@@ -9,13 +9,7 @@
   <body>
     <main class="app-shell">
       <header class="topbar">
-        <div>
-          <h1>Codenames Clue Trainer</h1>
-        </div>
-        <div class="topbar-actions">
-          <button class="button secondary" id="load-sample" type="button">Sample</button>
-          <button class="button" id="random-board" type="button">Random board</button>
-        </div>
+        <h1>Codenames Clue Trainer</h1>
       </header>
 
       <section class="workspace">
@@ -24,11 +18,44 @@
             <div>
               <h2>Board</h2>
               <p id="board-counts" class="muted"></p>
+              <div id="board-metrics" class="board-metrics" aria-label="Board difficulty metrics"></div>
             </div>
             <div class="board-header-actions">
-              <div class="segmented-control" role="group" aria-label="Board order">
-                <button id="order-random" type="button" aria-pressed="false">Random order</button>
-                <button id="order-grouped" type="button" aria-pressed="true">Group by role</button>
+              <div class="board-toolbar-group board-source-actions" role="group" aria-label="Choose board">
+                <button
+                  class="button secondary board-action"
+                  id="load-sample"
+                  type="button"
+                  title="Restore the fixed example board"
+                >
+                  Load sample
+                </button>
+                <button
+                  class="button board-action"
+                  id="random-board"
+                  type="button"
+                  title="Generate 25 new words and assign new roles"
+                >
+                  New random board
+                </button>
+              </div>
+              <div class="board-toolbar-group board-order-actions" role="group" aria-label="Arrange cards">
+                <button
+                  class="button ghost board-action"
+                  id="order-grouped"
+                  type="button"
+                  title="Arrange the current cards by Friendly, Enemy, Neutral, and Assassin"
+                >
+                  Sort by role
+                </button>
+                <button
+                  class="button ghost board-action"
+                  id="order-random"
+                  type="button"
+                  title="Shuffle current card positions without changing their words or roles"
+                >
+                  Randomize order
+                </button>
               </div>
               <button
                 class="icon-button"

@@ -1,15 +1,80 @@
 import { loadClueIndex } from "./clue-index.js";
 import { EMBEDDING_MODEL, centerEmbeddings, embedTerms } from "./embeddings.js";
-import { analyzeEmbeddedBoard } from "./model.js";
+import { analyzeEmbeddedBoard, calculateBoardMetrics } from "./model.js";
 import { DEFAULT_BOARD, ROLE_SEQUENCE, TEAMS, WORD_BANK } from "./word-data.js";
 
 const TEAM_BY_ID = new Map(TEAMS.map((team) => [team.id, team]));
 const TEAM_SORT_ORDER = new Map(TEAMS.map((team, index) => [team.id, index]));
 const MAX_RESULTS = 8;
+const BOARD_METRIC_DEFINITIONS = {
+  complexity: {
+    label: "Board complexity",
+    key: "board-complexity",
+    info:
+      "100 minus the average Blue and Red ease scores. Ease is 65% average Worth of the best three safe clues, 20% average Worth of the best three stretch clues, and 15% safe-option breadth; four safe options earns full credit. 0-32 is Easy, 33-65 Moderate, and 66-100 Hard.",
+  },
+  edge: {
+    label: "Blue vs red",
+    key: "side-edge",
+    info:
+      "Blue ease minus Red ease after scoring the board again with Blue and Red roles swapped. Positive favors Blue, negative favors Red, and a difference within 3 points is shown as Even. B and R show each side's 0-100 ease score.",
+  },
+};
+const SUGGESTION_COLUMNS = [
+  { label: "Clue", key: "clue", direction: "asc" },
+  { label: "Items", key: "number", direction: "desc" },
+  { label: "Targets" },
+  {
+    label: "Worth",
+    key: "worth",
+    direction: "desc",
+    info: "A 0-99 heuristic combining expected net, semantic fit, cohesion, safety margin, consistency, and clue familiarity.",
+  },
+  {
+    label: "Net",
+    key: "expectedNet",
+    direction: "desc",
+    info: "Estimated value: items times hit chance, minus the role-weighted cost of a miss. Higher is better.",
+  },
+  {
+    label: "Est. hit",
+    key: "success",
+    direction: "desc",
+    info: "Heuristic chance that the clue safely reaches its intended targets. It is not calibrated from real games yet.",
+  },
+  {
+    label: "Risk",
+    key: "risk",
+    direction: "desc",
+    info: "Safe, Medium, or Risky based on margin, hit estimate, target count, and whether the assassin is the closest danger.",
+  },
+  {
+    label: "Closest danger",
+    key: "danger",
+    direction: "desc",
+    info: "The non-friendly card most attracted to the clue after role penalties. The chip shows its word and raw similarity; its color shows the role.",
+  },
+  {
+    label: "Margin",
+    key: "margin",
+    direction: "desc",
+    info: "Weakest target similarity minus the strongest role-weighted danger. Positive values are safer.",
+  },
+  {
+    label: "Fit / cohesion",
+    info: "Fit is clue similarity to the target centroid. Cohesion is the average similarity among the target words.",
+  },
+];
+const RISK_SORT_VALUE = {
+  safe: 3,
+  medium: 2,
+  risky: 1,
+};
 
 let board = cloneBoard(DEFAULT_BOARD);
-let boardOrder = "grouped";
 let boardCollapsed = false;
+let suggestionSort = { key: "expectedNet", direction: "desc" };
+let latestAnalysis = null;
 let analyzeTimer = 0;
 let analysisRun = 0;
 let hasAnalysis = false;
@@ -18,6 +83,7 @@ let clueIndexPromise;
 const elements = {
   boardGrid: document.querySelector("#board-grid"),
   boardCounts: document.querySelector("#board-counts"),
+  boardMetrics: document.querySelector("#board-metrics"),
   safeResults: document.querySelector("#safe-results"),
   stretchResults: document.querySelector("#stretch-results"),
   resultsPanel: document.querySelector(".results-panel"),
@@ -39,29 +105,47 @@ const elements = {
 
 elements.loadSample.addEventListener("click", () => {
   board = cloneBoard(DEFAULT_BOARD);
-  boardOrder = "grouped";
   render();
 });
 
 elements.randomBoard.addEventListener("click", () => {
   board = createRandomBoard();
-  boardOrder = "random";
   render();
 });
 
 elements.orderRandom.addEventListener("click", () => {
-  boardOrder = "random";
+  board = shuffle([...board]);
   renderBoard();
 });
 
 elements.orderGrouped.addEventListener("click", () => {
-  boardOrder = "grouped";
+  board = board
+    .map((card, sourceIndex) => ({ card, sourceIndex }))
+    .sort(
+      (left, right) =>
+        TEAM_SORT_ORDER.get(left.card.team) - TEAM_SORT_ORDER.get(right.card.team) ||
+        left.sourceIndex - right.sourceIndex,
+    )
+    .map(({ card }) => card);
   renderBoard();
 });
 
 elements.toggleBoard.addEventListener("click", () => {
   boardCollapsed = !boardCollapsed;
   renderBoardVisibility();
+});
+
+document.addEventListener("click", () => {
+  closeInfoPopovers();
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") {
+    closeInfoPopovers();
+    if (document.activeElement?.classList.contains("info-button")) {
+      document.activeElement.blur();
+    }
+  }
 });
 
 render();
@@ -74,18 +158,7 @@ function render() {
 function renderBoard() {
   elements.boardGrid.replaceChildren();
 
-  const displayedBoard = board
-    .map((card, sourceIndex) => ({ card, sourceIndex }))
-    .sort((left, right) => {
-      if (boardOrder === "random") {
-        return left.sourceIndex - right.sourceIndex;
-      }
-
-      return (
-        TEAM_SORT_ORDER.get(left.card.team) - TEAM_SORT_ORDER.get(right.card.team) ||
-        left.sourceIndex - right.sourceIndex
-      );
-    });
+  const displayedBoard = board.map((card, sourceIndex) => ({ card, sourceIndex }));
 
   displayedBoard.forEach(({ card, sourceIndex }, displayIndex) => {
     const cardElement = document.createElement("div");
@@ -134,8 +207,6 @@ function renderBoard() {
   });
 
   renderBoardCounts(board);
-  elements.orderRandom.setAttribute("aria-pressed", String(boardOrder === "random"));
-  elements.orderGrouped.setAttribute("aria-pressed", String(boardOrder === "grouped"));
   renderBoardVisibility();
 }
 
@@ -191,8 +262,16 @@ async function runAnalysis() {
     const result = analyzeEmbeddedBoard(boardSnapshot, centeredBoardVectors, clueIndex, {
       limit: MAX_RESULTS,
     });
-    renderSuggestions(elements.safeResults, result.safe, "No safe 2-3 clue found for this board.");
-    renderSuggestions(elements.stretchResults, result.stretch, "No stretch clue found for this board.");
+    const redResult = analyzeEmbeddedBoard(
+      swapCompetitiveTeams(boardSnapshot),
+      centeredBoardVectors,
+      clueIndex,
+      { limit: MAX_RESULTS },
+    );
+    const boardMetrics = calculateBoardMetrics(result, redResult);
+    latestAnalysis = result;
+    renderSuggestionTables();
+    renderBoardMetrics(boardMetrics);
 
     elements.safeCount.textContent = String(result.safe.length);
     elements.stretchCount.textContent = String(result.stretch.length);
@@ -233,12 +312,14 @@ function renderModelProgress(event, runId) {
 
 function setAnalysisBusy(isBusy) {
   elements.resultsPanel?.setAttribute("aria-busy", String(isBusy));
+  elements.boardMetrics?.setAttribute("aria-busy", String(isBusy));
   if (isBusy) {
     elements.analysisStatus.textContent = hasAnalysis ? "Updating analysis" : "Loading local model";
   }
 }
 
 function renderPending() {
+  renderBoardMetrics();
   renderMessage(elements.safeResults, "Loading local embedding model...");
   renderMessage(elements.stretchResults, "Preparing clue index...");
   elements.safeCount.textContent = "-";
@@ -246,10 +327,76 @@ function renderPending() {
 }
 
 function renderError(error) {
+  latestAnalysis = null;
+  renderBoardMetrics();
   const message = error instanceof Error ? error.message : String(error);
   renderMessage(elements.safeResults, "Analysis unavailable.", "error");
   renderMessage(elements.stretchResults, "Edit a card or load a board to retry.", "error");
   elements.analysisStatus.textContent = message;
+}
+
+function renderSuggestionTables() {
+  if (!latestAnalysis) {
+    return;
+  }
+
+  renderSuggestions(
+    elements.safeResults,
+    latestAnalysis.safe,
+    "No safe 2-3 clue found for this board.",
+  );
+  renderSuggestions(
+    elements.stretchResults,
+    latestAnalysis.stretch,
+    "No stretch clue found for this board.",
+  );
+}
+
+function renderBoardMetrics(metrics = null) {
+  const complexityDefinition = BOARD_METRIC_DEFINITIONS.complexity;
+  const edgeDefinition = BOARD_METRIC_DEFINITIONS.edge;
+  const complexity = createBoardMetric({
+    definition: complexityDefinition,
+    value: metrics ? `${metrics.complexity} ${complexityLabel(metrics.complexity)}` : "--",
+    tone: metrics ? complexityTone(metrics.complexity) : "",
+  });
+  const edge = createBoardMetric({
+    definition: edgeDefinition,
+    value: metrics ? formatSideEdge(metrics.edge) : "--",
+    detail: metrics ? `B ${metrics.blueEase} / R ${metrics.redEase}` : "",
+    tone: metrics ? sideEdgeTone(metrics.edge) : "",
+  });
+
+  elements.boardMetrics.replaceChildren(complexity, edge);
+}
+
+function createBoardMetric({ definition, value, detail = "", tone }) {
+  const metric = document.createElement("div");
+  metric.className = "board-metric";
+  if (tone) {
+    metric.dataset.tone = tone;
+  }
+
+  const heading = document.createElement("span");
+  heading.className = "board-metric-heading";
+  const label = document.createElement("span");
+  label.className = "board-metric-label";
+  label.textContent = definition.label;
+  heading.append(label, createInfoControl(definition, "board-metrics"));
+
+  const score = document.createElement("strong");
+  score.className = "board-metric-value";
+  score.textContent = value;
+  metric.append(heading, score);
+
+  if (detail) {
+    const metadata = document.createElement("span");
+    metadata.className = "board-metric-detail";
+    metadata.textContent = detail;
+    metric.append(metadata);
+  }
+
+  return metric;
 }
 
 function renderSuggestions(container, suggestions, emptyMessage) {
@@ -268,33 +415,183 @@ function renderSuggestions(container, suggestions, emptyMessage) {
 
   const header = document.createElement("thead");
   const headerRow = document.createElement("tr");
-  for (const label of [
-    "Clue",
-    "Items",
-    "Targets",
-    "Worth",
-    "Net",
-    "Est. hit",
-    "Risk",
-    "Closest danger",
-    "Margin",
-    "Fit / cohesion",
-  ]) {
+  for (const column of SUGGESTION_COLUMNS) {
     const cell = document.createElement("th");
     cell.scope = "col";
-    cell.textContent = label;
+    const isActive = column.key === suggestionSort.key;
+    const content = document.createElement("div");
+    content.className = "column-header-content";
+
+    if (column.key) {
+      cell.setAttribute(
+        "aria-sort",
+        isActive ? (suggestionSort.direction === "asc" ? "ascending" : "descending") : "none",
+      );
+      const sortButton = document.createElement("button");
+      sortButton.className = "sort-button";
+      sortButton.type = "button";
+      sortButton.dataset.sortKey = column.key;
+      sortButton.setAttribute(
+        "aria-label",
+        isActive
+          ? `Sort by ${column.label}, currently ${suggestionSort.direction === "asc" ? "ascending" : "descending"}`
+          : `Sort by ${column.label}`,
+      );
+      sortButton.addEventListener("click", () => {
+        setSuggestionSort(column);
+      });
+
+      const label = document.createElement("span");
+      label.textContent = column.label;
+      const icon = document.createElement("span");
+      icon.className = `sort-icon${isActive ? ` ${suggestionSort.direction}` : ""}`;
+      icon.setAttribute("aria-hidden", "true");
+      sortButton.append(label, icon);
+      content.append(sortButton);
+    } else {
+      const label = document.createElement("span");
+      label.className = "column-label";
+      label.textContent = column.label;
+      content.append(label);
+    }
+
+    if (column.info) {
+      content.append(createInfoControl(column, container.id));
+    }
+
+    cell.append(content);
     headerRow.append(cell);
   }
   header.append(headerRow);
 
   const body = document.createElement("tbody");
-  for (const suggestion of suggestions) {
+  for (const suggestion of [...suggestions].sort(compareSuggestionsForDisplay)) {
     body.append(renderSuggestionRow(suggestion));
   }
 
   table.append(header, body);
   wrapper.append(table);
   container.append(wrapper);
+}
+
+function createInfoControl(column, tableId) {
+  const control = document.createElement("span");
+  control.className = "info-control";
+  control.addEventListener("pointerenter", () => {
+    control.classList.remove("is-dismissed");
+  });
+  control.addEventListener("focusin", () => {
+    control.classList.remove("is-dismissed");
+  });
+
+  const tooltipId = `info-${tableId}-${column.key ?? "fit"}`;
+  const button = document.createElement("button");
+  button.className = "info-button";
+  button.type = "button";
+  button.textContent = "i";
+  button.setAttribute("aria-label", `About ${column.label}`);
+  button.setAttribute("aria-controls", tooltipId);
+  button.setAttribute("aria-expanded", "false");
+  button.addEventListener("click", (event) => {
+    event.stopPropagation();
+    const wasOpen = button.getAttribute("aria-expanded") === "true";
+    closeInfoPopovers();
+    control.classList.remove("is-dismissed");
+    button.setAttribute("aria-expanded", String(!wasOpen));
+  });
+
+  const popover = document.createElement("span");
+  popover.className = "info-popover";
+  popover.id = tooltipId;
+  popover.role = "tooltip";
+  popover.textContent = column.info;
+
+  control.append(button, popover);
+  return control;
+}
+
+function closeInfoPopovers() {
+  for (const control of document.querySelectorAll(".info-control")) {
+    control.querySelector(".info-button")?.setAttribute("aria-expanded", "false");
+    control.classList.add("is-dismissed");
+  }
+}
+
+function setSuggestionSort(column) {
+  if (suggestionSort.key === column.key) {
+    suggestionSort = {
+      key: column.key,
+      direction: suggestionSort.direction === "asc" ? "desc" : "asc",
+    };
+  } else {
+    suggestionSort = {
+      key: column.key,
+      direction: column.direction,
+    };
+  }
+
+  renderSuggestionTables();
+}
+
+function compareSuggestionsForDisplay(left, right) {
+  const leftValue = suggestionSortValue(left, suggestionSort.key);
+  const rightValue = suggestionSortValue(right, suggestionSort.key);
+  let comparison = compareSortValues(leftValue, rightValue);
+
+  if (suggestionSort.direction === "desc") {
+    comparison *= -1;
+  }
+  if (comparison !== 0) {
+    return comparison;
+  }
+
+  if (suggestionSort.key !== "number" && right.number !== left.number) {
+    return right.number - left.number;
+  }
+
+  if (suggestionSort.key === "number") {
+    const netComparison =
+      suggestionSortValue(right, "expectedNet") - suggestionSortValue(left, "expectedNet");
+    if (netComparison !== 0) {
+      return netComparison;
+    }
+  }
+
+  return right.sortScore - left.sortScore;
+}
+
+function suggestionSortValue(suggestion, key) {
+  if (key === "clue") {
+    return suggestion.clue;
+  }
+  if (key === "number" || key === "worth") {
+    return suggestion[key];
+  }
+  if (key === "expectedNet") {
+    return Number(suggestion.expectedNet.toFixed(1));
+  }
+  if (key === "success") {
+    return Math.round(suggestion.success * 100);
+  }
+  if (key === "risk") {
+    return RISK_SORT_VALUE[suggestion.risk];
+  }
+  if (key === "danger") {
+    return Number(suggestion.closestDanger.sim.toFixed(2));
+  }
+  if (key === "margin") {
+    return Number(suggestion.margin.toFixed(2));
+  }
+
+  return 0;
+}
+
+function compareSortValues(left, right) {
+  if (typeof left === "string" && typeof right === "string") {
+    return left.localeCompare(right);
+  }
+
+  return left - right;
 }
 
 function renderMessage(container, message, variant = "") {
@@ -348,10 +645,14 @@ function renderSuggestionRow(suggestion) {
   const dangerCell = createTableCell("Closest danger", "danger-cell");
   const dangerChip = document.createElement("span");
   dangerChip.className = `danger-chip ${suggestion.closestDanger.team}`;
-  dangerChip.textContent = `${suggestion.closestDanger.word} ${teamLabel(suggestion.closestDanger.team)} ${formatNumber(
-    suggestion.closestDanger.sim,
-    2,
-  )}`;
+  const dangerSimilarity = formatNumber(suggestion.closestDanger.sim, 2);
+  const dangerRole = teamLabel(suggestion.closestDanger.team);
+  dangerChip.textContent = `${suggestion.closestDanger.word} ${dangerSimilarity}`;
+  dangerChip.setAttribute(
+    "aria-label",
+    `${suggestion.closestDanger.word}, ${dangerRole}, similarity ${dangerSimilarity}`,
+  );
+  dangerChip.title = dangerRole;
   dangerCell.append(dangerChip);
 
   const marginCell = createScoreCell(
@@ -407,6 +708,14 @@ function createRandomBoard() {
   }));
 }
 
+function swapCompetitiveTeams(cards) {
+  return cards.map((card) => ({
+    ...card,
+    team:
+      card.team === "friendly" ? "enemy" : card.team === "enemy" ? "friendly" : card.team,
+  }));
+}
+
 function renderBoardCounts(cards) {
   const counts = Object.fromEntries(TEAMS.map((team) => [team.id, 0]));
   for (const card of cards) {
@@ -453,6 +762,40 @@ function labelRisk(risk) {
   }
 
   return "Risky";
+}
+
+function complexityLabel(complexity) {
+  if (complexity <= 32) {
+    return "Easy";
+  }
+  if (complexity <= 65) {
+    return "Moderate";
+  }
+  return "Hard";
+}
+
+function complexityTone(complexity) {
+  if (complexity <= 32) {
+    return "easy";
+  }
+  if (complexity <= 65) {
+    return "moderate";
+  }
+  return "hard";
+}
+
+function formatSideEdge(edge) {
+  if (Math.abs(edge) <= 3) {
+    return "Even";
+  }
+  return edge > 0 ? `Blue +${edge}` : `Red +${Math.abs(edge)}`;
+}
+
+function sideEdgeTone(edge) {
+  if (Math.abs(edge) <= 3) {
+    return "even";
+  }
+  return edge > 0 ? "blue" : "red";
 }
 
 function teamLabel(teamId) {

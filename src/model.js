@@ -8,6 +8,10 @@ export const HAZARD_POLICY = Object.freeze({
 const SAFE_SIZES = [2, 3];
 const STRETCH_SIZES = [4, 5, 6];
 const SHORTLIST_SIZE = 40;
+const SIDE_EASE_SAFE_WEIGHT = 0.65;
+const SIDE_EASE_STRETCH_WEIGHT = 0.2;
+const SIDE_EASE_BREADTH_WEIGHT = 0.15;
+const FULL_SAFE_BREADTH = 4;
 
 export function analyzeEmbeddedBoard(board, boardVectors, clueIndex, options = {}) {
   const limit = options.limit ?? 8;
@@ -89,6 +93,18 @@ export function analyzeEmbeddedBoard(board, boardVectors, clueIndex, options = {
 export function applyDangerPenalty(similarity, team) {
   const policy = HAZARD_POLICY[team] ?? HAZARD_POLICY.neutral;
   return similarity + Math.max(0, similarity) * (policy.multiplier - 1) + policy.offset;
+}
+
+export function calculateBoardMetrics(blueAnalysis, redAnalysis) {
+  const blueEase = Math.round(calculateSideEase(blueAnalysis));
+  const redEase = Math.round(calculateSideEase(redAnalysis));
+
+  return {
+    blueEase,
+    redEase,
+    complexity: Math.round(clamp(100 - (blueEase + redEase) / 2, 0, 100)),
+    edge: blueEase - redEase,
+  };
 }
 
 export function normalizeTerm(term) {
@@ -511,6 +527,31 @@ function compareSuggestions(left, right) {
     return right.sortScore - left.sortScore;
   }
   return right.margin - left.margin;
+}
+
+function calculateSideEase(analysis) {
+  const safe = analysis?.safe ?? [];
+  const stretch = analysis?.stretch ?? [];
+  const safeWorth = averageTopWorth(safe, 3);
+  const stretchWorth = averageTopWorth(stretch, 3);
+  const safeBreadth = clamp(safe.length / FULL_SAFE_BREADTH, 0, 1) * 100;
+
+  return clamp(
+    safeWorth * SIDE_EASE_SAFE_WEIGHT +
+      stretchWorth * SIDE_EASE_STRETCH_WEIGHT +
+      safeBreadth * SIDE_EASE_BREADTH_WEIGHT,
+    0,
+    100,
+  );
+}
+
+function averageTopWorth(suggestions, limit) {
+  const worths = suggestions
+    .map((suggestion) => suggestion.worth)
+    .sort((left, right) => right - left)
+    .slice(0, limit);
+
+  return average(worths);
 }
 
 function simpleStem(value) {

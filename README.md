@@ -9,6 +9,7 @@ A local-first Codenames clue trainer. It embeds the board, searches a 3,000-word
 - **Fast search:** clue embeddings are precomputed, mean-centered, normalized, and stored as an int8 static index. Only the 25 board words are embedded at runtime.
 - **Negative scoring:** the weakest target similarity must beat the highest role-weighted neutral, enemy, or assassin similarity.
 - **Outputs:** safe 2-3 target clues and stretch 4-6 target clues, each with margin, nearest danger, estimated hit rate, expected net, and a 0-99 worth score.
+- **Board metrics:** a symmetric difficulty score and Blue-vs-Red edge computed by scoring both team perspectives.
 
 The model download happens on first use and is then cached by the browser. Board words are processed locally and are not sent to an application server.
 
@@ -84,6 +85,20 @@ Miss costs are `0.9` for neutral, `1.8` for enemy, and `5.5` for assassin. Worth
 
 The hit rate and worth score are ranking heuristics, not calibrated probabilities. The serious next quality step is to record actual guesses and fit these coefficients against gameplay outcomes.
 
+## Board Metrics
+
+The trainer scores the board from both perspectives. The Red pass reuses the same board embeddings and clue index, but swaps Blue and Red roles so both teams receive identical scoring treatment.
+
+Each side receives a 0-100 ease score:
+
+```text
+side ease = 65% * average Worth of best 3 safe clues
+          + 20% * average Worth of best 3 stretch clues
+          + 15% * safe-option breadth
+```
+
+Four safe options earns full breadth credit. Board complexity is `100 - average(Blue ease, Red ease)`: 0-32 is Easy, 33-65 Moderate, and 66-100 Hard. Blue vs Red is `Blue ease - Red ease`; differences within 3 points are displayed as Even.
+
 ## Architecture Alternatives
 
 | Approach | Strength | Cost / limitation |
@@ -120,9 +135,10 @@ sequenceDiagram
   App->>Model: Embed 25 board words
   Model-->>App: Normalized 384d vectors
   App->>App: Mean-center and renormalize board vectors
-  App->>Scorer: Analyze board against clue index
-  Scorer-->>App: Safe suggestions, stretch suggestions, summary
-  App->>Browser: Render ranked clues and danger metrics
+  App->>Scorer: Analyze Blue perspective
+  App->>Scorer: Analyze Red perspective with roles swapped
+  Scorer-->>App: Suggestions, side ease, complexity, edge
+  App->>Browser: Render ranked clues and board metrics
 ```
 
 ### Editing a Board Card
