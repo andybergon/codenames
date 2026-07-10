@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Codenames Trainer</title>
+    <link rel="stylesheet" href="./src/styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="topbar">
+        <div>
+          <h1>Codenames Clue Trainer</h1>
+        </div>
+        <div class="topbar-actions">
+          <button class="button secondary" id="load-sample" type="button">Sample</button>
+          <button class="button" id="random-board" type="button">Random board</button>
+        </div>
+      </header>
+
+      <section class="workspace">
+        <div class="board-panel" aria-label="Codenames board editor">
+          <div class="panel-header">
+            <div>
+              <h2>Board</h2>
+              <p id="board-counts" class="muted"></p>
+            </div>
+            <div class="board-header-actions">
+              <div class="segmented-control" role="group" aria-label="Board order">
+                <button id="order-random" type="button" aria-pressed="false">Random order</button>
+                <button id="order-grouped" type="button" aria-pressed="true">Group by role</button>
+              </div>
+              <button
+                class="icon-button"
+                id="toggle-board"
+                type="button"
+                aria-label="Collapse board"
+                aria-controls="board-grid"
+                aria-expanded="true"
+                title="Collapse board"
+              >
+                <span class="chevron" aria-hidden="true"></span>
+              </button>
+            </div>
+          </div>
+          <div id="board-grid" class="board-grid"></div>
+        </div>
+
+        <aside class="results-panel" aria-label="Clue recommendations">
+          <div class="panel-header">
+            <div>
+              <h2>Recommendations</h2>
+              <p id="analysis-status" class="muted"></p>
+            </div>
+          </div>
+
+          <div class="result-section">
+            <div class="section-title">
+              <h3>Safe 2-3</h3>
+              <span id="safe-count" class="pill"></span>
+            </div>
+            <div id="safe-results" class="suggestions"></div>
+          </div>
+
+          <div class="result-section">
+            <div class="section-title">
+              <h3>Stretch plays</h3>
+              <span id="stretch-count" class="pill"></span>
+            </div>
+            <div id="stretch-results" class="suggestions"></div>
+          </div>
+        </aside>
+      </section>
+
+      <section class="model-strip" aria-label="Model summary">
+        <div>
+          <span class="metric-label">Embedding model</span>
+          <strong id="model-name">MiniLM-L6-v2</strong>
+        </div>
+        <div>
+          <span class="metric-label">Clue vocabulary</span>
+          <strong id="vocabulary-source">wordfreq + seeds</strong>
+        </div>
+        <div>
+          <span class="metric-label">Friendly words</span>
+          <strong id="friendly-total">0</strong>
+        </div>
+        <div>
+          <span class="metric-label">Clue candidates</span>
+          <strong id="candidate-total">0</strong>
+        </div>
+        <div>
+          <span class="metric-label">Best margin</span>
+          <strong id="best-margin">0.00</strong>
+        </div>
+        <div>
+          <span class="metric-label">Best net</span>
+          <strong id="best-net">0.0</strong>
+        </div>
+      </section>
+    </main>
+
+    <script type="module" src="./src/app.js"></script>
+  </body>
+</html>

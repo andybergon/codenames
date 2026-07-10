@@ -1,0 +1,170 @@
+# Codenames Trainer
+
+A local-first Codenames clue trainer. It embeds the board, searches a 3,000-word clue index, and ranks conservative 2-3 word clues separately from ambitious 4-6 word clues.
+
+## TLDR
+
+- **Embedding:** `Xenova/all-MiniLM-L6-v2`, run locally in the browser with Transformers.js.
+- **Clue set:** 3,000 frequent English words from `wordfreq` 3.1.1, filtered through WordNet and a legality filter, plus a small curated seed list.
+- **Fast search:** clue embeddings are precomputed, mean-centered, normalized, and stored as an int8 static index. Only the 25 board words are embedded at runtime.
+- **Negative scoring:** the weakest target similarity must beat the highest role-weighted neutral, enemy, or assassin similarity.
+- **Outputs:** safe 2-3 target clues and stretch 4-6 target clues, each with margin, nearest danger, estimated hit rate, expected net, and a 0-99 worth score.
+
+The model download happens on first use and is then cached by the browser. Board words are processed locally and are not sent to an application server.
+
+## Run
+
+```sh
+npm install
+npm run dev
+```
+
+The Vite dev server accepts explicit host and port arguments:
+
+```sh
+npm run dev -- --host 127.0.0.1 --port 3535
+```
+
+## Check
+
+```sh
+npm run check
+```
+
+The smoke test uses a checked-in sample-board embedding fixture, so normal checks do not redownload the model.
+
+## Embedding Pipeline
+
+`all-MiniLM-L6-v2` produces 384-dimensional vectors. The generator computes the mean vector over the entire clue corpus, subtracts it from every clue vector, and normalizes the result. Runtime board embeddings receive the same transform. Mean-centering removes much of the shared single-word cosine baseline that otherwise makes generic clues appear close to unrelated cards.
+
+The static clue index in `public/data/clue-embeddings.json` stores normalized clue vectors as symmetric int8 values. This keeps the index around 1.6 MB while board words remain fully dynamic.
+
+## Clue Vocabulary
+
+The generated vocabulary starts from the 50,000 most frequent English entries exposed by [`wordfreq`](https://pypi.org/project/wordfreq/). The generator keeps 3,000 single ASCII words that:
+
+- contain 3-18 letters;
+- are recognized as content words by [WordNet](https://wordnet.princeton.edu/);
+- are not common function words or explicitly blocked terms.
+
+The existing curated `CLUE_BANK` is appended when a seed is not already present. At runtime, candidates are removed when they equal, stem-match, or substantially contain a board word. This is a practical legality filter, not a complete implementation of table-specific Codenames rulings.
+
+To regenerate the vocabulary and embeddings:
+
+```sh
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r scripts/requirements-clues.txt
+npm run generate:data
+```
+
+## Negative Scoring
+
+For every candidate clue and target set:
+
+```text
+target floor = minimum cosine similarity to any intended friendly word
+
+neutral danger  = similarity
+enemy danger    = similarity + 0.08 * max(0, similarity) + 0.015
+assassin danger = similarity + 0.22 * max(0, similarity) + 0.065
+
+margin = target floor - maximum danger
+```
+
+This applies role cost after semantic similarity. It does not subtract an enemy vector from a target vector. An enemy must be farther from the clue than a neutral card to produce the same margin, and the assassin receives the largest penalty.
+
+The estimated hit rate is a sigmoid over margin, weakest-target similarity, target cohesion, and target count. Expected net is:
+
+```text
+expected net = target count * estimated hit - miss cost * (1 - estimated hit)
+```
+
+Miss costs are `0.9` for neutral, `1.8` for enemy, and `5.5` for assassin. Worth combines expected net, semantic fit, cohesion, margin, consistency, and clue familiarity into a 0-99 display score.
+
+The hit rate and worth score are ranking heuristics, not calibrated probabilities. The serious next quality step is to record actual guesses and fit these coefficients against gameplay outcomes.
+
+## Architecture Alternatives
+
+| Approach | Strength | Cost / limitation |
+| --- | --- | --- |
+| **Current: local MiniLM + static clue index** | Private, keyless, dynamic board words, fast repeated scoring | First model load; fixed generated clue vocabulary |
+| Embed every clue in the browser | No generated index and fully dynamic vocabulary | Slow first run and much more client compute |
+| Local Python service with Sentence Transformers + FAISS | Easy model swaps, large vocabularies, efficient nearest-neighbor search | Requires a persistent backend and Python model runtime |
+| Hosted embedding API | Small frontend and easy model upgrades | Requires a backend, API key, recurring cost, and remote board processing |
+| Static fastText or GloVe word vectors | Very fast lexical similarity and fully offline runtime | Large assets; weaker phrase/context handling |
+| Embedding shortlist + learned reranker | Best route to game-specific quality | Needs labeled Codenames guesses, evaluation data, and more inference |
+
+For this trainer, the current hybrid is the strongest first default. A local service becomes attractive once the clue vocabulary grows beyond tens of thousands. A hosted API is attractive when operational simplicity matters more than local-only processing.
+
+## Sequence Diagrams
+
+### Initial Analysis
+
+```mermaid
+sequenceDiagram
+  participant Browser
+  participant App as src/app.js
+  participant Index as Static clue index
+  participant Model as MiniLM in Transformers.js
+  participant Scorer as src/model.js
+
+  Browser->>App: Load board UI
+  par Load generated clue data
+    App->>Index: Fetch clue words and int8 vectors
+    Index-->>App: Model metadata, corpus mean, clue index
+  and Load local embedding model
+    App->>Model: Initialize feature-extraction pipeline
+    Model-->>App: Download or use browser cache
+  end
+  App->>Model: Embed 25 board words
+  Model-->>App: Normalized 384d vectors
+  App->>App: Mean-center and renormalize board vectors
+  App->>Scorer: Analyze board against clue index
+  Scorer-->>App: Safe suggestions, stretch suggestions, summary
+  App->>Browser: Render ranked clues and danger metrics
+```
+
+### Editing a Board Card
+
+```mermaid
+sequenceDiagram
+  participant Player
+  participant App as src/app.js
+  participant Cache as Embedding cache
+  participant Model as MiniLM
+  participant Scorer as src/model.js
+
+  Player->>App: Edit a word or role
+  App->>App: Debounce text edits for 180ms
+  App->>Cache: Request board-word vectors
+  alt Word vector is cached
+    Cache-->>App: Reuse vector
+  else New board word
+    Cache->>Model: Embed missing word
+    Model-->>Cache: Store vector
+    Cache-->>App: Return vector
+  end
+  App->>Scorer: Re-run analysis
+  Scorer-->>App: Updated safe and stretch rankings
+```
+
+### Scoring a Target Set
+
+```mermaid
+sequenceDiagram
+  participant Ranker
+  participant TargetSet as Friendly target set
+  participant Candidate as Candidate clue
+  participant Hazards as Non-friendly cards
+
+  Ranker->>TargetSet: Build 2-3 or 4-6 word combination
+  Ranker->>Candidate: Read clue-to-board similarities
+  Candidate->>TargetSet: Find average and weakest target similarity
+  Candidate->>Hazards: Find highest role-weighted danger
+  Hazards-->>Candidate: Closest neutral, enemy, or assassin
+  Candidate->>Candidate: Compute margin and semantic shortlist score
+  Candidate->>Candidate: Compute hit estimate, expected net, and worth
+  Candidate-->>Ranker: Ranked suggestion or rejection
+  Ranker->>Ranker: Diversify clues and target sets
+```
