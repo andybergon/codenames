@@ -74,28 +74,47 @@
         </div>
 
         <aside class="results-panel" aria-label="Clue recommendations">
-          <div class="panel-header">
+          <div class="panel-header recommendation-header">
             <div>
               <h2>Recommendations</h2>
               <p id="analysis-status" class="muted"></p>
             </div>
-          </div>
-
-          <div class="result-section">
-            <div class="section-title">
-              <h3>Safe 2-3</h3>
-              <span id="safe-count" class="pill"></span>
+            <div class="recommendation-toolbar">
+              <div class="target-range-filter">
+                <div class="range-filter-heading">
+                  <span class="range-filter-label">Target words</span>
+                  <output id="target-range-value" for="target-min target-max">2-4</output>
+                </div>
+                <div id="target-range-control" class="dual-range">
+                  <span class="range-track" aria-hidden="true">
+                    <span class="range-selection"></span>
+                  </span>
+                  <input
+                    id="target-min"
+                    type="range"
+                    min="1"
+                    max="9"
+                    value="2"
+                    aria-label="Minimum target words"
+                  />
+                  <input
+                    id="target-max"
+                    type="range"
+                    min="1"
+                    max="9"
+                    value="4"
+                    aria-label="Maximum target words"
+                  />
+                </div>
+                <div class="range-limits" aria-hidden="true">
+                  <span>1</span>
+                  <span id="target-range-limit">9</span>
+                </div>
+              </div>
+              <span id="recommendation-count" class="pill" aria-label="Recommendation count"></span>
             </div>
-            <div id="safe-results" class="suggestions"></div>
           </div>
-
-          <div class="result-section">
-            <div class="section-title">
-              <h3>Stretch plays</h3>
-              <span id="stretch-count" class="pill"></span>
-            </div>
-            <div id="stretch-results" class="suggestions"></div>
-          </div>
+          <div id="recommendation-results" class="suggestions"></div>
         </aside>
       </section>
 

@@ -1,6 +1,6 @@
 # Codenames Trainer
 
-A local-first Codenames clue trainer. It embeds the board, searches a 3,000-word clue index, and ranks conservative 2-3 word clues separately from ambitious 4-6 word clues.
+A local-first Codenames clue trainer. It embeds the board, searches a 3,000-word clue index, and ranks clue options for every possible target count.
 
 ## TLDR
 
@@ -8,7 +8,7 @@ A local-first Codenames clue trainer. It embeds the board, searches a 3,000-word
 - **Clue set:** 3,000 frequent English words from `wordfreq` 3.1.1, filtered through WordNet and a legality filter, plus a small curated seed list.
 - **Fast search:** clue embeddings are precomputed, mean-centered, normalized, and stored as an int8 static index. Only the 25 board words are embedded at runtime.
 - **Negative scoring:** the weakest target similarity must beat the highest role-weighted neutral, enemy, or assassin similarity.
-- **Outputs:** safe 2-3 target clues and stretch 4-6 target clues, each with margin, nearest danger, estimated hit rate, expected net, and a 0-99 worth score.
+- **Outputs:** one sortable recommendation table, filterable from 1 to the current Blue-card count (capped at the standard nine) and defaulting to 2-4 targets, with margin, nearest danger, estimated hit rate, expected net, and a 0-99 worth score.
 - **Board metrics:** a symmetric difficulty score and Blue-vs-Red edge computed by scoring both team perspectives.
 
 The model download happens on first use and is then cached by the browser. Board words are processed locally and are not sent to an application server.
@@ -174,7 +174,7 @@ sequenceDiagram
   participant Candidate as Candidate clue
   participant Hazards as Non-friendly cards
 
-  Ranker->>TargetSet: Build 2-3 or 4-6 word combination
+  Ranker->>TargetSet: Build a 1-to-all target combination
   Ranker->>Candidate: Read clue-to-board similarities
   Candidate->>TargetSet: Find average and weakest target similarity
   Candidate->>Hazards: Find highest role-weighted danger

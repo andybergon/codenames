@@ -5,8 +5,9 @@ export const HAZARD_POLICY = Object.freeze({
   assassin: { multiplier: 1.22, offset: 0.065 },
 });
 
-const SAFE_SIZES = [2, 3];
-const STRETCH_SIZES = [4, 5, 6];
+const SAFE_MAX_SIZE = 3;
+const STRETCH_MIN_SIZE = 4;
+const MAX_TARGET_SIZE = 9;
 const SHORTLIST_SIZE = 40;
 const SIDE_EASE_SAFE_WEIGHT = 0.65;
 const SIDE_EASE_STRETCH_WEIGHT = 0.2;
@@ -31,7 +32,7 @@ export function analyzeEmbeddedBoard(board, boardVectors, clueIndex, options = {
   const hazards = entries.filter((card) => card.team !== "friendly");
   const candidateIndices = buildLegalCandidateIndices(entries, clueIndex.clues);
 
-  if (friendlies.length < 2 || hazards.length === 0 || candidateIndices.length === 0) {
+  if (friendlies.length < 1 || hazards.length === 0 || candidateIndices.length === 0) {
     return emptyAnalysis(friendlies.length, candidateIndices.length);
   }
 
@@ -49,9 +50,10 @@ export function analyzeEmbeddedBoard(board, boardVectors, clueIndex, options = {
     clueIndex,
   });
 
-  const safe = rankSuggestions({
+  const safeSizes = range(1, Math.min(SAFE_MAX_SIZE, friendlies.length));
+  const safe = rankSuggestionsBySize({
     friendlies,
-    sizes: SAFE_SIZES,
+    sizes: safeSizes,
     mode: "safe",
     limit,
     preparedCandidates,
@@ -60,10 +62,10 @@ export function analyzeEmbeddedBoard(board, boardVectors, clueIndex, options = {
     entryCount: entries.length,
   });
 
-  const availableStretchSizes = STRETCH_SIZES.filter((size) => size <= friendlies.length);
-  const stretch = rankSuggestions({
+  const stretchSizes = range(STRETCH_MIN_SIZE, Math.min(MAX_TARGET_SIZE, friendlies.length));
+  const stretch = rankSuggestionsBySize({
     friendlies,
-    sizes: availableStretchSizes.length > 0 ? availableStretchSizes : [3],
+    sizes: stretchSizes,
     mode: "stretch",
     limit,
     preparedCandidates,
@@ -77,6 +79,7 @@ export function analyzeEmbeddedBoard(board, boardVectors, clueIndex, options = {
   return {
     safe,
     stretch,
+    suggestions: allSuggestions,
     summary: {
       friendlyTotal: friendlies.length,
       candidateTotal: candidateIndices.length,
@@ -129,6 +132,7 @@ function emptyAnalysis(friendlyTotal, candidateTotal) {
   return {
     safe: [],
     stretch: [],
+    suggestions: [],
     summary: {
       friendlyTotal,
       candidateTotal,
@@ -289,6 +293,15 @@ function rankSuggestions({
   return diversifySuggestions(suggestions, limit, mode);
 }
 
+function rankSuggestionsBySize({ sizes, ...options }) {
+  return sizes.flatMap((size) =>
+    rankSuggestions({
+      ...options,
+      sizes: [size],
+    }),
+  );
+}
+
 function buildTargetContext(targets, boardSimilarities, entryCount) {
   let pairwiseTotal = 0;
   let pairwiseCount = 0;
@@ -442,7 +455,7 @@ function passesMode(scored, mode) {
   }
 
   return (
-    scored.number >= 3 &&
+    scored.number >= STRETCH_MIN_SIZE &&
     everyTargetConnected &&
     scored.expectedNet >= 0.35 &&
     scored.success >= 0.28 &&
@@ -508,6 +521,14 @@ function buildCombinations(items, size) {
 
   walk(0, []);
   return result;
+}
+
+function range(start, end) {
+  if (end < start) {
+    return [];
+  }
+
+  return Array.from({ length: end - start + 1 }, (_, index) => start + index);
 }
 
 function insertRanked(items, item, limit, compare = compareSuggestions) {

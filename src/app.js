@@ -5,7 +5,9 @@ import { DEFAULT_BOARD, ROLE_SEQUENCE, TEAMS, WORD_BANK } from "./word-data.js";
 
 const TEAM_BY_ID = new Map(TEAMS.map((team) => [team.id, team]));
 const TEAM_SORT_ORDER = new Map(TEAMS.map((team, index) => [team.id, index]));
-const MAX_RESULTS = 8;
+const RESULTS_PER_SIZE = 6;
+const DEFAULT_TARGET_RANGE = Object.freeze({ min: 2, max: 4 });
+const MAX_TARGET_WORDS = ROLE_SEQUENCE.filter((team) => team === "friendly").length;
 const BOARD_METRIC_DEFINITIONS = {
   complexity: {
     label: "Board complexity",
@@ -73,6 +75,9 @@ const RISK_SORT_VALUE = {
 
 let board = cloneBoard(DEFAULT_BOARD);
 let boardCollapsed = false;
+let targetRange = { ...DEFAULT_TARGET_RANGE };
+let targetRangeLimit = MAX_TARGET_WORDS;
+let activeTargetBoundary = null;
 let suggestionSort = { key: "expectedNet", direction: "desc" };
 let latestAnalysis = null;
 let analyzeTimer = 0;
@@ -84,12 +89,15 @@ const elements = {
   boardGrid: document.querySelector("#board-grid"),
   boardCounts: document.querySelector("#board-counts"),
   boardMetrics: document.querySelector("#board-metrics"),
-  safeResults: document.querySelector("#safe-results"),
-  stretchResults: document.querySelector("#stretch-results"),
+  recommendationResults: document.querySelector("#recommendation-results"),
   resultsPanel: document.querySelector(".results-panel"),
   analysisStatus: document.querySelector("#analysis-status"),
-  safeCount: document.querySelector("#safe-count"),
-  stretchCount: document.querySelector("#stretch-count"),
+  recommendationCount: document.querySelector("#recommendation-count"),
+  targetRangeControl: document.querySelector("#target-range-control"),
+  targetRangeValue: document.querySelector("#target-range-value"),
+  targetRangeLimit: document.querySelector("#target-range-limit"),
+  targetMin: document.querySelector("#target-min"),
+  targetMax: document.querySelector("#target-max"),
   friendlyTotal: document.querySelector("#friendly-total"),
   candidateTotal: document.querySelector("#candidate-total"),
   bestMargin: document.querySelector("#best-margin"),
@@ -134,6 +142,62 @@ elements.toggleBoard.addEventListener("click", () => {
   boardCollapsed = !boardCollapsed;
   renderBoardVisibility();
 });
+
+elements.targetMin.addEventListener("input", (event) => {
+  setTargetRange("min", Number(event.target.value));
+});
+
+elements.targetMax.addEventListener("input", (event) => {
+  setTargetRange("max", Number(event.target.value));
+});
+
+elements.targetMin.addEventListener("keydown", (event) => {
+  handleTargetRangeKey("min", event);
+});
+
+elements.targetMax.addEventListener("keydown", (event) => {
+  handleTargetRangeKey("max", event);
+});
+
+elements.targetRangeControl.addEventListener("pointerdown", (event) => {
+  if (event.button !== 0) {
+    return;
+  }
+
+  const value = targetValueFromPointer(event.clientX);
+  const minDistance = Math.abs(value - targetRange.min);
+  const maxDistance = Math.abs(value - targetRange.max);
+  activeTargetBoundary =
+    minDistance === maxDistance
+      ? value <= (targetRange.min + targetRange.max) / 2
+        ? "min"
+        : "max"
+      : minDistance < maxDistance
+        ? "min"
+        : "max";
+  elements.targetRangeControl.setPointerCapture(event.pointerId);
+  elements[activeTargetBoundary === "min" ? "targetMin" : "targetMax"].focus({
+    preventScroll: true,
+  });
+  setTargetRange(activeTargetBoundary, value);
+});
+
+elements.targetRangeControl.addEventListener("pointermove", (event) => {
+  if (!activeTargetBoundary) {
+    return;
+  }
+
+  setTargetRange(activeTargetBoundary, targetValueFromPointer(event.clientX));
+});
+
+for (const eventName of ["pointerup", "pointercancel"]) {
+  elements.targetRangeControl.addEventListener(eventName, (event) => {
+    if (elements.targetRangeControl.hasPointerCapture(event.pointerId)) {
+      elements.targetRangeControl.releasePointerCapture(event.pointerId);
+    }
+    activeTargetBoundary = null;
+  });
+}
 
 document.addEventListener("click", () => {
   closeInfoPopovers();
@@ -260,21 +324,19 @@ async function runAnalysis() {
 
     const centeredBoardVectors = centerEmbeddings(boardVectors, clueIndex.centering.mean);
     const result = analyzeEmbeddedBoard(boardSnapshot, centeredBoardVectors, clueIndex, {
-      limit: MAX_RESULTS,
+      limit: RESULTS_PER_SIZE,
     });
     const redResult = analyzeEmbeddedBoard(
       swapCompetitiveTeams(boardSnapshot),
       centeredBoardVectors,
       clueIndex,
-      { limit: MAX_RESULTS },
+      { limit: RESULTS_PER_SIZE },
     );
     const boardMetrics = calculateBoardMetrics(result, redResult);
     latestAnalysis = result;
-    renderSuggestionTables();
+    renderRecommendationTable();
     renderBoardMetrics(boardMetrics);
 
-    elements.safeCount.textContent = String(result.safe.length);
-    elements.stretchCount.textContent = String(result.stretch.length);
     elements.friendlyTotal.textContent = String(result.summary.friendlyTotal);
     elements.candidateTotal.textContent = String(result.summary.candidateTotal);
     elements.bestMargin.textContent = formatSigned(result.summary.bestMargin, 2);
@@ -320,35 +382,37 @@ function setAnalysisBusy(isBusy) {
 
 function renderPending() {
   renderBoardMetrics();
-  renderMessage(elements.safeResults, "Loading local embedding model...");
-  renderMessage(elements.stretchResults, "Preparing clue index...");
-  elements.safeCount.textContent = "-";
-  elements.stretchCount.textContent = "-";
+  renderMessage(elements.recommendationResults, "Loading local embedding model...");
+  elements.recommendationCount.textContent = "-";
 }
 
 function renderError(error) {
   latestAnalysis = null;
   renderBoardMetrics();
   const message = error instanceof Error ? error.message : String(error);
-  renderMessage(elements.safeResults, "Analysis unavailable.", "error");
-  renderMessage(elements.stretchResults, "Edit a card or load a board to retry.", "error");
+  renderMessage(elements.recommendationResults, "Analysis unavailable.", "error");
+  elements.recommendationCount.textContent = "-";
   elements.analysisStatus.textContent = message;
 }
 
-function renderSuggestionTables() {
+function renderRecommendationTable() {
   if (!latestAnalysis) {
     return;
   }
 
-  renderSuggestions(
-    elements.safeResults,
-    latestAnalysis.safe,
-    "No safe 2-3 clue found for this board.",
+  const suggestions = latestAnalysis.suggestions.filter(
+    (suggestion) => suggestion.number >= targetRange.min && suggestion.number <= targetRange.max,
+  );
+  const rangeLabel = formatTargetRange(targetRange);
+  elements.recommendationCount.textContent = String(suggestions.length);
+  elements.recommendationCount.setAttribute(
+    "aria-label",
+    `${suggestions.length} recommendations for ${rangeLabel} target words`,
   );
   renderSuggestions(
-    elements.stretchResults,
-    latestAnalysis.stretch,
-    "No stretch clue found for this board.",
+    elements.recommendationResults,
+    suggestions,
+    `No clue found for ${rangeLabel} target words.`,
   );
 }
 
@@ -530,7 +594,7 @@ function setSuggestionSort(column) {
     };
   }
 
-  renderSuggestionTables();
+  renderRecommendationTable();
 }
 
 function compareSuggestionsForDisplay(left, right) {
@@ -737,6 +801,83 @@ function renderBoardCounts(cards) {
   });
 
   elements.boardCounts.replaceChildren(...indicators);
+  updateTargetRangeLimit(cards);
+}
+
+function updateTargetRangeLimit(cards) {
+  const available = cards.filter(
+    (card) => card.team === "friendly" && String(card.word ?? "").trim().length > 0,
+  ).length;
+  const nextLimit = Math.max(1, Math.min(MAX_TARGET_WORDS, available));
+  const previousRange = { ...targetRange };
+  targetRangeLimit = nextLimit;
+  targetRange.max = Math.min(targetRange.max, targetRangeLimit);
+  targetRange.min = Math.min(targetRange.min, targetRange.max);
+  renderTargetRangeControl();
+
+  if (
+    latestAnalysis &&
+    (previousRange.min !== targetRange.min || previousRange.max !== targetRange.max)
+  ) {
+    renderRecommendationTable();
+  }
+}
+
+function setTargetRange(boundary, value) {
+  if (boundary === "min") {
+    targetRange.min = Math.min(value, targetRange.max);
+  } else {
+    targetRange.max = Math.max(value, targetRange.min);
+  }
+
+  renderTargetRangeControl();
+  renderRecommendationTable();
+}
+
+function handleTargetRangeKey(boundary, event) {
+  const current = targetRange[boundary];
+  const nextValue = {
+    ArrowDown: current - 1,
+    ArrowLeft: current - 1,
+    ArrowRight: current + 1,
+    ArrowUp: current + 1,
+    End: targetRangeLimit,
+    Home: 1,
+  }[event.key];
+
+  if (nextValue === undefined) {
+    return;
+  }
+
+  event.preventDefault();
+  setTargetRange(boundary, Math.max(1, Math.min(targetRangeLimit, nextValue)));
+}
+
+function targetValueFromPointer(clientX) {
+  const bounds = elements.targetRangeControl.getBoundingClientRect();
+  const progress = Math.max(0, Math.min(1, (clientX - bounds.left) / bounds.width));
+  return Math.round(1 + progress * (targetRangeLimit - 1));
+}
+
+function renderTargetRangeControl() {
+  elements.targetMin.max = String(targetRangeLimit);
+  elements.targetMax.max = String(targetRangeLimit);
+  elements.targetMin.value = String(targetRange.min);
+  elements.targetMax.value = String(targetRange.max);
+  elements.targetRangeLimit.textContent = String(targetRangeLimit);
+  elements.targetRangeValue.textContent = formatTargetRange(targetRange);
+
+  const denominator = Math.max(1, targetRangeLimit - 1);
+  const start = ((targetRange.min - 1) / denominator) * 100;
+  const end = ((targetRange.max - 1) / denominator) * 100;
+  elements.targetRangeControl.style.setProperty("--range-start", `${start}%`);
+  elements.targetRangeControl.style.setProperty("--range-end", `${end}%`);
+}
+
+function formatTargetRange(rangeValue) {
+  return rangeValue.min === rangeValue.max
+    ? String(rangeValue.min)
+    : `${rangeValue.min}-${rangeValue.max}`;
 }
 
 function cloneBoard(cards) {
