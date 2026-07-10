@@ -21,9 +21,10 @@ export function analyzeEmbeddedBoard(board, boardVectors, clueIndex, options = {
       sourceIndex,
       word: cleanDisplayWord(card.word),
       team: card.team,
+      done: Boolean(card.done),
       vector: boardVectors[sourceIndex],
     }))
-    .filter((card) => card.word.length > 0)
+    .filter((card) => !card.done && card.word.length > 0)
     .map((card, entryIndex) => ({ ...card, entryIndex }));
 
   validateDimensions(entries, clueIndex.dimensions);

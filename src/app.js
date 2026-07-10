@@ -7,6 +7,7 @@ const TEAM_BY_ID = new Map(TEAMS.map((team) => [team.id, team]));
 const TEAM_SORT_ORDER = new Map(TEAMS.map((team, index) => [team.id, index]));
 const RESULTS_PER_SIZE = 6;
 const DEFAULT_TARGET_RANGE = Object.freeze({ min: 2, max: 4 });
+const DEFAULT_MINIMUM_WORTH = 50;
 const MAX_TARGET_WORDS = ROLE_SEQUENCE.filter((team) => team === "friendly").length;
 const BOARD_METRIC_DEFINITIONS = {
   complexity: {
@@ -77,7 +78,9 @@ let board = cloneBoard(DEFAULT_BOARD);
 let boardCollapsed = false;
 let targetRange = { ...DEFAULT_TARGET_RANGE };
 let targetRangeLimit = MAX_TARGET_WORDS;
+let minimumWorth = DEFAULT_MINIMUM_WORTH;
 let activeTargetBoundary = null;
+let flippingCardIndex = null;
 let suggestionSort = { key: "expectedNet", direction: "desc" };
 let latestAnalysis = null;
 let analyzeTimer = 0;
@@ -95,9 +98,11 @@ const elements = {
   recommendationCount: document.querySelector("#recommendation-count"),
   targetRangeControl: document.querySelector("#target-range-control"),
   targetRangeValue: document.querySelector("#target-range-value"),
-  targetRangeLimit: document.querySelector("#target-range-limit"),
+  targetCountBreakdown: document.querySelector("#target-count-breakdown"),
   targetMin: document.querySelector("#target-min"),
   targetMax: document.querySelector("#target-max"),
+  minimumWorth: document.querySelector("#minimum-worth"),
+  minimumWorthValue: document.querySelector("#minimum-worth-value"),
   friendlyTotal: document.querySelector("#friendly-total"),
   candidateTotal: document.querySelector("#candidate-total"),
   bestMargin: document.querySelector("#best-margin"),
@@ -149,6 +154,12 @@ elements.targetMin.addEventListener("input", (event) => {
 
 elements.targetMax.addEventListener("input", (event) => {
   setTargetRange("max", Number(event.target.value));
+});
+
+elements.minimumWorth.addEventListener("input", (event) => {
+  minimumWorth = Number(event.target.value);
+  renderMinimumWorthControl();
+  renderRecommendationTable();
 });
 
 elements.targetMin.addEventListener("keydown", (event) => {
@@ -228,7 +239,36 @@ function renderBoard() {
     const cardElement = document.createElement("div");
     cardElement.className = "word-card";
     cardElement.dataset.team = card.team;
+    cardElement.dataset.done = String(Boolean(card.done));
     cardElement.dataset.sourceIndex = String(sourceIndex);
+    if (sourceIndex === flippingCardIndex) {
+      cardElement.classList.add("is-flipping");
+    }
+
+    const cardWord = card.word || `word ${displayIndex + 1}`;
+    if (card.done) {
+      cardElement.classList.add("is-done");
+
+      const back = document.createElement("div");
+      back.className = "card-back";
+      const backWord = document.createElement("strong");
+      backWord.className = "card-back-word";
+      backWord.textContent = card.word;
+      const backStatus = document.createElement("span");
+      backStatus.className = "card-back-status";
+      backStatus.textContent = "Done";
+      back.append(backWord, backStatus);
+
+      const restoreButton = createCardStateButton({
+        action: "restore-card",
+        label: `Return ${cardWord} to the board`,
+        title: `Return ${cardWord} to the board`,
+        onClick: () => setCardDone(sourceIndex, false),
+      });
+      cardElement.append(back, restoreButton);
+      elements.boardGrid.append(cardElement);
+      return;
+    }
 
     const input = document.createElement("input");
     input.className = "word-input";
@@ -266,12 +306,40 @@ function renderBoard() {
       roleRow.append(roleButton);
     }
 
-    cardElement.append(input, roleRow);
+    const doneButton = createCardStateButton({
+      action: "complete-card",
+      label: `Mark ${cardWord} as done`,
+      title: `Mark ${cardWord} as done`,
+      onClick: () => setCardDone(sourceIndex, true),
+    });
+
+    cardElement.append(input, roleRow, doneButton);
     elements.boardGrid.append(cardElement);
   });
 
+  flippingCardIndex = null;
+
   renderBoardCounts(board);
   renderBoardVisibility();
+}
+
+function createCardStateButton({ action, label, title, onClick }) {
+  const button = document.createElement("button");
+  button.className = `card-state-button ${action}`;
+  button.type = "button";
+  button.setAttribute("aria-label", label);
+  button.title = title;
+  button.addEventListener("click", onClick);
+  return button;
+}
+
+function setCardDone(sourceIndex, done) {
+  board[sourceIndex] = {
+    ...board[sourceIndex],
+    done,
+  };
+  flippingCardIndex = sourceIndex;
+  render();
 }
 
 function renderBoardVisibility() {
@@ -400,19 +468,23 @@ function renderRecommendationTable() {
     return;
   }
 
-  const suggestions = latestAnalysis.suggestions.filter(
+  const qualitySuggestions = latestAnalysis.suggestions.filter(
+    (suggestion) => suggestion.worth >= minimumWorth,
+  );
+  const suggestions = qualitySuggestions.filter(
     (suggestion) => suggestion.number >= targetRange.min && suggestion.number <= targetRange.max,
   );
   const rangeLabel = formatTargetRange(targetRange);
+  renderTargetCountBreakdown(qualitySuggestions);
   elements.recommendationCount.textContent = String(suggestions.length);
   elements.recommendationCount.setAttribute(
     "aria-label",
-    `${suggestions.length} recommendations for ${rangeLabel} target words`,
+    `${suggestions.length} recommendations for ${rangeLabel} target words with Worth ${minimumWorth} or higher`,
   );
   renderSuggestions(
     elements.recommendationResults,
     suggestions,
-    `No clue found for ${rangeLabel} target words.`,
+    `No clue found for ${rangeLabel} target words with Worth ${minimumWorth} or higher.`,
   );
 }
 
@@ -769,6 +841,7 @@ function createRandomBoard() {
   return words.map((word, index) => ({
     word,
     team: roles[index],
+    done: false,
   }));
 }
 
@@ -782,8 +855,13 @@ function swapCompetitiveTeams(cards) {
 
 function renderBoardCounts(cards) {
   const counts = Object.fromEntries(TEAMS.map((team) => [team.id, 0]));
+  let doneCount = 0;
   for (const card of cards) {
-    counts[card.team] += 1;
+    if (card.done) {
+      doneCount += 1;
+    } else {
+      counts[card.team] += 1;
+    }
   }
 
   const indicators = TEAMS.map((team) => {
@@ -800,26 +878,37 @@ function renderBoardCounts(cards) {
     return indicator;
   });
 
+  if (doneCount > 0) {
+    const doneIndicator = document.createElement("span");
+    doneIndicator.className = "board-count";
+    doneIndicator.dataset.team = "done";
+    const label = document.createElement("span");
+    label.textContent = "Done";
+    const value = document.createElement("strong");
+    value.textContent = String(doneCount);
+    doneIndicator.append(label, value);
+    indicators.push(doneIndicator);
+  }
+
   elements.boardCounts.replaceChildren(...indicators);
   updateTargetRangeLimit(cards);
 }
 
 function updateTargetRangeLimit(cards) {
   const available = cards.filter(
-    (card) => card.team === "friendly" && String(card.word ?? "").trim().length > 0,
+    (card) =>
+      !card.done && card.team === "friendly" && String(card.word ?? "").trim().length > 0,
   ).length;
   const nextLimit = Math.max(1, Math.min(MAX_TARGET_WORDS, available));
-  const previousRange = { ...targetRange };
   targetRangeLimit = nextLimit;
   targetRange.max = Math.min(targetRange.max, targetRangeLimit);
   targetRange.min = Math.min(targetRange.min, targetRange.max);
   renderTargetRangeControl();
 
-  if (
-    latestAnalysis &&
-    (previousRange.min !== targetRange.min || previousRange.max !== targetRange.max)
-  ) {
+  if (latestAnalysis) {
     renderRecommendationTable();
+  } else {
+    renderTargetCountBreakdown([]);
   }
 }
 
@@ -864,7 +953,6 @@ function renderTargetRangeControl() {
   elements.targetMax.max = String(targetRangeLimit);
   elements.targetMin.value = String(targetRange.min);
   elements.targetMax.value = String(targetRange.max);
-  elements.targetRangeLimit.textContent = String(targetRangeLimit);
   elements.targetRangeValue.textContent = formatTargetRange(targetRange);
 
   const denominator = Math.max(1, targetRangeLimit - 1);
@@ -872,6 +960,51 @@ function renderTargetRangeControl() {
   const end = ((targetRange.max - 1) / denominator) * 100;
   elements.targetRangeControl.style.setProperty("--range-start", `${start}%`);
   elements.targetRangeControl.style.setProperty("--range-end", `${end}%`);
+  renderMinimumWorthControl();
+}
+
+function renderMinimumWorthControl() {
+  elements.minimumWorth.value = String(minimumWorth);
+  elements.minimumWorthValue.textContent = String(minimumWorth);
+  elements.minimumWorth.style.setProperty("--worth-progress", `${(minimumWorth / 99) * 100}%`);
+}
+
+function renderTargetCountBreakdown(suggestions) {
+  const counts = Array.from({ length: targetRangeLimit }, () => 0);
+  for (const suggestion of suggestions) {
+    if (suggestion.number <= targetRangeLimit) {
+      counts[suggestion.number - 1] += 1;
+    }
+  }
+
+  const marks = counts.map((count, index) => {
+    const targetCount = index + 1;
+    const mark = document.createElement("span");
+    mark.className = "target-count-mark";
+    mark.dataset.selected = String(
+      targetCount >= targetRange.min && targetCount <= targetRange.max,
+    );
+    mark.dataset.hasResults = String(count > 0);
+    mark.title = `${targetCount} target ${targetCount === 1 ? "word" : "words"}: ${count} ${count === 1 ? "clue" : "clues"}`;
+
+    const number = document.createElement("strong");
+    number.textContent = String(targetCount);
+    const total = document.createElement("small");
+    total.textContent = String(count);
+    mark.append(number, total);
+    return mark;
+  });
+
+  elements.targetCountBreakdown.replaceChildren(...marks);
+  elements.targetCountBreakdown.setAttribute(
+    "aria-label",
+    counts
+      .map(
+        (count, index) =>
+          `${index + 1} ${index === 0 ? "target" : "targets"}: ${count} ${count === 1 ? "clue" : "clues"}`,
+      )
+      .join("; "),
+  );
 }
 
 function formatTargetRange(rangeValue) {

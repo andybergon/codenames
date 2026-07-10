@@ -106,9 +106,31 @@
                     aria-label="Maximum target words"
                   />
                 </div>
-                <div class="range-limits" aria-hidden="true">
-                  <span>1</span>
-                  <span id="target-range-limit">9</span>
+                <div
+                  id="target-count-breakdown"
+                  class="target-count-breakdown"
+                  aria-label="Recommendations by target count"
+                ></div>
+              </div>
+              <div
+                class="worth-filter"
+                title="Minimum composite Worth score"
+              >
+                <div class="range-filter-heading">
+                  <label for="minimum-worth">Min worth</label>
+                  <output id="minimum-worth-value" for="minimum-worth">50</output>
+                </div>
+                <input
+                  id="minimum-worth"
+                  type="range"
+                  min="0"
+                  max="99"
+                  value="50"
+                  aria-label="Minimum Worth score"
+                />
+                <div class="worth-limits" aria-hidden="true">
+                  <span>0</span>
+                  <span>99</span>
                 </div>
               </div>
               <span id="recommendation-count" class="pill" aria-label="Recommendation count"></span>

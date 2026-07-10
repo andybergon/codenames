@@ -27,6 +27,11 @@ assert.ok(applyDangerPenalty(0.4, "enemy") > applyDangerPenalty(0.4, "neutral"))
 assert.ok(applyDangerPenalty(0.4, "assassin") > applyDangerPenalty(0.4, "enemy"));
 
 const result = analyzeEmbeddedBoard(DEFAULT_BOARD, boardVectors, clueIndex, { limit: 8 });
+const boardWithDoneCards = DEFAULT_BOARD.map((card, index) => ({
+  ...card,
+  done: index === 0 || index === 9,
+}));
+const doneResult = analyzeEmbeddedBoard(boardWithDoneCards, boardVectors, clueIndex, { limit: 8 });
 const redBoard = DEFAULT_BOARD.map((card) => ({
   ...card,
   team: card.team === "friendly" ? "enemy" : card.team === "enemy" ? "friendly" : card.team,
@@ -44,6 +49,15 @@ assert.deepEqual(result.suggestions, [...result.safe, ...result.stretch]);
 const targetSizes = new Set(result.suggestions.map((suggestion) => suggestion.number));
 assert.ok([1, 2, 3, 4].every((size) => targetSizes.has(size)));
 assert.ok(Math.max(...targetSizes) <= 9);
+assert.equal(doneResult.summary.friendlyTotal, result.summary.friendlyTotal - 1);
+assert.ok(
+  doneResult.suggestions.every((suggestion) =>
+    suggestion.targets.every((target) => target.word !== "MOON"),
+  ),
+);
+assert.ok(
+  doneResult.suggestions.every((suggestion) => suggestion.closestDanger.word !== "MARS"),
+);
 assert.ok(boardMetrics.complexity >= 0 && boardMetrics.complexity <= 100);
 assert.ok(boardMetrics.blueEase >= 0 && boardMetrics.blueEase <= 100);
 assert.ok(boardMetrics.redEase >= 0 && boardMetrics.redEase <= 100);
