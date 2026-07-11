@@ -843,6 +843,23 @@ h3 {
   align-items: flex-end;
 }
 
+.recommendation-title-row,
+.recommendation-table-controls {
+  display: flex;
+  align-items: center;
+}
+
+.recommendation-title-row {
+  gap: 8px;
+}
+
+.recommendation-table-controls {
+  justify-content: flex-end;
+  gap: 4px;
+  margin-top: 6px;
+  padding-bottom: 2px;
+}
+
 .recommendation-toolbar,
 .range-filter-heading,
 .worth-limits {
@@ -871,12 +888,6 @@ h3 {
 
 .mobile-sort-control {
   display: none;
-}
-
-.metrics-display-controls {
-  display: flex;
-  align-items: center;
-  gap: 4px;
 }
 
 .mobile-metric-help {
@@ -1680,16 +1691,8 @@ h3 {
     text-transform: none;
   }
 
-  .metrics-display-controls {
-    justify-self: start;
-  }
-
   .mobile-metric-help {
     display: inline-flex;
-  }
-
-  #recommendation-count {
-    justify-self: end;
   }
 
   .suggestion-table-wrap {

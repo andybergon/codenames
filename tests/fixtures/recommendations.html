@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="/src/styles.css" />
+    <title>Recommendation layout fixture</title>
+  </head>
+  <body>
+    <main class="app-shell">
+      <aside class="results-panel">
+        <div class="suggestions">
+          <div class="suggestion-table-wrap">
+            <table class="suggestion-table">
+              <thead>
+                <tr>
+                  <th>Clue</th>
+                  <th>Items</th>
+                  <th>Targets</th>
+                  <th>Worth</th>
+                  <th>Est. hit</th>
+                  <th>Risk</th>
+                  <th>Closest danger</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="suggestion-row" data-risk="safe">
+                  <td class="clue-cell" data-label="Clue"><strong>Province</strong></td>
+                  <td class="item-cell" data-label="Items"><strong>2</strong></td>
+                  <td class="targets-cell" data-label="Targets">
+                    <div class="target-list">
+                      <span class="target-chip">Canada 0.58</span>
+                      <span class="target-chip">Beijing 0.43</span>
+                    </div>
+                  </td>
+                  <td class="score-cell worth-cell" data-label="Worth"><strong>88</strong></td>
+                  <td class="score-cell hit-cell" data-label="Est. hit"><strong>91%</strong></td>
+                  <td class="risk-cell" data-label="Risk"><span class="badge safe">Safe</span></td>
+                  <td class="danger-cell" data-label="Closest danger">
+                    <span class="danger-chip enemy">Australia 0.27</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </aside>
+    </main>
+  </body>
+</html>

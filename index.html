@@ -167,8 +167,15 @@
 
         <aside class="results-panel" aria-label="Clue recommendations">
           <div class="panel-header recommendation-header">
-            <div>
-              <h2>Recommendations</h2>
+            <div class="recommendation-title">
+              <div class="recommendation-title-row">
+                <h2>Recommendations</h2>
+                <span
+                  id="recommendation-count"
+                  class="pill"
+                  aria-label="Recommendation count"
+                ></span>
+              </div>
               <p id="analysis-status" class="muted"></p>
             </div>
             <div class="recommendation-toolbar">
@@ -252,18 +259,17 @@
                   <option value="margin:asc" data-advanced>Margin: low first</option>
                 </select>
               </label>
-              <div class="metrics-display-controls">
-                <span id="mobile-metric-help" class="mobile-metric-help"></span>
-                <label
-                  class="advanced-metrics-toggle"
-                  title="Show Net, Margin, and Fit/cohesion columns"
-                >
-                  <input id="advanced-metrics" type="checkbox" />
-                  <span>Advanced</span>
-                </label>
-              </div>
-              <span id="recommendation-count" class="pill" aria-label="Recommendation count"></span>
             </div>
+          </div>
+          <div class="recommendation-table-controls">
+            <span id="mobile-metric-help" class="mobile-metric-help"></span>
+            <label
+              class="advanced-metrics-toggle"
+              title="Show Net, Margin, and Fit/cohesion columns"
+            >
+              <input id="advanced-metrics" type="checkbox" />
+              <span>Advanced</span>
+            </label>
           </div>
           <div id="recommendation-results" class="suggestions"></div>
         </aside>

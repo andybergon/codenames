@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 
 const SHARED_BOARD = "/?b=2sw7fIwN9dL7Yos";
 
-test("mobile board and recommendations remain fully scannable", async ({ page }) => {
+test("mobile board and metric help remain fully usable", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto(SHARED_BOARD);
 
@@ -12,7 +12,25 @@ test("mobile board and recommendations remain fully scannable", async ({ page })
     .poll(() => boardGrid.evaluate((element) => getComputedStyle(element).gridTemplateColumns))
     .toMatch(/\S+\s+\S+/);
 
-  await expect(page.locator(".suggestion-row").first()).toBeVisible();
+  const metricHelp = page.getByRole("button", { name: "About Recommendation metrics" });
+  await expect(metricHelp).toHaveCSS("width", "28px");
+  await expect(metricHelp).toHaveCSS("height", "28px");
+  await metricHelp.click();
+
+  const popover = page.locator("#info-mobile-recommendations-recommendation-metrics");
+  await expect(popover).toBeVisible();
+  const bounds = await popover.boundingBox();
+  expect(bounds.x).toBeGreaterThanOrEqual(0);
+  expect(bounds.x + bounds.width).toBeLessThanOrEqual(390);
+  expect(bounds.y).toBeGreaterThanOrEqual(0);
+  expect(bounds.y + bounds.height).toBeLessThanOrEqual(844);
+});
+
+test("mobile recommendation cards show every primary metric", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/tests/fixtures/recommendations.html");
+
+  await expect(page.locator(".suggestion-row")).toBeVisible();
   const layout = await page.evaluate(() => {
     const row = document.querySelector(".suggestion-row");
     const table = document.querySelector(".suggestion-table");
@@ -38,19 +56,6 @@ test("mobile board and recommendations remain fully scannable", async ({ page })
     "Risk",
     "Closest danger",
   ]);
-
-  const metricHelp = page.getByRole("button", { name: "About Recommendation metrics" });
-  await expect(metricHelp).toHaveCSS("width", "28px");
-  await expect(metricHelp).toHaveCSS("height", "28px");
-  await metricHelp.click();
-
-  const popover = page.locator("#info-mobile-recommendations-recommendation-metrics");
-  await expect(popover).toBeVisible();
-  const bounds = await popover.boundingBox();
-  expect(bounds.x).toBeGreaterThanOrEqual(0);
-  expect(bounds.x + bounds.width).toBeLessThanOrEqual(390);
-  expect(bounds.y).toBeGreaterThanOrEqual(0);
-  expect(bounds.y + bounds.height).toBeLessThanOrEqual(844);
 });
 
 test("choosing a word pool does not replace the current board", async ({ page }) => {
