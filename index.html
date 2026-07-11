@@ -4,12 +4,35 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Codenames Trainer</title>
+    <script>
+      (() => {
+        const storageKey = "codenames-theme";
+        let setting = "system";
+        try {
+          const stored = window.localStorage.getItem(storageKey);
+          if (["system", "light", "dark"].includes(stored)) setting = stored;
+        } catch {}
+        const resolved =
+          setting === "system"
+            ? matchMedia("(prefers-color-scheme: dark)").matches
+              ? "dark"
+              : "light"
+            : setting;
+        document.documentElement.dataset.theme = resolved;
+        document.documentElement.dataset.themeSetting = setting;
+      })();
+    </script>
     <link rel="stylesheet" href="./src/styles.css" />
   </head>
   <body>
     <main class="app-shell">
       <header class="topbar">
         <h1>Codenames Clue Trainer</h1>
+        <div class="theme-switcher" role="group" aria-label="Color theme">
+          <button type="button" data-theme-value="system" aria-pressed="true">System</button>
+          <button type="button" data-theme-value="light" aria-pressed="false">Light</button>
+          <button type="button" data-theme-value="dark" aria-pressed="false">Dark</button>
+        </div>
       </header>
 
       <section class="workspace">

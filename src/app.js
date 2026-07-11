@@ -8,6 +8,8 @@ const TEAM_SORT_ORDER = new Map(TEAMS.map((team, index) => [team.id, index]));
 const RESULTS_PER_SIZE = 6;
 const DEFAULT_TARGET_RANGE = Object.freeze({ min: 2, max: 4 });
 const DEFAULT_MINIMUM_WORTH = 50;
+const THEME_STORAGE_KEY = "codenames-theme";
+const THEME_VALUES = new Set(["system", "light", "dark"]);
 const MAX_TARGET_WORDS = ROLE_SEQUENCE.filter((team) => team === "friendly").length;
 const BOARD_METRIC_DEFINITIONS = {
   complexity: {
@@ -114,7 +116,20 @@ const elements = {
   orderRandom: document.querySelector("#order-random"),
   orderGrouped: document.querySelector("#order-grouped"),
   toggleBoard: document.querySelector("#toggle-board"),
+  themeButtons: [...document.querySelectorAll("[data-theme-value]")],
 };
+
+const systemTheme = window.matchMedia("(prefers-color-scheme: dark)");
+
+for (const button of elements.themeButtons) {
+  button.addEventListener("click", () => setTheme(button.dataset.themeValue));
+}
+
+systemTheme.addEventListener("change", () => {
+  if (document.documentElement.dataset.themeSetting === "system") {
+    applyTheme("system");
+  }
+});
 
 elements.loadSample.addEventListener("click", () => {
   board = cloneBoard(DEFAULT_BOARD);
@@ -223,11 +238,41 @@ document.addEventListener("keydown", (event) => {
   }
 });
 
+applyTheme(readThemeSetting());
 render();
 
 function render() {
   renderBoard();
   void runAnalysis();
+}
+
+function readThemeSetting() {
+  const setting = document.documentElement.dataset.themeSetting;
+  return THEME_VALUES.has(setting) ? setting : "system";
+}
+
+function setTheme(setting) {
+  if (!THEME_VALUES.has(setting)) {
+    return;
+  }
+
+  try {
+    window.localStorage.setItem(THEME_STORAGE_KEY, setting);
+  } catch {
+    // The selected theme still applies for this page when storage is unavailable.
+  }
+  applyTheme(setting);
+}
+
+function applyTheme(setting) {
+  const resolved = setting === "system" ? (systemTheme.matches ? "dark" : "light") : setting;
+  document.documentElement.dataset.theme = resolved;
+  document.documentElement.dataset.themeSetting = setting;
+  document.documentElement.style.colorScheme = resolved;
+
+  for (const button of elements.themeButtons) {
+    button.setAttribute("aria-pressed", String(button.dataset.themeValue === setting));
+  }
 }
 
 function renderBoard() {
