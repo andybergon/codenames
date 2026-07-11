@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import {
   BOARD_ORDER,
@@ -13,7 +14,13 @@ import {
   applyDangerPenalty,
   calculateBoardMetrics,
 } from "../src/model.js";
-import { DEFAULT_BOARD } from "../src/word-data.js";
+import {
+  DEFAULT_BOARD,
+  EXTENDED_WORDS,
+  LEGACY_WORD_BANK,
+  OFFICIAL_WORDS,
+  WORD_SET,
+} from "../src/word-data.js";
 
 const rawIndex = JSON.parse(await readFile("public/data/clue-embeddings.json", "utf8"));
 const fixture = JSON.parse(
@@ -74,15 +81,58 @@ const sharedSeed = "AQIDBAUGBwg";
 const generatedBoard = createGeneratedBoardState(sharedSeed, BOARD_ORDER.RANDOM);
 const repeatedGeneratedBoard = createGeneratedBoardState(sharedSeed, BOARD_ORDER.RANDOM);
 assert.deepEqual(generatedBoard, repeatedGeneratedBoard);
+assert.equal(OFFICIAL_WORDS.length, 400);
+assert.equal(new Set(OFFICIAL_WORDS).size, 400);
+assert.equal(
+  createHash("sha256").update(OFFICIAL_WORDS.join("\n")).digest("hex"),
+  "1bfb51f84543c5253f838e678b683dad56c7251ae5693428311faa378d5e8d54",
+);
+assert.ok(
+  ["ICE CREAM", "LOCH NESS", "NEW YORK", "SCUBA DIVER"].every((word) =>
+    OFFICIAL_WORDS.includes(word),
+  ),
+);
+assert.ok(!OFFICIAL_WORDS.includes("CASTLE"));
+assert.equal(EXTENDED_WORDS.length, 407);
+assert.equal(new Set(EXTENDED_WORDS).size, 407);
+assert.equal(LEGACY_WORD_BANK.length, 366);
+assert.ok(generatedBoard.cards.every((card) => OFFICIAL_WORDS.includes(card.word)));
+assert.equal(generatedBoard.wordSet, WORD_SET.OFFICIAL);
+
+const extendedBoard = createGeneratedBoardState(
+  sharedSeed,
+  BOARD_ORDER.RANDOM,
+  WORD_SET.EXTENDED,
+);
+assert.equal(extendedBoard.wordSet, WORD_SET.EXTENDED);
+assert.ok(extendedBoard.cards.every((card) => EXTENDED_WORDS.includes(card.word)));
 
 const seedCode = encodeBoardParam(generatedBoard);
-assert.equal(seedCode.length, 14);
+assert.equal(seedCode, `2s${sharedSeed}or`);
+assert.equal(seedCode.length, 15);
 assert.deepEqual(decodeBoardParam(seedCode), generatedBoard);
+assert.equal(encodeBoardParam(extendedBoard), `2s${sharedSeed}xr`);
 assert.equal(encodeBoardParam(createSampleBoardState()), null);
 assert.equal(
   encodeBoardParam(createSampleBoardState(BOARD_ORDER.RANDOM)),
   "1pr",
 );
+
+const legacySeedCode = `1s${sharedSeed}r`;
+const legacyBoard = decodeBoardParam(legacySeedCode);
+assert.deepEqual(
+  legacyBoard.cards.slice(0, 3).map((card) => card.word),
+  ["HOOD", "CRASH", "PANTS"],
+);
+assert.equal(legacyBoard.source.type, "legacy-seed");
+assert.equal(encodeBoardParam(legacyBoard), legacySeedCode);
+
+const legacyExplicitBoard = decodeBoardParam(
+  "1e_8AC0NVU1RPTSBXT1JESUN4tgZiFEOBQOMOqH2DpyWekFjqJUMQdnPSOLcOKQQe1pMesQ3mVEKWeBuHDZJRBAA",
+);
+assert.equal(legacyExplicitBoard.cards[0].word, "CUSTOM WORD");
+assert.equal(legacyExplicitBoard.cards[0].team, "enemy");
+assert.equal(legacyExplicitBoard.wordSet, WORD_SET.EXTENDED);
 
 const customizedBoard = structuredClone(generatedBoard);
 customizedBoard.cards[0].word = "CUSTOM WORD";
@@ -91,12 +141,13 @@ customizedBoard.cards[0].done = true;
 customizedBoard.source = { type: "explicit" };
 const explicitCode = encodeBoardParam(customizedBoard);
 const decodedCustomBoard = decodeBoardParam(explicitCode);
-assert.ok(explicitCode.startsWith("1e"));
+assert.ok(explicitCode.startsWith("2eo"));
 assert.equal(decodedCustomBoard.cards[0].word, "CUSTOM WORD");
 assert.equal(decodedCustomBoard.cards[0].team, "enemy");
 assert.equal(decodedCustomBoard.cards[0].done, false);
 assert.deepEqual(decodedCustomBoard.randomLayoutOrder, customizedBoard.randomLayoutOrder);
 assert.equal(decodedCustomBoard.order, customizedBoard.order);
+assert.equal(decodedCustomBoard.wordSet, WORD_SET.OFFICIAL);
 assert.throws(() => decodeBoardParam("not-a-board"), /Unsupported board code/);
 
 console.log(

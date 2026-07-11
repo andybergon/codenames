@@ -61,7 +61,7 @@ export const DEFAULT_BOARD = [
   ["BLACKHOLE", "assassin"],
 ].map(([word, team]) => ({ word, team }));
 
-export const WORD_BANK = [
+export const LEGACY_WORD_BANK = [
   "AIR",
   "ALIEN",
   "AMBULANCE",
@@ -429,6 +429,107 @@ export const WORD_BANK = [
   "WORM",
   "YARD",
 ].sort();
+
+const LEGACY_ONLY_WORDS = new Set([
+  "ANCHOR",
+  "ARMY",
+  "BLACKHOLE",
+  "CASTLE",
+  "LOCHNESS",
+  "ROCKET",
+  "SCUBA",
+  "SUBMARINE",
+  "WHEEL",
+]);
+
+const OFFICIAL_WORDS_MISSING_FROM_LEGACY = [
+  "AFRICA",
+  "AGENT",
+  "ALPS",
+  "AMAZON",
+  "AMERICA",
+  "ARM",
+  "AUSTRALIA",
+  "BAND",
+  "BATTERY",
+  "BEIJING",
+  "BELL",
+  "BERMUDA",
+  "BOLT",
+  "BOOM",
+  "BUGLE",
+  "CENTAUR",
+  "COLD",
+  "CONTRACT",
+  "COOK",
+  "COTTON",
+  "CZECH",
+  "DICE",
+  "ENGLAND",
+  "FORCE",
+  "HEAD",
+  "HORSESHOE",
+  "ICE CREAM",
+  "LOCH NESS",
+  "LOCK",
+  "NET",
+  "NEW YORK",
+  "NUT",
+  "POUND",
+  "PRESS",
+  "PRINCESS",
+  "ROW",
+  "SCALE",
+  "SCUBA DIVER",
+  "SNOWMAN",
+  "SOCK",
+  "SOLDIER",
+  "SWITCH",
+  "WHIP",
+];
+
+export const OFFICIAL_WORDS = [
+  ...LEGACY_WORD_BANK.filter((word) => !LEGACY_ONLY_WORDS.has(word)),
+  ...OFFICIAL_WORDS_MISSING_FROM_LEGACY,
+].sort();
+
+export const EXTENDED_ADDITIONS = [
+  "ANCHOR",
+  "ARMY",
+  "BLACKHOLE",
+  "CASTLE",
+  "ROCKET",
+  "SUBMARINE",
+  "WHEEL",
+];
+
+export const EXTENDED_WORDS = [...OFFICIAL_WORDS, ...EXTENDED_ADDITIONS].sort();
+
+export const WORD_SET = Object.freeze({
+  OFFICIAL: "official",
+  EXTENDED: "extended",
+});
+
+export const WORD_SET_OPTIONS = Object.freeze({
+  [WORD_SET.OFFICIAL]: Object.freeze({
+    id: WORD_SET.OFFICIAL,
+    label: "Official",
+    words: OFFICIAL_WORDS,
+  }),
+  [WORD_SET.EXTENDED]: Object.freeze({
+    id: WORD_SET.EXTENDED,
+    label: "Extended",
+    words: EXTENDED_WORDS,
+  }),
+});
+
+export function getWordsForSet(wordSet) {
+  const option = WORD_SET_OPTIONS[wordSet];
+  if (!option) {
+    throw new Error(`Unknown word set: ${wordSet}`);
+  }
+  return option.words;
+}
 
 export const CLUE_BANK = [
   "account",

@@ -10,9 +10,10 @@ A local-first Codenames clue trainer. It embeds the board, searches a 3,000-word
 - **Negative scoring:** the weakest target similarity must beat the highest role-weighted neutral, enemy, or assassin similarity.
 - **Outputs:** one sortable recommendation table with per-target-count availability, a 1-to-9 target range, and a minimum Worth filter; defaults are 2-4 targets and Worth 50.
 - **Board metrics:** a symmetric difficulty score and Blue-vs-Red edge computed by scoring both team perspectives.
+- **Board words:** generated boards default to the 400-word original English base-game set; Extended adds a small trainer-specific set.
 - **Played cards:** mark cards done to flip them in place; done cards are excluded from role counts, scoring, clue legality, and later recommendations.
 - **Theme:** follow the system appearance or persist an explicit light or dark mode.
-- **Shareable boards:** versioned `?b=` links reproduce words, roles, the stable random layout, and the selected layout mode; generated boards use short seeds while edited boards fall back to compact explicit payloads.
+- **Shareable boards:** versioned `?b=` links reproduce words, roles, word set, the stable random layout, and the selected layout mode; generated boards use short seeds while edited boards fall back to compact explicit payloads.
 
 The model download happens on first use and is then cached by the browser. Board words are processed locally and are not sent to an application server.
 
@@ -36,6 +37,14 @@ npm run check
 ```
 
 The smoke test uses a checked-in sample-board embedding fixture, so normal checks do not redownload the model.
+
+## Board Word Sets
+
+**Official** is the default for generated boards and contains 400 unique words from the original English base game, including the printed multi-word entries `ICE CREAM`, `LOCH NESS`, `NEW YORK`, and `SCUBA DIVER`. The list is based on a [public transcription of the original set](https://gist.github.com/siemanko/6cc17ee2a253089969b1b904660b4097), with obvious spelling transcription errors normalized.
+
+**Extended** is a strict superset. It currently adds seven words already used by this trainer: `ANCHOR`, `ARMY`, `BLACKHOLE`, `CASTLE`, `ROCKET`, `SUBMARINE`, and `WHEEL`. The fixed Sample board is independent of the generated-board set and can contain these additions.
+
+New share links encode the selected word set. Existing v1 links still use the historical 366-word pool, so previously shared seeded and edited boards remain reproducible.
 
 ## Embedding Pipeline
 

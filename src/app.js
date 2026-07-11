@@ -10,7 +10,7 @@ import {
 import { loadClueIndex } from "./clue-index.js";
 import { EMBEDDING_MODEL, centerEmbeddings, embedTerms } from "./embeddings.js";
 import { analyzeEmbeddedBoard, calculateBoardMetrics } from "./model.js";
-import { ROLE_SEQUENCE, TEAMS } from "./word-data.js";
+import { ROLE_SEQUENCE, TEAMS, WORD_SET } from "./word-data.js";
 
 const TEAM_BY_ID = new Map(TEAMS.map((team) => [team.id, team]));
 const TEAM_SORT_ORDER = new Map(TEAMS.map((team, index) => [team.id, index]));
@@ -89,6 +89,7 @@ const initialBoardState = readInitialBoardState();
 let board = cloneBoard(initialBoardState.cards);
 let boardCollapsed = false;
 let boardOrder = initialBoardState.order;
+let boardWordSet = initialBoardState.wordSet;
 let randomLayoutOrder = [...initialBoardState.randomLayoutOrder];
 let boardSource = { ...initialBoardState.source };
 let targetRange = { ...DEFAULT_TARGET_RANGE };
@@ -133,6 +134,7 @@ const elements = {
   randomBoard: document.querySelector("#random-board"),
   orderRandom: document.querySelector("#order-random"),
   orderGrouped: document.querySelector("#order-grouped"),
+  wordSetButtons: [...document.querySelectorAll("[data-word-set-value]")],
   shareBoard: document.querySelector("#share-board"),
   toggleBoard: document.querySelector("#toggle-board"),
   themeButtons: [...document.querySelectorAll("[data-theme-value]")],
@@ -162,10 +164,18 @@ elements.loadSample.addEventListener("click", () => {
 });
 
 elements.randomBoard.addEventListener("click", () => {
-  loadBoardState(createGeneratedBoardState(createRandomSeed()));
+  loadBoardState(
+    createGeneratedBoardState(createRandomSeed(), BOARD_ORDER.SORTED, boardWordSet),
+  );
   syncBoardUrl();
   render();
 });
+
+for (const button of elements.wordSetButtons) {
+  button.addEventListener("click", () => {
+    switchBoardWordSet(button.dataset.wordSetValue);
+  });
+}
 
 elements.orderRandom.addEventListener("click", () => {
   if (boardOrder === BOARD_ORDER.RANDOM) {
@@ -332,6 +342,7 @@ function syncBoardUrl() {
       cards: board,
       randomLayoutOrder,
       order: boardOrder,
+      wordSet: boardWordSet,
       source: boardSource,
     });
     const url = new URL(window.location.href);
@@ -507,6 +518,7 @@ function renderBoard() {
 
   renderBoardCounts(board);
   renderBoardOrderControl();
+  renderBoardWordSetControl();
   renderBoardVisibility();
 }
 
@@ -519,6 +531,32 @@ function renderBoardOrderControl() {
     "aria-pressed",
     String(boardOrder === BOARD_ORDER.RANDOM),
   );
+}
+
+function renderBoardWordSetControl() {
+  for (const button of elements.wordSetButtons) {
+    button.setAttribute(
+      "aria-pressed",
+      String(button.dataset.wordSetValue === boardWordSet),
+    );
+  }
+}
+
+function switchBoardWordSet(nextWordSet) {
+  if (
+    nextWordSet === boardWordSet ||
+    (nextWordSet !== WORD_SET.OFFICIAL && nextWordSet !== WORD_SET.EXTENDED)
+  ) {
+    return;
+  }
+
+  const seed =
+    boardSource.type === "seed" || boardSource.type === "legacy-seed"
+      ? boardSource.seed
+      : createRandomSeed();
+  loadBoardState(createGeneratedBoardState(seed, boardOrder, nextWordSet));
+  syncBoardUrl();
+  render();
 }
 
 function createCardStateButton({ action, label, title, onClick }) {
@@ -1042,6 +1080,7 @@ function loadBoardState(state) {
   board = cloneBoard(state.cards);
   randomLayoutOrder = [...state.randomLayoutOrder];
   boardOrder = state.order;
+  boardWordSet = state.wordSet;
   boardSource = { ...state.source };
   board =
     boardOrder === BOARD_ORDER.RANDOM

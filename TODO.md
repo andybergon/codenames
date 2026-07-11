@@ -1,5 +1,9 @@
 # TODO
 
+- Curate the Extended board word set.
+  - Current: Official 400 plus seven non-duplicate words retained from the trainer's historical pool.
+  - Next: define inclusion criteria, review themed and regional coverage, and test additions for clue quality before expanding the set.
+
 - Evaluate a more game-specific semantic embedding or reranker.
   - Current: mean-centered `all-MiniLM-L6-v2` provides general semantic similarity but is not trained on Codenames associations.
   - Next: create a small board-and-clue evaluation set, then compare stronger embedding models and an embedding-shortlist reranker on top-k clue quality, latency, and browser size.
