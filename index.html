@@ -231,6 +231,27 @@
                   <span>99</span>
                 </div>
               </div>
+              <label class="mobile-sort-control" for="mobile-suggestion-sort">
+                <span>Sort</span>
+                <select id="mobile-suggestion-sort">
+                  <option value="worth:desc">Worth: high first</option>
+                  <option value="worth:asc">Worth: low first</option>
+                  <option value="number:desc">Items: most first</option>
+                  <option value="number:asc">Items: fewest first</option>
+                  <option value="success:desc">Hit: high first</option>
+                  <option value="success:asc">Hit: low first</option>
+                  <option value="risk:desc">Risk: safest first</option>
+                  <option value="risk:asc">Risk: riskiest first</option>
+                  <option value="danger:asc">Danger: low first</option>
+                  <option value="danger:desc">Danger: high first</option>
+                  <option value="clue:asc">Clue: A-Z</option>
+                  <option value="clue:desc">Clue: Z-A</option>
+                  <option value="expectedNet:desc" data-advanced>Net: high first</option>
+                  <option value="expectedNet:asc" data-advanced>Net: low first</option>
+                  <option value="margin:desc" data-advanced>Margin: high first</option>
+                  <option value="margin:asc" data-advanced>Margin: low first</option>
+                </select>
+              </label>
               <label
                 class="advanced-metrics-toggle"
                 title="Show Net, Margin, and Fit/cohesion columns"

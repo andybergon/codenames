@@ -869,6 +869,10 @@ h3 {
   cursor: pointer;
 }
 
+.mobile-sort-control {
+  display: none;
+}
+
 .advanced-metrics-toggle:hover,
 .advanced-metrics-toggle:has(input:checked) {
   border-color: var(--ink);
@@ -1619,7 +1623,7 @@ h3 {
   .recommendation-toolbar {
     display: grid;
     width: 100%;
-    grid-template-columns: minmax(0, 1fr) auto auto;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     align-items: end;
   }
 
@@ -1631,6 +1635,164 @@ h3 {
   .worth-filter {
     width: auto;
     margin-left: 0;
+  }
+
+  .mobile-sort-control {
+    display: grid;
+    min-width: 0;
+    gap: 5px;
+    color: var(--muted);
+    font-size: 0.68rem;
+    font-weight: 900;
+    line-height: 1;
+    text-transform: uppercase;
+  }
+
+  .mobile-sort-control select {
+    width: 100%;
+    min-height: 30px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 0 26px 0 8px;
+    background: var(--panel);
+    color: var(--ink);
+    font: inherit;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+
+  .advanced-metrics-toggle {
+    justify-self: start;
+  }
+
+  #recommendation-count {
+    justify-self: end;
+  }
+
+  .suggestion-table-wrap {
+    overflow: visible;
+  }
+
+  .suggestion-table,
+  .suggestion-table.is-advanced {
+    display: block;
+    min-width: 0;
+    border-spacing: 0;
+  }
+
+  .suggestion-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .suggestion-table tbody {
+    display: grid;
+    gap: 8px;
+  }
+
+  .suggestion-row {
+    display: grid;
+    overflow: hidden;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    grid-template-areas:
+      "clue items worth"
+      "targets targets targets"
+      "hit risk risk"
+      "danger danger danger"
+      "net margin semantics";
+    border: 1px solid var(--line);
+    border-left: 4px solid var(--tan);
+    border-radius: 7px;
+    background: var(--surface);
+  }
+
+  .suggestion-row[data-risk="safe"] {
+    border-left-color: var(--green);
+  }
+
+  .suggestion-row[data-risk="risky"] {
+    border-left-color: var(--orange);
+  }
+
+  .suggestion-table td,
+  .suggestion-table td:first-child,
+  .suggestion-table td:last-child {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 4px;
+    border: 0;
+    border-radius: 0;
+    padding: 7px 8px;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .suggestion-row:hover td {
+    background: transparent;
+  }
+
+  .suggestion-table td::before {
+    color: var(--muted);
+    content: attr(data-label);
+    font-size: 0.58rem;
+    font-weight: 900;
+    line-height: 1;
+    text-transform: uppercase;
+  }
+
+  .clue-cell {
+    grid-area: clue;
+  }
+
+  .clue-cell::before {
+    display: none;
+  }
+
+  .item-cell {
+    grid-area: items;
+  }
+
+  .targets-cell {
+    grid-area: targets;
+    border-top: 1px solid var(--hairline) !important;
+  }
+
+  .worth-cell {
+    grid-area: worth;
+  }
+
+  .net-cell {
+    grid-area: net;
+  }
+
+  .hit-cell {
+    grid-area: hit;
+  }
+
+  .risk-cell {
+    grid-area: risk;
+    align-items: flex-end !important;
+  }
+
+  .danger-cell {
+    grid-area: danger;
+    border-top: 1px solid var(--hairline) !important;
+  }
+
+  .margin-cell {
+    grid-area: margin;
+  }
+
+  .semantics-cell {
+    grid-area: semantics;
   }
 
   .board-grid {

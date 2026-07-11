@@ -135,6 +135,7 @@ const elements = {
   targetMax: document.querySelector("#target-max"),
   minimumWorth: document.querySelector("#minimum-worth"),
   minimumWorthValue: document.querySelector("#minimum-worth-value"),
+  mobileSuggestionSort: document.querySelector("#mobile-suggestion-sort"),
   advancedMetrics: document.querySelector("#advanced-metrics"),
   worthDistribution: document.querySelector("#worth-distribution"),
   friendlyTotal: document.querySelector("#friendly-total"),
@@ -232,6 +233,12 @@ elements.targetMax.addEventListener("input", (event) => {
 elements.minimumWorth.addEventListener("input", (event) => {
   minimumWorth = Number(event.target.value);
   renderMinimumWorthControl();
+  renderRecommendationTable();
+});
+
+elements.mobileSuggestionSort.addEventListener("change", (event) => {
+  const [key, direction] = event.target.value.split(":");
+  suggestionSort = { key, direction };
   renderRecommendationTable();
 });
 
@@ -737,6 +744,7 @@ function renderRecommendationTable() {
     (suggestion) => suggestion.worth >= minimumWorth,
   );
   const rangeLabel = formatTargetRange(targetRange);
+  renderMobileSortControl();
   renderWorthDistribution(rangeSuggestions);
   renderTargetCountBreakdown(qualitySuggestions);
   elements.recommendationCount.textContent = String(suggestions.length);
@@ -749,6 +757,14 @@ function renderRecommendationTable() {
     suggestions,
     `No clue found for ${rangeLabel} target words with Worth ${minimumWorth} or higher.`,
   );
+}
+
+function renderMobileSortControl() {
+  elements.mobileSuggestionSort.value = `${suggestionSort.key}:${suggestionSort.direction}`;
+  for (const option of elements.mobileSuggestionSort.querySelectorAll("[data-advanced]")) {
+    option.hidden = !showAdvancedMetrics;
+    option.disabled = !showAdvancedMetrics;
+  }
 }
 
 function renderBoardMetrics(metrics = null) {
