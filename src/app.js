@@ -1,8 +1,16 @@
-import { Monitor, Moon, Sun, createIcons } from "lucide";
+import { Check, Monitor, Moon, Share2, Sun, createIcons } from "lucide";
+import {
+  BOARD_ORDER,
+  createGeneratedBoardState,
+  createRandomSeed,
+  createSampleBoardState,
+  decodeBoardParam,
+  encodeBoardParam,
+} from "./board-share.js";
 import { loadClueIndex } from "./clue-index.js";
 import { EMBEDDING_MODEL, centerEmbeddings, embedTerms } from "./embeddings.js";
 import { analyzeEmbeddedBoard, calculateBoardMetrics } from "./model.js";
-import { DEFAULT_BOARD, ROLE_SEQUENCE, TEAMS, WORD_BANK } from "./word-data.js";
+import { ROLE_SEQUENCE, TEAMS } from "./word-data.js";
 
 const TEAM_BY_ID = new Map(TEAMS.map((team) => [team.id, team]));
 const TEAM_SORT_ORDER = new Map(TEAMS.map((team, index) => [team.id, index]));
@@ -77,9 +85,12 @@ const RISK_SORT_VALUE = {
   risky: 1,
 };
 
-let board = cloneBoard(DEFAULT_BOARD);
+const initialBoardState = readInitialBoardState();
+let board = cloneBoard(initialBoardState.cards);
 let boardCollapsed = false;
-let boardOrder = "grouped";
+let boardOrder = initialBoardState.order;
+let randomLayoutOrder = [...initialBoardState.randomLayoutOrder];
+let boardSource = { ...initialBoardState.source };
 let targetRange = { ...DEFAULT_TARGET_RANGE };
 let targetRangeLimit = MAX_TARGET_WORDS;
 let minimumWorth = DEFAULT_MINIMUM_WORTH;
@@ -91,6 +102,10 @@ let analyzeTimer = 0;
 let analysisRun = 0;
 let hasAnalysis = false;
 let clueIndexPromise;
+let shareFeedbackTimer = 0;
+
+board =
+  boardOrder === BOARD_ORDER.RANDOM ? sortBoardByRandomLayout(board) : sortBoardByRole(board);
 
 const elements = {
   boardGrid: document.querySelector("#board-grid"),
@@ -107,6 +122,7 @@ const elements = {
   targetMax: document.querySelector("#target-max"),
   minimumWorth: document.querySelector("#minimum-worth"),
   minimumWorthValue: document.querySelector("#minimum-worth-value"),
+  worthDistribution: document.querySelector("#worth-distribution"),
   friendlyTotal: document.querySelector("#friendly-total"),
   candidateTotal: document.querySelector("#candidate-total"),
   bestMargin: document.querySelector("#best-margin"),
@@ -117,16 +133,15 @@ const elements = {
   randomBoard: document.querySelector("#random-board"),
   orderRandom: document.querySelector("#order-random"),
   orderGrouped: document.querySelector("#order-grouped"),
+  shareBoard: document.querySelector("#share-board"),
   toggleBoard: document.querySelector("#toggle-board"),
-  boardMoreToggle: document.querySelector("#board-more-toggle"),
-  boardMoreMenu: document.querySelector("#board-more-menu"),
   themeButtons: [...document.querySelectorAll("[data-theme-value]")],
 };
 
 const systemTheme = window.matchMedia("(prefers-color-scheme: dark)");
 
 createIcons({
-  icons: { Monitor, Moon, Sun },
+  icons: { Check, Monitor, Moon, Share2, Sun },
   attrs: { width: 18, height: 18, "stroke-width": 2 },
 });
 
@@ -141,42 +156,46 @@ systemTheme.addEventListener("change", () => {
 });
 
 elements.loadSample.addEventListener("click", () => {
-  setBoardMenuOpen(false);
-  board = cloneBoard(DEFAULT_BOARD);
-  boardOrder = "grouped";
+  loadBoardState(createSampleBoardState());
+  syncBoardUrl();
   render();
 });
 
 elements.randomBoard.addEventListener("click", () => {
-  board = createRandomBoard();
-  boardOrder = "grouped";
+  loadBoardState(createGeneratedBoardState(createRandomSeed()));
+  syncBoardUrl();
   render();
 });
 
 elements.orderRandom.addEventListener("click", () => {
-  boardOrder = "shuffled";
-  board = shuffle([...board]);
+  if (boardOrder === BOARD_ORDER.RANDOM) {
+    return;
+  }
+
+  boardOrder = BOARD_ORDER.RANDOM;
+  board = sortBoardByRandomLayout(board);
+  syncBoardUrl();
   renderBoard();
 });
 
 elements.orderGrouped.addEventListener("click", () => {
-  boardOrder = "grouped";
+  if (boardOrder === BOARD_ORDER.SORTED) {
+    return;
+  }
+
+  boardOrder = BOARD_ORDER.SORTED;
   board = sortBoardByRole(board);
+  syncBoardUrl();
   renderBoard();
+});
+
+elements.shareBoard.addEventListener("click", () => {
+  void copyBoardShareLink();
 });
 
 elements.toggleBoard.addEventListener("click", () => {
   boardCollapsed = !boardCollapsed;
   renderBoardVisibility();
-});
-
-elements.boardMoreToggle.addEventListener("click", (event) => {
-  event.stopPropagation();
-  setBoardMenuOpen(elements.boardMoreToggle.getAttribute("aria-expanded") !== "true");
-});
-
-elements.boardMoreMenu.addEventListener("click", (event) => {
-  event.stopPropagation();
 });
 
 elements.targetMin.addEventListener("input", (event) => {
@@ -242,13 +261,11 @@ for (const eventName of ["pointerup", "pointercancel"]) {
 }
 
 document.addEventListener("click", () => {
-  setBoardMenuOpen(false);
   closeInfoPopovers();
 });
 
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape") {
-    setBoardMenuOpen(false);
     closeInfoPopovers();
     if (document.activeElement?.classList.contains("info-button")) {
       document.activeElement.blur();
@@ -262,11 +279,6 @@ render();
 function render() {
   renderBoard();
   void runAnalysis();
-}
-
-function setBoardMenuOpen(open) {
-  elements.boardMoreToggle.setAttribute("aria-expanded", String(open));
-  elements.boardMoreMenu.hidden = !open;
 }
 
 function readThemeSetting() {
@@ -295,6 +307,105 @@ function applyTheme(setting) {
 
   for (const button of elements.themeButtons) {
     button.setAttribute("aria-pressed", String(button.dataset.themeValue === setting));
+  }
+}
+
+function readInitialBoardState() {
+  const url = new URL(window.location.href);
+  try {
+    return decodeBoardParam(url.searchParams.get("b"));
+  } catch (error) {
+    console.warn("Ignoring invalid shared board code.", error);
+    url.searchParams.delete("b");
+    window.history.replaceState(null, "", url);
+    return createSampleBoardState();
+  }
+}
+
+function markBoardCustomized() {
+  boardSource = { type: "explicit" };
+}
+
+function syncBoardUrl() {
+  try {
+    const code = encodeBoardParam({
+      cards: board,
+      randomLayoutOrder,
+      order: boardOrder,
+      source: boardSource,
+    });
+    const url = new URL(window.location.href);
+    if (code) {
+      url.searchParams.set("b", code);
+    } else {
+      url.searchParams.delete("b");
+    }
+    window.history.replaceState(null, "", url);
+    return true;
+  } catch {
+    setShareButtonState("error");
+    return false;
+  }
+}
+
+async function copyBoardShareLink() {
+  if (!syncBoardUrl()) {
+    return;
+  }
+
+  try {
+    await writeClipboardText(window.location.href);
+    setShareButtonState("copied");
+  } catch {
+    setShareButtonState("error");
+  }
+}
+
+async function writeClipboardText(value) {
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(value);
+    return;
+  }
+
+  const textarea = document.createElement("textarea");
+  textarea.value = value;
+  textarea.setAttribute("readonly", "");
+  textarea.style.position = "fixed";
+  textarea.style.opacity = "0";
+  document.body.append(textarea);
+  textarea.select();
+  const copied = document.execCommand("copy");
+  textarea.remove();
+  if (!copied) {
+    throw new Error("Clipboard copy failed.");
+  }
+}
+
+function setShareButtonState(state) {
+  window.clearTimeout(shareFeedbackTimer);
+  elements.shareBoard.dataset.state = state;
+  const copied = state === "copied";
+  const error = state === "error";
+  const label = copied
+    ? "Board link copied"
+    : error
+      ? "Unable to copy board link"
+      : "Copy board share link";
+  elements.shareBoard.setAttribute("aria-label", label);
+  elements.shareBoard.title = label;
+
+  const icon = document.createElement("i");
+  icon.dataset.lucide = copied ? "check" : "share-2";
+  icon.setAttribute("aria-hidden", "true");
+  elements.shareBoard.replaceChildren(icon);
+  createIcons({
+    icons: { Check, Share2 },
+    attrs: { width: 18, height: 18, "stroke-width": 2 },
+    root: elements.shareBoard,
+  });
+
+  if (state !== "idle") {
+    shareFeedbackTimer = window.setTimeout(() => setShareButtonState("idle"), 5000);
   }
 }
 
@@ -349,6 +460,8 @@ function renderBoard() {
         ...board[sourceIndex],
         word: event.target.value,
       };
+      markBoardCustomized();
+      syncBoardUrl();
       scheduleAnalysis();
     });
 
@@ -369,9 +482,11 @@ function renderBoard() {
           ...board[sourceIndex],
           team: team.id,
         };
-        if (boardOrder === "grouped") {
+        markBoardCustomized();
+        if (boardOrder === BOARD_ORDER.SORTED) {
           board = sortBoardByRole(board);
         }
+        syncBoardUrl();
         render();
       });
       roleRow.append(roleButton);
@@ -396,8 +511,14 @@ function renderBoard() {
 }
 
 function renderBoardOrderControl() {
-  elements.orderGrouped.setAttribute("aria-pressed", String(boardOrder === "grouped"));
-  elements.orderRandom.setAttribute("aria-pressed", String(boardOrder === "shuffled"));
+  elements.orderGrouped.setAttribute(
+    "aria-pressed",
+    String(boardOrder === BOARD_ORDER.SORTED),
+  );
+  elements.orderRandom.setAttribute(
+    "aria-pressed",
+    String(boardOrder === BOARD_ORDER.RANDOM),
+  );
 }
 
 function createCardStateButton({ action, label, title, onClick }) {
@@ -527,6 +648,7 @@ function setAnalysisBusy(isBusy) {
 
 function renderPending() {
   renderBoardMetrics();
+  renderWorthDistribution([]);
   renderMessage(elements.recommendationResults, "Loading local embedding model...");
   elements.recommendationCount.textContent = "-";
 }
@@ -534,6 +656,7 @@ function renderPending() {
 function renderError(error) {
   latestAnalysis = null;
   renderBoardMetrics();
+  renderWorthDistribution([]);
   const message = error instanceof Error ? error.message : String(error);
   renderMessage(elements.recommendationResults, "Analysis unavailable.", "error");
   elements.recommendationCount.textContent = "-";
@@ -545,13 +668,17 @@ function renderRecommendationTable() {
     return;
   }
 
+  const rangeSuggestions = latestAnalysis.suggestions.filter(
+    (suggestion) => suggestion.number >= targetRange.min && suggestion.number <= targetRange.max,
+  );
   const qualitySuggestions = latestAnalysis.suggestions.filter(
     (suggestion) => suggestion.worth >= minimumWorth,
   );
-  const suggestions = qualitySuggestions.filter(
-    (suggestion) => suggestion.number >= targetRange.min && suggestion.number <= targetRange.max,
+  const suggestions = rangeSuggestions.filter(
+    (suggestion) => suggestion.worth >= minimumWorth,
   );
   const rangeLabel = formatTargetRange(targetRange);
+  renderWorthDistribution(rangeSuggestions);
   renderTargetCountBreakdown(qualitySuggestions);
   elements.recommendationCount.textContent = String(suggestions.length);
   elements.recommendationCount.setAttribute(
@@ -911,14 +1038,15 @@ function createScoreCell(label, value, className) {
   return cell;
 }
 
-function createRandomBoard() {
-  const words = shuffle([...WORD_BANK]).slice(0, 25);
-
-  return words.map((word, index) => ({
-    word,
-    team: ROLE_SEQUENCE[index],
-    done: false,
-  }));
+function loadBoardState(state) {
+  board = cloneBoard(state.cards);
+  randomLayoutOrder = [...state.randomLayoutOrder];
+  boardOrder = state.order;
+  boardSource = { ...state.source };
+  board =
+    boardOrder === BOARD_ORDER.RANDOM
+      ? sortBoardByRandomLayout(board)
+      : sortBoardByRole(board);
 }
 
 function sortBoardByRole(cards) {
@@ -927,9 +1055,17 @@ function sortBoardByRole(cards) {
     .sort(
       (left, right) =>
         TEAM_SORT_ORDER.get(left.card.team) - TEAM_SORT_ORDER.get(right.card.team) ||
+        left.card.layoutId - right.card.layoutId ||
         left.sourceIndex - right.sourceIndex,
     )
     .map(({ card }) => card);
+}
+
+function sortBoardByRandomLayout(cards) {
+  const positions = new Map(randomLayoutOrder.map((layoutId, index) => [layoutId, index]));
+  return [...cards].sort(
+    (left, right) => positions.get(left.layoutId) - positions.get(right.layoutId),
+  );
 }
 
 function swapCompetitiveTeams(cards) {
@@ -1056,6 +1192,39 @@ function renderMinimumWorthControl() {
   elements.minimumWorth.style.setProperty("--worth-progress", `${(minimumWorth / 99) * 100}%`);
 }
 
+function renderWorthDistribution(suggestions) {
+  const binSize = 5;
+  const bins = Array.from({ length: 20 }, () => 0);
+  for (const suggestion of suggestions) {
+    const index = Math.min(bins.length - 1, Math.floor(suggestion.worth / binSize));
+    bins[index] += 1;
+  }
+
+  const maximum = Math.max(1, ...bins);
+  const bars = bins.map((count, index) => {
+    const start = index * binSize;
+    const end = index === bins.length - 1 ? 99 : start + binSize - 1;
+    const bar = document.createElement("span");
+    bar.className = "worth-distribution-bar";
+    bar.dataset.included = String(end >= minimumWorth);
+    bar.dataset.empty = String(count === 0);
+    bar.style.setProperty(
+      "--bar-height",
+      count === 0 ? "0%" : `${(count / maximum) * 100}%`,
+    );
+    bar.title = `Worth ${start}-${end}: ${count} ${count === 1 ? "clue" : "clues"}`;
+    return bar;
+  });
+
+  const included = suggestions.filter((suggestion) => suggestion.worth >= minimumWorth).length;
+  const excluded = suggestions.length - included;
+  elements.worthDistribution.replaceChildren(...bars);
+  elements.worthDistribution.setAttribute(
+    "aria-label",
+    `Worth distribution for ${suggestions.length} clues in the selected target range. ${included} meet the minimum of ${minimumWorth}; lowering it can add ${excluded}.`,
+  );
+}
+
 function renderTargetCountBreakdown(suggestions) {
   const counts = Array.from({ length: targetRangeLimit }, () => 0);
   for (const suggestion of suggestions) {
@@ -1102,15 +1271,6 @@ function formatTargetRange(rangeValue) {
 
 function cloneBoard(cards) {
   return cards.map((card) => ({ ...card }));
-}
-
-function shuffle(items) {
-  for (let index = items.length - 1; index > 0; index -= 1) {
-    const swapIndex = Math.floor(Math.random() * (index + 1));
-    [items[index], items[swapIndex]] = [items[swapIndex], items[index]];
-  }
-
-  return items;
 }
 
 function labelRisk(risk) {

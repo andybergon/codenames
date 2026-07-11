@@ -1,5 +1,12 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
+import {
+  BOARD_ORDER,
+  createGeneratedBoardState,
+  createSampleBoardState,
+  decodeBoardParam,
+  encodeBoardParam,
+} from "../src/board-share.js";
 import { hydrateClueIndex } from "../src/clue-index.js";
 import {
   analyzeEmbeddedBoard,
@@ -62,6 +69,35 @@ assert.ok(boardMetrics.complexity >= 0 && boardMetrics.complexity <= 100);
 assert.ok(boardMetrics.blueEase >= 0 && boardMetrics.blueEase <= 100);
 assert.ok(boardMetrics.redEase >= 0 && boardMetrics.redEase <= 100);
 assert.equal(boardMetrics.edge, boardMetrics.blueEase - boardMetrics.redEase);
+
+const sharedSeed = "AQIDBAUGBwg";
+const generatedBoard = createGeneratedBoardState(sharedSeed, BOARD_ORDER.RANDOM);
+const repeatedGeneratedBoard = createGeneratedBoardState(sharedSeed, BOARD_ORDER.RANDOM);
+assert.deepEqual(generatedBoard, repeatedGeneratedBoard);
+
+const seedCode = encodeBoardParam(generatedBoard);
+assert.equal(seedCode.length, 14);
+assert.deepEqual(decodeBoardParam(seedCode), generatedBoard);
+assert.equal(encodeBoardParam(createSampleBoardState()), null);
+assert.equal(
+  encodeBoardParam(createSampleBoardState(BOARD_ORDER.RANDOM)),
+  "1pr",
+);
+
+const customizedBoard = structuredClone(generatedBoard);
+customizedBoard.cards[0].word = "CUSTOM WORD";
+customizedBoard.cards[0].team = "enemy";
+customizedBoard.cards[0].done = true;
+customizedBoard.source = { type: "explicit" };
+const explicitCode = encodeBoardParam(customizedBoard);
+const decodedCustomBoard = decodeBoardParam(explicitCode);
+assert.ok(explicitCode.startsWith("1e"));
+assert.equal(decodedCustomBoard.cards[0].word, "CUSTOM WORD");
+assert.equal(decodedCustomBoard.cards[0].team, "enemy");
+assert.equal(decodedCustomBoard.cards[0].done, false);
+assert.deepEqual(decodedCustomBoard.randomLayoutOrder, customizedBoard.randomLayoutOrder);
+assert.equal(decodedCustomBoard.order, customizedBoard.order);
+assert.throws(() => decodeBoardParam("not-a-board"), /Unsupported board code/);
 
 console.log(
   `Smoke ok: ${result.safe.length} safe, ${result.stretch.length} stretch, ${result.summary.candidateTotal} candidates, complexity ${boardMetrics.complexity}, edge ${boardMetrics.edge}`,

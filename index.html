@@ -63,69 +63,70 @@
         <div class="board-panel" aria-label="Codenames board editor">
           <div class="panel-header">
             <div>
-              <h2>Board</h2>
+              <div class="board-title-row">
+                <h2>Board</h2>
+                <button
+                  class="disclosure-button"
+                  id="toggle-board"
+                  type="button"
+                  aria-label="Collapse board"
+                  aria-controls="board-grid"
+                  aria-expanded="true"
+                  title="Collapse board"
+                >
+                  <span class="chevron" aria-hidden="true"></span>
+                </button>
+              </div>
               <p id="board-counts" class="muted"></p>
               <div id="board-metrics" class="board-metrics" aria-label="Board difficulty metrics"></div>
             </div>
             <div class="board-header-actions">
-              <button
-                class="button board-action"
-                id="random-board"
-                type="button"
-                title="Generate 25 new words and assign new roles"
-              >
-                New board
-              </button>
-              <div class="order-switch" role="group" aria-label="Card order">
+              <div class="board-source-actions" role="group" aria-label="Board source">
+                <button
+                  class="button board-action"
+                  id="random-board"
+                  type="button"
+                  title="Generate 25 new words and assign new roles"
+                >
+                  New
+                </button>
+                <button
+                  class="button secondary board-action"
+                  id="load-sample"
+                  type="button"
+                  title="Restore the fixed training board"
+                >
+                  Sample
+                </button>
+              </div>
+              <div class="order-switch" role="group" aria-label="Card layout">
                 <button
                   id="order-grouped"
                   type="button"
-                  aria-label="Order cards by role"
+                  aria-label="Show cards sorted by role"
                   aria-pressed="true"
                   title="Group cards by Friendly, Enemy, Neutral, and Assassin"
                 >
-                  Role
+                  Sorted
                 </button>
                 <button
                   id="order-random"
                   type="button"
-                  aria-label="Shuffle card positions"
+                  aria-label="Show the board's random card order"
                   aria-pressed="false"
-                  title="Shuffle positions without changing words or roles"
+                  title="Show this board's preserved random arrangement"
                 >
-                  Shuffle
+                  Random
                 </button>
-              </div>
-              <div class="board-more">
-                <button
-                  class="icon-button"
-                  id="board-more-toggle"
-                  type="button"
-                  aria-label="More board actions"
-                  aria-controls="board-more-menu"
-                  aria-expanded="false"
-                  aria-haspopup="menu"
-                  title="More board actions"
-                >
-                  <span class="more-icon" aria-hidden="true">...</span>
-                </button>
-                <div id="board-more-menu" class="board-more-menu" role="menu" hidden>
-                  <button id="load-sample" type="button" role="menuitem">
-                    <strong>Load sample</strong>
-                    <span>Restore the fixed training board</span>
-                  </button>
-                </div>
               </div>
               <button
                 class="icon-button"
-                id="toggle-board"
+                id="share-board"
                 type="button"
-                aria-label="Collapse board"
-                aria-controls="board-grid"
-                aria-expanded="true"
-                title="Collapse board"
+                aria-label="Copy board share link"
+                title="Copy board share link"
               >
-                <span class="chevron" aria-hidden="true"></span>
+                <i data-lucide="share-2" aria-hidden="true"></i>
               </button>
             </div>
           </div>
@@ -179,6 +180,12 @@
                   <label for="minimum-worth">Min worth</label>
                   <output id="minimum-worth-value" for="minimum-worth">50</output>
                 </div>
+                <div
+                  id="worth-distribution"
+                  class="worth-distribution"
+                  role="img"
+                  aria-label="Worth distribution"
+                ></div>
                 <input
                   id="minimum-worth"
                   type="range"

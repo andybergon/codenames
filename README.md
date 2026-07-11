@@ -12,6 +12,7 @@ A local-first Codenames clue trainer. It embeds the board, searches a 3,000-word
 - **Board metrics:** a symmetric difficulty score and Blue-vs-Red edge computed by scoring both team perspectives.
 - **Played cards:** mark cards done to flip them in place; done cards are excluded from role counts, scoring, clue legality, and later recommendations.
 - **Theme:** follow the system appearance or persist an explicit light or dark mode.
+- **Shareable boards:** versioned `?b=` links reproduce words, roles, the stable random layout, and the selected layout mode; generated boards use short seeds while edited boards fall back to compact explicit payloads.
 
 The model download happens on first use and is then cached by the browser. Board words are processed locally and are not sent to an application server.
 
