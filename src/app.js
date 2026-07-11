@@ -1,3 +1,4 @@
+import { Monitor, Moon, Sun, createIcons } from "lucide";
 import { loadClueIndex } from "./clue-index.js";
 import { EMBEDDING_MODEL, centerEmbeddings, embedTerms } from "./embeddings.js";
 import { analyzeEmbeddedBoard, calculateBoardMetrics } from "./model.js";
@@ -78,6 +79,7 @@ const RISK_SORT_VALUE = {
 
 let board = cloneBoard(DEFAULT_BOARD);
 let boardCollapsed = false;
+let boardOrder = "grouped";
 let targetRange = { ...DEFAULT_TARGET_RANGE };
 let targetRangeLimit = MAX_TARGET_WORDS;
 let minimumWorth = DEFAULT_MINIMUM_WORTH;
@@ -116,10 +118,17 @@ const elements = {
   orderRandom: document.querySelector("#order-random"),
   orderGrouped: document.querySelector("#order-grouped"),
   toggleBoard: document.querySelector("#toggle-board"),
+  boardMoreToggle: document.querySelector("#board-more-toggle"),
+  boardMoreMenu: document.querySelector("#board-more-menu"),
   themeButtons: [...document.querySelectorAll("[data-theme-value]")],
 };
 
 const systemTheme = window.matchMedia("(prefers-color-scheme: dark)");
+
+createIcons({
+  icons: { Monitor, Moon, Sun },
+  attrs: { width: 18, height: 18, "stroke-width": 2 },
+});
 
 for (const button of elements.themeButtons) {
   button.addEventListener("click", () => setTheme(button.dataset.themeValue));
@@ -132,35 +141,42 @@ systemTheme.addEventListener("change", () => {
 });
 
 elements.loadSample.addEventListener("click", () => {
+  setBoardMenuOpen(false);
   board = cloneBoard(DEFAULT_BOARD);
+  boardOrder = "grouped";
   render();
 });
 
 elements.randomBoard.addEventListener("click", () => {
   board = createRandomBoard();
+  boardOrder = "grouped";
   render();
 });
 
 elements.orderRandom.addEventListener("click", () => {
+  boardOrder = "shuffled";
   board = shuffle([...board]);
   renderBoard();
 });
 
 elements.orderGrouped.addEventListener("click", () => {
-  board = board
-    .map((card, sourceIndex) => ({ card, sourceIndex }))
-    .sort(
-      (left, right) =>
-        TEAM_SORT_ORDER.get(left.card.team) - TEAM_SORT_ORDER.get(right.card.team) ||
-        left.sourceIndex - right.sourceIndex,
-    )
-    .map(({ card }) => card);
+  boardOrder = "grouped";
+  board = sortBoardByRole(board);
   renderBoard();
 });
 
 elements.toggleBoard.addEventListener("click", () => {
   boardCollapsed = !boardCollapsed;
   renderBoardVisibility();
+});
+
+elements.boardMoreToggle.addEventListener("click", (event) => {
+  event.stopPropagation();
+  setBoardMenuOpen(elements.boardMoreToggle.getAttribute("aria-expanded") !== "true");
+});
+
+elements.boardMoreMenu.addEventListener("click", (event) => {
+  event.stopPropagation();
 });
 
 elements.targetMin.addEventListener("input", (event) => {
@@ -226,11 +242,13 @@ for (const eventName of ["pointerup", "pointercancel"]) {
 }
 
 document.addEventListener("click", () => {
+  setBoardMenuOpen(false);
   closeInfoPopovers();
 });
 
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape") {
+    setBoardMenuOpen(false);
     closeInfoPopovers();
     if (document.activeElement?.classList.contains("info-button")) {
       document.activeElement.blur();
@@ -244,6 +262,11 @@ render();
 function render() {
   renderBoard();
   void runAnalysis();
+}
+
+function setBoardMenuOpen(open) {
+  elements.boardMoreToggle.setAttribute("aria-expanded", String(open));
+  elements.boardMoreMenu.hidden = !open;
 }
 
 function readThemeSetting() {
@@ -346,6 +369,9 @@ function renderBoard() {
           ...board[sourceIndex],
           team: team.id,
         };
+        if (boardOrder === "grouped") {
+          board = sortBoardByRole(board);
+        }
         render();
       });
       roleRow.append(roleButton);
@@ -365,7 +391,13 @@ function renderBoard() {
   flippingCardIndex = null;
 
   renderBoardCounts(board);
+  renderBoardOrderControl();
   renderBoardVisibility();
+}
+
+function renderBoardOrderControl() {
+  elements.orderGrouped.setAttribute("aria-pressed", String(boardOrder === "grouped"));
+  elements.orderRandom.setAttribute("aria-pressed", String(boardOrder === "shuffled"));
 }
 
 function createCardStateButton({ action, label, title, onClick }) {
@@ -881,13 +913,23 @@ function createScoreCell(label, value, className) {
 
 function createRandomBoard() {
   const words = shuffle([...WORD_BANK]).slice(0, 25);
-  const roles = shuffle([...ROLE_SEQUENCE]);
 
   return words.map((word, index) => ({
     word,
-    team: roles[index],
+    team: ROLE_SEQUENCE[index],
     done: false,
   }));
+}
+
+function sortBoardByRole(cards) {
+  return cards
+    .map((card, sourceIndex) => ({ card, sourceIndex }))
+    .sort(
+      (left, right) =>
+        TEAM_SORT_ORDER.get(left.card.team) - TEAM_SORT_ORDER.get(right.card.team) ||
+        left.sourceIndex - right.sourceIndex,
+    )
+    .map(({ card }) => card);
 }
 
 function swapCompetitiveTeams(cards) {

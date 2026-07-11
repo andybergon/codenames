@@ -29,9 +29,33 @@
       <header class="topbar">
         <h1>Codenames Clue Trainer</h1>
         <div class="theme-switcher" role="group" aria-label="Color theme">
-          <button type="button" data-theme-value="system" aria-pressed="true">System</button>
-          <button type="button" data-theme-value="light" aria-pressed="false">Light</button>
-          <button type="button" data-theme-value="dark" aria-pressed="false">Dark</button>
+          <button
+            type="button"
+            data-theme-value="system"
+            aria-label="Use system theme"
+            aria-pressed="true"
+            title="System theme"
+          >
+            <i data-lucide="monitor" aria-hidden="true"></i>
+          </button>
+          <button
+            type="button"
+            data-theme-value="light"
+            aria-label="Use light theme"
+            aria-pressed="false"
+            title="Light theme"
+          >
+            <i data-lucide="sun" aria-hidden="true"></i>
+          </button>
+          <button
+            type="button"
+            data-theme-value="dark"
+            aria-label="Use dark theme"
+            aria-pressed="false"
+            title="Dark theme"
+          >
+            <i data-lucide="moon" aria-hidden="true"></i>
+          </button>
         </div>
       </header>
 
@@ -44,41 +68,53 @@
               <div id="board-metrics" class="board-metrics" aria-label="Board difficulty metrics"></div>
             </div>
             <div class="board-header-actions">
-              <div class="board-toolbar-group board-source-actions" role="group" aria-label="Choose board">
+              <button
+                class="button board-action"
+                id="random-board"
+                type="button"
+                title="Generate 25 new words and assign new roles"
+              >
+                New board
+              </button>
+              <div class="order-switch" role="group" aria-label="Card order">
                 <button
-                  class="button secondary board-action"
-                  id="load-sample"
-                  type="button"
-                  title="Restore the fixed example board"
-                >
-                  Load sample
-                </button>
-                <button
-                  class="button board-action"
-                  id="random-board"
-                  type="button"
-                  title="Generate 25 new words and assign new roles"
-                >
-                  New random board
-                </button>
-              </div>
-              <div class="board-toolbar-group board-order-actions" role="group" aria-label="Arrange cards">
-                <button
-                  class="button ghost board-action"
                   id="order-grouped"
                   type="button"
-                  title="Arrange the current cards by Friendly, Enemy, Neutral, and Assassin"
+                  aria-label="Order cards by role"
+                  aria-pressed="true"
+                  title="Group cards by Friendly, Enemy, Neutral, and Assassin"
                 >
-                  Sort by role
+                  Role
                 </button>
                 <button
-                  class="button ghost board-action"
                   id="order-random"
                   type="button"
-                  title="Shuffle current card positions without changing their words or roles"
+                  aria-label="Shuffle card positions"
+                  aria-pressed="false"
+                  title="Shuffle positions without changing words or roles"
                 >
-                  Randomize order
+                  Shuffle
                 </button>
+              </div>
+              <div class="board-more">
+                <button
+                  class="icon-button"
+                  id="board-more-toggle"
+                  type="button"
+                  aria-label="More board actions"
+                  aria-controls="board-more-menu"
+                  aria-expanded="false"
+                  aria-haspopup="menu"
+                  title="More board actions"
+                >
+                  <span class="more-icon" aria-hidden="true">...</span>
+                </button>
+                <div id="board-more-menu" class="board-more-menu" role="menu" hidden>
+                  <button id="load-sample" type="button" role="menuitem">
+                    <strong>Load sample</strong>
+                    <span>Restore the fixed training board</span>
+                  </button>
+                </div>
               </div>
               <button
                 class="icon-button"
