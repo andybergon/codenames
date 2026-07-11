@@ -61,8 +61,8 @@
 
       <section class="workspace">
         <div class="board-panel" aria-label="Codenames board editor">
-          <div class="panel-header">
-            <div>
+          <div class="panel-header board-header">
+            <div class="board-primary-row">
               <div class="board-title-row">
                 <h2>Board</h2>
                 <button
@@ -77,78 +77,87 @@
                   <span class="chevron" aria-hidden="true"></span>
                 </button>
               </div>
-              <p id="board-counts" class="muted"></p>
-              <div id="board-metrics" class="board-metrics" aria-label="Board difficulty metrics"></div>
-            </div>
-            <div class="board-header-actions">
-              <div class="board-source-actions" role="group" aria-label="Board source">
-                <button
-                  class="button board-action"
-                  id="random-board"
-                  type="button"
-                  title="Generate 25 new words and assign new roles"
-                >
-                  New
-                </button>
-                <button
-                  class="button secondary board-action"
-                  id="load-sample"
-                  type="button"
-                  title="Restore the fixed training board"
-                >
-                  Sample
-                </button>
-              </div>
-              <div class="word-set-control">
-                <span class="word-set-label">New board words</span>
-                <div class="word-set-switch" role="group" aria-label="Board word set">
+              <div class="board-header-actions">
+                <div class="board-source-actions" role="group" aria-label="Board source">
                   <button
+                    class="button board-action"
+                    id="random-board"
                     type="button"
-                    data-word-set-value="official"
-                    aria-pressed="true"
-                    title="Use the 400 words from the original English base game"
+                    title="Generate 25 new words and assign new roles"
                   >
-                    Official <span>400</span>
+                    New
                   </button>
                   <button
+                    class="button secondary board-action"
+                    id="load-sample"
                     type="button"
-                    data-word-set-value="extended"
-                    aria-pressed="false"
-                    title="Use the official words plus trainer additions"
+                    title="Restore the fixed training board"
                   >
-                    Extended <span>407</span>
+                    Sample
                   </button>
                 </div>
-              </div>
-              <div class="order-switch" role="group" aria-label="Card layout">
+                <div class="board-control board-word-control">
+                  <span class="board-control-label">Words</span>
+                  <div class="word-set-switch" role="group" aria-label="Board word set">
+                    <button
+                      type="button"
+                      data-word-set-value="official"
+                      aria-pressed="true"
+                      title="Use the 400 words from the original English base game"
+                    >
+                      Official <span>400</span>
+                    </button>
+                    <button
+                      type="button"
+                      data-word-set-value="extended"
+                      aria-pressed="false"
+                      title="Use the official words plus trainer additions"
+                    >
+                      Extended <span>407</span>
+                    </button>
+                  </div>
+                </div>
+                <div class="board-control board-order-control">
+                  <span class="board-control-label">Order</span>
+                  <div class="order-switch" role="group" aria-label="Card layout">
+                    <button
+                      id="order-grouped"
+                      type="button"
+                      aria-label="Show cards sorted by role"
+                      aria-pressed="true"
+                      title="Group cards by Friendly, Enemy, Neutral, and Assassin"
+                    >
+                      Sorted
+                    </button>
+                    <button
+                      id="order-random"
+                      type="button"
+                      aria-label="Show the board's random card order"
+                      aria-pressed="false"
+                      title="Show this board's preserved random arrangement"
+                    >
+                      Random
+                    </button>
+                  </div>
+                </div>
                 <button
-                  id="order-grouped"
+                  class="icon-button"
+                  id="share-board"
                   type="button"
-                  aria-label="Show cards sorted by role"
-                  aria-pressed="true"
-                  title="Group cards by Friendly, Enemy, Neutral, and Assassin"
+                  aria-label="Copy board share link"
+                  title="Copy board share link"
                 >
-                  Sorted
-                </button>
-                <button
-                  id="order-random"
-                  type="button"
-                  aria-label="Show the board's random card order"
-                  aria-pressed="false"
-                  title="Show this board's preserved random arrangement"
-                >
-                  Random
+                  <i data-lucide="share-2" aria-hidden="true"></i>
                 </button>
               </div>
-              <button
-                class="icon-button"
-                id="share-board"
-                type="button"
-                aria-label="Copy board share link"
-                title="Copy board share link"
-              >
-                <i data-lucide="share-2" aria-hidden="true"></i>
-              </button>
+            </div>
+            <div class="board-summary-row">
+              <p id="board-counts" class="muted"></p>
+              <div
+                id="board-metrics"
+                class="board-metrics"
+                aria-label="Board difficulty metrics"
+              ></div>
             </div>
           </div>
           <div id="board-grid" class="board-grid"></div>
