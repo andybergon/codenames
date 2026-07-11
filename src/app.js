@@ -892,9 +892,11 @@ function createInfoControl(column, tableId) {
   control.className = "info-control";
   control.addEventListener("pointerenter", () => {
     control.classList.remove("is-dismissed");
+    positionInfoPopover(button, popover);
   });
   control.addEventListener("focusin", () => {
     control.classList.remove("is-dismissed");
+    positionInfoPopover(button, popover);
   });
 
   const tooltipId = `info-${tableId}-${column.id}`;
@@ -911,6 +913,9 @@ function createInfoControl(column, tableId) {
     closeInfoPopovers();
     control.classList.remove("is-dismissed");
     button.setAttribute("aria-expanded", String(!wasOpen));
+    if (!wasOpen) {
+      positionInfoPopover(button, popover);
+    }
   });
 
   const popover = document.createElement("span");
@@ -921,6 +926,26 @@ function createInfoControl(column, tableId) {
 
   control.append(button, popover);
   return control;
+}
+
+function positionInfoPopover(button, popover) {
+  requestAnimationFrame(() => {
+    const buttonBounds = button.getBoundingClientRect();
+    const popoverBounds = popover.getBoundingClientRect();
+    const gutter = 12;
+    const gap = 8;
+    const left = Math.max(
+      gutter,
+      Math.min(buttonBounds.left, window.innerWidth - popoverBounds.width - gutter),
+    );
+    const below = buttonBounds.bottom + gap;
+    const top =
+      below + popoverBounds.height <= window.innerHeight - gutter
+        ? below
+        : Math.max(gutter, buttonBounds.top - popoverBounds.height - gap);
+    popover.style.setProperty("--info-left", `${left}px`);
+    popover.style.setProperty("--info-top", `${top}px`);
+  });
 }
 
 function closeInfoPopovers() {
