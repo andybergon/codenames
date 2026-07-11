@@ -1693,7 +1693,6 @@ h3 {
     right: 0;
   }
 
-  .board-grid,
   .model-strip {
     grid-template-columns: 1fr;
   }
