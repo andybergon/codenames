@@ -915,7 +915,6 @@ function createInfoControl(column, tableId) {
   const button = document.createElement("button");
   button.className = "info-button";
   button.type = "button";
-  button.textContent = "i";
   button.setAttribute("aria-label", `About ${column.label}`);
   button.setAttribute("aria-controls", tooltipId);
   button.setAttribute("aria-expanded", "false");

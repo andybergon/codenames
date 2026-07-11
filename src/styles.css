@@ -1366,28 +1366,37 @@ h3 {
 .info-control {
   position: relative;
   display: inline-flex;
-  flex: 0 0 14px;
+  flex: 0 0 28px;
 }
 
 .info-button {
+  position: relative;
   display: inline-grid;
-  width: 14px;
-  height: 14px;
+  width: 28px;
+  height: 28px;
   place-items: center;
-  border: 1px solid currentColor;
-  border-radius: 50%;
+  border: 0;
   padding: 0;
   background: transparent;
   color: var(--muted);
+}
+
+.info-button::before {
+  display: grid;
+  width: 16px;
+  height: 16px;
+  place-items: center;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  content: "i";
   font-size: 0.59rem;
   font-weight: 900;
   line-height: 1;
-  text-transform: none;
 }
 
-.info-button:hover,
-.info-button:focus-visible,
-.info-button[aria-expanded="true"] {
+.info-button:hover::before,
+.info-button:focus-visible::before,
+.info-button[aria-expanded="true"]::before {
   background: var(--ink);
   color: var(--on-ink);
 }
