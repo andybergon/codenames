@@ -4,6 +4,8 @@ node_modules/
 dist/
 .venv/
 coverage/
+playwright-report/
+test-results/
 .env
 .env.*
 !.env.example

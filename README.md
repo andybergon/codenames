@@ -38,6 +38,14 @@ npm run check
 
 The smoke test uses a checked-in sample-board embedding fixture, so normal checks do not redownload the model.
 
+Responsive browser regressions run separately:
+
+```sh
+npm run test:ui
+```
+
+Run both the static/smoke checks and responsive browser suite with `npm test`.
+
 ## Board Word Sets
 
 **Official** is the default for generated boards and contains 400 unique words from the original English base game, including the printed multi-word entries `ICE CREAM`, `LOCH NESS`, `NEW YORK`, and `SCUBA DIVER`. The list is based on a [public transcription of the original set](https://gist.github.com/siemanko/6cc17ee2a253089969b1b904660b4097), with obvious spelling transcription errors normalized.
