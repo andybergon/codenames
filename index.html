@@ -262,14 +262,43 @@
             </div>
           </div>
           <div class="recommendation-table-controls">
-            <span id="mobile-metric-help" class="mobile-metric-help"></span>
-            <label
-              class="advanced-metrics-toggle"
-              title="Show Net, Margin, and Fit/cohesion columns"
-            >
-              <input id="advanced-metrics" type="checkbox" />
-              <span>Advanced</span>
-            </label>
+            <div class="turn-controls">
+              <div class="side-switch" role="group" aria-label="Recommendation team">
+                <button
+                  type="button"
+                  data-recommendation-side="blue"
+                  aria-pressed="true"
+                  title="Show Blue recommendations"
+                >
+                  <span class="side-dot" aria-hidden="true"></span>
+                  Blue
+                </button>
+                <button
+                  type="button"
+                  data-recommendation-side="red"
+                  aria-pressed="false"
+                  title="Show Red recommendations"
+                >
+                  <span class="side-dot" aria-hidden="true"></span>
+                  Red
+                </button>
+              </div>
+              <label class="auto-turn-toggle" title="Switch teams after applying a recommendation">
+                <input id="auto-switch-sides" type="checkbox" checked />
+                <span>Auto turn</span>
+              </label>
+              <span id="turn-status" class="turn-status" role="status">Blue to play</span>
+            </div>
+            <div class="column-display-controls">
+              <span id="mobile-metric-help" class="mobile-metric-help"></span>
+              <label
+                class="advanced-metrics-toggle"
+                title="Show Net, Margin, and Fit/cohesion columns"
+              >
+                <input id="advanced-metrics" type="checkbox" />
+                <span>Advanced</span>
+              </label>
+            </div>
           </div>
           <div id="recommendation-results" class="suggestions"></div>
         </aside>
@@ -285,7 +314,7 @@
           <strong id="vocabulary-source">wordfreq + seeds</strong>
         </div>
         <div>
-          <span class="metric-label">Friendly words</span>
+          <span class="metric-label">Active team words</span>
           <strong id="friendly-total">0</strong>
         </div>
         <div>

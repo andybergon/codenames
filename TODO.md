@@ -1,17 +1,5 @@
 # TODO
 
-- Apply a recommendation to mark its target cards as guessed.
-  - Current: individual cards can already be marked done and are excluded from later recommendations.
-  - Next: make a recommendation row actionable, confirm the affected targets, then reuse the existing done-card flow for every target in that clue.
-
-- Support recommendations for either Blue or Red.
-  - Current: recommendations are generated from the Friendly/Blue perspective only.
-  - Next: add an active-team control and run the same scoring pipeline with the selected team's cards treated as friendly.
-
-- Add a manual full-game loop.
-  - Depends on applying recommendations and supporting both team perspectives.
-  - Next: after applying one side's recommendation, switch to the other side automatically while retaining a manual team override, until the board reaches an end state.
-
 - Curate the Extended board word set.
   - Current: Official 400 plus seven non-duplicate words retained from the trainer's historical pool.
   - Next: define inclusion criteria, review themed and regional coverage, and test additions for clue quality before expanding the set.

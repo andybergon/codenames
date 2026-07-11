@@ -19,6 +19,7 @@ export function analyzeEmbeddedBoard(board, boardVectors, clueIndex, options = {
   const entries = board
     .map((card, sourceIndex) => ({
       sourceIndex,
+      layoutId: card.layoutId ?? sourceIndex,
       word: cleanDisplayWord(card.word),
       team: card.team,
       done: Boolean(card.done),
@@ -366,6 +367,7 @@ function shortlistCandidates(
 function scoreCandidate({ candidate, context, candidateSimilarities, entryCount }) {
   const rowOffset = candidate.candidateIndex * entryCount;
   const targetSims = context.targets.map((target) => ({
+    layoutId: target.layoutId,
     word: target.word,
     sim: candidateSimilarities[rowOffset + target.entryIndex],
   }));

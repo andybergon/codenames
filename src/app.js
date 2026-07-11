@@ -9,6 +9,14 @@ import {
 } from "./board-share.js";
 import { loadClueIndex } from "./clue-index.js";
 import { EMBEDDING_MODEL, centerEmbeddings, embedTerms } from "./embeddings.js";
+import {
+  SIDE,
+  applySuggestionTurn,
+  boardForSide,
+  boardTeamFromPerspective,
+  teamForSide,
+  winningSide,
+} from "./gameplay.js";
 import { analyzeEmbeddedBoard, calculateBoardMetrics } from "./model.js";
 import { ROLE_SEQUENCE, TEAMS, WORD_SET } from "./word-data.js";
 
@@ -108,14 +116,22 @@ let boardWordSet = initialBoardState.wordSet;
 let nextBoardWordSet = boardWordSet;
 let randomLayoutOrder = [...initialBoardState.randomLayoutOrder];
 let boardSource = { ...initialBoardState.source };
-let targetRange = { ...DEFAULT_TARGET_RANGE };
+let targetRanges = {
+  [SIDE.BLUE]: { ...DEFAULT_TARGET_RANGE },
+  [SIDE.RED]: { ...DEFAULT_TARGET_RANGE },
+};
+let targetRange = targetRanges[SIDE.BLUE];
 let targetRangeLimit = MAX_TARGET_WORDS;
 let minimumWorth = DEFAULT_MINIMUM_WORTH;
 let activeTargetBoundary = null;
-let flippingCardIndex = null;
+let flippingCardLayoutIds = new Set();
 let suggestionSort = { key: "worth", direction: "desc" };
 let showAdvancedMetrics = false;
+let activeSide = SIDE.BLUE;
+let autoSwitchSides = true;
+let turnMessage = "";
 let latestAnalysis = null;
+let latestAnalyses = { [SIDE.BLUE]: null, [SIDE.RED]: null };
 let analyzeTimer = 0;
 let analysisRun = 0;
 let hasAnalysis = false;
@@ -142,6 +158,9 @@ const elements = {
   minimumWorthValue: document.querySelector("#minimum-worth-value"),
   mobileSuggestionSort: document.querySelector("#mobile-suggestion-sort"),
   mobileMetricHelp: document.querySelector("#mobile-metric-help"),
+  sideButtons: [...document.querySelectorAll("[data-recommendation-side]")],
+  autoSwitchSides: document.querySelector("#auto-switch-sides"),
+  turnStatus: document.querySelector("#turn-status"),
   advancedMetrics: document.querySelector("#advanced-metrics"),
   worthDistribution: document.querySelector("#worth-distribution"),
   friendlyTotal: document.querySelector("#friendly-total"),
@@ -248,6 +267,17 @@ elements.mobileSuggestionSort.addEventListener("change", (event) => {
   renderRecommendationTable();
 });
 
+for (const button of elements.sideButtons) {
+  button.addEventListener("click", () => {
+    setActiveSide(button.dataset.recommendationSide);
+  });
+}
+
+elements.autoSwitchSides.addEventListener("change", (event) => {
+  autoSwitchSides = event.target.checked;
+  renderTurnControls();
+});
+
 elements.advancedMetrics.addEventListener("change", (event) => {
   showAdvancedMetrics = event.target.checked;
   if (
@@ -330,6 +360,7 @@ render();
 
 function render() {
   renderBoard();
+  renderTurnControls();
   void runAnalysis();
 }
 
@@ -473,7 +504,7 @@ function renderBoard() {
     cardElement.dataset.team = card.team;
     cardElement.dataset.done = String(Boolean(card.done));
     cardElement.dataset.sourceIndex = String(sourceIndex);
-    if (sourceIndex === flippingCardIndex) {
+    if (flippingCardLayoutIds.has(card.layoutId)) {
       cardElement.classList.add("is-flipping");
     }
 
@@ -488,13 +519,13 @@ function renderBoard() {
       backWord.textContent = card.word;
       const backStatus = document.createElement("span");
       backStatus.className = "card-back-status";
-      backStatus.textContent = "Done";
+      backStatus.textContent = "Guessed";
       back.append(backWord, backStatus);
 
       const restoreButton = createCardStateButton({
         action: "restore-card",
-        label: `Return ${cardWord} to the board`,
-        title: `Return ${cardWord} to the board`,
+        label: `Return guessed card ${cardWord} to the board`,
+        title: `Return guessed card ${cardWord} to the board`,
         onClick: () => setCardDone(sourceIndex, false),
       });
       cardElement.append(back, restoreButton);
@@ -513,6 +544,8 @@ function renderBoard() {
         ...board[sourceIndex],
         word: event.target.value,
       };
+      invalidateAnalyses();
+      turnMessage = "";
       markBoardCustomized();
       syncBoardUrl();
       scheduleAnalysis();
@@ -535,6 +568,8 @@ function renderBoard() {
           ...board[sourceIndex],
           team: team.id,
         };
+        invalidateAnalyses();
+        turnMessage = "";
         markBoardCustomized();
         if (boardOrder === BOARD_ORDER.SORTED) {
           board = sortBoardByRole(board);
@@ -547,8 +582,8 @@ function renderBoard() {
 
     const doneButton = createCardStateButton({
       action: "complete-card",
-      label: `Mark ${cardWord} as done`,
-      title: `Mark ${cardWord} as done`,
+      label: `Mark ${cardWord} as guessed`,
+      title: `Mark ${cardWord} as guessed`,
       onClick: () => setCardDone(sourceIndex, true),
     });
 
@@ -556,7 +591,7 @@ function renderBoard() {
     elements.boardGrid.append(cardElement);
   });
 
-  flippingCardIndex = null;
+  flippingCardLayoutIds.clear();
 
   renderBoardCounts(board);
   renderBoardOrderControl();
@@ -596,6 +631,62 @@ function setNewBoardWordSet(nextWordSet) {
   renderBoardWordSetControl();
 }
 
+function setActiveSide(nextSide) {
+  if ((nextSide !== SIDE.BLUE && nextSide !== SIDE.RED) || nextSide === activeSide) {
+    return;
+  }
+
+  activeSide = nextSide;
+  targetRange = targetRanges[activeSide];
+  latestAnalysis = latestAnalyses[activeSide];
+  turnMessage = "";
+  updateTargetRangeLimit(board);
+  renderTurnControls();
+  renderAnalysisSummary(latestAnalysis);
+}
+
+function renderTurnControls() {
+  for (const button of elements.sideButtons) {
+    button.setAttribute(
+      "aria-pressed",
+      String(button.dataset.recommendationSide === activeSide),
+    );
+  }
+  elements.autoSwitchSides.checked = autoSwitchSides;
+  elements.resultsPanel.dataset.activeSide = activeSide;
+
+  const winner = winningSide(board);
+  if (winner) {
+    elements.turnStatus.textContent = turnMessage
+      ? `${sideLabel(winner)} wins · ${turnMessage}`
+      : `${sideLabel(winner)} wins`;
+    return;
+  }
+  elements.turnStatus.textContent = turnMessage
+    ? `${turnMessage} · ${sideLabel(activeSide)} to play`
+    : `${sideLabel(activeSide)} to play`;
+}
+
+function resetGameState() {
+  activeSide = SIDE.BLUE;
+  targetRanges = {
+    [SIDE.BLUE]: { ...DEFAULT_TARGET_RANGE },
+    [SIDE.RED]: { ...DEFAULT_TARGET_RANGE },
+  };
+  targetRange = targetRanges[activeSide];
+  turnMessage = "";
+  invalidateAnalyses();
+}
+
+function invalidateAnalyses() {
+  latestAnalysis = null;
+  latestAnalyses = { [SIDE.BLUE]: null, [SIDE.RED]: null };
+  renderWorthDistribution([]);
+  renderTargetCountBreakdown([]);
+  renderMessage(elements.recommendationResults, "Updating recommendations...");
+  elements.recommendationCount.textContent = "-";
+}
+
 function createCardStateButton({ action, label, title, onClick }) {
   const button = document.createElement("button");
   button.className = `card-state-button ${action}`;
@@ -607,11 +698,14 @@ function createCardStateButton({ action, label, title, onClick }) {
 }
 
 function setCardDone(sourceIndex, done) {
+  const layoutId = board[sourceIndex].layoutId;
   board[sourceIndex] = {
     ...board[sourceIndex],
     done,
   };
-  flippingCardIndex = sourceIndex;
+  flippingCardLayoutIds = new Set([layoutId]);
+  invalidateAnalyses();
+  turnMessage = "";
   render();
 }
 
@@ -664,27 +758,24 @@ async function runAnalysis() {
     }
 
     const centeredBoardVectors = centerEmbeddings(boardVectors, clueIndex.centering.mean);
-    const result = analyzeEmbeddedBoard(boardSnapshot, centeredBoardVectors, clueIndex, {
+    const blueResult = analyzeEmbeddedBoard(boardSnapshot, centeredBoardVectors, clueIndex, {
       limit: RESULTS_PER_SIZE,
     });
     const redResult = analyzeEmbeddedBoard(
-      swapCompetitiveTeams(boardSnapshot),
+      boardForSide(boardSnapshot, SIDE.RED),
       centeredBoardVectors,
       clueIndex,
       { limit: RESULTS_PER_SIZE },
     );
-    const boardMetrics = calculateBoardMetrics(result, redResult);
-    latestAnalysis = result;
+    const boardMetrics = calculateBoardMetrics(blueResult, redResult);
+    latestAnalyses = { [SIDE.BLUE]: blueResult, [SIDE.RED]: redResult };
+    latestAnalysis = latestAnalyses[activeSide];
     renderRecommendationTable();
     renderBoardMetrics(boardMetrics);
-
-    elements.friendlyTotal.textContent = String(result.summary.friendlyTotal);
-    elements.candidateTotal.textContent = String(result.summary.candidateTotal);
-    elements.bestMargin.textContent = formatSigned(result.summary.bestMargin, 2);
-    elements.bestNet.textContent = formatSigned(result.summary.bestNet, 1);
+    renderAnalysisSummary(latestAnalysis);
     elements.modelName.textContent = shortModelName(clueIndex.model);
     elements.vocabularySource.textContent = `${clueIndex.vocabulary.source} ${clueIndex.vocabulary.sourceVersion} + seeds`;
-    elements.analysisStatus.textContent = `${result.summary.candidateTotal} candidates | ${Math.round(performance.now() - startedAt)} ms`;
+    elements.analysisStatus.textContent = `${latestAnalysis.summary.candidateTotal} candidates | ${Math.round(performance.now() - startedAt)} ms`;
     hasAnalysis = true;
   } catch (error) {
     if (runId !== analysisRun) {
@@ -729,13 +820,20 @@ function renderPending() {
 }
 
 function renderError(error) {
-  latestAnalysis = null;
+  invalidateAnalyses();
   renderBoardMetrics();
   renderWorthDistribution([]);
   const message = error instanceof Error ? error.message : String(error);
   renderMessage(elements.recommendationResults, "Analysis unavailable.", "error");
   elements.recommendationCount.textContent = "-";
   elements.analysisStatus.textContent = message;
+}
+
+function renderAnalysisSummary(analysis) {
+  elements.friendlyTotal.textContent = String(analysis?.summary.friendlyTotal ?? 0);
+  elements.candidateTotal.textContent = String(analysis?.summary.candidateTotal ?? 0);
+  elements.bestMargin.textContent = formatSigned(analysis?.summary.bestMargin ?? 0, 2);
+  elements.bestNet.textContent = formatSigned(analysis?.summary.bestNet ?? 0, 1);
 }
 
 function renderRecommendationTable() {
@@ -759,12 +857,12 @@ function renderRecommendationTable() {
   elements.recommendationCount.textContent = String(suggestions.length);
   elements.recommendationCount.setAttribute(
     "aria-label",
-    `${suggestions.length} recommendations for ${rangeLabel} target words with Worth ${minimumWorth} or higher`,
+    `${suggestions.length} ${sideLabel(activeSide)} recommendations for ${rangeLabel} target words with Worth ${minimumWorth} or higher`,
   );
   renderSuggestions(
     elements.recommendationResults,
     suggestions,
-    `No clue found for ${rangeLabel} target words with Worth ${minimumWorth} or higher.`,
+    `No ${sideLabel(activeSide)} clue found for ${rangeLabel} target words with Worth ${minimumWorth} or higher.`,
   );
 }
 
@@ -906,6 +1004,11 @@ function renderSuggestions(container, suggestions, emptyMessage) {
   table.append(columnGroup, header, body);
   wrapper.append(table);
   container.append(wrapper);
+  createIcons({
+    icons: { Check },
+    attrs: { width: 15, height: 15, "stroke-width": 2.5 },
+    root: wrapper,
+  });
 }
 
 function createInfoControl(column, tableId) {
@@ -1064,11 +1167,30 @@ function renderSuggestionRow(suggestion, columns) {
   const row = document.createElement("tr");
   row.className = "suggestion-row";
   row.dataset.risk = suggestion.risk;
+  const gameOver = Boolean(winningSide(board));
+  row.dataset.actionable = String(!gameOver);
+  const applyLabel = `Apply ${suggestion.clue} ${suggestion.number} for ${sideLabel(activeSide)} and mark ${suggestion.targets.map((target) => target.word).join(", ")} guessed`;
+  row.title = applyLabel;
+  row.addEventListener("click", (event) => {
+    if (!gameOver && !event.target.closest("button")) {
+      applyRecommendation(suggestion);
+    }
+  });
 
   const clueCell = createTableCell("Clue", "clue-cell");
+  const applyButton = document.createElement("button");
+  applyButton.className = "apply-suggestion-button";
+  applyButton.type = "button";
+  applyButton.setAttribute("aria-label", applyLabel);
+  applyButton.disabled = gameOver;
+  applyButton.addEventListener("click", () => applyRecommendation(suggestion));
   const clue = document.createElement("strong");
   clue.textContent = suggestion.clue;
-  clueCell.append(clue);
+  const applyIcon = document.createElement("i");
+  applyIcon.dataset.lucide = "check";
+  applyIcon.setAttribute("aria-hidden", "true");
+  applyButton.append(clue, applyIcon);
+  clueCell.append(applyButton);
 
   const itemCell = createTableCell("Items", "item-cell");
   const itemCount = document.createElement("strong");
@@ -1102,9 +1224,10 @@ function renderSuggestionRow(suggestion, columns) {
 
   const dangerCell = createTableCell("Closest danger", "danger-cell");
   const dangerChip = document.createElement("span");
-  dangerChip.className = `danger-chip ${suggestion.closestDanger.team}`;
+  const dangerTeam = boardTeamFromPerspective(suggestion.closestDanger.team, activeSide);
+  dangerChip.className = `danger-chip ${dangerTeam}`;
   const dangerSimilarity = formatNumber(suggestion.closestDanger.sim, 2);
-  const dangerRole = teamLabel(suggestion.closestDanger.team);
+  const dangerRole = teamLabel(dangerTeam);
   dangerChip.textContent = `${suggestion.closestDanger.word} ${dangerSimilarity}`;
   dangerChip.setAttribute(
     "aria-label",
@@ -1144,6 +1267,28 @@ function renderSuggestionRow(suggestion, columns) {
   return row;
 }
 
+function applyRecommendation(suggestion) {
+  if (winningSide(board)) {
+    return;
+  }
+
+  const playedSide = activeSide;
+  const applied = applySuggestionTurn(board, suggestion, playedSide, autoSwitchSides);
+  if (applied.appliedLayoutIds.length === 0) {
+    return;
+  }
+
+  board = applied.cards;
+  flippingCardLayoutIds = new Set(applied.appliedLayoutIds);
+  turnMessage = `${suggestion.clue.toUpperCase()} ${suggestion.number} applied for ${sideLabel(playedSide)}`;
+  if (applied.nextSide !== activeSide) {
+    activeSide = applied.nextSide;
+    targetRange = targetRanges[activeSide];
+  }
+  invalidateAnalyses();
+  render();
+}
+
 function createTableCell(label, className) {
   const cell = document.createElement("td");
   cell.className = className;
@@ -1169,6 +1314,7 @@ function loadBoardState(state) {
     boardOrder === BOARD_ORDER.RANDOM
       ? sortBoardByRandomLayout(board)
       : sortBoardByRole(board);
+  resetGameState();
 }
 
 function sortBoardByRole(cards) {
@@ -1188,14 +1334,6 @@ function sortBoardByRandomLayout(cards) {
   return [...cards].sort(
     (left, right) => positions.get(left.layoutId) - positions.get(right.layoutId),
   );
-}
-
-function swapCompetitiveTeams(cards) {
-  return cards.map((card) => ({
-    ...card,
-    team:
-      card.team === "friendly" ? "enemy" : card.team === "enemy" ? "friendly" : card.team,
-  }));
 }
 
 function renderBoardCounts(cards) {
@@ -1228,7 +1366,7 @@ function renderBoardCounts(cards) {
     doneIndicator.className = "board-count";
     doneIndicator.dataset.team = "done";
     const label = document.createElement("span");
-    label.textContent = "Done";
+    label.textContent = "Guessed";
     const value = document.createElement("strong");
     value.textContent = String(doneCount);
     doneIndicator.append(label, value);
@@ -1242,7 +1380,9 @@ function renderBoardCounts(cards) {
 function updateTargetRangeLimit(cards) {
   const available = cards.filter(
     (card) =>
-      !card.done && card.team === "friendly" && String(card.word ?? "").trim().length > 0,
+      !card.done &&
+      card.team === teamForSide(activeSide) &&
+      String(card.word ?? "").trim().length > 0,
   ).length;
   const nextLimit = Math.max(1, Math.min(MAX_TARGET_WORDS, available));
   targetRangeLimit = nextLimit;
@@ -1443,6 +1583,10 @@ function sideEdgeTone(edge) {
 
 function teamLabel(teamId) {
   return TEAM_BY_ID.get(teamId)?.label ?? teamId;
+}
+
+function sideLabel(side) {
+  return side === SIDE.RED ? "Red" : "Blue";
 }
 
 function shortModelName(model) {

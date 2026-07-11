@@ -10,6 +10,16 @@ import {
 } from "../src/board-share.js";
 import { hydrateClueIndex } from "../src/clue-index.js";
 import {
+  SIDE,
+  applySuggestionTurn,
+  applySuggestionToBoard,
+  boardForSide,
+  boardTeamFromPerspective,
+  otherSide,
+  remainingCardsForSide,
+  winningSide,
+} from "../src/gameplay.js";
+import {
   analyzeEmbeddedBoard,
   applyDangerPenalty,
   calculateBoardMetrics,
@@ -72,10 +82,60 @@ assert.ok(
 assert.ok(
   doneResult.suggestions.every((suggestion) => suggestion.closestDanger.word !== "MARS"),
 );
+assert.ok(
+  result.suggestions.every((suggestion) =>
+    suggestion.targets.every((target) => Number.isInteger(target.layoutId)),
+  ),
+);
 assert.ok(boardMetrics.complexity >= 0 && boardMetrics.complexity <= 100);
 assert.ok(boardMetrics.blueEase >= 0 && boardMetrics.blueEase <= 100);
 assert.ok(boardMetrics.redEase >= 0 && boardMetrics.redEase <= 100);
 assert.equal(boardMetrics.edge, boardMetrics.blueEase - boardMetrics.redEase);
+
+assert.equal(otherSide(SIDE.BLUE), SIDE.RED);
+assert.equal(boardForSide(DEFAULT_BOARD, SIDE.RED)[0].team, "enemy");
+assert.equal(boardForSide(DEFAULT_BOARD, SIDE.RED)[9].team, "friendly");
+assert.equal(boardTeamFromPerspective("enemy", SIDE.RED), "friendly");
+assert.equal(remainingCardsForSide(DEFAULT_BOARD, SIDE.BLUE), 9);
+assert.equal(remainingCardsForSide(DEFAULT_BOARD, SIDE.RED), 8);
+const appliedSuggestion = {
+  targets: [
+    { layoutId: 0 },
+    { layoutId: 1 },
+  ],
+};
+const appliedBoard = applySuggestionToBoard(
+  DEFAULT_BOARD.map((card, layoutId) => ({ ...card, layoutId, done: false })),
+  appliedSuggestion,
+);
+assert.deepEqual(appliedBoard.appliedLayoutIds, [0, 1]);
+assert.ok(appliedBoard.cards[0].done && appliedBoard.cards[1].done);
+assert.equal(DEFAULT_BOARD[0].done, undefined);
+assert.equal(winningSide(appliedBoard.cards), null);
+const autoTurn = applySuggestionTurn(
+  DEFAULT_BOARD.map((card, layoutId) => ({ ...card, layoutId, done: false })),
+  appliedSuggestion,
+  SIDE.BLUE,
+);
+assert.equal(autoTurn.nextSide, SIDE.RED);
+const manualTurn = applySuggestionTurn(
+  DEFAULT_BOARD.map((card, layoutId) => ({ ...card, layoutId, done: false })),
+  appliedSuggestion,
+  SIDE.BLUE,
+  false,
+);
+assert.equal(manualTurn.nextSide, SIDE.BLUE);
+const winningTurn = applySuggestionTurn(
+  DEFAULT_BOARD.map((card, layoutId) => ({
+    ...card,
+    layoutId,
+    done: card.team === "friendly" && layoutId !== 0,
+  })),
+  { targets: [{ layoutId: 0 }] },
+  SIDE.BLUE,
+);
+assert.equal(winningTurn.winner, SIDE.BLUE);
+assert.equal(winningTurn.nextSide, SIDE.BLUE);
 
 const sharedSeed = "AQIDBAUGBwg";
 const generatedBoard = createGeneratedBoardState(sharedSeed, BOARD_ORDER.RANDOM);

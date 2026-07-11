@@ -1,6 +1,6 @@
 export const TEAMS = [
-  { id: "friendly", label: "Friendly", short: "B" },
-  { id: "enemy", label: "Enemy", short: "R" },
+  { id: "friendly", label: "Blue", short: "B" },
+  { id: "enemy", label: "Red", short: "R" },
   { id: "neutral", label: "Neutral", short: "N" },
   { id: "assassin", label: "Assassin", short: "X" },
 ];
