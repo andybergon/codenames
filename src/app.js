@@ -35,47 +35,57 @@ const BOARD_METRIC_DEFINITIONS = {
   },
 };
 const SUGGESTION_COLUMNS = [
-  { label: "Clue", key: "clue", direction: "asc" },
-  { label: "Items", key: "number", direction: "desc" },
-  { label: "Targets" },
+  { id: "clue", label: "Clue", key: "clue", direction: "asc" },
+  { id: "items", label: "Items", key: "number", direction: "desc" },
+  { id: "targets", label: "Targets" },
   {
+    id: "worth",
     label: "Worth",
     key: "worth",
     direction: "desc",
     info: "A 0-99 heuristic combining expected net, semantic fit, cohesion, safety margin, consistency, and clue familiarity.",
   },
   {
+    id: "net",
     label: "Net",
     key: "expectedNet",
     direction: "desc",
+    advanced: true,
     info: "Estimated value: items times hit chance, minus the role-weighted cost of a miss. Higher is better.",
   },
   {
+    id: "hit",
     label: "Est. hit",
     key: "success",
     direction: "desc",
     info: "Heuristic chance that the clue safely reaches its intended targets. It is not calibrated from real games yet.",
   },
   {
+    id: "risk",
     label: "Risk",
     key: "risk",
     direction: "desc",
     info: "Safe, Medium, or Risky based on margin, hit estimate, target count, and whether the assassin is the closest danger.",
   },
   {
+    id: "danger",
     label: "Closest danger",
     key: "danger",
     direction: "desc",
     info: "The non-friendly card most attracted to the clue after role penalties. The chip shows its word and raw similarity; its color shows the role.",
   },
   {
+    id: "margin",
     label: "Margin",
     key: "margin",
     direction: "desc",
+    advanced: true,
     info: "Weakest target similarity minus the strongest role-weighted danger. Positive values are safer.",
   },
   {
+    id: "semantics",
     label: "Fit / cohesion",
+    advanced: true,
     info: "Fit is clue similarity to the target centroid. Cohesion is the average similarity among the target words.",
   },
 ];
@@ -97,7 +107,8 @@ let targetRangeLimit = MAX_TARGET_WORDS;
 let minimumWorth = DEFAULT_MINIMUM_WORTH;
 let activeTargetBoundary = null;
 let flippingCardIndex = null;
-let suggestionSort = { key: "expectedNet", direction: "desc" };
+let suggestionSort = { key: "worth", direction: "desc" };
+let showAdvancedMetrics = false;
 let latestAnalysis = null;
 let analyzeTimer = 0;
 let analysisRun = 0;
@@ -123,6 +134,7 @@ const elements = {
   targetMax: document.querySelector("#target-max"),
   minimumWorth: document.querySelector("#minimum-worth"),
   minimumWorthValue: document.querySelector("#minimum-worth-value"),
+  advancedMetrics: document.querySelector("#advanced-metrics"),
   worthDistribution: document.querySelector("#worth-distribution"),
   friendlyTotal: document.querySelector("#friendly-total"),
   candidateTotal: document.querySelector("#candidate-total"),
@@ -219,6 +231,19 @@ elements.targetMax.addEventListener("input", (event) => {
 elements.minimumWorth.addEventListener("input", (event) => {
   minimumWorth = Number(event.target.value);
   renderMinimumWorthControl();
+  renderRecommendationTable();
+});
+
+elements.advancedMetrics.addEventListener("change", (event) => {
+  showAdvancedMetrics = event.target.checked;
+  if (
+    !showAdvancedMetrics &&
+    SUGGESTION_COLUMNS.some(
+      (column) => column.advanced && column.key === suggestionSort.key,
+    )
+  ) {
+    suggestionSort = { key: "worth", direction: "desc" };
+  }
   renderRecommendationTable();
 });
 
@@ -789,13 +814,23 @@ function renderSuggestions(container, suggestions, emptyMessage) {
   wrapper.className = "suggestion-table-wrap";
 
   const table = document.createElement("table");
-  table.className = "suggestion-table";
+  table.className = `suggestion-table${showAdvancedMetrics ? " is-advanced" : ""}`;
+  const columns = SUGGESTION_COLUMNS.filter(
+    (column) => showAdvancedMetrics || !column.advanced,
+  );
+  const columnGroup = document.createElement("colgroup");
+  for (const column of columns) {
+    const tableColumn = document.createElement("col");
+    tableColumn.className = `column-${column.id}`;
+    columnGroup.append(tableColumn);
+  }
 
   const header = document.createElement("thead");
   const headerRow = document.createElement("tr");
-  for (const column of SUGGESTION_COLUMNS) {
+  for (const column of columns) {
     const cell = document.createElement("th");
     cell.scope = "col";
+    cell.dataset.column = column.id;
     const isActive = column.key === suggestionSort.key;
     const content = document.createElement("div");
     content.className = "column-header-content";
@@ -844,10 +879,10 @@ function renderSuggestions(container, suggestions, emptyMessage) {
 
   const body = document.createElement("tbody");
   for (const suggestion of [...suggestions].sort(compareSuggestionsForDisplay)) {
-    body.append(renderSuggestionRow(suggestion));
+    body.append(renderSuggestionRow(suggestion, columns));
   }
 
-  table.append(header, body);
+  table.append(columnGroup, header, body);
   wrapper.append(table);
   container.append(wrapper);
 }
@@ -862,7 +897,7 @@ function createInfoControl(column, tableId) {
     control.classList.remove("is-dismissed");
   });
 
-  const tooltipId = `info-${tableId}-${column.key ?? "fit"}`;
+  const tooltipId = `info-${tableId}-${column.id}`;
   const button = document.createElement("button");
   button.className = "info-button";
   button.type = "button";
@@ -928,10 +963,10 @@ function compareSuggestionsForDisplay(left, right) {
   }
 
   if (suggestionSort.key === "number") {
-    const netComparison =
-      suggestionSortValue(right, "expectedNet") - suggestionSortValue(left, "expectedNet");
-    if (netComparison !== 0) {
-      return netComparison;
+    const worthComparison =
+      suggestionSortValue(right, "worth") - suggestionSortValue(left, "worth");
+    if (worthComparison !== 0) {
+      return worthComparison;
     }
   }
 
@@ -980,7 +1015,7 @@ function renderMessage(container, message, variant = "") {
   container.append(empty);
 }
 
-function renderSuggestionRow(suggestion) {
+function renderSuggestionRow(suggestion, columns) {
   const row = document.createElement("tr");
   row.className = "suggestion-row";
   row.dataset.risk = suggestion.risk;
@@ -1046,18 +1081,21 @@ function renderSuggestionRow(suggestion) {
   cohesion.textContent = `Coh ${formatNumber(suggestion.cohesion, 2)}`;
   semanticsCell.append(fit, cohesion);
 
-  row.append(
-    clueCell,
-    itemCell,
-    targetsCell,
-    worthCell,
-    netCell,
-    hitCell,
-    riskCell,
-    dangerCell,
-    marginCell,
-    semanticsCell,
-  );
+  const cells = {
+    clue: clueCell,
+    items: itemCell,
+    targets: targetsCell,
+    worth: worthCell,
+    net: netCell,
+    hit: hitCell,
+    risk: riskCell,
+    danger: dangerCell,
+    margin: marginCell,
+    semantics: semanticsCell,
+  };
+  for (const column of columns) {
+    row.append(cells[column.id]);
+  }
   return row;
 }
 

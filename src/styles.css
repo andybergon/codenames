@@ -860,6 +860,38 @@ h3 {
   gap: 10px;
 }
 
+.advanced-metrics-toggle {
+  display: inline-flex;
+  min-height: 30px;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 0 8px;
+  color: var(--muted);
+  font-size: 0.68rem;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.advanced-metrics-toggle:hover,
+.advanced-metrics-toggle:has(input:checked) {
+  border-color: var(--ink);
+  color: var(--ink);
+}
+
+.advanced-metrics-toggle input {
+  width: 14px;
+  height: 14px;
+  margin: 0;
+  accent-color: var(--ink);
+}
+
+.advanced-metrics-toggle input:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
 .target-range-filter {
   width: 240px;
 }
@@ -1241,12 +1273,16 @@ h3 {
 
 .suggestion-table {
   width: 100%;
-  min-width: 1000px;
+  min-width: 760px;
   border-collapse: separate;
   border-spacing: 0 6px;
   table-layout: fixed;
   font-size: 0.78rem;
   font-variant-numeric: tabular-nums;
+}
+
+.suggestion-table.is-advanced {
+  min-width: 1000px;
 }
 
 .suggestion-table th {
@@ -1384,7 +1420,9 @@ h3 {
   box-shadow: 0 10px 28px rgb(0 0 0 / 24%);
 }
 
-.suggestion-table th:nth-child(n + 8) .info-popover {
+.suggestion-table th[data-column="danger"] .info-popover,
+.suggestion-table th[data-column="margin"] .info-popover,
+.suggestion-table th[data-column="semantics"] .info-popover {
   right: 0;
   left: auto;
 }
@@ -1395,37 +1433,62 @@ h3 {
   display: block;
 }
 
-.suggestion-table th:nth-child(1) {
-  width: 10.5%;
+.suggestion-table col.column-clue {
+  width: 12%;
 }
 
-.suggestion-table th:nth-child(2) {
-  width: 6.5%;
-}
-
-.suggestion-table th:nth-child(3) {
-  width: 19%;
-}
-
-.suggestion-table th:nth-child(5),
-.suggestion-table th:nth-child(6) {
+.suggestion-table col.column-items {
   width: 7%;
 }
 
-.suggestion-table th:nth-child(4),
-.suggestion-table th:nth-child(9) {
+.suggestion-table col.column-targets {
+  width: 24%;
+}
+
+.suggestion-table col.column-worth {
+  width: 9%;
+}
+
+.suggestion-table col.column-hit,
+.suggestion-table col.column-risk {
+  width: 10%;
+}
+
+.suggestion-table col.column-danger {
+  width: 28%;
+}
+
+.suggestion-table.is-advanced col.column-clue {
+  width: 10.5%;
+}
+
+.suggestion-table.is-advanced col.column-items {
+  width: 6.5%;
+}
+
+.suggestion-table.is-advanced col.column-targets {
+  width: 19%;
+}
+
+.suggestion-table.is-advanced col.column-worth,
+.suggestion-table.is-advanced col.column-margin {
   width: 8.5%;
 }
 
-.suggestion-table th:nth-child(7) {
+.suggestion-table.is-advanced col.column-net,
+.suggestion-table.is-advanced col.column-hit {
+  width: 7%;
+}
+
+.suggestion-table.is-advanced col.column-risk {
   width: 8%;
 }
 
-.suggestion-table th:nth-child(8) {
+.suggestion-table.is-advanced col.column-danger {
   width: 16%;
 }
 
-.suggestion-table th:nth-child(10) {
+.suggestion-table.is-advanced col.column-semantics {
   width: 9%;
 }
 
@@ -1568,7 +1631,7 @@ h3 {
   .recommendation-toolbar {
     display: grid;
     width: 100%;
-    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-columns: minmax(0, 1fr) auto auto;
     align-items: end;
   }
 
