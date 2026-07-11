@@ -100,6 +100,7 @@ let board = cloneBoard(initialBoardState.cards);
 let boardCollapsed = false;
 let boardOrder = initialBoardState.order;
 let boardWordSet = initialBoardState.wordSet;
+let nextBoardWordSet = boardWordSet;
 let randomLayoutOrder = [...initialBoardState.randomLayoutOrder];
 let boardSource = { ...initialBoardState.source };
 let targetRange = { ...DEFAULT_TARGET_RANGE };
@@ -177,7 +178,7 @@ elements.loadSample.addEventListener("click", () => {
 
 elements.randomBoard.addEventListener("click", () => {
   loadBoardState(
-    createGeneratedBoardState(createRandomSeed(), BOARD_ORDER.SORTED, boardWordSet),
+    createGeneratedBoardState(createRandomSeed(), BOARD_ORDER.SORTED, nextBoardWordSet),
   );
   syncBoardUrl();
   render();
@@ -185,7 +186,7 @@ elements.randomBoard.addEventListener("click", () => {
 
 for (const button of elements.wordSetButtons) {
   button.addEventListener("click", () => {
-    switchBoardWordSet(button.dataset.wordSetValue);
+    setNewBoardWordSet(button.dataset.wordSetValue);
   });
 }
 
@@ -562,26 +563,21 @@ function renderBoardWordSetControl() {
   for (const button of elements.wordSetButtons) {
     button.setAttribute(
       "aria-pressed",
-      String(button.dataset.wordSetValue === boardWordSet),
+      String(button.dataset.wordSetValue === nextBoardWordSet),
     );
   }
 }
 
-function switchBoardWordSet(nextWordSet) {
+function setNewBoardWordSet(nextWordSet) {
   if (
-    nextWordSet === boardWordSet ||
+    nextWordSet === nextBoardWordSet ||
     (nextWordSet !== WORD_SET.OFFICIAL && nextWordSet !== WORD_SET.EXTENDED)
   ) {
     return;
   }
 
-  const seed =
-    boardSource.type === "seed" || boardSource.type === "legacy-seed"
-      ? boardSource.seed
-      : createRandomSeed();
-  loadBoardState(createGeneratedBoardState(seed, boardOrder, nextWordSet));
-  syncBoardUrl();
-  render();
+  nextBoardWordSet = nextWordSet;
+  renderBoardWordSetControl();
 }
 
 function createCardStateButton({ action, label, title, onClick }) {
