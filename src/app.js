@@ -34,6 +34,11 @@ const BOARD_METRIC_DEFINITIONS = {
       "Blue ease minus Red ease after scoring the board again with Blue and Red roles swapped. Positive favors Blue, negative favors Red, and a difference within 3 points is shown as Even. B and R show each side's 0-100 ease score.",
   },
 };
+const MOBILE_METRIC_DEFINITION = {
+  id: "recommendation-metrics",
+  label: "Recommendation metrics",
+  info: "Worth is the overall 0-99 ranking. Est. hit approximates the chance of reaching every target. Risk summarizes safety, and Closest danger shows the strongest non-friendly association.",
+};
 const SUGGESTION_COLUMNS = [
   { id: "clue", label: "Clue", key: "clue", direction: "asc" },
   { id: "items", label: "Items", key: "number", direction: "desc" },
@@ -136,6 +141,7 @@ const elements = {
   minimumWorth: document.querySelector("#minimum-worth"),
   minimumWorthValue: document.querySelector("#minimum-worth-value"),
   mobileSuggestionSort: document.querySelector("#mobile-suggestion-sort"),
+  mobileMetricHelp: document.querySelector("#mobile-metric-help"),
   advancedMetrics: document.querySelector("#advanced-metrics"),
   worthDistribution: document.querySelector("#worth-distribution"),
   friendlyTotal: document.querySelector("#friendly-total"),
@@ -316,6 +322,9 @@ document.addEventListener("keydown", (event) => {
   }
 });
 
+elements.mobileMetricHelp.append(
+  createInfoControl(MOBILE_METRIC_DEFINITION, "mobile-recommendations"),
+);
 applyTheme(readThemeSetting());
 render();
 

@@ -873,6 +873,16 @@ h3 {
   display: none;
 }
 
+.metrics-display-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.mobile-metric-help {
+  display: none;
+}
+
 .advanced-metrics-toggle:hover,
 .advanced-metrics-toggle:has(input:checked) {
   border-color: var(--ink);
@@ -1670,8 +1680,12 @@ h3 {
     text-transform: none;
   }
 
-  .advanced-metrics-toggle {
+  .metrics-display-controls {
     justify-self: start;
+  }
+
+  .mobile-metric-help {
+    display: inline-flex;
   }
 
   #recommendation-count {
