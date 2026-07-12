@@ -17,5 +17,7 @@ Local-first Vite application for embedding-powered Codenames clue recommendation
 - GitHub: `https://github.com/andybergon/codenames`
 - Vercel project: `codenames`
 - Production: `https://codenames.andybergon.me`
+- Public Vercel alias: `https://codenames-trainer.vercel.app`
 - Deploy through pushes to `main`; do not upload the working directory directly with the Vercel CLI.
+- Keep Vercel SSO deployment protection disabled so the public `vercel.app` alias does not redirect visitors to Vercel login.
 - Cloudflare owns DNS. The production record is a DNS-only `CNAME` from `codenames.andybergon.me` to `90043d1adb0620da.vercel-dns-016.com`.
