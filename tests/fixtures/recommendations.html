@@ -12,36 +12,87 @@
         <div class="suggestions">
           <div class="suggestion-table-wrap">
             <table class="suggestion-table">
+              <colgroup>
+                <col class="column-clue" />
+                <col class="column-items" />
+                <col class="column-targets" />
+                <col class="column-worth" />
+                <col class="column-hit" />
+                <col class="column-risk" />
+                <col class="column-danger" />
+                <col class="column-action" />
+              </colgroup>
               <thead>
                 <tr>
                   <th>Clue</th>
                   <th>Items</th>
                   <th>Targets</th>
-                  <th>Worth</th>
-                  <th>Est. hit</th>
-                  <th>Risk</th>
-                  <th>Closest danger</th>
+                  <th data-column="worth">
+                    <div class="column-header-content">
+                      <button class="sort-button" type="button">
+                        <span class="column-label">Worth</span><span class="sort-icon desc"></span>
+                      </button>
+                      <span class="info-control"><button class="info-button" type="button"></button></span>
+                    </div>
+                  </th>
+                  <th data-column="hit">
+                    <div class="column-header-content">
+                      <button class="sort-button" type="button">
+                        <span class="column-label">Est. hit</span><span class="sort-icon"></span>
+                      </button>
+                      <span class="info-control"><button class="info-button" type="button"></button></span>
+                    </div>
+                  </th>
+                  <th data-column="risk">
+                    <div class="column-header-content">
+                      <button class="sort-button" type="button">
+                        <span class="column-label">Risk</span><span class="sort-icon"></span>
+                      </button>
+                      <span class="info-control"><button class="info-button" type="button"></button></span>
+                    </div>
+                  </th>
+                  <th data-column="danger">
+                    <div class="column-header-content">
+                      <button class="sort-button" type="button">
+                        <span class="column-label">Closest danger</span><span class="sort-icon"></span>
+                      </button>
+                      <span class="info-control"><button class="info-button" type="button"></button></span>
+                    </div>
+                  </th>
+                  <th>Apply</th>
                 </tr>
               </thead>
               <tbody>
                 <tr class="suggestion-row" data-risk="safe">
                   <td class="clue-cell" data-label="Clue">
-                    <button class="apply-suggestion-button" type="button">
-                      <strong>Province</strong>
-                    </button>
+                    <strong>Province</strong>
                   </td>
-                  <td class="item-cell" data-label="Items"><strong>2</strong></td>
+                  <td class="item-cell" data-label="Items"><strong>3</strong></td>
                   <td class="targets-cell" data-label="Targets">
                     <div class="target-list">
-                      <span class="target-chip">Canada 0.58</span>
-                      <span class="target-chip">Beijing 0.43</span>
+                      <span class="target-chip">
+                        <span class="target-word">Microscope</span><span class="target-score">0.58</span>
+                      </span>
+                      <span class="target-chip">
+                        <span class="target-word">Hospital</span><span class="target-score">0.43</span>
+                      </span>
+                      <span class="target-chip">
+                        <span class="target-word">Nurse</span><span class="target-score">0.37</span>
+                      </span>
                     </div>
                   </td>
                   <td class="score-cell worth-cell" data-label="Worth"><strong>88</strong></td>
                   <td class="score-cell hit-cell" data-label="Est. hit"><strong>91%</strong></td>
                   <td class="risk-cell" data-label="Risk"><span class="badge safe">Safe</span></td>
                   <td class="danger-cell" data-label="Closest danger">
-                    <span class="danger-chip enemy">Australia 0.27</span>
+                    <span class="danger-chip enemy">
+                      <span class="danger-word">Australia</span><span class="danger-score">0.27</span>
+                    </span>
+                  </td>
+                  <td class="action-cell" data-label="Apply">
+                    <button class="apply-suggestion-button" type="button" aria-label="Apply Province 3">
+                      <span aria-hidden="true">✓</span>
+                    </button>
                   </td>
                 </tr>
               </tbody>

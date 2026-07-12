@@ -45,7 +45,7 @@ const BOARD_METRIC_DEFINITIONS = {
 const MOBILE_METRIC_DEFINITION = {
   id: "recommendation-metrics",
   label: "Recommendation metrics",
-  info: "Worth is the overall 0-99 ranking. Est. hit approximates the chance of reaching every target. Risk summarizes safety, and Closest danger shows the strongest non-friendly association.",
+  info: "Worth ranks overall clue usefulness. Est. hit estimates the chance of getting every target before a miss. Risk is a safety label with hard cutoffs, so a Safe clue can still have lower Worth than a Medium clue.",
 };
 const SUGGESTION_COLUMNS = [
   { id: "clue", label: "Clue", key: "clue", direction: "asc" },
@@ -56,7 +56,7 @@ const SUGGESTION_COLUMNS = [
     label: "Worth",
     key: "worth",
     direction: "desc",
-    info: "A 0-99 heuristic combining expected net, semantic fit, cohesion, safety margin, consistency, and clue familiarity.",
+    info: "Overall usefulness from 0-99. It rewards more likely targets, stronger semantic fit, cohesive target words, safety margin, and clue familiarity. Risk is shown separately.",
   },
   {
     id: "net",
@@ -71,14 +71,14 @@ const SUGGESTION_COLUMNS = [
     label: "Est. hit",
     key: "success",
     direction: "desc",
-    info: "Heuristic chance that the clue safely reaches its intended targets. It is not calibrated from real games yet.",
+    info: "Estimated chance that teammates get every intended target before hitting another card. This is a model estimate, not a percentage measured from real games.",
   },
   {
     id: "risk",
     label: "Risk",
     key: "risk",
     direction: "desc",
-    info: "Safe, Medium, or Risky based on margin, hit estimate, target count, and whether the assassin is the closest danger.",
+    info: "A traffic-light safety label with hard cutoffs. Safe needs 1-3 targets, at least 73% estimated hit, and a 0.11 safety margin. Assassin danger, a margin below 0.025, or hit below 56% is Risky; the rest is Medium.",
   },
   {
     id: "danger",
@@ -101,6 +101,7 @@ const SUGGESTION_COLUMNS = [
     advanced: true,
     info: "Fit is clue similarity to the target centroid. Cohesion is the average similarity among the target words.",
   },
+  { id: "action", label: "Apply" },
 ];
 const RISK_SORT_VALUE = {
   safe: 3,
@@ -128,7 +129,6 @@ let flippingCardLayoutIds = new Set();
 let suggestionSort = { key: "worth", direction: "desc" };
 let showAdvancedMetrics = false;
 let activeSide = SIDE.BLUE;
-let autoSwitchSides = true;
 let turnMessage = "";
 let latestAnalysis = null;
 let latestAnalyses = { [SIDE.BLUE]: null, [SIDE.RED]: null };
@@ -159,7 +159,6 @@ const elements = {
   mobileSuggestionSort: document.querySelector("#mobile-suggestion-sort"),
   mobileMetricHelp: document.querySelector("#mobile-metric-help"),
   sideButtons: [...document.querySelectorAll("[data-recommendation-side]")],
-  autoSwitchSides: document.querySelector("#auto-switch-sides"),
   turnStatus: document.querySelector("#turn-status"),
   advancedMetrics: document.querySelector("#advanced-metrics"),
   worthDistribution: document.querySelector("#worth-distribution"),
@@ -272,11 +271,6 @@ for (const button of elements.sideButtons) {
     setActiveSide(button.dataset.recommendationSide);
   });
 }
-
-elements.autoSwitchSides.addEventListener("change", (event) => {
-  autoSwitchSides = event.target.checked;
-  renderTurnControls();
-});
 
 elements.advancedMetrics.addEventListener("change", (event) => {
   showAdvancedMetrics = event.target.checked;
@@ -652,7 +646,6 @@ function renderTurnControls() {
       String(button.dataset.recommendationSide === activeSide),
     );
   }
-  elements.autoSwitchSides.checked = autoSwitchSides;
   elements.resultsPanel.dataset.activeSide = activeSide;
 
   const winner = winningSide(board);
@@ -662,9 +655,7 @@ function renderTurnControls() {
       : `${sideLabel(winner)} wins`;
     return;
   }
-  elements.turnStatus.textContent = turnMessage
-    ? `${turnMessage} · ${sideLabel(activeSide)} to play`
-    : `${sideLabel(activeSide)} to play`;
+  elements.turnStatus.textContent = turnMessage;
 }
 
 function resetGameState() {
@@ -1167,6 +1158,7 @@ function renderSuggestionRow(suggestion, columns) {
   const row = document.createElement("tr");
   row.className = "suggestion-row";
   row.dataset.risk = suggestion.risk;
+  row.dataset.targetCount = String(suggestion.number);
   const gameOver = Boolean(winningSide(board));
   row.dataset.actionable = String(!gameOver);
   const applyLabel = `Apply ${suggestion.clue} ${suggestion.number} for ${sideLabel(activeSide)} and mark ${suggestion.targets.map((target) => target.word).join(", ")} guessed`;
@@ -1178,19 +1170,24 @@ function renderSuggestionRow(suggestion, columns) {
   });
 
   const clueCell = createTableCell("Clue", "clue-cell");
+  const clue = document.createElement("strong");
+  clue.textContent = suggestion.clue;
+  clue.title = suggestion.clue;
+  clueCell.append(clue);
+
+  const actionCell = createTableCell("Apply", "action-cell");
   const applyButton = document.createElement("button");
   applyButton.className = "apply-suggestion-button";
   applyButton.type = "button";
   applyButton.setAttribute("aria-label", applyLabel);
+  applyButton.title = applyLabel;
   applyButton.disabled = gameOver;
   applyButton.addEventListener("click", () => applyRecommendation(suggestion));
-  const clue = document.createElement("strong");
-  clue.textContent = suggestion.clue;
   const applyIcon = document.createElement("i");
   applyIcon.dataset.lucide = "check";
   applyIcon.setAttribute("aria-hidden", "true");
-  applyButton.append(clue, applyIcon);
-  clueCell.append(applyButton);
+  applyButton.append(applyIcon);
+  actionCell.append(applyButton);
 
   const itemCell = createTableCell("Items", "item-cell");
   const itemCount = document.createElement("strong");
@@ -1203,7 +1200,16 @@ function renderSuggestionRow(suggestion, columns) {
   for (const target of suggestion.targets) {
     const chip = document.createElement("span");
     chip.className = "target-chip";
-    chip.textContent = `${target.word} ${formatNumber(target.sim, 2)}`;
+    const score = formatNumber(target.sim, 2);
+    chip.setAttribute("aria-label", `${target.word}, similarity ${score}`);
+    chip.title = `${target.word} ${score}`;
+    const word = document.createElement("span");
+    word.className = "target-word";
+    word.textContent = target.word;
+    const value = document.createElement("span");
+    value.className = "target-score";
+    value.textContent = score;
+    chip.append(word, value);
     targets.append(chip);
   }
   targetsCell.append(targets);
@@ -1228,7 +1234,13 @@ function renderSuggestionRow(suggestion, columns) {
   dangerChip.className = `danger-chip ${dangerTeam}`;
   const dangerSimilarity = formatNumber(suggestion.closestDanger.sim, 2);
   const dangerRole = teamLabel(dangerTeam);
-  dangerChip.textContent = `${suggestion.closestDanger.word} ${dangerSimilarity}`;
+  const dangerWord = document.createElement("span");
+  dangerWord.className = "danger-word";
+  dangerWord.textContent = suggestion.closestDanger.word;
+  const dangerScore = document.createElement("span");
+  dangerScore.className = "danger-score";
+  dangerScore.textContent = dangerSimilarity;
+  dangerChip.append(dangerWord, dangerScore);
   dangerChip.setAttribute(
     "aria-label",
     `${suggestion.closestDanger.word}, ${dangerRole}, similarity ${dangerSimilarity}`,
@@ -1260,6 +1272,7 @@ function renderSuggestionRow(suggestion, columns) {
     danger: dangerCell,
     margin: marginCell,
     semantics: semanticsCell,
+    action: actionCell,
   };
   for (const column of columns) {
     row.append(cells[column.id]);
@@ -1273,7 +1286,7 @@ function applyRecommendation(suggestion) {
   }
 
   const playedSide = activeSide;
-  const applied = applySuggestionTurn(board, suggestion, playedSide, autoSwitchSides);
+  const applied = applySuggestionTurn(board, suggestion, playedSide);
   if (applied.appliedLayoutIds.length === 0) {
     return;
   }

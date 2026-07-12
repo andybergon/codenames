@@ -47,6 +47,12 @@ test("mobile recommendation cards show every primary metric", async ({ page }) =
       visibleLabels: [...row.querySelectorAll("td")]
         .filter((cell) => cell.getBoundingClientRect().width > 0)
         .map((cell) => cell.dataset.label),
+      targetLayout: [...row.querySelectorAll(".target-chip")].map((chip) => ({
+        width: chip.getBoundingClientRect().width,
+        scoreFits:
+          chip.querySelector(".target-score").getBoundingClientRect().right <=
+          chip.getBoundingClientRect().right,
+      })),
     };
   });
 
@@ -61,7 +67,71 @@ test("mobile recommendation cards show every primary metric", async ({ page }) =
     "Est. hit",
     "Risk",
     "Closest danger",
+    "Apply",
   ]);
+  expect(layout.targetLayout.every((target) => target.scoreFits)).toBe(true);
+  expect(Math.max(...layout.targetLayout.map((target) => target.width))).toBeLessThanOrEqual(
+    Math.min(...layout.targetLayout.map((target) => target.width)) + 1,
+  );
+});
+
+test("recommendation values remain visible across responsive breakpoints", async ({ page }) => {
+  await page.goto("/tests/fixtures/recommendations.html");
+
+  for (const width of [320, 390, 720, 721, 900, 1115, 1440]) {
+    await page.setViewportSize({ width, height: 844 });
+    const layout = await page.evaluate(() => {
+      const chips = [...document.querySelectorAll(".target-chip")];
+      const protectedValues = [
+        ...document.querySelectorAll(
+          ".target-score, .danger-score, .item-cell strong, .score-cell strong",
+        ),
+      ];
+      return {
+        pageOverflows: document.documentElement.scrollWidth > document.documentElement.clientWidth,
+        chipWidths: chips.map((chip) => Math.round(chip.getBoundingClientRect().width)),
+        protectedValuesFit: protectedValues.every((value) => {
+          const valueRect = value.getBoundingClientRect();
+          const parentRect = value.parentElement.getBoundingClientRect();
+          return valueRect.left >= parentRect.left - 1 && valueRect.right <= parentRect.right + 1;
+        }),
+      };
+    });
+
+    expect(layout.pageOverflows, `page overflow at ${width}px`).toBe(false);
+    expect(layout.protectedValuesFit, `cropped value at ${width}px`).toBe(true);
+    expect(
+      Math.max(...layout.chipWidths) - Math.min(...layout.chipWidths),
+      `uneven target chips at ${width}px`,
+    ).toBeLessThanOrEqual(1);
+  }
+});
+
+test("sortable metric headers keep sort and info controls separate", async ({ page }) => {
+  await page.goto("/tests/fixtures/recommendations.html");
+  await expect(page.locator('th[data-column="worth"]')).toBeVisible();
+
+  for (const width of [900, 1011, 1115]) {
+    await page.setViewportSize({ width, height: 900 });
+    const headers = await page.evaluate(() =>
+      ["worth", "hit", "risk", "danger"].map((column) => {
+        const header = document.querySelector(`th[data-column="${column}"]`);
+        const sort = header.querySelector(".sort-button").getBoundingClientRect();
+        const info = header.querySelector(".info-control").getBoundingClientRect();
+        const bounds = header.getBoundingClientRect();
+        return {
+          column,
+          controlsOverlap: sort.right > info.left,
+          infoOverflows: info.right > bounds.right,
+        };
+      }),
+    );
+
+    expect(
+      headers.filter((header) => header.controlsOverlap || header.infoOverflows),
+      `header overlap at ${width}px`,
+    ).toEqual([]);
+  }
 });
 
 test("choosing a word pool does not replace the current board", async ({ page }) => {
@@ -86,15 +156,11 @@ test("recommendation perspective can switch between Blue and Red", async ({ page
 
   const blue = page.getByRole("button", { name: "Blue", exact: true });
   const red = page.getByRole("button", { name: "Red", exact: true });
-  const autoTurn = page.getByRole("checkbox", { name: "Auto turn" });
 
   await expect(blue).toHaveAttribute("aria-pressed", "true");
-  await expect(autoTurn).toBeChecked();
   await red.click();
 
   await expect(red).toHaveAttribute("aria-pressed", "true");
   await expect(page.locator(".results-panel")).toHaveAttribute("data-active-side", "red");
-  await expect(page.locator("#turn-status")).toHaveText("Red to play");
-  await autoTurn.uncheck();
-  await expect(autoTurn).not.toBeChecked();
+  await expect(page.locator("#turn-status")).toBeEmpty();
 });

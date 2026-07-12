@@ -94,7 +94,6 @@
 }
 
 body {
-  min-width: 320px;
   margin: 0;
   background: var(--page);
 }
@@ -912,24 +911,6 @@ h3 {
   background: currentColor;
 }
 
-.auto-turn-toggle {
-  display: inline-flex;
-  min-height: 30px;
-  align-items: center;
-  gap: 5px;
-  color: var(--muted);
-  font-size: 0.68rem;
-  font-weight: 850;
-  cursor: pointer;
-}
-
-.auto-turn-toggle input {
-  width: 14px;
-  height: 14px;
-  margin: 0;
-  accent-color: var(--ink);
-}
-
 .turn-status {
   color: var(--muted);
   font-size: 0.7rem;
@@ -1327,14 +1308,36 @@ h3 {
 }
 
 .target-list {
-  flex-wrap: wrap;
+  display: grid;
+  width: 100%;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 6px;
 }
 
 .target-chip {
-  padding: 0 8px;
+  display: grid;
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr) auto;
+  justify-content: stretch;
+  gap: 4px;
+  overflow: hidden;
+  padding: 0 5px;
   background: var(--blue-soft);
   color: var(--blue-text);
+  font-size: 0.7rem;
+  text-align: left;
+}
+
+.target-word {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.target-score {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .danger-chip {
@@ -1369,7 +1372,7 @@ h3 {
 
 .suggestion-table {
   width: 100%;
-  min-width: 760px;
+  min-width: 900px;
   border-collapse: separate;
   border-spacing: 0 6px;
   table-layout: fixed;
@@ -1378,11 +1381,11 @@ h3 {
 }
 
 .suggestion-table.is-advanced {
-  min-width: 1000px;
+  min-width: 1200px;
 }
 
 .suggestion-table th {
-  padding: 0 8px 3px;
+  padding: 0 6px 3px;
   color: var(--muted);
   font-size: 0.66rem;
   font-weight: 900;
@@ -1466,6 +1469,21 @@ h3 {
   flex: 0 0 28px;
 }
 
+.suggestion-table th .info-control {
+  flex-basis: 20px;
+}
+
+.suggestion-table th .info-button {
+  width: 20px;
+  height: 20px;
+}
+
+.suggestion-table th .info-button::before {
+  width: 14px;
+  height: 14px;
+  font-size: 0.52rem;
+}
+
 .info-button {
   position: relative;
   display: inline-grid;
@@ -1540,7 +1558,7 @@ h3 {
 }
 
 .suggestion-table col.column-targets {
-  width: 24%;
+  width: 30%;
 }
 
 .suggestion-table col.column-worth {
@@ -1553,7 +1571,11 @@ h3 {
 }
 
 .suggestion-table col.column-danger {
-  width: 28%;
+  width: 17%;
+}
+
+.suggestion-table col.column-action {
+  width: 5%;
 }
 
 .suggestion-table.is-advanced col.column-clue {
@@ -1561,33 +1583,37 @@ h3 {
 }
 
 .suggestion-table.is-advanced col.column-items {
-  width: 6.5%;
+  width: 6%;
 }
 
 .suggestion-table.is-advanced col.column-targets {
-  width: 19%;
+  width: 24%;
 }
 
 .suggestion-table.is-advanced col.column-worth,
 .suggestion-table.is-advanced col.column-margin {
-  width: 8.5%;
+  width: 8%;
 }
 
 .suggestion-table.is-advanced col.column-net,
 .suggestion-table.is-advanced col.column-hit {
-  width: 7%;
+  width: 6.5%;
 }
 
 .suggestion-table.is-advanced col.column-risk {
-  width: 8%;
+  width: 7.5%;
 }
 
 .suggestion-table.is-advanced col.column-danger {
-  width: 16%;
+  width: 10%;
 }
 
 .suggestion-table.is-advanced col.column-semantics {
-  width: 9%;
+  width: 8%;
+}
+
+.suggestion-table.is-advanced col.column-action {
+  width: 5%;
 }
 
 .suggestion-table td {
@@ -1634,42 +1660,47 @@ h3 {
 }
 
 .clue-cell strong {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
   font-size: 0.92rem;
   line-height: 1.1;
+  text-overflow: ellipsis;
   text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.column-action .column-header-content,
+.action-cell {
+  justify-content: center;
+  text-align: center !important;
 }
 
 .apply-suggestion-button {
-  display: flex;
-  width: 100%;
-  min-width: 0;
-  min-height: 30px;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6px;
-  border: 0;
+  display: inline-grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 6px;
   padding: 0;
-  background: transparent;
-  color: var(--ink);
-  text-align: left;
+  background: var(--subtle-fill-soft);
+  color: var(--blue);
 }
 
 .apply-suggestion-button svg {
-  flex: 0 0 auto;
-  border: 1px solid currentColor;
-  border-radius: 50%;
-  padding: 2px;
-  color: var(--blue);
-  opacity: 0.65;
+  width: 16px;
+  height: 16px;
 }
 
-.results-panel[data-active-side="red"] .apply-suggestion-button svg {
+.results-panel[data-active-side="red"] .apply-suggestion-button {
   color: var(--red);
 }
 
-.apply-suggestion-button:hover svg,
-.apply-suggestion-button:focus-visible svg {
-  opacity: 1;
+.apply-suggestion-button:hover,
+.apply-suggestion-button:focus-visible {
+  border-color: currentColor;
+  background: var(--surface-hover);
 }
 
 .apply-suggestion-button:focus-visible {
@@ -1702,10 +1733,26 @@ h3 {
 }
 
 .danger-cell .danger-chip {
+  display: inline-grid;
+  max-width: 100%;
   min-height: 28px;
-  justify-content: flex-start;
+  grid-template-columns: minmax(0, 1fr) auto;
+  justify-content: stretch;
+  gap: 4px;
   line-height: 1.15;
   text-align: left;
+}
+
+.danger-word {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.danger-score {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .semantics-cell span {
@@ -1734,6 +1781,19 @@ h3 {
   .suggestion-table th:first-child {
     z-index: 2;
     background: var(--panel);
+  }
+}
+
+@media (max-width: 820px) {
+  .board-primary-row {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .board-header-actions {
+    width: 100%;
+    flex-wrap: wrap;
+    justify-content: flex-start;
   }
 }
 
@@ -1852,13 +1912,7 @@ h3 {
   }
 
   .suggestion-table thead {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip: rect(0 0 0 0);
-    clip-path: inset(50%);
-    white-space: nowrap;
+    display: none;
   }
 
   .suggestion-table tbody {
@@ -1869,13 +1923,13 @@ h3 {
   .suggestion-row {
     display: grid;
     overflow: hidden;
-    grid-template-columns: minmax(0, 1fr) auto auto;
+    grid-template-columns: minmax(0, 1fr) auto auto 36px;
     grid-template-areas:
-      "clue items worth"
-      "targets targets targets"
-      "hit risk risk"
-      "danger danger danger"
-      "net margin semantics";
+      "clue items worth action"
+      "targets targets targets targets"
+      "hit risk risk risk"
+      "danger danger danger danger"
+      "net margin semantics semantics";
     border: 1px solid var(--line);
     border-left: 4px solid var(--tan);
     border-radius: 7px;
@@ -1964,6 +2018,16 @@ h3 {
 
   .semantics-cell {
     grid-area: semantics;
+  }
+
+  .action-cell {
+    grid-area: action;
+    align-items: center !important;
+    padding-left: 0 !important;
+  }
+
+  .action-cell::before {
+    display: none;
   }
 
   .board-grid {
