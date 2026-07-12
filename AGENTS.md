@@ -5,6 +5,7 @@ Local-first Vite application for embedding-powered Codenames clue recommendation
 ## Checks
 
 - Run `npm test` before publishing changes. It covers the smoke suite, production build, and responsive Playwright tests.
+- Playwright owns port `42873` with server reuse disabled. Keep it isolated so tests cannot silently run against another repo's local server.
 - Keep generated Extended word data and `scripts/generated/extended-word-report.json` in sync with `npm run generate:extended`.
 
 ## Share Compatibility
