@@ -1,5 +1,6 @@
 import {
   DEFAULT_BOARD,
+  EXTENDED_V2_WORDS,
   EXTENDED_WORDS,
   LEGACY_WORD_BANK,
   ROLE_SEQUENCE,
@@ -14,12 +15,13 @@ export const BOARD_ORDER = Object.freeze({
 });
 
 const LEGACY_VERSION = "1";
-const VERSION = "2";
+const PREVIOUS_VERSION = "2";
+const VERSION = "3";
 const SAMPLE_RANDOM_CODE = `${LEGACY_VERSION}pr`;
 const SAMPLE_LAYOUT_SEED = "Q09ERU5BTUU";
 const CARD_COUNT = 25;
-const WORD_BITS = 9;
-const WORD_ESCAPE = 2 ** WORD_BITS - 1;
+const PREVIOUS_WORD_BITS = 9;
+const WORD_BITS = 10;
 const TEAM_BITS = 2;
 const LAYOUT_BITS = 5;
 const MAX_LITERAL_BYTES = 1024;
@@ -31,7 +33,6 @@ const WORD_SET_CODE = Object.freeze({
 const WORD_SET_FROM_CODE = new Map(
   Object.entries(WORD_SET_CODE).map(([wordSet, code]) => [code, wordSet]),
 );
-const WORD_INDEX = new Map(EXTENDED_WORDS.map((word, index) => [word, index]));
 const TEAM_INDEX = new Map(TEAMS.map((team, index) => [team.id, index]));
 
 export function createRandomSeed() {
@@ -66,7 +67,18 @@ export function createGeneratedBoardState(
     order,
     wordSet,
     words: getWordsForSet(wordSet),
-    source: { type: "seed", seed },
+    source: { type: "seed", seed, version: VERSION },
+  });
+}
+
+function createPreviousGeneratedBoardState(seed, order, wordSet) {
+  validateWordSet(wordSet);
+  return createSeededBoardState({
+    seed,
+    order,
+    wordSet,
+    words: wordSet === WORD_SET.OFFICIAL ? getWordsForSet(wordSet) : EXTENDED_V2_WORDS,
+    source: { type: "seed", seed, version: PREVIOUS_VERSION },
   });
 }
 
@@ -122,28 +134,32 @@ export function decodeBoardParam(value) {
     );
   }
 
-  const seedMatch = value.match(/^2s([A-Za-z0-9_-]{11})([ox])([sr])$/);
+  const seedMatch = value.match(/^([23])s([A-Za-z0-9_-]{11})([ox])([sr])$/);
   if (seedMatch) {
-    const wordSet = WORD_SET_FROM_CODE.get(seedMatch[2]);
-    return createGeneratedBoardState(
-      seedMatch[1],
-      seedMatch[3] === "r" ? BOARD_ORDER.RANDOM : BOARD_ORDER.SORTED,
-      wordSet,
-    );
+    const wordSet = WORD_SET_FROM_CODE.get(seedMatch[3]);
+    const order = seedMatch[4] === "r" ? BOARD_ORDER.RANDOM : BOARD_ORDER.SORTED;
+    return seedMatch[1] === PREVIOUS_VERSION
+      ? createPreviousGeneratedBoardState(seedMatch[2], order, wordSet)
+      : createGeneratedBoardState(seedMatch[2], order, wordSet);
   }
   if (value.startsWith(`${LEGACY_VERSION}e`)) {
     return decodeExplicitBoard(
       value.slice(2),
       LEGACY_WORD_BANK,
       WORD_SET.EXTENDED,
+      LEGACY_VERSION,
+      PREVIOUS_WORD_BITS,
     );
   }
-  const explicitMatch = value.match(/^2e([ox])(.+)$/);
+  const explicitMatch = value.match(/^([23])e([ox])(.+)$/);
   if (explicitMatch) {
+    const isPrevious = explicitMatch[1] === PREVIOUS_VERSION;
     return decodeExplicitBoard(
-      explicitMatch[2],
-      EXTENDED_WORDS,
-      WORD_SET_FROM_CODE.get(explicitMatch[1]),
+      explicitMatch[3],
+      isPrevious ? EXTENDED_V2_WORDS : EXTENDED_WORDS,
+      WORD_SET_FROM_CODE.get(explicitMatch[2]),
+      explicitMatch[1],
+      isPrevious ? PREVIOUS_WORD_BITS : WORD_BITS,
     );
   }
 
@@ -159,7 +175,8 @@ export function encodeBoardParam({ cards, randomLayoutOrder, order, source, word
   }
   if (source.type === "seed") {
     validateSeed(source.seed);
-    return `${VERSION}s${source.seed}${WORD_SET_CODE[wordSet]}${
+    const version = source.version === PREVIOUS_VERSION ? PREVIOUS_VERSION : VERSION;
+    return `${version}s${source.seed}${WORD_SET_CODE[wordSet]}${
       order === BOARD_ORDER.RANDOM ? "r" : "s"
     }`;
   }
@@ -170,18 +187,27 @@ export function encodeBoardParam({ cards, randomLayoutOrder, order, source, word
     }`;
   }
   if (source.type === "explicit") {
-    return `${VERSION}e${WORD_SET_CODE[wordSet]}${encodeExplicitBoard(
+    const version = [LEGACY_VERSION, PREVIOUS_VERSION].includes(source.version)
+      ? source.version
+      : VERSION;
+    const isLegacy = version === LEGACY_VERSION;
+    const isPrevious = version === PREVIOUS_VERSION;
+    const wordBank = isLegacy ? LEGACY_WORD_BANK : isPrevious ? EXTENDED_V2_WORDS : EXTENDED_WORDS;
+    const wordBits = isPrevious || isLegacy ? PREVIOUS_WORD_BITS : WORD_BITS;
+    const wordIndex = new Map(wordBank.map((word, index) => [word, index]));
+    return `${version}e${isLegacy ? "" : WORD_SET_CODE[wordSet]}${encodeExplicitBoard(
       cards,
       randomLayoutOrder,
       order,
-      WORD_INDEX,
+      wordIndex,
+      wordBits,
     )}`;
   }
 
   throw new Error("Unsupported board source.");
 }
 
-function encodeExplicitBoard(cards, randomLayoutOrder, order, wordIndex) {
+function encodeExplicitBoard(cards, randomLayoutOrder, order, wordIndex, wordBits) {
   const canonicalCards = canonicalizeCards(cards);
   validateLayoutOrder(randomLayoutOrder);
   const writer = createBitWriter();
@@ -194,13 +220,13 @@ function encodeExplicitBoard(cards, randomLayoutOrder, order, wordIndex) {
       if (literal.length > MAX_LITERAL_BYTES) {
         throw new Error("A board word is too long to share.");
       }
-      writer.write(WORD_ESCAPE, WORD_BITS);
+      writer.write(2 ** wordBits - 1, wordBits);
       writer.write(literal.length, 16);
       for (const byte of literal) {
         writer.write(byte, 8);
       }
     } else {
-      writer.write(wordCode, WORD_BITS);
+      writer.write(wordCode, wordBits);
     }
 
     const teamIndex = TEAM_INDEX.get(card.team);
@@ -217,15 +243,15 @@ function encodeExplicitBoard(cards, randomLayoutOrder, order, wordIndex) {
   return bytesToBase64Url(writer.finish());
 }
 
-function decodeExplicitBoard(value, wordBank, wordSet) {
+function decodeExplicitBoard(value, wordBank, wordSet, version, wordBits) {
   const reader = createBitReader(base64UrlToBytes(value));
   const order = reader.read(1) === 1 ? BOARD_ORDER.RANDOM : BOARD_ORDER.SORTED;
   const cards = [];
 
   for (let layoutId = 0; layoutId < CARD_COUNT; layoutId += 1) {
-    const wordCode = reader.read(WORD_BITS);
+    const wordCode = reader.read(wordBits);
     let word;
-    if (wordCode === WORD_ESCAPE) {
+    if (wordCode === 2 ** wordBits - 1) {
       const length = reader.read(16);
       if (length > MAX_LITERAL_BYTES) {
         throw new Error("A shared board word is too long.");
@@ -259,7 +285,7 @@ function decodeExplicitBoard(value, wordBank, wordSet) {
     randomLayoutOrder,
     order,
     wordSet,
-    source: { type: "explicit" },
+    source: { type: "explicit", version },
   };
 }
 

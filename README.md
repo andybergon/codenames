@@ -10,8 +10,8 @@ A local-first Codenames clue trainer. It embeds the board, searches a 3,000-word
 - **Negative scoring:** the weakest target similarity must beat the highest role-weighted neutral, enemy, or assassin similarity.
 - **Outputs:** one sortable recommendation table with per-target-count availability, a 1-to-9 target range, and a minimum Worth filter; defaults are 2-4 targets, Worth 50, and a compact view. Advanced reveals Net, Margin, and Fit/cohesion diagnostics.
 - **Board metrics:** a symmetric difficulty score and Blue-vs-Red edge computed by scoring both team perspectives.
-- **Board words:** generated boards default to the 400-word original English base-game set; Extended adds a small trainer-specific set.
-- **Gameplay:** switch recommendations between Blue and Red, click a recommendation to mark all its targets guessed, and optionally switch teams automatically after each applied clue.
+- **Board words:** generated boards default to the 400-word original English base-game set; Extended doubles the pool to 800 with mathematically ranked, reviewed additions.
+- **Gameplay:** switch recommendations between Blue and Red, then click a recommendation to mark its targets guessed and pass the turn automatically.
 - **Guessed cards:** guessed cards flip in place and are excluded from role counts, scoring, clue legality, and later recommendations; each card can be restored individually.
 - **Theme:** follow the system appearance or persist an explicit light or dark mode.
 - **Shareable boards:** versioned `?b=` links reproduce words, roles, word set, the stable random layout, and the selected layout mode; generated boards use short seeds while edited boards fall back to compact explicit payloads.
@@ -53,9 +53,17 @@ Run both the static/smoke checks and responsive browser suite with `npm test`.
 
 **Official** is the default for generated boards and contains 400 unique words from the original English base game, including the printed multi-word entries `ICE CREAM`, `LOCH NESS`, `NEW YORK`, and `SCUBA DIVER`. The list is based on a [public transcription of the original set](https://gist.github.com/siemanko/6cc17ee2a253089969b1b904660b4097), with obvious spelling transcription errors normalized.
 
-**Extended** is a strict superset. It currently adds seven words already used by this trainer: `ANCHOR`, `ARMY`, `BLACKHOLE`, `CASTLE`, `ROCKET`, `SUBMARINE`, and `WHEEL`. The fixed Sample board is independent of the generated-board set and can contain these additions.
+**Extended** is a strict 800-word superset: Official plus 400 trainer additions. Its generator starts from a reviewed universe of concrete, imageable, culturally broad, and playful words. It then uses the same MiniLM embedding space to score frequency, association breadth, semantic-domain entropy, and category fit; selects across 14 domains; and rejects overly similar choices within each domain. The reviewed candidate universe is an intentional safety and fun guardrail: mathematical breadth alone can otherwise over-rank generic administrative nouns.
 
-New share links encode the selected word set. Existing v1 links still use the historical 366-word pool, so previously shared seeded and edited boards remain reproducible.
+Regenerate the checked-in set and its audit report with:
+
+```sh
+npm run generate:extended
+```
+
+The output is deterministic for the checked-in clue index and candidate universe. The report at `scripts/generated/extended-word-report.json` records the formula, counts, category distribution, aggregate scores, and selected words for review.
+
+New v3 share links encode the selected word set and support the larger pool. Existing v1 links continue to use the historical 366-word pool, and v2 links continue to use the former Official 400 / Extended 407 pools, so previously shared seeded and edited boards remain reproducible.
 
 ## Embedding Pipeline
 

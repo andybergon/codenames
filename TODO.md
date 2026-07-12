@@ -1,8 +1,8 @@
 # TODO
 
-- Curate the Extended board word set.
-  - Current: Official 400 plus seven non-duplicate words retained from the trainer's historical pool.
-  - Next: define inclusion criteria, review themed and regional coverage, and test additions for clue quality before expanding the set.
+- Add a word-set browser for the Official and Extended pools.
+  - Show the complete 400- and 800-word lists and clearly identify the 400 Extended additions; Extended is a strict superset, so it removes no Official words.
+  - Next: open a searchable compact dialog or drawer from the Words control.
 
 - Evaluate a more game-specific semantic embedding or reranker.
   - Current: mean-centered `all-MiniLM-L6-v2` provides general semantic similarity but is not trained on Codenames associations.

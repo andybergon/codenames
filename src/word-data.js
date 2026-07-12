@@ -1,3 +1,8 @@
+import {
+  CURATED_EXTENDED_ADDITIONS,
+  EXTENDED_WORD_REPORT,
+} from "./generated/extended-word-data.js";
+
 export const TEAMS = [
   { id: "friendly", label: "Blue", short: "B" },
   { id: "enemy", label: "Red", short: "R" },
@@ -493,7 +498,7 @@ export const OFFICIAL_WORDS = [
   ...OFFICIAL_WORDS_MISSING_FROM_LEGACY,
 ].sort();
 
-export const EXTENDED_ADDITIONS = [
+export const EXTENDED_V2_ADDITIONS = [
   "ANCHOR",
   "ARMY",
   "BLACKHOLE",
@@ -503,7 +508,10 @@ export const EXTENDED_ADDITIONS = [
   "WHEEL",
 ];
 
+export const EXTENDED_V2_WORDS = [...OFFICIAL_WORDS, ...EXTENDED_V2_ADDITIONS].sort();
+export const EXTENDED_ADDITIONS = CURATED_EXTENDED_ADDITIONS;
 export const EXTENDED_WORDS = [...OFFICIAL_WORDS, ...EXTENDED_ADDITIONS].sort();
+export { EXTENDED_WORD_REPORT };
 
 export const WORD_SET = Object.freeze({
   OFFICIAL: "official",
