@@ -2,6 +2,8 @@
 
 A local-first Codenames clue trainer. It embeds the board, searches a 3,000-word clue index, and ranks clue options for every possible target count.
 
+[Open the live trainer](https://codenames.andybergon.me)
+
 ## TLDR
 
 - **Embedding:** `Xenova/all-MiniLM-L6-v2`, run locally in the browser with Transformers.js.
