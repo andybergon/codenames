@@ -5,8 +5,8 @@
   - Next: open a searchable compact dialog or drawer from the Words control.
 
 - Evaluate a more game-specific semantic embedding or reranker.
-  - Current: mean-centered `all-MiniLM-L6-v2` provides general semantic similarity but is not trained on Codenames associations.
-  - Next: create a small board-and-clue evaluation set, then compare stronger embedding models and an embedding-shortlist reranker on top-k clue quality, latency, and browser size.
+  - Current: the human-data benchmark compares five browser-compatible models across 7,703 Codenames Duet turns and 2,250 two-target human clues. Mean-centered BGE-small is the best balanced embedding candidate; MiniLM-L12 is stronger on intended pairs but makes more avoid-word errors.
+  - Next: A/B BGE-small and MiniLM-L12 in the trainer's generated top clues, then add lightweight gameplay-outcome capture before changing the production model or fitting a reranker.
 
 - Expand the generated clue index beyond 3,000 candidates.
   - Current: frequent `wordfreq` entries filtered through WordNet, plus curated seeds, produce a 1.6 MB int8 index.

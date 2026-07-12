@@ -73,6 +73,27 @@ New v3 share links encode the selected word set and support the larger pool. Exi
 
 The static clue index in `public/data/clue-embeddings.json` stores normalized clue vectors as symmetric int8 values. This keeps the index around 1.6 MB while board words remain fully dynamic.
 
+## Human Gameplay Embedding Evaluation
+
+`npm run evaluate:embeddings` compares browser-compatible q8 embedding models against two public human datasets:
+
+- [Cultural Codes](https://github.com/SALT-NLP/codenames): 7,703 Codenames Duet turns with human clues, guesses, intended targets, neutral words, and avoid words.
+- [Lexical Search and Pragmatics in Connector](https://github.com/hawkrobe/lexical-search-and-pragmatics): 2,250 human production clues for fixed two-word targets on full 20-word boards.
+
+The benchmark pins both upstream commits, downloads their files into the gitignored cache, and does not redistribute the datasets because neither upstream repository contains an explicit license file. It embeds each human clue and board, applies the trainer's clue-corpus mean-centering, then measures agreement with human guesses, target recovery, and avoid-word errors. The checked-in report is `scripts/generated/embedding-model-comparison.json`.
+
+Centered-model results from the July 2026 run:
+
+| Model | q8 model | Duet first guess | Duet target recall | Duet avoid rate | Two-target recall | Exact target pair |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| **MiniLM-L6 (current)** | 23 MB | 51.48% | 57.66% | 9.62% | 51.09% | 23.16% |
+| MiniLM-L12 | 34 MB | 51.67% | 57.91% | 10.02% | **54.69%** | **28.49%** |
+| GTE-small | 34 MB | 51.27% | 57.35% | 10.27% | 53.36% | 26.22% |
+| **BGE-small** | 34 MB | **52.13%** | **58.73%** | **9.46%** | 52.93% | 24.31% |
+| MPNet-base | 110 MB | 49.85% | 56.04% | 10.39% | 50.96% | 21.60% |
+
+BGE-small is the best balanced candidate: versus the current model it gains 0.65 percentage points on first-guess agreement, 1.07 points on Duet target recall, 1.84 points on two-target recall, and slightly lowers avoid errors. MiniLM-L12 is substantially better at recovering intended pairs, but its higher avoid rate makes it a riskier default. A production switch still needs an end-to-end comparison of the trainer's generated top clues because this benchmark isolates the embedding layer and does not test the clue vocabulary, legality filter, or Worth formula.
+
 ## Clue Vocabulary
 
 The generated vocabulary starts from the 50,000 most frequent English entries exposed by [`wordfreq`](https://pypi.org/project/wordfreq/). The generator keeps 3,000 single ASCII words that:

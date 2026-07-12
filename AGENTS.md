@@ -7,6 +7,12 @@ Local-first Vite application for embedding-powered Codenames clue recommendation
 - Run `npm test` before publishing changes. It covers the smoke suite, production build, and responsive Playwright tests.
 - Playwright owns port `42873` with server reuse disabled. Keep it isolated so tests cannot silently run against another repo's local server.
 - Keep generated Extended word data and `scripts/generated/extended-word-report.json` in sync with `npm run generate:extended`.
+- Run `npm run evaluate:embeddings` to refresh the human-data embedding comparison and `scripts/generated/embedding-model-comparison.json`. The benchmark pins Cultural Codes and Connector upstream commits and keeps their data under `.cache`; neither upstream repository declares a license, so do not vendor or redistribute those datasets.
+
+## Embedding Model Evaluation
+
+- Mean-centering improves every tested model on the human Codenames datasets; compare centered variants when evaluating a production swap.
+- The July 2026 benchmark identifies BGE-small as the best balanced candidate and MiniLM-L12 as the strongest two-target candidate with more avoid-word errors. Treat this as an embedding-layer result, not proof that generated clue rankings improve end to end.
 
 ## Share Compatibility
 

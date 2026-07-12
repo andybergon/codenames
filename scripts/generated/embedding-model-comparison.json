@@ -1,0 +1,521 @@
+{
+  "generatedAt": "2026-07-12T05:38:43.895Z",
+  "dataset": {
+    "culturalCodes": {
+      "name": "Cultural Codes",
+      "repository": "https://github.com/SALT-NLP/codenames",
+      "commit": "9bf4550e681f7a42ac406439b00b0c717f59f13c",
+      "turns": 7703,
+      "note": "Human Codenames Duet games with clues, guesses, intended targets, neutral words, and avoid words."
+    },
+    "connector": {
+      "name": "Lexical Search and Pragmatics in Connector, Experiment 1",
+      "repository": "https://github.com/hawkrobe/lexical-search-and-pragmatics",
+      "commit": "8d824794d623adf4dd19cbff13d987d539b19c5e",
+      "turns": 2250,
+      "note": "Human production clues for fixed two-word targets on full 20-word boards in a simplified associative reference game."
+    },
+    "licenseNote": "Neither upstream repository has an explicit license file. Data is fetched into the gitignored cache and is not redistributed."
+  },
+  "evaluation": {
+    "transforms": "Each model is reported raw and after subtracting the mean over the trainer's 3056-word clue corpus and L2 normalizing",
+    "guessMetrics": "Rank all words remaining on the human guesser's board by cosine similarity to the human clue.",
+    "targetMetrics": "Rank intended targets against neutral and avoid words from the human clue-giver state.",
+    "limitations": [
+      "Codenames Duet has goal, neutral, and avoid roles rather than two competitive teams and one assassin.",
+      "The dataset averages few intended targets per clue, so it tests semantic alignment more strongly than ambitious multi-target clue generation.",
+      "This isolates embedding quality and does not evaluate the trainer's clue vocabulary, legality filter, or Worth formula."
+    ]
+  },
+  "results": [
+    {
+      "model": "Xenova/all-MiniLM-L6-v2",
+      "transform": "raw",
+      "dimensions": 384,
+      "q8ModelBytes": 22972370,
+      "elapsedSeconds": 1.422,
+      "datasets": {
+        "culturalCodes": {
+          "scoredGuessTurns": 7625,
+          "scoredTargetTurns": 7703,
+          "firstGuessAccuracy": 0.5006,
+          "guessRecallAtHumanCount": 0.5003,
+          "targetRecallAtCount": 0.5582,
+          "exactTargetSetAccuracy": 0.4982,
+          "avoidWordRate": 0.1005,
+          "pairwiseTargetAccuracy": 0.8407
+        },
+        "connector": {
+          "scoredGuessTurns": 0,
+          "scoredTargetTurns": 2250,
+          "firstGuessAccuracy": null,
+          "guessRecallAtHumanCount": null,
+          "targetRecallAtCount": 0.4829,
+          "exactTargetSetAccuracy": 0.2093,
+          "avoidWordRate": 0,
+          "pairwiseTargetAccuracy": 0.7824
+        }
+      },
+      "deltaVsBaseline": {
+        "culturalCodes": {
+          "scoredGuessTurns": 0,
+          "scoredTargetTurns": 0,
+          "firstGuessAccuracy": -0.0142,
+          "guessRecallAtHumanCount": -0.0106,
+          "targetRecallAtCount": -0.0184,
+          "exactTargetSetAccuracy": -0.0177,
+          "avoidWordRate": 0.0043,
+          "pairwiseTargetAccuracy": -0.0106
+        },
+        "connector": {
+          "scoredGuessTurns": 0,
+          "scoredTargetTurns": 0,
+          "firstGuessAccuracy": null,
+          "guessRecallAtHumanCount": null,
+          "targetRecallAtCount": -0.028,
+          "exactTargetSetAccuracy": -0.0223,
+          "avoidWordRate": 0,
+          "pairwiseTargetAccuracy": -0.023
+        }
+      }
+    },
+    {
+      "model": "Xenova/all-MiniLM-L6-v2",
+      "transform": "centered",
+      "dimensions": 384,
+      "q8ModelBytes": 22972370,
+      "elapsedSeconds": 1.422,
+      "datasets": {
+        "culturalCodes": {
+          "scoredGuessTurns": 7625,
+          "scoredTargetTurns": 7703,
+          "firstGuessAccuracy": 0.5148,
+          "guessRecallAtHumanCount": 0.5109,
+          "targetRecallAtCount": 0.5766,
+          "exactTargetSetAccuracy": 0.5159,
+          "avoidWordRate": 0.0962,
+          "pairwiseTargetAccuracy": 0.8513
+        },
+        "connector": {
+          "scoredGuessTurns": 0,
+          "scoredTargetTurns": 2250,
+          "firstGuessAccuracy": null,
+          "guessRecallAtHumanCount": null,
+          "targetRecallAtCount": 0.5109,
+          "exactTargetSetAccuracy": 0.2316,
+          "avoidWordRate": 0,
+          "pairwiseTargetAccuracy": 0.8054
+        }
+      },
+      "deltaVsBaseline": null
+    },
+    {
+      "model": "Xenova/all-MiniLM-L12-v2",
+      "transform": "raw",
+      "dimensions": 384,
+      "q8ModelBytes": 34014366,
+      "elapsedSeconds": 2.029,
+      "datasets": {
+        "culturalCodes": {
+          "scoredGuessTurns": 7625,
+          "scoredTargetTurns": 7703,
+          "firstGuessAccuracy": 0.5095,
+          "guessRecallAtHumanCount": 0.5045,
+          "targetRecallAtCount": 0.5678,
+          "exactTargetSetAccuracy": 0.5073,
+          "avoidWordRate": 0.1044,
+          "pairwiseTargetAccuracy": 0.8419
+        },
+        "connector": {
+          "scoredGuessTurns": 0,
+          "scoredTargetTurns": 2250,
+          "firstGuessAccuracy": null,
+          "guessRecallAtHumanCount": null,
+          "targetRecallAtCount": 0.528,
+          "exactTargetSetAccuracy": 0.2644,
+          "avoidWordRate": 0,
+          "pairwiseTargetAccuracy": 0.8089
+        }
+      },
+      "deltaVsBaseline": {
+        "culturalCodes": {
+          "scoredGuessTurns": 0,
+          "scoredTargetTurns": 0,
+          "firstGuessAccuracy": -0.0053,
+          "guessRecallAtHumanCount": -0.0064,
+          "targetRecallAtCount": -0.0088,
+          "exactTargetSetAccuracy": -0.0086,
+          "avoidWordRate": 0.0082,
+          "pairwiseTargetAccuracy": -0.0094
+        },
+        "connector": {
+          "scoredGuessTurns": 0,
+          "scoredTargetTurns": 0,
+          "firstGuessAccuracy": null,
+          "guessRecallAtHumanCount": null,
+          "targetRecallAtCount": 0.0171,
+          "exactTargetSetAccuracy": 0.0328,
+          "avoidWordRate": 0,
+          "pairwiseTargetAccuracy": 0.0035
+        }
+      }
+    },
+    {
+      "model": "Xenova/all-MiniLM-L12-v2",
+      "transform": "centered",
+      "dimensions": 384,
+      "q8ModelBytes": 34014366,
+      "elapsedSeconds": 2.029,
+      "datasets": {
+        "culturalCodes": {
+          "scoredGuessTurns": 7625,
+          "scoredTargetTurns": 7703,
+          "firstGuessAccuracy": 0.5167,
+          "guessRecallAtHumanCount": 0.5111,
+          "targetRecallAtCount": 0.5791,
+          "exactTargetSetAccuracy": 0.5179,
+          "avoidWordRate": 0.1002,
+          "pairwiseTargetAccuracy": 0.8478
+        },
+        "connector": {
+          "scoredGuessTurns": 0,
+          "scoredTargetTurns": 2250,
+          "firstGuessAccuracy": null,
+          "guessRecallAtHumanCount": null,
+          "targetRecallAtCount": 0.5469,
+          "exactTargetSetAccuracy": 0.2849,
+          "avoidWordRate": 0,
+          "pairwiseTargetAccuracy": 0.8159
+        }
+      },
+      "deltaVsBaseline": {
+        "culturalCodes": {
+          "scoredGuessTurns": 0,
+          "scoredTargetTurns": 0,
+          "firstGuessAccuracy": 0.0019,
+          "guessRecallAtHumanCount": 0.0002,
+          "targetRecallAtCount": 0.0025,
+          "exactTargetSetAccuracy": 0.002,
+          "avoidWordRate": 0.004,
+          "pairwiseTargetAccuracy": -0.0035
+        },
+        "connector": {
+          "scoredGuessTurns": 0,
+          "scoredTargetTurns": 0,
+          "firstGuessAccuracy": null,
+          "guessRecallAtHumanCount": null,
+          "targetRecallAtCount": 0.036,
+          "exactTargetSetAccuracy": 0.0533,
+          "avoidWordRate": 0,
+          "pairwiseTargetAccuracy": 0.0105
+        }
+      }
+    },
+    {
+      "model": "Xenova/gte-small",
+      "transform": "raw",
+      "dimensions": 384,
+      "q8ModelBytes": 34014426,
+      "elapsedSeconds": 1.996,
+      "datasets": {
+        "culturalCodes": {
+          "scoredGuessTurns": 7625,
+          "scoredTargetTurns": 7703,
+          "firstGuessAccuracy": 0.4995,
+          "guessRecallAtHumanCount": 0.4911,
+          "targetRecallAtCount": 0.5571,
+          "exactTargetSetAccuracy": 0.4982,
+          "avoidWordRate": 0.1054,
+          "pairwiseTargetAccuracy": 0.8279
+        },
+        "connector": {
+          "scoredGuessTurns": 0,
+          "scoredTargetTurns": 2250,
+          "firstGuessAccuracy": null,
+          "guessRecallAtHumanCount": null,
+          "targetRecallAtCount": 0.4933,
+          "exactTargetSetAccuracy": 0.2138,
+          "avoidWordRate": 0,
+          "pairwiseTargetAccuracy": 0.7914
+        }
+      },
+      "deltaVsBaseline": {
+        "culturalCodes": {
+          "scoredGuessTurns": 0,
+          "scoredTargetTurns": 0,
+          "firstGuessAccuracy": -0.0153,
+          "guessRecallAtHumanCount": -0.0198,
+          "targetRecallAtCount": -0.0195,
+          "exactTargetSetAccuracy": -0.0177,
+          "avoidWordRate": 0.0092,
+          "pairwiseTargetAccuracy": -0.0234
+        },
+        "connector": {
+          "scoredGuessTurns": 0,
+          "scoredTargetTurns": 0,
+          "firstGuessAccuracy": null,
+          "guessRecallAtHumanCount": null,
+          "targetRecallAtCount": -0.0176,
+          "exactTargetSetAccuracy": -0.0178,
+          "avoidWordRate": 0,
+          "pairwiseTargetAccuracy": -0.014
+        }
+      }
+    },
+    {
+      "model": "Xenova/gte-small",
+      "transform": "centered",
+      "dimensions": 384,
+      "q8ModelBytes": 34014426,
+      "elapsedSeconds": 1.996,
+      "datasets": {
+        "culturalCodes": {
+          "scoredGuessTurns": 7625,
+          "scoredTargetTurns": 7703,
+          "firstGuessAccuracy": 0.5127,
+          "guessRecallAtHumanCount": 0.5066,
+          "targetRecallAtCount": 0.5735,
+          "exactTargetSetAccuracy": 0.5128,
+          "avoidWordRate": 0.1027,
+          "pairwiseTargetAccuracy": 0.846
+        },
+        "connector": {
+          "scoredGuessTurns": 0,
+          "scoredTargetTurns": 2250,
+          "firstGuessAccuracy": null,
+          "guessRecallAtHumanCount": null,
+          "targetRecallAtCount": 0.5336,
+          "exactTargetSetAccuracy": 0.2622,
+          "avoidWordRate": 0,
+          "pairwiseTargetAccuracy": 0.817
+        }
+      },
+      "deltaVsBaseline": {
+        "culturalCodes": {
+          "scoredGuessTurns": 0,
+          "scoredTargetTurns": 0,
+          "firstGuessAccuracy": -0.0021,
+          "guessRecallAtHumanCount": -0.0043,
+          "targetRecallAtCount": -0.0031,
+          "exactTargetSetAccuracy": -0.0031,
+          "avoidWordRate": 0.0065,
+          "pairwiseTargetAccuracy": -0.0053
+        },
+        "connector": {
+          "scoredGuessTurns": 0,
+          "scoredTargetTurns": 0,
+          "firstGuessAccuracy": null,
+          "guessRecallAtHumanCount": null,
+          "targetRecallAtCount": 0.0227,
+          "exactTargetSetAccuracy": 0.0306,
+          "avoidWordRate": 0,
+          "pairwiseTargetAccuracy": 0.0116
+        }
+      }
+    },
+    {
+      "model": "Xenova/bge-small-en-v1.5",
+      "transform": "raw",
+      "dimensions": 384,
+      "q8ModelBytes": 34014426,
+      "elapsedSeconds": 2.011,
+      "datasets": {
+        "culturalCodes": {
+          "scoredGuessTurns": 7625,
+          "scoredTargetTurns": 7703,
+          "firstGuessAccuracy": 0.5057,
+          "guessRecallAtHumanCount": 0.4991,
+          "targetRecallAtCount": 0.5648,
+          "exactTargetSetAccuracy": 0.5066,
+          "avoidWordRate": 0.0989,
+          "pairwiseTargetAccuracy": 0.836
+        },
+        "connector": {
+          "scoredGuessTurns": 0,
+          "scoredTargetTurns": 2250,
+          "firstGuessAccuracy": null,
+          "guessRecallAtHumanCount": null,
+          "targetRecallAtCount": 0.4904,
+          "exactTargetSetAccuracy": 0.1947,
+          "avoidWordRate": 0,
+          "pairwiseTargetAccuracy": 0.8026
+        }
+      },
+      "deltaVsBaseline": {
+        "culturalCodes": {
+          "scoredGuessTurns": 0,
+          "scoredTargetTurns": 0,
+          "firstGuessAccuracy": -0.0091,
+          "guessRecallAtHumanCount": -0.0118,
+          "targetRecallAtCount": -0.0118,
+          "exactTargetSetAccuracy": -0.0093,
+          "avoidWordRate": 0.0027,
+          "pairwiseTargetAccuracy": -0.0153
+        },
+        "connector": {
+          "scoredGuessTurns": 0,
+          "scoredTargetTurns": 0,
+          "firstGuessAccuracy": null,
+          "guessRecallAtHumanCount": null,
+          "targetRecallAtCount": -0.0205,
+          "exactTargetSetAccuracy": -0.0369,
+          "avoidWordRate": 0,
+          "pairwiseTargetAccuracy": -0.0028
+        }
+      }
+    },
+    {
+      "model": "Xenova/bge-small-en-v1.5",
+      "transform": "centered",
+      "dimensions": 384,
+      "q8ModelBytes": 34014426,
+      "elapsedSeconds": 2.011,
+      "datasets": {
+        "culturalCodes": {
+          "scoredGuessTurns": 7625,
+          "scoredTargetTurns": 7703,
+          "firstGuessAccuracy": 0.5213,
+          "guessRecallAtHumanCount": 0.5182,
+          "targetRecallAtCount": 0.5873,
+          "exactTargetSetAccuracy": 0.5265,
+          "avoidWordRate": 0.0946,
+          "pairwiseTargetAccuracy": 0.855
+        },
+        "connector": {
+          "scoredGuessTurns": 0,
+          "scoredTargetTurns": 2250,
+          "firstGuessAccuracy": null,
+          "guessRecallAtHumanCount": null,
+          "targetRecallAtCount": 0.5293,
+          "exactTargetSetAccuracy": 0.2431,
+          "avoidWordRate": 0,
+          "pairwiseTargetAccuracy": 0.8245
+        }
+      },
+      "deltaVsBaseline": {
+        "culturalCodes": {
+          "scoredGuessTurns": 0,
+          "scoredTargetTurns": 0,
+          "firstGuessAccuracy": 0.0065,
+          "guessRecallAtHumanCount": 0.0073,
+          "targetRecallAtCount": 0.0107,
+          "exactTargetSetAccuracy": 0.0106,
+          "avoidWordRate": -0.0016,
+          "pairwiseTargetAccuracy": 0.0037
+        },
+        "connector": {
+          "scoredGuessTurns": 0,
+          "scoredTargetTurns": 0,
+          "firstGuessAccuracy": null,
+          "guessRecallAtHumanCount": null,
+          "targetRecallAtCount": 0.0184,
+          "exactTargetSetAccuracy": 0.0115,
+          "avoidWordRate": 0,
+          "pairwiseTargetAccuracy": 0.0191
+        }
+      }
+    },
+    {
+      "model": "Xenova/all-mpnet-base-v2",
+      "transform": "raw",
+      "dimensions": 768,
+      "q8ModelBytes": 110086122,
+      "elapsedSeconds": 4.521,
+      "datasets": {
+        "culturalCodes": {
+          "scoredGuessTurns": 7625,
+          "scoredTargetTurns": 7703,
+          "firstGuessAccuracy": 0.4875,
+          "guessRecallAtHumanCount": 0.4849,
+          "targetRecallAtCount": 0.5487,
+          "exactTargetSetAccuracy": 0.488,
+          "avoidWordRate": 0.1097,
+          "pairwiseTargetAccuracy": 0.8332
+        },
+        "connector": {
+          "scoredGuessTurns": 0,
+          "scoredTargetTurns": 2250,
+          "firstGuessAccuracy": null,
+          "guessRecallAtHumanCount": null,
+          "targetRecallAtCount": 0.4873,
+          "exactTargetSetAccuracy": 0.1964,
+          "avoidWordRate": 0,
+          "pairwiseTargetAccuracy": 0.7977
+        }
+      },
+      "deltaVsBaseline": {
+        "culturalCodes": {
+          "scoredGuessTurns": 0,
+          "scoredTargetTurns": 0,
+          "firstGuessAccuracy": -0.0273,
+          "guessRecallAtHumanCount": -0.026,
+          "targetRecallAtCount": -0.0279,
+          "exactTargetSetAccuracy": -0.0279,
+          "avoidWordRate": 0.0135,
+          "pairwiseTargetAccuracy": -0.0181
+        },
+        "connector": {
+          "scoredGuessTurns": 0,
+          "scoredTargetTurns": 0,
+          "firstGuessAccuracy": null,
+          "guessRecallAtHumanCount": null,
+          "targetRecallAtCount": -0.0236,
+          "exactTargetSetAccuracy": -0.0352,
+          "avoidWordRate": 0,
+          "pairwiseTargetAccuracy": -0.0077
+        }
+      }
+    },
+    {
+      "model": "Xenova/all-mpnet-base-v2",
+      "transform": "centered",
+      "dimensions": 768,
+      "q8ModelBytes": 110086122,
+      "elapsedSeconds": 4.521,
+      "datasets": {
+        "culturalCodes": {
+          "scoredGuessTurns": 7625,
+          "scoredTargetTurns": 7703,
+          "firstGuessAccuracy": 0.4985,
+          "guessRecallAtHumanCount": 0.4932,
+          "targetRecallAtCount": 0.5604,
+          "exactTargetSetAccuracy": 0.4998,
+          "avoidWordRate": 0.1039,
+          "pairwiseTargetAccuracy": 0.8387
+        },
+        "connector": {
+          "scoredGuessTurns": 0,
+          "scoredTargetTurns": 2250,
+          "firstGuessAccuracy": null,
+          "guessRecallAtHumanCount": null,
+          "targetRecallAtCount": 0.5096,
+          "exactTargetSetAccuracy": 0.216,
+          "avoidWordRate": 0,
+          "pairwiseTargetAccuracy": 0.8098
+        }
+      },
+      "deltaVsBaseline": {
+        "culturalCodes": {
+          "scoredGuessTurns": 0,
+          "scoredTargetTurns": 0,
+          "firstGuessAccuracy": -0.0163,
+          "guessRecallAtHumanCount": -0.0177,
+          "targetRecallAtCount": -0.0162,
+          "exactTargetSetAccuracy": -0.0161,
+          "avoidWordRate": 0.0077,
+          "pairwiseTargetAccuracy": -0.0126
+        },
+        "connector": {
+          "scoredGuessTurns": 0,
+          "scoredTargetTurns": 0,
+          "firstGuessAccuracy": null,
+          "guessRecallAtHumanCount": null,
+          "targetRecallAtCount": -0.0013,
+          "exactTargetSetAccuracy": -0.0156,
+          "avoidWordRate": 0,
+          "pairwiseTargetAccuracy": 0.0044
+        }
+      }
+    }
+  ]
+}
