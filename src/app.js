@@ -7,8 +7,16 @@ import {
   decodeBoardParam,
   encodeBoardParam,
 } from "./board-share.js";
-import { loadClueIndex } from "./clue-index.js";
-import { EMBEDDING_MODEL, centerEmbeddings, embedTerms } from "./embeddings.js";
+import { loadShardedClueIndex } from "./clue-index.js";
+import { centerEmbeddings, embedTerms } from "./embeddings.js";
+import {
+  CANDIDATE_OPTIONS,
+  DEFAULT_CANDIDATE_COUNT,
+  DEFAULT_MODEL_ID,
+  MODEL_OPTIONS,
+  indexManifestUrl,
+  modelOption,
+} from "./model-lab.js";
 import {
   SIDE,
   applySuggestionTurn,
@@ -26,6 +34,7 @@ const RESULTS_PER_SIZE = 6;
 const DEFAULT_TARGET_RANGE = Object.freeze({ min: 2, max: 4 });
 const DEFAULT_MINIMUM_WORTH = 50;
 const THEME_STORAGE_KEY = "codenames-theme";
+const MODEL_LAB_RUNTIME_STORAGE_KEY = "codenames-model-lab-runtime-v1";
 const THEME_VALUES = new Set(["system", "light", "dark"]);
 const MAX_TARGET_WORDS = ROLE_SEQUENCE.filter((team) => team === "friendly").length;
 const BOARD_METRIC_DEFINITIONS = {
@@ -46,6 +55,11 @@ const MOBILE_METRIC_DEFINITION = {
   id: "recommendation-metrics",
   label: "Recommendation metrics",
   info: "Worth ranks overall clue usefulness. Est. hit estimates the chance of getting every target before a miss. Risk is a safety label with hard cutoffs, so a Safe clue can still have lower Worth than a Medium clue.",
+};
+const MODEL_PICKER_INFO = {
+  id: "measurements",
+  label: "Model picker measurements",
+  info: "Human recall is target recall on 7,703 played Codenames Duet turns; the compact matrix omits the separately measured avoid rate. Runtime is measured in this browser after a combination runs. Vocabulary coverage is exact-match presence across 9,932 usable human clues, not proof that the trainer ranks that clue highly.",
 };
 const SUGGESTION_COLUMNS = [
   { id: "clue", label: "Clue", key: "clue", direction: "asc" },
@@ -135,7 +149,10 @@ let latestAnalyses = { [SIDE.BLUE]: null, [SIDE.RED]: null };
 let analyzeTimer = 0;
 let analysisRun = 0;
 let hasAnalysis = false;
-let clueIndexPromise;
+const clueIndexPromises = new Map();
+let selectedModelId = DEFAULT_MODEL_ID;
+let selectedCandidateCount = DEFAULT_CANDIDATE_COUNT;
+const runtimeMeasurements = readRuntimeMeasurements();
 let shareFeedbackTimer = 0;
 
 board =
@@ -162,12 +179,10 @@ const elements = {
   turnStatus: document.querySelector("#turn-status"),
   advancedMetrics: document.querySelector("#advanced-metrics"),
   worthDistribution: document.querySelector("#worth-distribution"),
-  friendlyTotal: document.querySelector("#friendly-total"),
-  candidateTotal: document.querySelector("#candidate-total"),
-  bestMargin: document.querySelector("#best-margin"),
-  bestNet: document.querySelector("#best-net"),
-  modelName: document.querySelector("#model-name"),
-  vocabularySource: document.querySelector("#vocabulary-source"),
+  modelLabModel: document.querySelector("#model-lab-model"),
+  modelLabCandidates: document.querySelector("#model-lab-candidates"),
+  modelLabMatrix: document.querySelector("#model-lab-matrix"),
+  modelPickerInfo: document.querySelector("#model-picker-info"),
   loadSample: document.querySelector("#load-sample"),
   randomBoard: document.querySelector("#random-board"),
   orderRandom: document.querySelector("#order-random"),
@@ -177,6 +192,15 @@ const elements = {
   toggleBoard: document.querySelector("#toggle-board"),
   themeButtons: [...document.querySelectorAll("[data-theme-value]")],
 };
+
+elements.modelLabModel.addEventListener("change", (event) => {
+  selectedModelId = event.target.value;
+  switchModelLabConfiguration();
+});
+elements.modelLabCandidates.addEventListener("change", (event) => {
+  selectedCandidateCount = Number(event.target.value);
+  switchModelLabConfiguration();
+});
 
 const systemTheme = window.matchMedia("(prefers-color-scheme: dark)");
 
@@ -349,8 +373,97 @@ document.addEventListener("keydown", (event) => {
 elements.mobileMetricHelp.append(
   createInfoControl(MOBILE_METRIC_DEFINITION, "mobile-recommendations"),
 );
+elements.modelPickerInfo.append(createInfoControl(MODEL_PICKER_INFO, "model-picker"));
 applyTheme(readThemeSetting());
+renderModelLab();
 render();
+
+function switchModelLabConfiguration() {
+  analysisRun += 1;
+  hasAnalysis = false;
+  invalidateAnalyses();
+  renderModelLab();
+  void runAnalysis();
+}
+
+function renderModelLab() {
+  elements.modelLabModel.value = selectedModelId;
+  elements.modelLabCandidates.value = String(selectedCandidateCount);
+  const largestModelBytes = Math.max(...MODEL_OPTIONS.map(({ modelBytes }) => modelBytes));
+  const fastestScoreMs = Math.min(
+    ...[...runtimeMeasurements.values()].map(({ scoreMs }) => scoreMs),
+    Infinity,
+  );
+  const table = document.createElement("table");
+  table.className = "model-comparison-table";
+  table.innerHTML = `
+    <thead><tr><th scope="col">Embedding model</th>${CANDIDATE_OPTIONS.map((option) => `
+      <th scope="col"><strong>${option.count.toLocaleString()} clues</strong><span>${(option.humanClueCoverage * 100).toFixed(1)}% human clue coverage</span></th>`).join("")}</tr></thead>
+    <tbody>${MODEL_OPTIONS.map((option) => `
+      <tr>
+        <th scope="row"><strong>${option.label}</strong>
+          <div class="model-axis-measure"><span>Recall (55–59%)</span><div class="lab-bar quality"><i style="width:${Math.max(0, Math.min(100, Math.round(((option.humanQuality - 0.55) / 0.04) * 100)))}%"></i></div><b>${(option.humanQuality * 100).toFixed(1)}%</b></div>
+          <div class="model-axis-measure"><span>Download</span><div class="lab-bar size"><i style="width:${Math.round((option.modelBytes / largestModelBytes) * 100)}%"></i></div><b>${Math.round(option.modelBytes / 1_000_000)} MB</b></div>
+        </th>
+        ${CANDIDATE_OPTIONS.map(({ count }) => {
+          const measured = runtimeMeasurements.get(`${option.id}:${count}`);
+          const speedWidth = measured
+            ? Math.min(100, Math.round((fastestScoreMs / measured.scoreMs) * 100))
+            : 0;
+          const selected = option.id === selectedModelId && count === selectedCandidateCount;
+          const recommended = option.id === DEFAULT_MODEL_ID && count === DEFAULT_CANDIDATE_COUNT;
+          return `<td><button type="button" class="model-combination" data-model-id="${option.id}" data-candidate-count="${count}" aria-pressed="${selected}">
+            ${recommended ? '<span class="model-recommendation-badge">Recommended</span>' : ""}
+            <strong>${measured ? `${measured.scoreMs} ms score` : "Run to measure"}</strong>
+            <div class="lab-bar speed" aria-hidden="true"><i style="width:${speedWidth}%"></i></div>
+            <small>${measured ? `${measured.totalMs} ms last total` : "No device timing yet"}</small>
+          </button></td>`;
+        }).join("")}
+      </tr>`).join("")}</tbody>`;
+  table.querySelectorAll(".model-combination").forEach((button) => {
+    button.addEventListener("click", () => {
+      const modelId = button.dataset.modelId;
+      const candidateCount = Number(button.dataset.candidateCount);
+      if (modelId === selectedModelId && candidateCount === selectedCandidateCount) return;
+      selectedModelId = modelId;
+      selectedCandidateCount = candidateCount;
+      elements.modelLabModel.value = modelId;
+      elements.modelLabCandidates.value = String(candidateCount);
+      switchModelLabConfiguration();
+    });
+  });
+  elements.modelLabMatrix.replaceChildren(table);
+}
+
+function readRuntimeMeasurements() {
+  try {
+    const entries = JSON.parse(window.localStorage.getItem(MODEL_LAB_RUNTIME_STORAGE_KEY) ?? "[]");
+    if (!Array.isArray(entries)) return new Map();
+    const modelIds = new Set(MODEL_OPTIONS.map(({ id }) => id));
+    const candidateCounts = new Set(CANDIDATE_OPTIONS.map(({ count }) => count));
+    return new Map(entries.filter(([key, measurement]) => {
+      const [modelId, rawCandidateCount] = String(key).split(":");
+      return (
+        modelIds.has(modelId) &&
+        candidateCounts.has(Number(rawCandidateCount)) &&
+        Number.isFinite(measurement?.scoreMs) &&
+        measurement.scoreMs > 0 &&
+        Number.isFinite(measurement?.totalMs) &&
+        measurement.totalMs >= measurement.scoreMs
+      );
+    }));
+  } catch {
+    return new Map();
+  }
+}
+
+function saveRuntimeMeasurements() {
+  try {
+    window.localStorage.setItem(MODEL_LAB_RUNTIME_STORAGE_KEY, JSON.stringify([...runtimeMeasurements]));
+  } catch {
+    // Comparisons still work for this page when storage is unavailable.
+  }
+}
 
 function render() {
   renderBoard();
@@ -729,13 +842,23 @@ async function runAnalysis() {
   }
 
   try {
-    clueIndexPromise ??= loadClueIndex();
+    const configuration = `${selectedModelId}:${selectedCandidateCount}`;
+    if (!clueIndexPromises.has(configuration)) {
+      const clueIndexPromise = loadShardedClueIndex(indexManifestUrl(selectedModelId), selectedCandidateCount)
+        .catch((error) => {
+          clueIndexPromises.delete(configuration);
+          throw error;
+        });
+      clueIndexPromises.set(configuration, clueIndexPromise);
+    }
+    const activeModel = modelOption(selectedModelId);
     const boardSnapshot = cloneBoard(board);
     const [clueIndex, boardVectors] = await Promise.all([
-      clueIndexPromise,
+      clueIndexPromises.get(configuration),
       embedTerms(
         boardSnapshot.map((card) => card.word),
         {
+          model: activeModel.model,
           onProgress: (event) => renderModelProgress(event, runId),
         },
       ),
@@ -744,10 +867,11 @@ async function runAnalysis() {
     if (runId !== analysisRun) {
       return;
     }
-    if (clueIndex.model !== EMBEDDING_MODEL) {
-      throw new Error(`Clue index uses ${clueIndex.model}, but the browser loaded ${EMBEDDING_MODEL}`);
+    if (clueIndex.model !== activeModel.model || clueIndex.dimensions !== activeModel.dimensions) {
+      throw new Error(`The selected model and clue index are incompatible`);
     }
 
+    const scoreStartedAt = performance.now();
     const centeredBoardVectors = centerEmbeddings(boardVectors, clueIndex.centering.mean);
     const blueResult = analyzeEmbeddedBoard(boardSnapshot, centeredBoardVectors, clueIndex, {
       limit: RESULTS_PER_SIZE,
@@ -764,9 +888,12 @@ async function runAnalysis() {
     renderRecommendationTable();
     renderBoardMetrics(boardMetrics);
     renderAnalysisSummary(latestAnalysis);
-    elements.modelName.textContent = shortModelName(clueIndex.model);
-    elements.vocabularySource.textContent = `${clueIndex.vocabulary.source} ${clueIndex.vocabulary.sourceVersion} + seeds`;
-    elements.analysisStatus.textContent = `${latestAnalysis.summary.candidateTotal} candidates | ${Math.round(performance.now() - startedAt)} ms`;
+    const scoreMs = Math.round(performance.now() - scoreStartedAt);
+    const totalMs = Math.round(performance.now() - startedAt);
+    runtimeMeasurements.set(configuration, { scoreMs, totalMs });
+    saveRuntimeMeasurements();
+    elements.analysisStatus.textContent = `${latestAnalysis.summary.candidateTotal} candidates | ${scoreMs} ms score`;
+    renderModelLab();
     hasAnalysis = true;
   } catch (error) {
     if (runId !== analysisRun) {
@@ -821,10 +948,6 @@ function renderError(error) {
 }
 
 function renderAnalysisSummary(analysis) {
-  elements.friendlyTotal.textContent = String(analysis?.summary.friendlyTotal ?? 0);
-  elements.candidateTotal.textContent = String(analysis?.summary.candidateTotal ?? 0);
-  elements.bestMargin.textContent = formatSigned(analysis?.summary.bestMargin ?? 0, 2);
-  elements.bestNet.textContent = formatSigned(analysis?.summary.bestNet ?? 0, 1);
 }
 
 function renderRecommendationTable() {
@@ -1600,10 +1723,6 @@ function teamLabel(teamId) {
 
 function sideLabel(side) {
   return side === SIDE.RED ? "Red" : "Blue";
-}
-
-function shortModelName(model) {
-  return model.split("/").at(-1) ?? model;
 }
 
 function formatSigned(value, digits) {

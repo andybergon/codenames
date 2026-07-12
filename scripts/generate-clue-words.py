@@ -9,7 +9,7 @@ from wordfreq import top_n_list, zipf_frequency
 
 
 SOURCE_LIMIT = 50_000
-OUTPUT_LIMIT = 3_000
+OUTPUT_LIMIT = 30_000
 OUTPUT_PATH = Path(__file__).parent / "generated" / "clue-words.json"
 NLTK_DATA_PATH = Path(__file__).parent.parent / ".cache" / "nltk_data"
 

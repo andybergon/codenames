@@ -6,11 +6,12 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "check": "node --check scripts/generate-clue-index.mjs && node --check scripts/generate-extended-words.mjs && node --check scripts/evaluate-embedding-models.mjs && node --check scripts/smoke.mjs && node --check src/word-data.js && node --check src/board-share.js && node --check src/clue-index.js && node --check src/embeddings.js && node --check src/gameplay.js && node --check src/model.js && node --check src/app.js && node scripts/smoke.mjs && vite build",
+    "check": "node --check scripts/clue-candidates.mjs && node --check scripts/generate-clue-index.mjs && node --check scripts/evaluate-candidate-coverage.mjs && node --check scripts/generate-extended-words.mjs && node --check scripts/evaluate-embedding-models.mjs && node --check scripts/smoke.mjs && node --check src/word-data.js && node --check src/board-share.js && node --check src/clue-index.js && node --check src/embeddings.js && node --check src/gameplay.js && node --check src/model.js && node --check src/model-lab.js && node --check src/app.js && node scripts/smoke.mjs && vite build",
     "test": "npm run check && npm run test:ui",
     "test:ui": "playwright test",
     "generate:extended": "node scripts/generate-extended-words.mjs",
     "evaluate:embeddings": "node scripts/evaluate-embedding-models.mjs",
+    "evaluate:candidates": "node scripts/evaluate-candidate-coverage.mjs",
     "generate:words": "python3 scripts/generate-clue-words.py",
     "generate:index": "node scripts/generate-clue-index.mjs",
     "generate:data": "npm run generate:words && npm run generate:index"

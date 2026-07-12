@@ -8,7 +8,8 @@ import {
   decodeBoardParam,
   encodeBoardParam,
 } from "../src/board-share.js";
-import { hydrateClueIndex } from "../src/clue-index.js";
+import { hydrateClueShards } from "../src/clue-index.js";
+import { CANDIDATE_OPTIONS, MODEL_OPTIONS } from "../src/model-lab.js";
 import {
   SIDE,
   applySuggestionTurn,
@@ -35,12 +36,25 @@ import {
   WORD_SET,
 } from "../src/word-data.js";
 
-const rawIndex = JSON.parse(await readFile("public/data/clue-embeddings.json", "utf8"));
 const fixture = JSON.parse(
   await readFile("scripts/generated/sample-board-embeddings.json", "utf8"),
 );
-const clueIndex = hydrateClueIndex(rawIndex);
+const defaultManifest = JSON.parse(await readFile("public/data/model-lab/minilm-l6/manifest.json", "utf8"));
+const defaultShard = JSON.parse(await readFile("public/data/model-lab/minilm-l6/clues-0-3000.json", "utf8"));
+const clueIndex = hydrateClueShards(defaultManifest, [defaultShard], 3000);
 const boardVectors = fixture.vectors.map((vector) => Float32Array.from(vector));
+
+for (const option of MODEL_OPTIONS) {
+  const manifest = JSON.parse(await readFile(`public/data/model-lab/${option.id}/manifest.json`, "utf8"));
+  assert.equal(manifest.model, option.model);
+  assert.equal(manifest.dimensions, option.dimensions);
+  assert.deepEqual(manifest.shards.map(({ start, end }) => [start, end]), [[0, 3000], [3000, 10000], [10000, 30000]]);
+  const firstShard = JSON.parse(await readFile(`public/data/model-lab/${option.id}/${manifest.shards[0].file}`, "utf8"));
+  const hydrated = hydrateClueShards(manifest, [firstShard], 3000);
+  assert.equal(hydrated.clues.length, 3000);
+  assert.equal(hydrated.vectors.length, 3000 * option.dimensions);
+}
+assert.deepEqual(CANDIDATE_OPTIONS.map(({ count }) => count), [3000, 10000, 30000]);
 
 assert.equal(clueIndex.model, fixture.model);
 assert.equal(clueIndex.dimensions, 384);

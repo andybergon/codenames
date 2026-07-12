@@ -1,148 +1,88 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, stat, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { env, pipeline } from "@huggingface/transformers";
 import { CLUE_BANK, DEFAULT_BOARD } from "../src/word-data.js";
+import { buildClueCandidates } from "./clue-candidates.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const WORDS_PATH = resolve(ROOT, "scripts/generated/clue-words.json");
-const INDEX_PATH = resolve(ROOT, "public/data/clue-embeddings.json");
-const FIXTURE_PATH = resolve(ROOT, "scripts/generated/sample-board-embeddings.json");
-const MODEL = "Xenova/all-MiniLM-L6-v2";
-const QUANTIZATION_SCALE = 127;
-const BATCH_SIZE = 64;
+const MODEL_DEFINITIONS = {
+  "minilm-l3": "Xenova/paraphrase-MiniLM-L3-v2",
+  "minilm-l6": "Xenova/all-MiniLM-L6-v2",
+  "bge-small": "Xenova/bge-small-en-v1.5",
+  "minilm-l12": "Xenova/all-MiniLM-L12-v2",
+  "mpnet-base": "Xenova/all-mpnet-base-v2",
+};
+const modelIds = process.argv.slice(2).length ? process.argv.slice(2) : Object.keys(MODEL_DEFINITIONS);
+const CUTS = [3_000, 10_000, 30_000];
+const SCALE = 127;
+const BATCH_SIZE = 128;
 
 env.cacheDir = resolve(ROOT, ".cache/huggingface");
 env.allowLocalModels = false;
 
 const wordSource = JSON.parse(await readFile(WORDS_PATH, "utf8"));
-const candidates = mergeCandidates(wordSource.words, CLUE_BANK);
+const candidates = buildClueCandidates(wordSource.words, CLUE_BANK, CUTS.at(-1));
+if (candidates.length < CUTS.at(-1)) throw new Error(`Need ${CUTS.at(-1)} candidates, found ${candidates.length}`);
 
-let lastDownloadPercent = -1;
-const extractor = await pipeline("feature-extraction", MODEL, {
-  dtype: "q8",
-  progress_callback: (event) => {
-    if (event.status !== "progress" || typeof event.progress !== "number") {
-      return;
-    }
-    const percent = Math.floor(event.progress / 10) * 10;
-    if (percent > lastDownloadPercent) {
-      lastDownloadPercent = percent;
-      console.log(`Model download ${percent}%`);
-    }
-  },
-});
-
-const clueVectors = await embedInBatches(
-  extractor,
-  candidates.map((candidate) => candidate.word),
-  "clues",
-);
-const boardWords = DEFAULT_BOARD.map((card) => card.word.toLowerCase());
-const rawBoardVectors = await embedInBatches(extractor, boardWords, "sample board");
-const dimensions = clueVectors[0].length;
-const embeddingMean = meanVector(clueVectors, dimensions);
-const centeredClueVectors = clueVectors.map((vector) => centerAndNormalize(vector, embeddingMean));
-const boardVectors = rawBoardVectors.map((vector) => centerAndNormalize(vector, embeddingMean));
-const quantizedVectors = new Int8Array(centeredClueVectors.length * dimensions);
-
-centeredClueVectors.forEach((vector, vectorIndex) => {
-  vector.forEach((value, dimension) => {
-    quantizedVectors[vectorIndex * dimensions + dimension] = Math.round(
-      Math.max(-1, Math.min(1, value)) * QUANTIZATION_SCALE,
-    );
+for (const id of modelIds) {
+  const modelName = MODEL_DEFINITIONS[id];
+  if (!modelName) throw new Error(`Unknown model id: ${id}`);
+  console.log(`Loading ${modelName}`);
+  const extractor = await pipeline("feature-extraction", modelName, { dtype: "q8" });
+  const raw = await embedInBatches(extractor, candidates.map(({ word }) => word), id);
+  const dimensions = raw[0].length;
+  const mean = meanVector(raw, dimensions);
+  const quantized = new Int8Array(raw.length * dimensions);
+  raw.forEach((vector, row) => {
+    const centered = centerAndNormalize(vector, mean);
+    centered.forEach((value, column) => { quantized[row * dimensions + column] = Math.round(Math.max(-1, Math.min(1, value)) * SCALE); });
   });
-});
 
-const index = {
-  version: 1,
-  model: MODEL,
-  dimensions,
-  quantization: {
-    type: "symmetric-int8",
-    scale: QUANTIZATION_SCALE,
-  },
-  centering: {
-    method: "clue-corpus-mean",
-    mean: embeddingMean.map((value) => Number(value.toFixed(8))),
-  },
-  vocabulary: {
-    source: wordSource.source,
-    sourceVersion: wordSource.sourceVersion,
-    language: wordSource.language,
-    filters: wordSource.filters,
-    curatedSeedCount: CLUE_BANK.length,
-  },
-  clues: candidates.map((candidate) => candidate.word),
-  frequencies: candidates.map((candidate) => candidate.zipf),
-  vectors: Buffer.from(quantizedVectors.buffer).toString("base64"),
-};
-
-const fixture = {
-  model: MODEL,
-  dimensions,
-  words: boardWords,
-  vectors: boardVectors.map((vector) => vector.map((value) => Number(value.toFixed(7)))),
-};
-
-await mkdir(dirname(INDEX_PATH), { recursive: true });
-await mkdir(dirname(FIXTURE_PATH), { recursive: true });
-await writeFile(INDEX_PATH, `${JSON.stringify(index)}\n`, "utf8");
-await writeFile(FIXTURE_PATH, `${JSON.stringify(fixture, null, 2)}\n`, "utf8");
-
-console.log(
-  `Wrote ${candidates.length} ${dimensions}-dimensional clue embeddings to ${INDEX_PATH}`,
-);
+  const outputDir = resolve(ROOT, `public/data/model-lab/${id}`);
+  await mkdir(outputDir, { recursive: true });
+  const shards = [];
+  let start = 0;
+  for (const end of CUTS) {
+    const payload = {
+      clues: candidates.slice(start, end).map(({ word }) => word),
+      frequencies: candidates.slice(start, end).map(({ zipf }) => zipf),
+      vectors: Buffer.from(quantized.subarray(start * dimensions, end * dimensions)).toString("base64"),
+    };
+    const file = `clues-${start}-${end}.json`;
+    const content = `${JSON.stringify(payload)}\n`;
+    await writeFile(resolve(outputDir, file), content);
+    shards.push({ start, end, file, bytes: Buffer.byteLength(content) });
+    start = end;
+  }
+  const modelBytes = (await stat(resolve(env.cacheDir, modelName, "onnx/model_quantized.onnx"))).size;
+  const manifest = {
+    version: 2, model: modelName, dimensions,
+    quantization: { type: "symmetric-int8", scale: SCALE },
+    centering: { method: "30000-clue-corpus-mean", mean: mean.map((v) => Number(v.toFixed(8))) },
+    vocabulary: { source: wordSource.source, sourceVersion: wordSource.sourceVersion, language: wordSource.language, filters: wordSource.filters, curatedSeedCount: CLUE_BANK.length },
+    modelBytes, shards,
+  };
+  await writeFile(resolve(outputDir, "manifest.json"), `${JSON.stringify(manifest, null, 2)}\n`);
+  if (id === "minilm-l6") {
+    const boardWords = DEFAULT_BOARD.map(({ word }) => word.toLowerCase());
+    const boardRaw = await embedInBatches(extractor, boardWords, "sample board");
+    const fixture = { model: modelName, dimensions, words: boardWords, vectors: boardRaw.map((vector) => centerAndNormalize(vector, mean).map((value) => Number(value.toFixed(7)))) };
+    await writeFile(resolve(ROOT, "scripts/generated/sample-board-embeddings.json"), `${JSON.stringify(fixture, null, 2)}\n`);
+  }
+  console.log(`Wrote ${id}: ${candidates.length} x ${dimensions}`);
+  if (typeof extractor.dispose === "function") await extractor.dispose();
+}
 
 async function embedInBatches(model, terms, label) {
   const vectors = [];
-
   for (let start = 0; start < terms.length; start += BATCH_SIZE) {
     const batch = terms.slice(start, start + BATCH_SIZE);
-    const output = await model(batch, { pooling: "mean", normalize: true });
-    vectors.push(...output.tolist());
-    console.log(`${label}: ${Math.min(start + batch.length, terms.length)}/${terms.length}`);
+    vectors.push(...(await model(batch, { pooling: "mean", normalize: true })).tolist());
+    if (start % (BATCH_SIZE * 10) === 0) console.log(`${label}: ${Math.min(start + batch.length, terms.length)}/${terms.length}`);
   }
-
   return vectors;
 }
-
-function mergeCandidates(frequencyWords, seedWords) {
-  const seen = new Set();
-  const merged = [];
-
-  for (const candidate of frequencyWords) {
-    if (!seen.has(candidate.word)) {
-      seen.add(candidate.word);
-      merged.push(candidate);
-    }
-  }
-
-  for (const seed of seedWords) {
-    const word = seed.toLowerCase();
-    if (/^[a-z]+$/u.test(word) && !seen.has(word)) {
-      seen.add(word);
-      merged.push({ word, zipf: 3.4 });
-    }
-  }
-
-  return merged;
-}
-
-function meanVector(vectors, dimensions) {
-  const mean = new Array(dimensions).fill(0);
-
-  for (const vector of vectors) {
-    vector.forEach((value, index) => {
-      mean[index] += value / vectors.length;
-    });
-  }
-
-  return mean;
-}
-
-function centerAndNormalize(vector, mean) {
-  const centered = vector.map((value, index) => value - mean[index]);
-  const magnitude = Math.sqrt(centered.reduce((total, value) => total + value * value, 0));
-  return centered.map((value) => value / magnitude);
-}
+function meanVector(vectors, dimensions) { const mean = new Array(dimensions).fill(0); for (const vector of vectors) vector.forEach((value, i) => { mean[i] += value / vectors.length; }); return mean; }
+function centerAndNormalize(vector, mean) { const centered = vector.map((v, i) => v - mean[i]); const magnitude = Math.sqrt(centered.reduce((n, v) => n + v * v, 0)); return centered.map((v) => v / magnitude); }

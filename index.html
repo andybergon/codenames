@@ -300,31 +300,35 @@
         </aside>
       </section>
 
-      <section class="model-strip" aria-label="Model summary">
-        <div>
-          <span class="metric-label">Embedding model</span>
-          <strong id="model-name">MiniLM-L6-v2</strong>
+      <section class="model-lab" aria-labelledby="model-lab-title">
+        <div class="model-lab-heading">
+          <div>
+            <div class="model-lab-title-row">
+              <h2 id="model-lab-title">Model picker</h2>
+              <span id="model-picker-info"></span>
+            </div>
+            <p>Choose using human-game quality, download size, and measured speed. Alternatives load only when selected.</p>
+          </div>
         </div>
-        <div>
-          <span class="metric-label">Clue vocabulary</span>
-          <strong id="vocabulary-source">wordfreq + seeds</strong>
+        <div class="model-lab-controls">
+          <label>Embedding model
+            <select id="model-lab-model">
+              <option value="minilm-l3">MiniLM-L3 (smallest)</option>
+              <option value="minilm-l6">MiniLM-L6 (default)</option>
+              <option value="bge-small">BGE-small</option>
+              <option value="minilm-l12">MiniLM-L12</option>
+              <option value="mpnet-base">MPNet-base (largest)</option>
+            </select>
+          </label>
+          <label>Clue vocabulary
+            <select id="model-lab-candidates">
+              <option value="3000">3,000 (default)</option>
+              <option value="10000">10,000</option>
+              <option value="30000">30,000</option>
+            </select>
+          </label>
         </div>
-        <div>
-          <span class="metric-label">Active team words</span>
-          <strong id="friendly-total">0</strong>
-        </div>
-        <div>
-          <span class="metric-label">Clue candidates</span>
-          <strong id="candidate-total">0</strong>
-        </div>
-        <div>
-          <span class="metric-label">Best margin</span>
-          <strong id="best-margin">0.00</strong>
-        </div>
-        <div>
-          <span class="metric-label">Best net</span>
-          <strong id="best-net">0.0</strong>
-        </div>
+        <div id="model-lab-matrix" class="model-lab-matrix" aria-label="Embedding model and clue vocabulary comparison"></div>
       </section>
     </main>
 

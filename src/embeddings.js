@@ -2,15 +2,17 @@ import { pipeline } from "@huggingface/transformers";
 
 export const EMBEDDING_MODEL = "Xenova/all-MiniLM-L6-v2";
 
-const vectorCache = new Map();
-let extractorPromise;
+const vectorCaches = new Map();
+const extractorPromises = new Map();
 
 export async function embedTerms(terms, options = {}) {
+  const model = options.model ?? EMBEDDING_MODEL;
+  const vectorCache = getVectorCache(model);
   const normalizedTerms = terms.map(normalizeEmbeddingTerm);
   const missingTerms = [...new Set(normalizedTerms.filter((term) => term && !vectorCache.has(term)))];
 
   if (missingTerms.length > 0) {
-    const extractor = await getExtractor(options.onProgress);
+    const extractor = await getExtractor(model, options.onProgress);
     const output = await extractor(missingTerms, {
       pooling: "mean",
       normalize: true,
@@ -47,15 +49,20 @@ export function centerEmbeddings(vectors, mean) {
   });
 }
 
-function getExtractor(onProgress) {
-  if (!extractorPromise) {
-    extractorPromise = pipeline("feature-extraction", EMBEDDING_MODEL, {
+function getExtractor(model, onProgress) {
+  if (!extractorPromises.has(model)) {
+    extractorPromises.set(model, pipeline("feature-extraction", model, {
       dtype: "q8",
       progress_callback: onProgress,
-    });
+    }));
   }
 
-  return extractorPromise;
+  return extractorPromises.get(model);
+}
+
+function getVectorCache(model) {
+  if (!vectorCaches.has(model)) vectorCaches.set(model, new Map());
+  return vectorCaches.get(model);
 }
 
 function normalizeEmbeddingTerm(term) {

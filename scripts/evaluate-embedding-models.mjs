@@ -2,20 +2,22 @@ import { mkdir, readFile, stat, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { env, pipeline } from "@huggingface/transformers";
+import { CLUE_BANK } from "../src/word-data.js";
+import { buildClueCandidates } from "./clue-candidates.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const CACHE_DIR = resolve(ROOT, ".cache/evaluations/cultural-codes");
 const REPORT_PATH = resolve(ROOT, "scripts/generated/embedding-model-comparison.json");
-const INDEX_PATH = resolve(ROOT, "public/data/clue-embeddings.json");
+const WORDS_PATH = resolve(ROOT, "scripts/generated/clue-words.json");
 const DATASET_COMMIT = "9bf4550e681f7a42ac406439b00b0c717f59f13c";
 const DATASET_BASE = `https://raw.githubusercontent.com/SALT-NLP/codenames/${DATASET_COMMIT}/data`;
 const CONNECTOR_COMMIT = "8d824794d623adf4dd19cbff13d987d539b19c5e";
 const CONNECTOR_BASE = `https://raw.githubusercontent.com/hawkrobe/lexical-search-and-pragmatics/${CONNECTOR_COMMIT}/data/exp1`;
 const DEFAULT_MODELS = [
+  "Xenova/paraphrase-MiniLM-L3-v2",
   "Xenova/all-MiniLM-L6-v2",
-  "Xenova/all-MiniLM-L12-v2",
-  "Xenova/gte-small",
   "Xenova/bge-small-en-v1.5",
+  "Xenova/all-MiniLM-L12-v2",
   "Xenova/all-mpnet-base-v2",
 ];
 const BATCH_SIZE = 64;
@@ -24,8 +26,8 @@ env.cacheDir = resolve(ROOT, ".cache/huggingface");
 env.allowLocalModels = false;
 
 const models = readModelArguments(process.argv.slice(2));
-const rawIndex = JSON.parse(await readFile(INDEX_PATH, "utf8"));
-const clueCorpus = rawIndex.clues;
+const wordSource = JSON.parse(await readFile(WORDS_PATH, "utf8"));
+const clueCorpus = buildClueCandidates(wordSource.words, CLUE_BANK).map(({ word }) => word);
 const [clueRows, guessRows] = await Promise.all([
   loadDataset("clue_generation_task/all.csv"),
   loadDataset("generate_guess_task/all.csv"),

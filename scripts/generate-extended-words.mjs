@@ -5,7 +5,8 @@ import { env, pipeline } from "@huggingface/transformers";
 import { OFFICIAL_WORDS } from "../src/word-data.js";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const INDEX_PATH = resolve(ROOT, "public/data/clue-embeddings.json");
+const INDEX_MANIFEST_PATH = resolve(ROOT, "public/data/model-lab/minilm-l6/manifest.json");
+const INDEX_SHARD_PATH = resolve(ROOT, "public/data/model-lab/minilm-l6/clues-0-3000.json");
 const OUTPUT_PATH = resolve(ROOT, "src/generated/extended-word-data.js");
 const REPORT_PATH = resolve(ROOT, "scripts/generated/extended-word-report.json");
 const TARGET_ADDITION_COUNT = 400;
@@ -160,7 +161,9 @@ hell jesus johnson jones lee mary peter rape sex sexual sexy simon suicide thoma
 target
 `.trim().split(/\s+/));
 
-const rawIndex = JSON.parse(await readFile(INDEX_PATH, "utf8"));
+const manifest = JSON.parse(await readFile(INDEX_MANIFEST_PATH, "utf8"));
+const shard = JSON.parse(await readFile(INDEX_SHARD_PATH, "utf8"));
+const rawIndex = { ...manifest, ...shard };
 const encoded = Buffer.from(rawIndex.vectors, "base64");
 const vectors = new Int8Array(encoded.buffer, encoded.byteOffset, encoded.byteLength);
 const dimensions = rawIndex.dimensions;

@@ -1,13 +1,13 @@
 # Codenames Trainer
 
-A local-first Codenames clue trainer. It embeds the board, searches a 3,000-word clue index, and ranks clue options for every possible target count.
+A local-first Codenames clue trainer. It embeds the board, searches a 3,000-word clue index by default, and ranks clue options for every possible target count. A built-in model picker compares larger vocabularies and alternative embeddings.
 
 [Open the live trainer](https://codenames.andybergon.me)
 
 ## TLDR
 
 - **Embedding:** `Xenova/all-MiniLM-L6-v2`, run locally in the browser with Transformers.js.
-- **Clue set:** 3,000 frequent English words from `wordfreq` 3.1.1, filtered through WordNet and a legality filter, plus a small curated seed list.
+- **Clue set:** 30,000 frequent English words from `wordfreq` 3.1.1, filtered through WordNet and a legality filter; the fastest 3,000-word prefix remains the default.
 - **Fast search:** clue embeddings are precomputed, mean-centered, normalized, and stored as an int8 static index. Only the 25 board words are embedded at runtime.
 - **Negative scoring:** the weakest target similarity must beat the highest role-weighted neutral, enemy, or assassin similarity.
 - **Outputs:** one sortable recommendation table with per-target-count availability, a 1-to-9 target range, and a minimum Worth filter; defaults are 2-4 targets, Worth 50, and a compact view. Advanced reveals Net, Margin, and Fit/cohesion diagnostics.
@@ -71,7 +71,7 @@ New v3 share links encode the selected word set and support the larger pool. Exi
 
 `all-MiniLM-L6-v2` produces 384-dimensional vectors. The generator computes the mean vector over the entire clue corpus, subtracts it from every clue vector, and normalizes the result. Runtime board embeddings receive the same transform. Mean-centering removes much of the shared single-word cosine baseline that otherwise makes generic clues appear close to unrelated cards.
 
-The static clue index in `public/data/clue-embeddings.json` stores normalized clue vectors as symmetric int8 values. This keeps the index around 1.6 MB while board words remain fully dynamic.
+The default remains MiniLM-L6 with 3,000 candidates. The Model picker below the recommendations replaces the old static model summary and compares every combination of MiniLM-L3, MiniLM-L6, BGE-small, MiniLM-L12, and MPNet-base with 3k, 10k, and 30k candidate vocabularies. A model and its compatible static index load only after selection. Indexes are split into 0-3k, 3k-10k, and 10k-30k int8 shards under `public/data/model-lab/`, so moving upward downloads only the additional candidate tiers. Board words remain fully dynamic.
 
 ## Human Gameplay Embedding Evaluation
 
@@ -82,21 +82,33 @@ The static clue index in `public/data/clue-embeddings.json` stores normalized cl
 
 The benchmark pins both upstream commits, downloads their files into the gitignored cache, and does not redistribute the datasets because neither upstream repository contains an explicit license file. It embeds each human clue and board, applies the trainer's clue-corpus mean-centering, then measures agreement with human guesses, target recovery, and avoid-word errors. The checked-in report is `scripts/generated/embedding-model-comparison.json`.
 
-Centered-model results from the July 2026 run:
+Centered-model results from the July 2026 run, refreshed with the same 30,000-clue centering corpus used by Model picker:
 
 | Model | q8 model | Duet first guess | Duet target recall | Duet avoid rate | Two-target recall | Exact target pair |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| **MiniLM-L6 (current)** | 23 MB | 51.48% | 57.66% | 9.62% | 51.09% | 23.16% |
-| MiniLM-L12 | 34 MB | 51.67% | 57.91% | 10.02% | **54.69%** | **28.49%** |
-| GTE-small | 34 MB | 51.27% | 57.35% | 10.27% | 53.36% | 26.22% |
-| **BGE-small** | 34 MB | **52.13%** | **58.73%** | **9.46%** | 52.93% | 24.31% |
-| MPNet-base | 110 MB | 49.85% | 56.04% | 10.39% | 50.96% | 21.60% |
+| MiniLM-L3 | **17.5 MB** | 49.60% | 56.09% | 10.37% | 50.31% | 20.84% |
+| **MiniLM-L6 (current)** | 23 MB | 51.27% | 57.43% | **9.44%** | 50.11% | 22.67% |
+| MiniLM-L12 | 34 MB | 51.70% | 57.84% | 10.09% | **54.22%** | **28.27%** |
+| **BGE-small** | 34 MB | **52.04%** | **58.57%** | 9.46% | 52.49% | 23.64% |
+| MPNet-base | 110 MB | 49.61% | 55.85% | 10.62% | 50.93% | 22.44% |
 
-BGE-small is the best balanced candidate: versus the current model it gains 0.65 percentage points on first-guess agreement, 1.07 points on Duet target recall, 1.84 points on two-target recall, and slightly lowers avoid errors. MiniLM-L12 is substantially better at recovering intended pairs, but its higher avoid rate makes it a riskier default. A production switch still needs an end-to-end comparison of the trainer's generated top clues because this benchmark isolates the embedding layer and does not test the clue vocabulary, legality filter, or Worth formula.
+BGE-small has the best played-turn target recall: versus the current model it gains 0.77 percentage points on first-guess agreement and 1.14 points on Duet target recall, with an avoid rate within 0.02 points. MiniLM-L12 is substantially better at recovering intended pairs, but its higher avoid rate makes it a riskier default. The wider endpoints show that size alone does not help: MiniLM-L3 saves 5.5 MB but loses 1.34 recall points, while 110 MB MPNet-base loses 1.58 recall points and raises avoid errors. A production switch still needs an end-to-end comparison of the trainer's generated top clues because this benchmark isolates the embedding layer and does not test the clue vocabulary, legality filter, or Worth formula.
+
+## Candidate Vocabulary Evaluation
+
+`npm run evaluate:candidates` measures whether the generated vocabulary contains the human clue, using 7,703 Cultural Codes observations and 2,250 Connector observations. After removing blank/non-letter clues, 9,932 observations remain. This is a real coverage metric, but it is deliberately shown separately from quality: containing a human clue does not mean the trainer ranks it highly or that it is legal on every board.
+
+| Candidates | Human clue coverage | Incremental index download per model |
+| ---: | ---: | ---: |
+| 3,000 | 61.79% | about 1.5 MB |
+| 10,000 | 85.08% | about 3.5 MB more |
+| 30,000 | 93.47% | about 10 MB more |
+
+The reproducible report is `scripts/generated/candidate-coverage.json`. Model picker records score time and total analysis time in local browser storage for each model/candidate combination on the current device; these runtime values are not presented as universal benchmark numbers.
 
 ## Clue Vocabulary
 
-The generated vocabulary starts from the 50,000 most frequent English entries exposed by [`wordfreq`](https://pypi.org/project/wordfreq/). The generator keeps 3,000 single ASCII words that:
+The generated vocabulary starts from the 50,000 most frequent English entries exposed by [`wordfreq`](https://pypi.org/project/wordfreq/). The generator keeps 30,000 single ASCII words that:
 
 - contain 3-18 letters;
 - are recognized as content words by [WordNet](https://wordnet.princeton.edu/);

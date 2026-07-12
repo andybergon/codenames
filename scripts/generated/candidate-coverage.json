@@ -1,0 +1,38 @@
+{
+  "generatedAt": "2026-07-12T16:48:23.028Z",
+  "metric": "Exact normalized single-word human clue presence in the generated candidate prefix. This measures vocabulary coverage, not end-to-end ranking quality.",
+  "datasets": {
+    "culturalCodes": 7703,
+    "connector": 2250,
+    "licenseNote": "Upstream data is fetched to the gitignored cache and not redistributed because neither repository declares a license."
+  },
+  "results": [
+    {
+      "candidateCount": 3000,
+      "observations": 9932,
+      "coveredObservations": 6137,
+      "observationCoverage": 0.6179,
+      "uniqueClues": 2719,
+      "coveredUniqueClues": 1057,
+      "uniqueCoverage": 0.3887
+    },
+    {
+      "candidateCount": 10000,
+      "observations": 9932,
+      "coveredObservations": 8450,
+      "observationCoverage": 0.8508,
+      "uniqueClues": 2719,
+      "coveredUniqueClues": 1826,
+      "uniqueCoverage": 0.6716
+    },
+    {
+      "candidateCount": 30000,
+      "observations": 9932,
+      "coveredObservations": 9283,
+      "observationCoverage": 0.9347,
+      "uniqueClues": 2719,
+      "coveredUniqueClues": 2302,
+      "uniqueCoverage": 0.8466
+    }
+  ]
+}

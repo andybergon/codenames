@@ -164,3 +164,72 @@ test("recommendation perspective can switch between Blue and Red", async ({ page
   await expect(page.locator(".results-panel")).toHaveAttribute("data-active-side", "red");
   await expect(page.locator("#turn-status")).toBeEmpty();
 });
+
+test("model lab lazy-loads only selected model and incremental clue shards", async ({ page }) => {
+  const requests = [];
+  page.on("request", (request) => {
+    const path = new URL(request.url()).pathname;
+    if (path.includes("/data/model-lab/")) requests.push(path);
+  });
+  await page.goto(SHARED_BOARD);
+
+  await expect(page.getByRole("heading", { name: "Model picker" })).toBeVisible();
+  await expect.poll(() => requests.some((path) => path.includes("minilm-l6/manifest"))).toBe(true);
+  expect(requests.some((path) => path.includes("minilm-l3"))).toBe(false);
+  expect(requests.some((path) => path.includes("bge-small"))).toBe(false);
+  expect(requests.some((path) => path.includes("minilm-l12"))).toBe(false);
+  expect(requests.some((path) => path.includes("mpnet-base"))).toBe(false);
+
+  const bge3k = page.locator('.model-combination[data-model-id="bge-small"][data-candidate-count="3000"]');
+  await expect(bge3k).toHaveCount(1);
+  await bge3k.click();
+  await expect.poll(() => requests.some((path) => path.includes("bge-small/clues-0-3000"))).toBe(true);
+  const baseRequests = requests.filter((path) => path.includes("bge-small/clues-0-3000")).length;
+
+  const bge10k = page.locator('.model-combination[data-model-id="bge-small"][data-candidate-count="10000"]');
+  await expect(bge10k).toHaveCount(1);
+  await bge10k.click();
+  await expect.poll(() => requests.some((path) => path.includes("bge-small/clues-3000-10000"))).toBe(true);
+  expect(requests.filter((path) => path.includes("bge-small/clues-0-3000"))).toHaveLength(baseRequests);
+  expect(requests.some((path) => path.includes("minilm-l3"))).toBe(false);
+  expect(requests.some((path) => path.includes("minilm-l12"))).toBe(false);
+  expect(requests.some((path) => path.includes("mpnet-base"))).toBe(false);
+});
+
+test("model lab speed bars compare persisted valid runtimes without exceeding 100%", async ({ page }) => {
+  await page.addInitScript(() => {
+    window.localStorage.setItem(
+      "codenames-model-lab-runtime-v1",
+      JSON.stringify([
+        ["minilm-l6:3000", { scoreMs: 100, totalMs: 160 }],
+        ["bge-small:3000", { scoreMs: 200, totalMs: 280 }],
+        ["minilm-l12:3000", { scoreMs: 0, totalMs: 300 }],
+        ["unknown:3000", { scoreMs: 1, totalMs: 1 }],
+      ]),
+    );
+    const originalFetch = window.fetch.bind(window);
+    window.fetch = (input, init) => {
+      const url = new URL(typeof input === "string" ? input : input.url, window.location.href);
+      return url.origin === window.location.origin
+        ? originalFetch(input, init)
+        : new Promise(() => {});
+    };
+  });
+  await page.goto(SHARED_BOARD);
+
+  await expect(page.locator(".model-combination")).toHaveCount(15);
+  await expect(page.getByText("Use combination")).toHaveCount(0);
+  await expect(page.getByText("Selected", { exact: true })).toHaveCount(0);
+  await expect(page.locator(".model-recommendation-badge")).toHaveCount(1);
+  await expect(page.locator(".model-recommendation-badge")).toContainText("Recommended");
+  await expect(page.locator('#model-picker-info .info-button')).toBeVisible();
+  await expect(page.locator(".model-lab-info")).toHaveCount(0);
+  const l6 = page.locator('.model-combination[data-model-id="minilm-l6"][data-candidate-count="3000"]');
+  const bge = page.locator('.model-combination[data-model-id="bge-small"][data-candidate-count="3000"]');
+  const l12 = page.locator('.model-combination[data-model-id="minilm-l12"][data-candidate-count="3000"]');
+  await expect(l6.locator(".lab-bar.speed i")).toHaveAttribute("style", "width:100%");
+  await expect(bge.locator(".lab-bar.speed i")).toHaveAttribute("style", "width:50%");
+  await expect(l12.locator(".lab-bar.speed i")).toHaveAttribute("style", "width:0%");
+  await expect(l12).toContainText("Run to measure");
+  await expect(page.locator('th[scope="row"] .lab-bar.quality i').first()).toHaveAttribute("style", "width:27%");
+});
