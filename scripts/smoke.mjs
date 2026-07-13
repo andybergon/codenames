@@ -39,6 +39,9 @@ import {
 const fixture = JSON.parse(
   await readFile("scripts/generated/sample-board-embeddings.json", "utf8"),
 );
+const pickerBenchmark = JSON.parse(
+  await readFile("scripts/generated/model-picker-benchmark.json", "utf8"),
+);
 const defaultManifest = JSON.parse(await readFile("public/data/model-lab/minilm-l6/manifest.json", "utf8"));
 const defaultShard = JSON.parse(await readFile("public/data/model-lab/minilm-l6/clues-0-3000.json", "utf8"));
 const clueIndex = hydrateClueShards(defaultManifest, [defaultShard], 3000);
@@ -55,6 +58,16 @@ for (const option of MODEL_OPTIONS) {
   assert.equal(hydrated.vectors.length, 3000 * option.dimensions);
 }
 assert.deepEqual(CANDIDATE_OPTIONS.map(({ count }) => count), [3000, 10000, 30000]);
+assert.equal(pickerBenchmark.results.length, MODEL_OPTIONS.length * CANDIDATE_OPTIONS.length);
+for (const option of MODEL_OPTIONS) {
+  for (const { count } of CANDIDATE_OPTIONS) {
+    const benchmark = pickerBenchmark.results.find(
+      ({ modelId, candidateCount }) => modelId === option.id && candidateCount === count,
+    );
+    assert.ok(benchmark?.medianMs > 0, `missing benchmark for ${option.id}:${count}`);
+    assert.equal(benchmark.dimensions, option.dimensions);
+  }
+}
 
 assert.equal(clueIndex.model, fixture.model);
 assert.equal(clueIndex.dimensions, 384);

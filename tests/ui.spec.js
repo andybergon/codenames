@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import pickerBenchmark from "../scripts/generated/model-picker-benchmark.json" with { type: "json" };
 
 const SHARED_BOARD = "/?b=2sw7fIwN9dL7Yos";
 
@@ -227,17 +228,8 @@ test("model lab lazy-loads only selected model and incremental clue shards", asy
   expect(requests.some((path) => path.includes("mpnet-base"))).toBe(false);
 });
 
-test("model lab speed bars compare persisted valid runtimes without exceeding 100%", async ({ page }) => {
+test("model picker uses the fixed benchmark and shows one time per combination", async ({ page }) => {
   await page.addInitScript(() => {
-    window.localStorage.setItem(
-      "codenames-model-lab-runtime-v1",
-      JSON.stringify([
-        ["minilm-l6:3000", { scoreMs: 100, totalMs: 160 }],
-        ["bge-small:3000", { scoreMs: 200, totalMs: 280 }],
-        ["minilm-l12:3000", { scoreMs: 0, totalMs: 300 }],
-        ["unknown:3000", { scoreMs: 1, totalMs: 1 }],
-      ]),
-    );
     const originalFetch = window.fetch.bind(window);
     window.fetch = (input, init) => {
       const url = new URL(typeof input === "string" ? input : input.url, window.location.href);
@@ -254,13 +246,29 @@ test("model lab speed bars compare persisted valid runtimes without exceeding 10
   await expect(page.locator(".model-recommendation-badge")).toHaveCount(1);
   await expect(page.locator(".model-recommendation-badge")).toContainText("Recommended");
   await expect(page.locator('#model-picker-info .info-button')).toBeVisible();
+  await expect(page.locator('#candidate-filter-info .info-button')).toBeVisible();
   await expect(page.locator(".model-lab-info")).toHaveCount(0);
   const l6 = page.locator('.model-combination[data-model-id="minilm-l6"][data-candidate-count="3000"]');
   const bge = page.locator('.model-combination[data-model-id="bge-small"][data-candidate-count="3000"]');
-  const l12 = page.locator('.model-combination[data-model-id="minilm-l12"][data-candidate-count="3000"]');
-  await expect(l6.locator(".lab-bar.speed i")).toHaveAttribute("style", "width:100%");
-  await expect(bge.locator(".lab-bar.speed i")).toHaveAttribute("style", "width:50%");
-  await expect(l12.locator(".lab-bar.speed i")).toHaveAttribute("style", "width:0%");
-  await expect(l12).toContainText("Run to measure");
-  await expect(page.locator('th[scope="row"] .lab-bar.quality i').first()).toHaveAttribute("style", "width:27%");
+  const mpnet30k = page.locator('.model-combination[data-model-id="mpnet-base"][data-candidate-count="30000"]');
+  const fastest = Math.min(...pickerBenchmark.results.map(({ medianMs }) => medianMs));
+  const result = (modelId, candidateCount) => pickerBenchmark.results.find(
+    (entry) => entry.modelId === modelId && entry.candidateCount === candidateCount,
+  );
+  await expect(l6).toContainText(`${result("minilm-l6", 3000).medianMs.toFixed(1)} ms`);
+  await expect(l6.locator("small")).toHaveCount(0);
+  await expect(l6.locator(".lab-bar.speed i")).toHaveAttribute(
+    "style",
+    `width:${Math.round((fastest / result("minilm-l6", 3000).medianMs) * 100)}%`,
+  );
+  await expect(bge.locator(".lab-bar.speed i")).toHaveAttribute(
+    "style",
+    `width:${Math.round((fastest / result("bge-small", 3000).medianMs) * 100)}%`,
+  );
+  await expect(mpnet30k.locator(".lab-bar.speed i")).toHaveAttribute(
+    "style",
+    `width:${Math.round((fastest / result("mpnet-base", 30000).medianMs) * 100)}%`,
+  );
+  await expect(page.locator('tr[data-model-id="minilm-l3"] .lab-bar.quality i')).toHaveAttribute("style", "width:27%");
+  await expect(page.getByText("Recall", { exact: true })).toHaveCount(5);
 });

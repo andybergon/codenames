@@ -1,0 +1,308 @@
+{
+  "generatedAt": "2026-07-13T01:30:54.912Z",
+  "environment": {
+    "node": "v26.5.0",
+    "platform": "darwin",
+    "release": "25.5.0",
+    "architecture": "arm64",
+    "cpu": "Apple M5 Pro",
+    "logicalCores": 18,
+    "totalMemoryBytes": 51539607552,
+    "freeMemoryBytesAtReport": 2737995776,
+    "garbageCollectionExposed": true
+  },
+  "methodology": {
+    "warmups": 2,
+    "iterations": 7,
+    "statistic": "median",
+    "operation": "Score the fixed sample board for both Blue and Red, then calculate board metrics. Index/model loading and board embedding are excluded.",
+    "vectors": "Deterministic normalized synthetic board vectors keep the scoring work identical across runs while matching each model dimension."
+  },
+  "results": [
+    {
+      "modelId": "minilm-l3",
+      "model": "Xenova/paraphrase-MiniLM-L3-v2",
+      "dimensions": 384,
+      "candidateCount": 3000,
+      "legalCandidateCount": 2976,
+      "medianMs": 72.2,
+      "p25Ms": 70.5,
+      "p75Ms": 97.5,
+      "samplesMs": [
+        66.4,
+        68.7,
+        72.2,
+        72.2,
+        97.4,
+        97.5,
+        97.8
+      ]
+    },
+    {
+      "modelId": "minilm-l3",
+      "model": "Xenova/paraphrase-MiniLM-L3-v2",
+      "dimensions": 384,
+      "candidateCount": 10000,
+      "legalCandidateCount": 9946,
+      "medianMs": 228,
+      "p25Ms": 212.1,
+      "p75Ms": 274.6,
+      "samplesMs": [
+        204.3,
+        209.3,
+        214.9,
+        228,
+        230.1,
+        319,
+        323.3
+      ]
+    },
+    {
+      "modelId": "minilm-l3",
+      "model": "Xenova/paraphrase-MiniLM-L3-v2",
+      "dimensions": 384,
+      "candidateCount": 30000,
+      "legalCandidateCount": 29900,
+      "medianMs": 614.7,
+      "p25Ms": 602.7,
+      "p75Ms": 759,
+      "samplesMs": [
+        595.2,
+        599.3,
+        606.1,
+        614.7,
+        619.1,
+        898.8,
+        899.5
+      ]
+    },
+    {
+      "modelId": "minilm-l6",
+      "model": "Xenova/all-MiniLM-L6-v2",
+      "dimensions": 384,
+      "candidateCount": 3000,
+      "legalCandidateCount": 2976,
+      "medianMs": 65,
+      "p25Ms": 64.3,
+      "p75Ms": 67.5,
+      "samplesMs": [
+        64.1,
+        64.3,
+        64.3,
+        65,
+        66.2,
+        68.8,
+        95
+      ]
+    },
+    {
+      "modelId": "minilm-l6",
+      "model": "Xenova/all-MiniLM-L6-v2",
+      "dimensions": 384,
+      "candidateCount": 10000,
+      "legalCandidateCount": 9946,
+      "medianMs": 214.4,
+      "p25Ms": 210.1,
+      "p75Ms": 259.9,
+      "samplesMs": [
+        204.5,
+        205.9,
+        214.3,
+        214.4,
+        214.4,
+        305.3,
+        305.5
+      ]
+    },
+    {
+      "modelId": "minilm-l6",
+      "model": "Xenova/all-MiniLM-L6-v2",
+      "dimensions": 384,
+      "candidateCount": 30000,
+      "legalCandidateCount": 29900,
+      "medianMs": 606.9,
+      "p25Ms": 602.3,
+      "p75Ms": 753.5,
+      "samplesMs": [
+        595.6,
+        599.3,
+        605.3,
+        606.9,
+        608.1,
+        898.9,
+        907.1
+      ]
+    },
+    {
+      "modelId": "bge-small",
+      "model": "Xenova/bge-small-en-v1.5",
+      "dimensions": 384,
+      "candidateCount": 3000,
+      "legalCandidateCount": 2976,
+      "medianMs": 69.6,
+      "p25Ms": 64.5,
+      "p75Ms": 84.2,
+      "samplesMs": [
+        63.9,
+        64.4,
+        64.6,
+        69.6,
+        73.9,
+        94.5,
+        96.3
+      ]
+    },
+    {
+      "modelId": "bge-small",
+      "model": "Xenova/bge-small-en-v1.5",
+      "dimensions": 384,
+      "candidateCount": 10000,
+      "legalCandidateCount": 9946,
+      "medianMs": 211.8,
+      "p25Ms": 205.1,
+      "p75Ms": 259.2,
+      "samplesMs": [
+        203.3,
+        204.5,
+        205.6,
+        211.8,
+        212,
+        306.5,
+        307.9
+      ]
+    },
+    {
+      "modelId": "bge-small",
+      "model": "Xenova/bge-small-en-v1.5",
+      "dimensions": 384,
+      "candidateCount": 30000,
+      "legalCandidateCount": 29900,
+      "medianMs": 608.5,
+      "p25Ms": 605.5,
+      "p75Ms": 758.3,
+      "samplesMs": [
+        600.7,
+        603.5,
+        607.5,
+        608.5,
+        609.7,
+        906.9,
+        911
+      ]
+    },
+    {
+      "modelId": "minilm-l12",
+      "model": "Xenova/all-MiniLM-L12-v2",
+      "dimensions": 384,
+      "candidateCount": 3000,
+      "legalCandidateCount": 2976,
+      "medianMs": 67.4,
+      "p25Ms": 66.9,
+      "p75Ms": 70.7,
+      "samplesMs": [
+        66.2,
+        66.4,
+        67.4,
+        67.4,
+        67.5,
+        73.9,
+        99.5
+      ]
+    },
+    {
+      "modelId": "minilm-l12",
+      "model": "Xenova/all-MiniLM-L12-v2",
+      "dimensions": 384,
+      "candidateCount": 10000,
+      "legalCandidateCount": 9946,
+      "medianMs": 212.4,
+      "p25Ms": 208.8,
+      "p75Ms": 262.8,
+      "samplesMs": [
+        208,
+        208.1,
+        209.5,
+        212.4,
+        215.7,
+        309.9,
+        312.7
+      ]
+    },
+    {
+      "modelId": "minilm-l12",
+      "model": "Xenova/all-MiniLM-L12-v2",
+      "dimensions": 384,
+      "candidateCount": 30000,
+      "legalCandidateCount": 29900,
+      "medianMs": 625.4,
+      "p25Ms": 615.5,
+      "p75Ms": 781.6,
+      "samplesMs": [
+        601.2,
+        610.5,
+        620.4,
+        625.4,
+        627.6,
+        935.7,
+        955.7
+      ]
+    },
+    {
+      "modelId": "mpnet-base",
+      "model": "Xenova/all-mpnet-base-v2",
+      "dimensions": 768,
+      "candidateCount": 3000,
+      "legalCandidateCount": 2976,
+      "medianMs": 102.7,
+      "p25Ms": 99.3,
+      "p75Ms": 130.9,
+      "samplesMs": [
+        98.7,
+        98.8,
+        99.8,
+        102.7,
+        103.6,
+        158.3,
+        159.1
+      ]
+    },
+    {
+      "modelId": "mpnet-base",
+      "model": "Xenova/all-mpnet-base-v2",
+      "dimensions": 768,
+      "candidateCount": 10000,
+      "legalCandidateCount": 9946,
+      "medianMs": 331,
+      "p25Ms": 323.3,
+      "p75Ms": 428.2,
+      "samplesMs": [
+        318.8,
+        322,
+        324.6,
+        331,
+        333.4,
+        523.1,
+        526.1
+      ]
+    },
+    {
+      "modelId": "mpnet-base",
+      "model": "Xenova/all-mpnet-base-v2",
+      "dimensions": 768,
+      "candidateCount": 30000,
+      "legalCandidateCount": 29900,
+      "medianMs": 968.3,
+      "p25Ms": 955.1,
+      "p75Ms": 1263.5,
+      "samplesMs": [
+        937.9,
+        948.4,
+        961.8,
+        968.3,
+        968.6,
+        1558.4,
+        1562
+      ]
+    }
+  ]
+}

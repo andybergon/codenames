@@ -1,4 +1,5 @@
 import { Check, Monitor, Moon, Share2, Sun, createIcons } from "lucide";
+import MODEL_PICKER_BENCHMARK from "../scripts/generated/model-picker-benchmark.json" with { type: "json" };
 import {
   BOARD_ORDER,
   createGeneratedBoardState,
@@ -34,7 +35,6 @@ const RESULTS_PER_SIZE = 6;
 const DEFAULT_TARGET_RANGE = Object.freeze({ min: 2, max: 4 });
 const DEFAULT_MINIMUM_WORTH = 50;
 const THEME_STORAGE_KEY = "codenames-theme";
-const MODEL_LAB_RUNTIME_STORAGE_KEY = "codenames-model-lab-runtime-v1";
 const THEME_VALUES = new Set(["system", "light", "dark"]);
 const MAX_TARGET_WORDS = ROLE_SEQUENCE.filter((team) => team === "friendly").length;
 const BOARD_METRIC_DEFINITIONS = {
@@ -59,8 +59,19 @@ const MOBILE_METRIC_DEFINITION = {
 const MODEL_PICKER_INFO = {
   id: "measurements",
   label: "Model picker measurements",
-  info: "Human recall is target recall on 7,703 played Codenames Duet turns; the compact matrix omits the separately measured avoid rate. Runtime is measured in this browser after a combination runs. Vocabulary coverage is exact-match presence across 9,932 usable human clues, not proof that the trainer ranks that clue highly.",
+  info: `Human recall is target recall on 7,703 played Codenames Duet turns; recall bars use a zoomed 55–59% scale. Speed is the median of ${MODEL_PICKER_BENCHMARK.methodology.iterations} fixed Node scoring runs after ${MODEL_PICKER_BENCHMARK.methodology.warmups} warmups on ${MODEL_PICKER_BENCHMARK.environment.cpu}; loading is excluded. Vocabulary coverage is exact-match presence across 9,932 usable human clues, not proof that the trainer ranks that clue highly.`,
 };
+const CANDIDATE_FILTER_INFO = {
+  id: "candidate-filter",
+  label: "available clue candidates",
+  info: "This count starts from the selected vocabulary and dynamically removes clues that conflict with the remaining board words: exact matches, simple stem variants, and words that contain or are contained by a board word. There is no additional fixed removal at runtime, so the count changes with the board and guessed cards.",
+};
+const PICKER_BENCHMARK_BY_CONFIGURATION = new Map(
+  MODEL_PICKER_BENCHMARK.results.map((result) => [
+    `${result.modelId}:${result.candidateCount}`,
+    result,
+  ]),
+);
 const SUGGESTION_COLUMNS = [
   { id: "clue", label: "Clue", key: "clue", direction: "asc" },
   { id: "items", label: "Items", key: "number", direction: "desc" },
@@ -153,7 +164,6 @@ let hasAnalysis = false;
 const clueIndexPromises = new Map();
 let selectedModelId = DEFAULT_MODEL_ID;
 let selectedCandidateCount = DEFAULT_CANDIDATE_COUNT;
-const runtimeMeasurements = readRuntimeMeasurements();
 let shareFeedbackTimer = 0;
 
 board =
@@ -169,6 +179,7 @@ const elements = {
   resultsPanel: document.querySelector(".results-panel"),
   analysisStatus: document.querySelector("#analysis-status"),
   recommendationCount: document.querySelector("#recommendation-count"),
+  candidateFilterInfo: document.querySelector("#candidate-filter-info"),
   targetRangeControl: document.querySelector("#target-range-control"),
   targetRangeValue: document.querySelector("#target-range-value"),
   targetCountBreakdown: document.querySelector("#target-count-breakdown"),
@@ -383,6 +394,9 @@ elements.mobileMetricHelp.append(
   createInfoControl(MOBILE_METRIC_DEFINITION, "mobile-recommendations"),
 );
 elements.modelPickerInfo.append(createInfoControl(MODEL_PICKER_INFO, "model-picker"));
+elements.candidateFilterInfo.append(
+  createInfoControl(CANDIDATE_FILTER_INFO, "recommendation-status"),
+);
 applyTheme(readThemeSetting());
 renderModelLab();
 render();
@@ -400,8 +414,7 @@ function renderModelLab() {
   elements.modelLabCandidates.value = String(selectedCandidateCount);
   const largestModelBytes = Math.max(...MODEL_OPTIONS.map(({ modelBytes }) => modelBytes));
   const fastestScoreMs = Math.min(
-    ...[...runtimeMeasurements.values()].map(({ scoreMs }) => scoreMs),
-    Infinity,
+    ...MODEL_PICKER_BENCHMARK.results.map(({ medianMs }) => medianMs),
   );
   const table = document.createElement("table");
   table.className = "model-comparison-table";
@@ -409,23 +422,20 @@ function renderModelLab() {
     <thead><tr><th scope="col">Embedding model</th>${CANDIDATE_OPTIONS.map((option) => `
       <th scope="col"><strong>${option.count.toLocaleString()} clues</strong><span>${(option.humanClueCoverage * 100).toFixed(1)}% human clue coverage</span></th>`).join("")}</tr></thead>
     <tbody>${MODEL_OPTIONS.map((option) => `
-      <tr>
+      <tr data-model-id="${option.id}">
         <th scope="row"><strong>${option.label}</strong>
-          <div class="model-axis-measure"><span>Recall (55–59%)</span><div class="lab-bar quality"><i style="width:${Math.max(0, Math.min(100, Math.round(((option.humanQuality - 0.55) / 0.04) * 100)))}%"></i></div><b>${(option.humanQuality * 100).toFixed(1)}%</b></div>
+          <div class="model-axis-measure"><span>Recall</span><div class="lab-bar quality"><i style="width:${Math.max(0, Math.min(100, Math.round(((option.humanQuality - 0.55) / 0.04) * 100)))}%"></i></div><b>${(option.humanQuality * 100).toFixed(1)}%</b></div>
           <div class="model-axis-measure"><span>Download</span><div class="lab-bar size"><i style="width:${Math.round((option.modelBytes / largestModelBytes) * 100)}%"></i></div><b>${Math.round(option.modelBytes / 1_000_000)} MB</b></div>
         </th>
         ${CANDIDATE_OPTIONS.map(({ count }) => {
-          const measured = runtimeMeasurements.get(`${option.id}:${count}`);
-          const speedWidth = measured
-            ? Math.min(100, Math.round((fastestScoreMs / measured.scoreMs) * 100))
-            : 0;
+          const benchmark = PICKER_BENCHMARK_BY_CONFIGURATION.get(`${option.id}:${count}`);
+          const speedWidth = Math.min(100, Math.round((fastestScoreMs / benchmark.medianMs) * 100));
           const selected = option.id === selectedModelId && count === selectedCandidateCount;
           const recommended = option.id === DEFAULT_MODEL_ID && count === DEFAULT_CANDIDATE_COUNT;
           return `<td><button type="button" class="model-combination" data-model-id="${option.id}" data-candidate-count="${count}" aria-pressed="${selected}">
             ${recommended ? '<span class="model-recommendation-badge">Recommended</span>' : ""}
-            <strong>${measured ? `${measured.scoreMs} ms score` : "Run to measure"}</strong>
+            <strong>${benchmark.medianMs.toFixed(1)} ms</strong>
             <div class="lab-bar speed" aria-hidden="true"><i style="width:${speedWidth}%"></i></div>
-            <small>${measured ? `${measured.totalMs} ms last total` : "No device timing yet"}</small>
           </button></td>`;
         }).join("")}
       </tr>`).join("")}</tbody>`;
@@ -442,36 +452,6 @@ function renderModelLab() {
     });
   });
   elements.modelLabMatrix.replaceChildren(table);
-}
-
-function readRuntimeMeasurements() {
-  try {
-    const entries = JSON.parse(window.localStorage.getItem(MODEL_LAB_RUNTIME_STORAGE_KEY) ?? "[]");
-    if (!Array.isArray(entries)) return new Map();
-    const modelIds = new Set(MODEL_OPTIONS.map(({ id }) => id));
-    const candidateCounts = new Set(CANDIDATE_OPTIONS.map(({ count }) => count));
-    return new Map(entries.filter(([key, measurement]) => {
-      const [modelId, rawCandidateCount] = String(key).split(":");
-      return (
-        modelIds.has(modelId) &&
-        candidateCounts.has(Number(rawCandidateCount)) &&
-        Number.isFinite(measurement?.scoreMs) &&
-        measurement.scoreMs > 0 &&
-        Number.isFinite(measurement?.totalMs) &&
-        measurement.totalMs >= measurement.scoreMs
-      );
-    }));
-  } catch {
-    return new Map();
-  }
-}
-
-function saveRuntimeMeasurements() {
-  try {
-    window.localStorage.setItem(MODEL_LAB_RUNTIME_STORAGE_KEY, JSON.stringify([...runtimeMeasurements]));
-  } catch {
-    // Comparisons still work for this page when storage is unavailable.
-  }
 }
 
 function render() {
@@ -857,7 +837,6 @@ function scheduleAnalysis() {
 
 async function runAnalysis() {
   const runId = ++analysisRun;
-  const startedAt = performance.now();
   setAnalysisBusy(true);
 
   if (!hasAnalysis) {
@@ -912,11 +891,7 @@ async function runAnalysis() {
     renderBoardMetrics(boardMetrics);
     renderAnalysisSummary(latestAnalysis);
     const scoreMs = Math.round(performance.now() - scoreStartedAt);
-    const totalMs = Math.round(performance.now() - startedAt);
-    runtimeMeasurements.set(configuration, { scoreMs, totalMs });
-    saveRuntimeMeasurements();
     elements.analysisStatus.textContent = `${latestAnalysis.summary.candidateTotal} candidates | ${scoreMs} ms score`;
-    renderModelLab();
     hasAnalysis = true;
   } catch (error) {
     if (runId !== analysisRun) {

@@ -51,6 +51,8 @@ npm run test:ui
 
 Run both the static/smoke checks and responsive browser suite with `npm test`.
 
+Refresh the controlled Model picker speed comparison with `npm run benchmark:picker`. It excludes loading, runs every model/vocabulary combination in one Node process, and records warmups, repeated samples, medians, spread, and machine metadata in `scripts/generated/model-picker-benchmark.json`.
+
 ## Board Word Sets
 
 **Official** is the default for generated boards and contains 400 unique words from the original English base game, including the printed multi-word entries `ICE CREAM`, `LOCH NESS`, `NEW YORK`, and `SCUBA DIVER`. The list is based on a [public transcription of the original set](https://gist.github.com/siemanko/6cc17ee2a253089969b1b904660b4097), with obvious spelling transcription errors normalized.
@@ -71,7 +73,7 @@ New v3 share links encode the selected word set and support the larger pool. Exi
 
 `all-MiniLM-L6-v2` produces 384-dimensional vectors. The generator computes the mean vector over the entire clue corpus, subtracts it from every clue vector, and normalizes the result. Runtime board embeddings receive the same transform. Mean-centering removes much of the shared single-word cosine baseline that otherwise makes generic clues appear close to unrelated cards.
 
-The default remains MiniLM-L6 with 3,000 candidates. The Model picker below the recommendations replaces the old static model summary and compares every combination of MiniLM-L3, MiniLM-L6, BGE-small, MiniLM-L12, and MPNet-base with 3k, 10k, and 30k candidate vocabularies. A model and its compatible static index load only after selection. Indexes are split into 0-3k, 3k-10k, and 10k-30k int8 shards under `public/data/model-lab/`, so moving upward downloads only the additional candidate tiers. Board words remain fully dynamic.
+The default remains MiniLM-L6 with 3,000 candidates. The Model picker below the recommendations replaces the old static model summary and compares every combination of MiniLM-L3, MiniLM-L6, BGE-small, MiniLM-L12, and MPNet-base with 3k, 10k, and 30k candidate vocabularies. Its speed cells show controlled median Node scoring time rather than noisy browser-local measurements. A model and its compatible static index load only after selection. Indexes are split into 0-3k, 3k-10k, and 10k-30k int8 shards under `public/data/model-lab/`, so moving upward downloads only the additional candidate tiers. Board words remain fully dynamic.
 
 ## Human Gameplay Embedding Evaluation
 
@@ -104,7 +106,7 @@ BGE-small has the best played-turn target recall: versus the current model it ga
 | 10,000 | 85.08% | about 3.5 MB more |
 | 30,000 | 93.47% | about 10 MB more |
 
-The reproducible report is `scripts/generated/candidate-coverage.json`. Model picker records score time and total analysis time in local browser storage for each model/candidate combination on the current device; these runtime values are not presented as universal benchmark numbers.
+The reproducible coverage report is `scripts/generated/candidate-coverage.json`. The separate controlled speed report is `scripts/generated/model-picker-benchmark.json`; its values are comparable within the recorded machine and process, not universal timings for every device.
 
 ## Clue Vocabulary
 
@@ -114,7 +116,7 @@ The generated vocabulary starts from the 50,000 most frequent English entries ex
 - are recognized as content words by [WordNet](https://wordnet.princeton.edu/);
 - are not common function words or explicitly blocked terms.
 
-The existing curated `CLUE_BANK` is appended when a seed is not already present. At runtime, candidates are removed when they equal, stem-match, or substantially contain a board word. This is a practical legality filter, not a complete implementation of table-specific Codenames rulings.
+The existing curated `CLUE_BANK` is appended when a seed is not already present. At runtime, candidates are dynamically removed when they equal, stem-match, or substantially contain a remaining board word. The displayed candidate count therefore changes with the board and guessed cards; there is no additional fixed runtime exclusion. This is a practical legality filter, not a complete implementation of table-specific Codenames rulings.
 
 To regenerate the vocabulary and embeddings:
 

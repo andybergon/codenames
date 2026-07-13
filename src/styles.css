@@ -125,13 +125,12 @@ body {
 .model-axis-measure { display: grid; grid-template-columns: 82px minmax(45px, 1fr) 46px; align-items: center; gap: 6px; margin-top: 7px; }
 .model-axis-measure span { margin: 0; font-size: .61rem; font-weight: 700; }
 .model-axis-measure b { color: var(--ink); font-size: .67rem; font-variant-numeric: tabular-nums; text-align: right; }
-.model-combination { position: relative; display: grid; width: 100%; min-height: 96px; align-content: center; gap: 7px; border: 1px solid var(--line); border-radius: 9px; padding: 10px; background: var(--panel); color: var(--ink); text-align: left; }
+.model-combination { position: relative; display: grid; width: 100%; min-height: 82px; align-content: center; gap: 7px; border: 1px solid var(--line); border-radius: 9px; padding: 10px; background: var(--panel); color: var(--ink); text-align: left; }
 .model-combination:hover { border-color: var(--blue); background: var(--surface-hover); }
 .model-combination[aria-pressed="true"] { border-color: var(--blue); outline: 3px solid var(--blue); outline-offset: -3px; }
 .model-recommendation-badge { position: absolute; top: 7px; right: 7px; border-radius: 999px; padding: 3px 6px; background: var(--green-soft); color: var(--green); font-size: .55rem; font-weight: 900; letter-spacing: .04em; line-height: 1; text-transform: uppercase; }
 .model-combination:has(.model-recommendation-badge) > strong { padding-right: 78px; }
 .model-combination > strong { font-size: .78rem; font-variant-numeric: tabular-nums; }
-.model-combination > small { color: var(--muted); font-size: .65rem; font-variant-numeric: tabular-nums; }
 .lab-bar { overflow: hidden; height: 6px; border-radius: 99px; background: var(--track-fill); }
 .lab-bar i { display: block; height: 100%; border-radius: inherit; background: var(--green); }
 .lab-bar.size i { background: var(--orange); }
@@ -889,6 +888,25 @@ h3 {
 
 .recommendation-title-row {
   gap: 8px;
+}
+
+.analysis-status-row {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.analysis-status-row .muted {
+  margin-top: 0;
+}
+
+.analysis-status-row .info-control {
+  flex-basis: 22px;
+}
+
+.analysis-status-row .info-button {
+  width: 22px;
+  height: 22px;
 }
 
 .recommendation-table-controls {

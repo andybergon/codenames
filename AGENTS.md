@@ -10,6 +10,7 @@ Local-first Vite application for embedding-powered Codenames clue recommendation
 - Run `npm run evaluate:embeddings` to refresh the human-data embedding comparison and `scripts/generated/embedding-model-comparison.json`. The benchmark pins Cultural Codes and Connector upstream commits and keeps their data under `.cache`; neither upstream repository declares a license, so do not vendor or redistribute those datasets.
 - Keep `scripts/generated/clue-words.json` and every `public/data/model-lab/<model>/` manifest/shard set in sync with `npm run generate:data`. Model-lab indexes are incremental 0-3k, 3k-10k, and 10k-30k shards and all use the 30k-corpus mean; do not change one shard independently.
 - Run `npm run evaluate:candidates` after changing clue filtering or ordering. It measures exact vocabulary coverage against cached/fetched Cultural Codes and Connector clues and updates `scripts/generated/candidate-coverage.json`.
+- Run `npm run benchmark:picker` after changing scoring performance or selectable model/index dimensions. It benchmarks every picker cell in one Node process with warmups and repeated runs, then updates `scripts/generated/model-picker-benchmark.json`.
 
 ## Embedding Model Evaluation
 
