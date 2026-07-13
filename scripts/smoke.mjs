@@ -43,6 +43,12 @@ const fixture = JSON.parse(
 const pickerBenchmark = JSON.parse(
   await readFile("scripts/generated/model-picker-benchmark.json", "utf8"),
 );
+const embeddingReport = JSON.parse(
+  await readFile("scripts/generated/embedding-model-comparison.json", "utf8"),
+);
+const candidateCoverageReport = JSON.parse(
+  await readFile("scripts/generated/candidate-coverage.json", "utf8"),
+);
 const defaultManifest = JSON.parse(await readFile("public/data/model-lab/minilm-l6/manifest.json", "utf8"));
 const defaultShard = JSON.parse(await readFile("public/data/model-lab/minilm-l6/clues-0-3000.json", "utf8"));
 const clueIndex = hydrateClueShards(defaultManifest, [defaultShard], 3000);
@@ -50,8 +56,15 @@ const boardVectors = fixture.vectors.map((vector) => Float32Array.from(vector));
 
 for (const option of MODEL_OPTIONS) {
   const manifest = JSON.parse(await readFile(`public/data/model-lab/${option.id}/manifest.json`, "utf8"));
+  const embeddingResult = embeddingReport.results.find(
+    ({ model, transform }) => model === option.model && transform === "centered",
+  );
   assert.equal(manifest.model, option.model);
   assert.equal(manifest.dimensions, option.dimensions);
+  assert.equal(manifest.modelBytes, option.modelBytes);
+  assert.equal(embeddingResult?.q8ModelBytes, option.modelBytes);
+  assert.equal(embeddingResult?.datasets.culturalCodes.targetRecallAtCount, option.humanQuality);
+  assert.equal(embeddingResult?.datasets.culturalCodes.avoidWordRate, option.avoidRate);
   const expectedCuts = PICKER_MODEL_OPTIONS.some(({ id }) => id === option.id)
     ? [[0, 3000], [3000, 10000], [10000, 30000], [30000, 100000]]
     : [[0, 3000], [3000, 10000], [10000, 30000]];
@@ -77,6 +90,16 @@ for (const option of MODEL_OPTIONS) {
   assert.equal(hydrated.vectors.length, 3000 * option.dimensions);
 }
 assert.deepEqual(CANDIDATE_OPTIONS.map(({ count }) => count), [3000, 10000, 30000, 100000]);
+for (const candidate of CANDIDATE_OPTIONS) {
+  const coverageResult = candidateCoverageReport.results.find(
+    ({ candidateCount }) => candidateCount === candidate.count,
+  );
+  assert.equal(
+    coverageResult?.observationCoverage,
+    candidate.humanClueCoverage,
+    `human clue coverage differs at ${candidate.count}`,
+  );
+}
 assert.equal(pickerBenchmark.results.length, PICKER_MODEL_OPTIONS.length * CANDIDATE_OPTIONS.length);
 for (const option of PICKER_MODEL_OPTIONS) {
   for (const { count } of CANDIDATE_OPTIONS) {

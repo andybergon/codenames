@@ -31,12 +31,16 @@ if (candidates.length < CUTS.at(-1)) throw new Error(`Need ${CUTS.at(-1)} candid
 for (const id of modelIds) {
   const modelName = MODEL_DEFINITIONS[id];
   if (!modelName) throw new Error(`Unknown model id: ${id}`);
+  const cuts = DEFAULT_MODEL_IDS.includes(id)
+    ? CUTS
+    : CUTS.filter((cut) => cut <= CENTERING_COUNT);
+  const modelCandidates = candidates.slice(0, cuts.at(-1));
   const outputDir = resolve(ROOT, `public/data/model-lab/${id}`);
-  const existing = await matchingExistingIndex(outputDir, modelName, candidates);
+  const existing = await matchingExistingIndex(outputDir, modelName, modelCandidates);
   console.log(`Loading ${modelName}`);
   const extractor = await pipeline("feature-extraction", modelName, { dtype: "q8" });
   const embeddingStart = existing?.candidateCount ?? 0;
-  const embeddedCandidates = candidates.slice(embeddingStart);
+  const embeddedCandidates = modelCandidates.slice(embeddingStart);
   const raw = await embedInBatches(extractor, embeddedCandidates.map(({ word }) => word), id);
   const dimensions = raw[0]?.length ?? existing.dimensions;
   const mean = existing?.centering.mean ?? meanVector(raw.slice(0, CENTERING_COUNT), dimensions);
@@ -49,12 +53,12 @@ for (const id of modelIds) {
   await mkdir(outputDir, { recursive: true });
   const shards = existing ? [...existing.shards] : [];
   let start = embeddingStart;
-  for (const end of CUTS.filter((cut) => cut > embeddingStart)) {
+  for (const end of cuts.filter((cut) => cut > embeddingStart)) {
     const localStart = start - embeddingStart;
     const localEnd = end - embeddingStart;
     const payload = {
-      clues: candidates.slice(start, end).map(({ word }) => word),
-      frequencies: candidates.slice(start, end).map(({ zipf }) => zipf),
+      clues: modelCandidates.slice(start, end).map(({ word }) => word),
+      frequencies: modelCandidates.slice(start, end).map(({ zipf }) => zipf),
       vectors: Buffer.from(quantized.subarray(localStart * dimensions, localEnd * dimensions)).toString("base64"),
     };
     const file = `clues-${start}-${end}.json`;
@@ -78,7 +82,7 @@ for (const id of modelIds) {
     const fixture = { model: modelName, dimensions, words: boardWords, vectors: boardRaw.map((vector) => centerAndNormalize(vector, mean).map((value) => Number(value.toFixed(7)))) };
     await writeFile(resolve(ROOT, "scripts/generated/sample-board-embeddings.json"), `${JSON.stringify(fixture, null, 2)}\n`);
   }
-  console.log(`Wrote ${id}: ${candidates.length} x ${dimensions}`);
+  console.log(`Wrote ${id}: ${modelCandidates.length} x ${dimensions}`);
   if (typeof extractor.dispose === "function") await extractor.dispose();
 }
 

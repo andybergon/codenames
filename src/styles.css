@@ -117,7 +117,7 @@ body {
 .model-lab-matrix { min-width: 0; }
 .model-table-scroll { overflow-x: auto; }
 .model-comparison-table { width: 100%; min-width: 940px; border-spacing: 8px; table-layout: fixed; }
-.model-comparison-table th, .model-comparison-table td { padding: 0; border: 0; text-align: left; vertical-align: stretch; }
+.model-comparison-table th, .model-comparison-table td { padding: 0; border: 0; text-align: left; vertical-align: top; }
 .model-comparison-table thead th { padding: 8px 10px; border-radius: 8px; background: var(--subtle-fill-soft); }
 .model-comparison-table thead th:first-child, .model-comparison-table tbody th { width: 165px; }
 .model-comparison-table th strong, .model-comparison-table th span { display: block; }

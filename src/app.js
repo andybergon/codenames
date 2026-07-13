@@ -934,6 +934,8 @@ async function runAnalysis() {
   try {
     const configuration = `${selectedModelId}:${selectedCandidateCount}`;
     if (!clueIndexPromises.has(configuration)) {
+      const candidateOption = CANDIDATE_OPTIONS.find(({ count }) => count === selectedCandidateCount);
+      elements.analysisStatus.textContent = `Loading ${selectedCandidateCount.toLocaleString()} clues (${(candidateOption.indexBytes / 1_000_000).toFixed(1)} MB index)`;
       const clueIndexPromise = loadShardedClueIndex(indexManifestUrl(selectedModelId), selectedCandidateCount)
         .catch((error) => {
           clueIndexPromises.delete(configuration);
@@ -958,7 +960,9 @@ async function runAnalysis() {
       return;
     }
     if (clueIndex.model !== activeModel.model || clueIndex.dimensions !== activeModel.dimensions) {
-      throw new Error(`The selected model and clue index are incompatible`);
+      throw new Error(
+        `Clue index ${clueIndex.model}/${clueIndex.dimensions}d is incompatible with ${activeModel.model}/${activeModel.dimensions}d`,
+      );
     }
 
     const scoreStartedAt = performance.now();

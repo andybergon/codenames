@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-13T02:37:11.318Z",
+  "generatedAt": "2026-07-13T03:27:11.011Z",
   "metric": "Exact normalized single-word human clue presence in the generated candidate prefix. This measures vocabulary coverage, not end-to-end ranking quality.",
   "datasets": {
     "culturalCodes": 7703,
@@ -9,39 +9,39 @@
   "results": [
     {
       "candidateCount": 3000,
-      "observations": 9932,
-      "coveredObservations": 6137,
-      "observationCoverage": 0.6179,
-      "uniqueClues": 2719,
-      "coveredUniqueClues": 1057,
-      "uniqueCoverage": 0.3887
+      "observations": 9865,
+      "coveredObservations": 6126,
+      "observationCoverage": 0.621,
+      "uniqueClues": 2679,
+      "coveredUniqueClues": 1055,
+      "uniqueCoverage": 0.3938
     },
     {
       "candidateCount": 10000,
-      "observations": 9932,
-      "coveredObservations": 8450,
-      "observationCoverage": 0.8508,
-      "uniqueClues": 2719,
-      "coveredUniqueClues": 1826,
-      "uniqueCoverage": 0.6716
+      "observations": 9865,
+      "coveredObservations": 8432,
+      "observationCoverage": 0.8547,
+      "uniqueClues": 2679,
+      "coveredUniqueClues": 1820,
+      "uniqueCoverage": 0.6794
     },
     {
       "candidateCount": 30000,
-      "observations": 9932,
-      "coveredObservations": 9283,
-      "observationCoverage": 0.9347,
-      "uniqueClues": 2719,
-      "coveredUniqueClues": 2302,
-      "uniqueCoverage": 0.8466
+      "observations": 9865,
+      "coveredObservations": 9262,
+      "observationCoverage": 0.9389,
+      "uniqueClues": 2679,
+      "coveredUniqueClues": 2296,
+      "uniqueCoverage": 0.857
     },
     {
       "candidateCount": 100000,
-      "observations": 9932,
-      "coveredObservations": 9529,
-      "observationCoverage": 0.9594,
-      "uniqueClues": 2719,
-      "coveredUniqueClues": 2473,
-      "uniqueCoverage": 0.9095
+      "observations": 9865,
+      "coveredObservations": 9497,
+      "observationCoverage": 0.9627,
+      "uniqueClues": 2679,
+      "coveredUniqueClues": 2461,
+      "uniqueCoverage": 0.9186
     }
   ]
 }

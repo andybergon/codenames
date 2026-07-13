@@ -62,10 +62,10 @@ export const PICKER_MODEL_OPTIONS = Object.freeze(
 );
 
 export const CANDIDATE_OPTIONS = Object.freeze([
-  { count: 3_000, humanClueCoverage: 0.6179, indexBytes: 1_578_554 },
-  { count: 10_000, humanClueCoverage: 0.8508, indexBytes: 5_268_446 },
-  { count: 30_000, humanClueCoverage: 0.9347, indexBytes: 15_820_717 },
-  { count: 100_000, humanClueCoverage: 0.9594, indexBytes: 52_791_589 },
+  { count: 3_000, humanClueCoverage: 0.621, indexBytes: 1_578_554 },
+  { count: 10_000, humanClueCoverage: 0.8547, indexBytes: 5_268_446 },
+  { count: 30_000, humanClueCoverage: 0.9389, indexBytes: 15_820_717 },
+  { count: 100_000, humanClueCoverage: 0.9627, indexBytes: 52_791_589 },
 ]);
 
 export function modelOption(id) {

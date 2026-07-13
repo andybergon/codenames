@@ -35,7 +35,10 @@ await writeFile(resolve(ROOT, "scripts/generated/candidate-coverage.json"), `${J
 console.table(results);
 
 async function load(url, path) { try { return await readFile(path, "utf8"); } catch { const response = await fetch(url); if (!response.ok) throw new Error(`Dataset download failed: ${response.status}`); const raw = await response.text(); await mkdir(dirname(path), { recursive: true }); await writeFile(path, raw); return raw; } }
-function normalize(value) { return String(value ?? "").toLowerCase().replace(/[^a-z]/gu, ""); }
+function normalize(value) {
+  const clue = String(value ?? "").trim().toLowerCase();
+  return /^[a-z]+$/u.test(clue) ? clue : "";
+}
 function round(value) { return Number(value.toFixed(4)); }
 function parseCsv(raw) {
   const rows = []; let row = []; let field = ""; let quoted = false;

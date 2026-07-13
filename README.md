@@ -98,14 +98,14 @@ BGE-small has the best played-turn target recall: versus the current model it ga
 
 ## Candidate Vocabulary Evaluation
 
-`npm run evaluate:candidates` measures whether the generated vocabulary contains the human clue, using 7,703 Cultural Codes observations and 2,250 Connector observations. After removing blank/non-letter clues, 9,932 observations remain. This is a real coverage metric, but it is deliberately shown separately from quality: containing a human clue does not mean the trainer ranks it highly or that it is legal on every board.
+`npm run evaluate:candidates` measures whether the generated vocabulary contains the human clue, using 7,703 Cultural Codes observations and 2,250 Connector observations. After removing blank and non-single-word clues, 9,865 observations remain. This is a real coverage metric, but it is deliberately shown separately from quality: containing a human clue does not mean the trainer ranks it highly or that it is legal on every board.
 
 | Candidates | Human clue coverage | Incremental index download per model |
 | ---: | ---: | ---: |
-| 3,000 | 61.79% | about 1.5 MB |
-| 10,000 | 85.08% | about 3.5 MB more |
-| 30,000 | 93.47% | about 10 MB more |
-| 100,000 | 95.94% | about 37 MB more |
+| 3,000 | 62.10% | about 1.5 MB |
+| 10,000 | 85.47% | about 3.5 MB more |
+| 30,000 | 93.89% | about 10 MB more |
+| 100,000 | 96.27% | about 37 MB more |
 
 The reproducible coverage report is `scripts/generated/candidate-coverage.json`. The separate controlled speed report is `scripts/generated/model-picker-benchmark.json`; its values are comparable within the recorded machine and process, not universal timings for every device.
 

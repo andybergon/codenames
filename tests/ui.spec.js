@@ -228,9 +228,17 @@ test("model lab lazy-loads only selected model and incremental clue shards", asy
   expect(requests.some((path) => path.includes("minilm-l12"))).toBe(false);
   expect(requests.some((path) => path.includes("mpnet-base"))).toBe(false);
 
+  let releaseTailRequest;
+  await page.route("**/bge-small/clues-30000-100000.json", async (route) => {
+    await new Promise((resolve) => { releaseTailRequest = resolve; });
+    await route.continue();
+  });
   const bge100k = page.locator('.model-combination[data-model-id="bge-small"][data-candidate-count="100000"]');
   await expect(bge100k).toHaveCount(1);
   await bge100k.click();
+  await expect(page.locator("#analysis-status")).toHaveText("Loading 100,000 clues (52.8 MB index)");
+  await expect.poll(() => typeof releaseTailRequest).toBe("function");
+  releaseTailRequest();
   await expect.poll(() => requests.some((path) => path.includes("bge-small/clues-30000-100000"))).toBe(true);
 });
 
@@ -247,10 +255,10 @@ test("model picker uses the fixed benchmark and shows one time per combination",
   await page.goto(SHARED_BOARD);
 
   await expect(page.locator(".model-combination")).toHaveCount(12);
-  await expect(page.getByRole("columnheader", { name: "3,000 clues 61.8% human clue coverage 1.6 MB index" })).toBeVisible();
-  await expect(page.getByRole("columnheader", { name: "10,000 clues 85.1% human clue coverage 5.3 MB index" })).toBeVisible();
-  await expect(page.getByRole("columnheader", { name: "30,000 clues 93.5% human clue coverage 15.8 MB index" })).toBeVisible();
-  await expect(page.getByRole("columnheader", { name: "100,000 clues 95.9% human clue coverage 52.8 MB index" })).toBeVisible();
+  await expect(page.getByRole("columnheader", { name: "3,000 clues 62.1% human clue coverage 1.6 MB index" })).toBeVisible();
+  await expect(page.getByRole("columnheader", { name: "10,000 clues 85.5% human clue coverage 5.3 MB index" })).toBeVisible();
+  await expect(page.getByRole("columnheader", { name: "30,000 clues 93.9% human clue coverage 15.8 MB index" })).toBeVisible();
+  await expect(page.getByRole("columnheader", { name: "100,000 clues 96.3% human clue coverage 52.8 MB index" })).toBeVisible();
   await expect(page.getByText("Use combination")).toHaveCount(0);
   await expect(page.getByText("Selected", { exact: true })).toHaveCount(0);
   await expect(page.locator(".model-recommendation-badge")).toHaveCount(1);
@@ -266,7 +274,7 @@ test("model picker uses the fixed benchmark and shows one time per combination",
     (entry) => entry.modelId === modelId && entry.candidateCount === candidateCount,
   );
   await expect(l6).toContainText(`${result("minilm-l6", 10000).medianMs.toFixed(1)} ms`);
-  await expect(l6).toContainText("48.9%");
+  await expect(l6).toContainText("49.1%");
   await expect(l6.locator("small")).toHaveCount(0);
   await expect(l6.locator(".lab-bar.speed i")).toHaveAttribute(
     "style",
