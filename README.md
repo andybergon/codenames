@@ -1,13 +1,13 @@
 # Codenames Trainer
 
-A local-first Codenames clue trainer. It embeds the board, searches a 3,000-word clue index by default, and ranks clue options for every possible target count. A built-in model picker compares larger vocabularies and alternative embeddings.
+A local-first Codenames clue trainer. It embeds the board, searches a 10,000-word clue index by default, and ranks clue options for every possible target count. A built-in model picker compares smaller and larger vocabularies with alternative embeddings.
 
 [Open the live trainer](https://codenames.andybergon.me)
 
 ## TLDR
 
 - **Embedding:** `Xenova/all-MiniLM-L6-v2`, run locally in the browser with Transformers.js.
-- **Clue set:** 30,000 frequent English words from `wordfreq` 3.1.1, filtered through WordNet and a legality filter; the fastest 3,000-word prefix remains the default.
+- **Clue set:** 100,000 frequency-ranked English words from `wordfreq` 3.1.1, filtered through WordNet, a controlled alphabetic/name fallback, and a legality filter; the balanced 10,000-word prefix is the default.
 - **Fast search:** clue embeddings are precomputed, mean-centered, normalized, and stored as an int8 static index. Only the 25 board words are embedded at runtime.
 - **Negative scoring:** the weakest target similarity must beat the highest role-weighted neutral, enemy, or assassin similarity.
 - **Outputs:** one collapsible, sortable recommendation table with per-target-count availability, a 1-to-9 target range, and a minimum Worth filter; defaults are 2-4 targets, Worth 50, and a compact view. Advanced reveals Net, Margin, and Fit/cohesion diagnostics.
@@ -71,9 +71,9 @@ New v3 share links encode the selected word set and support the larger pool. Exi
 
 ## Embedding Pipeline
 
-`all-MiniLM-L6-v2` produces 384-dimensional vectors. The generator computes the mean vector over the entire clue corpus, subtracts it from every clue vector, and normalizes the result. Runtime board embeddings receive the same transform. Mean-centering removes much of the shared single-word cosine baseline that otherwise makes generic clues appear close to unrelated cards.
+`all-MiniLM-L6-v2` produces 384-dimensional vectors. The generator computes the mean vector over the stable first-30k centering corpus, subtracts it from every clue vector—including the experimental 100k tail—and normalizes the result. Runtime board embeddings receive the same transform. Mean-centering removes much of the shared single-word cosine baseline that otherwise makes generic clues appear close to unrelated cards.
 
-The default remains MiniLM-L6 with 3,000 candidates. The Model picker below the recommendations replaces the old static model summary and compares every combination of MiniLM-L3, MiniLM-L6, BGE-small, MiniLM-L12, and MPNet-base with 3k, 10k, and 30k candidate vocabularies. Its speed cells show controlled median Node scoring time rather than noisy browser-local measurements. A model and its compatible static index load only after selection. Indexes are split into 0-3k, 3k-10k, and 10k-30k int8 shards under `public/data/model-lab/`, so moving upward downloads only the additional candidate tiers. Board words remain fully dynamic.
+The default is MiniLM-L6 with 10,000 candidates. The Model picker compares the three model families with a meaningful size, quality, or speed advantage—MiniLM-L3, MiniLM-L6, and BGE-small—across 3k, 10k, 30k, and experimental 100k candidate vocabularies. Its cells combine human fit, controlled median Node scoring time, and total model-plus-index download; the Pareto chart shows the same trade-offs on a logarithmic speed axis. A model and its compatible static index load only after selection. Indexes are split into 0-3k, 3k-10k, 10k-30k, and 30k-100k int8 shards under `public/data/model-lab/`, so moving upward downloads only the additional candidate tiers. Board words remain fully dynamic.
 
 ## Human Gameplay Embedding Evaluation
 
@@ -105,18 +105,23 @@ BGE-small has the best played-turn target recall: versus the current model it ga
 | 3,000 | 61.79% | about 1.5 MB |
 | 10,000 | 85.08% | about 3.5 MB more |
 | 30,000 | 93.47% | about 10 MB more |
+| 100,000 | 95.94% | about 37 MB more |
 
 The reproducible coverage report is `scripts/generated/candidate-coverage.json`. The separate controlled speed report is `scripts/generated/model-picker-benchmark.json`; its values are comparable within the recorded machine and process, not universal timings for every device.
 
 ## Clue Vocabulary
 
-The generated vocabulary starts from the 50,000 most frequent English entries exposed by [`wordfreq`](https://pypi.org/project/wordfreq/). The generator keeps 30,000 single ASCII words that:
+The generated vocabulary starts from the full English inventory exposed by [`wordfreq`](https://pypi.org/project/wordfreq/). The generator first keeps 88,563 single ASCII WordNet-backed words, then fills the experimental tail to 100,000 with frequency-ranked alphabetic words and names after stopword and profanity filtering. The first 30,000 entries remain identical to the original index.
+
+Primary candidates:
 
 - contain 3-18 letters;
 - are recognized as content words by [WordNet](https://wordnet.princeton.edu/);
 - are not common function words or explicitly blocked terms.
 
-The existing curated `CLUE_BANK` is appended when a seed is not already present. At runtime, candidates are dynamically removed when they equal, stem-match, or substantially contain a remaining board word. The displayed candidate count therefore changes with the board and guessed cards; there is no additional fixed runtime exclusion. This is a practical legality filter, not a complete implementation of table-specific Codenames rulings.
+The fallback is intentionally exposed only through the 100k option. It increases proper-name and long-tail coverage, but also introduces more obscure and generic candidates; that is why 100k is not the default.
+
+The existing curated `CLUE_BANK` is appended when a seed is not already present. At runtime, candidates are dynamically removed when they equal, stem-match, substantially contain, or form a recognized compound with a remaining board word. The compound check uses the trainer's 800-word board vocabulary, rejecting clues such as `pinball` for PIN or BALL without incorrectly rejecting the rulebook's ROW / `sparrow` example. The displayed candidate count therefore changes with the board and guessed cards; there is no additional fixed runtime exclusion. This remains a practical legality filter rather than a substitute for table-specific spymaster rulings.
 
 To regenerate the vocabulary and embeddings:
 

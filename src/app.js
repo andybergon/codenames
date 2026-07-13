@@ -14,7 +14,7 @@ import {
   CANDIDATE_OPTIONS,
   DEFAULT_CANDIDATE_COUNT,
   DEFAULT_MODEL_ID,
-  MODEL_OPTIONS,
+  PICKER_MODEL_OPTIONS,
   indexManifestUrl,
   modelOption,
 } from "./model-lab.js";
@@ -59,7 +59,7 @@ const MOBILE_METRIC_DEFINITION = {
 const MODEL_PICKER_INFO = {
   id: "measurements",
   label: "Model picker measurements",
-  info: `Human recall is target recall on 7,703 played Codenames Duet turns; recall bars use a zoomed 55–59% scale. Speed is the median of ${MODEL_PICKER_BENCHMARK.methodology.iterations} fixed Node scoring runs after ${MODEL_PICKER_BENCHMARK.methodology.warmups} warmups on ${MODEL_PICKER_BENCHMARK.environment.cpu}; loading is excluded. Vocabulary coverage is exact-match presence across 9,932 usable human clues, not proof that the trainer ranks that clue highly.`,
+  info: `Human fit combines target recall on 7,703 played Codenames Duet turns with exact-match vocabulary coverage across 9,932 usable human clues. It is a comparison index, not an end-to-end success rate. Speed is the median of ${MODEL_PICKER_BENCHMARK.methodology.iterations} fixed Node scoring runs after ${MODEL_PICKER_BENCHMARK.methodology.warmups} warmups on ${MODEL_PICKER_BENCHMARK.environment.cpu}; loading is excluded. Download combines the embedding model and the clue index required by that configuration. Longer cell bars mean better fit, faster scoring, or a smaller total download.`,
 };
 const CANDIDATE_FILTER_INFO = {
   id: "candidate-filter",
@@ -412,30 +412,51 @@ function switchModelLabConfiguration() {
 function renderModelLab() {
   elements.modelLabModel.value = selectedModelId;
   elements.modelLabCandidates.value = String(selectedCandidateCount);
-  const largestModelBytes = Math.max(...MODEL_OPTIONS.map(({ modelBytes }) => modelBytes));
+  const smallestConfigurationBytes = Math.min(
+    ...PICKER_MODEL_OPTIONS.flatMap((model) =>
+      CANDIDATE_OPTIONS.map((candidate) => model.modelBytes + candidate.indexBytes),
+    ),
+  );
   const fastestScoreMs = Math.min(
-    ...MODEL_PICKER_BENCHMARK.results.map(({ medianMs }) => medianMs),
+    ...MODEL_PICKER_BENCHMARK.results
+      .filter(({ modelId }) => PICKER_MODEL_OPTIONS.some(({ id }) => id === modelId))
+      .map(({ medianMs }) => medianMs),
+  );
+  const configurations = PICKER_MODEL_OPTIONS.flatMap((model) =>
+    CANDIDATE_OPTIONS.map((candidate) => {
+      const benchmark = PICKER_BENCHMARK_BY_CONFIGURATION.get(`${model.id}:${candidate.count}`);
+      return {
+        model,
+        candidate,
+        benchmark,
+        humanFit: model.humanQuality * candidate.humanClueCoverage,
+        totalBytes: model.modelBytes + candidate.indexBytes,
+      };
+    }),
   );
   const table = document.createElement("table");
   table.className = "model-comparison-table";
   table.innerHTML = `
     <thead><tr><th scope="col">Embedding model</th>${CANDIDATE_OPTIONS.map((option) => `
-      <th scope="col"><strong>${option.count.toLocaleString()} clues</strong><span>${(option.humanClueCoverage * 100).toFixed(1)}% human clue coverage</span></th>`).join("")}</tr></thead>
-    <tbody>${MODEL_OPTIONS.map((option) => `
+      <th scope="col"><strong>${option.count.toLocaleString()} clues</strong><span>${(option.humanClueCoverage * 100).toFixed(1)}% human clue coverage</span><span class="model-index-size">${(option.indexBytes / 1_000_000).toFixed(1)} MB index</span></th>`).join("")}</tr></thead>
+    <tbody>${PICKER_MODEL_OPTIONS.map((option) => `
       <tr data-model-id="${option.id}">
-        <th scope="row"><strong>${option.label}</strong>
-          <div class="model-axis-measure"><span>Recall</span><div class="lab-bar quality"><i style="width:${Math.max(0, Math.min(100, Math.round(((option.humanQuality - 0.55) / 0.04) * 100)))}%"></i></div><b>${(option.humanQuality * 100).toFixed(1)}%</b></div>
-          <div class="model-axis-measure"><span>Download</span><div class="lab-bar size"><i style="width:${Math.round((option.modelBytes / largestModelBytes) * 100)}%"></i></div><b>${Math.round(option.modelBytes / 1_000_000)} MB</b></div>
-        </th>
-        ${CANDIDATE_OPTIONS.map(({ count }) => {
+        <th scope="row"><strong>${option.label}</strong><span>${Math.round(option.modelBytes / 1_000_000)} MB base model</span></th>
+        ${CANDIDATE_OPTIONS.map((candidate) => {
+          const { count } = candidate;
           const benchmark = PICKER_BENCHMARK_BY_CONFIGURATION.get(`${option.id}:${count}`);
+          const humanFit = option.humanQuality * candidate.humanClueCoverage;
+          const totalBytes = option.modelBytes + candidate.indexBytes;
+          const fitWidth = Math.round((humanFit / 0.56) * 100);
           const speedWidth = Math.min(100, Math.round((fastestScoreMs / benchmark.medianMs) * 100));
+          const downloadWidth = Math.round((smallestConfigurationBytes / totalBytes) * 100);
           const selected = option.id === selectedModelId && count === selectedCandidateCount;
           const recommended = option.id === DEFAULT_MODEL_ID && count === DEFAULT_CANDIDATE_COUNT;
           return `<td><button type="button" class="model-combination" data-model-id="${option.id}" data-candidate-count="${count}" aria-pressed="${selected}">
             ${recommended ? '<span class="model-recommendation-badge">Recommended</span>' : ""}
-            <strong>${benchmark.medianMs.toFixed(1)} ms</strong>
-            <div class="lab-bar speed" aria-hidden="true"><i style="width:${speedWidth}%"></i></div>
+            <div class="model-cell-measure"><span>Fit</span><div class="lab-bar quality" aria-hidden="true"><i style="width:${fitWidth}%"></i></div><b>${(humanFit * 100).toFixed(1)}%</b></div>
+            <div class="model-cell-measure"><span>Speed</span><div class="lab-bar speed" aria-hidden="true"><i style="width:${speedWidth}%"></i></div><b>${benchmark.medianMs.toFixed(1)} ms</b></div>
+            <div class="model-cell-measure"><span>Download</span><div class="lab-bar download" aria-hidden="true"><i style="width:${downloadWidth}%"></i></div><b>${(totalBytes / 1_000_000).toFixed(1)} MB</b></div>
           </button></td>`;
         }).join("")}
       </tr>`).join("")}</tbody>`;
@@ -451,7 +472,74 @@ function renderModelLab() {
       switchModelLabConfiguration();
     });
   });
-  elements.modelLabMatrix.replaceChildren(table);
+  const tableScroller = document.createElement("div");
+  tableScroller.className = "model-table-scroll";
+  tableScroller.append(table);
+  elements.modelLabMatrix.replaceChildren(tableScroller, createParetoChart(configurations));
+}
+
+function createParetoChart(configurations) {
+  const width = 760;
+  const height = 246;
+  const plot = { left: 50, right: 24, top: 18, bottom: 42 };
+  const minMs = Math.min(...configurations.map(({ benchmark }) => benchmark.medianMs));
+  const maxMs = Math.max(...configurations.map(({ benchmark }) => benchmark.medianMs));
+  const minFit = 0.32;
+  const maxFit = 0.57;
+  const colors = {
+    "minilm-l3": "var(--orange)",
+    "minilm-l6": "var(--blue)",
+    "bge-small": "var(--green)",
+  };
+  const x = (milliseconds) =>
+    plot.left +
+    (Math.log(milliseconds / minMs) / Math.log(maxMs / minMs)) *
+      (width - plot.left - plot.right);
+  const y = (fit) =>
+    plot.top + ((maxFit - fit) / (maxFit - minFit)) * (height - plot.top - plot.bottom);
+  const pointsByModel = new Map(
+    PICKER_MODEL_OPTIONS.map((model) => [
+      model.id,
+      configurations.filter((configuration) => configuration.model.id === model.id),
+    ]),
+  );
+  const xTicks = [minMs, 200, 600, 2_000].filter((tick, index) =>
+    index === 0 || (tick > minMs && tick < maxMs),
+  );
+  const yTicks = [0.35, 0.45, 0.55];
+  const grid = [
+    ...xTicks.map((tick) => `<line x1="${x(tick)}" y1="${plot.top}" x2="${x(tick)}" y2="${height - plot.bottom}" />`),
+    ...yTicks.map((tick) => `<line x1="${plot.left}" y1="${y(tick)}" x2="${width - plot.right}" y2="${y(tick)}" />`),
+  ].join("");
+  const tickLabels = [
+    ...xTicks.map((tick) => `<text x="${x(tick)}" y="${height - 20}" text-anchor="middle">${Math.round(tick).toLocaleString()} ms</text>`),
+    ...yTicks.map((tick) => `<text x="${plot.left - 9}" y="${y(tick) + 4}" text-anchor="end">${Math.round(tick * 100)}%</text>`),
+  ].join("");
+  const series = [...pointsByModel.entries()].map(([modelId, points]) => {
+    const path = points.map((point, index) => `${index === 0 ? "M" : "L"}${x(point.benchmark.medianMs)},${y(point.humanFit)}`).join(" ");
+    const circles = points.map((point) => {
+      const radius = 5 + Math.sqrt(point.totalBytes / 1_000_000) * 0.7;
+      const recommended = point.model.id === DEFAULT_MODEL_ID && point.candidate.count === DEFAULT_CANDIDATE_COUNT;
+      return `<g><circle cx="${x(point.benchmark.medianMs)}" cy="${y(point.humanFit)}" r="${radius.toFixed(1)}" fill="${colors[modelId]}" class="pareto-point${recommended ? " is-recommended" : ""}"><title>${point.model.label}, ${point.candidate.count.toLocaleString()} clues: ${(point.humanFit * 100).toFixed(1)}% human fit, ${point.benchmark.medianMs.toFixed(1)} ms, ${(point.totalBytes / 1_000_000).toFixed(1)} MB total download</title></circle>${recommended ? `<text class="pareto-default-label" text-anchor="end" x="${x(point.benchmark.medianMs) - radius - 5}" y="${y(point.humanFit) - radius}">Default</text>` : ""}</g>`;
+    }).join("");
+    return `<path d="${path}" fill="none" stroke="${colors[modelId]}" class="pareto-series" />${circles}`;
+  }).join("");
+  const legend = PICKER_MODEL_OPTIONS.map((model, index) => `
+    <g transform="translate(${plot.left + index * 145},${height - 14})"><circle r="5" fill="${colors[model.id]}" /><text x="10" y="4">${model.label}</text></g>`).join("");
+  const wrapper = document.createElement("section");
+  wrapper.className = "model-pareto";
+  wrapper.innerHTML = `
+    <div class="model-pareto-heading"><strong>Pareto frontier</strong><span>Higher fit, farther left, and smaller bubbles are better. Speed uses a log scale.</span></div>
+    <div class="model-pareto-plot"><svg viewBox="0 0 ${width} ${height}" role="img" aria-labelledby="pareto-title pareto-description">
+      <title id="pareto-title">Model and clue vocabulary Pareto frontier</title>
+      <desc id="pareto-description">Human fit versus logarithmically scaled scoring time for the three non-dominated model families and four clue vocabulary sizes. Bubble size represents the total model and clue-index download. MiniLM-L6 with ten thousand clues is recommended.</desc>
+      <g class="pareto-grid">${grid}</g>
+      <g class="pareto-ticks">${tickLabels}</g>
+      <text class="pareto-axis-label" x="${plot.left}" y="12">Human fit</text>
+      ${series}
+      <g class="pareto-legend">${legend}</g>
+    </svg></div>`;
+  return wrapper;
 }
 
 function render() {

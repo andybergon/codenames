@@ -9,7 +9,7 @@ const CACHE = resolve(ROOT, ".cache/evaluations/cultural-codes");
 const CULTURAL_URL = "https://raw.githubusercontent.com/SALT-NLP/codenames/9bf4550e681f7a42ac406439b00b0c717f59f13c/data/clue_generation_task/all.csv";
 const CONNECTOR_URL = "https://raw.githubusercontent.com/hawkrobe/lexical-search-and-pragmatics/8d824794d623adf4dd19cbff13d987d539b19c5e/data/exp1/cleaned.csv";
 const wordSource = JSON.parse(await readFile(resolve(ROOT, "scripts/generated/clue-words.json"), "utf8"));
-const words = buildClueCandidates(wordSource.words, CLUE_BANK).map(({ word }) => word);
+const words = buildClueCandidates(wordSource.words, CLUE_BANK, 100_000).map(({ word }) => word);
 const [culturalRaw, connectorRaw] = await Promise.all([
   load(CULTURAL_URL, resolve(CACHE, "clue_generation_task/all.csv")),
   load(CONNECTOR_URL, resolve(CACHE, "connector/cleaned.csv")),
@@ -19,7 +19,7 @@ const clues = [
   ...parseCsv(connectorRaw).map((row) => row.correctedClue),
 ].map(normalize).filter(Boolean);
 const uniqueClues = [...new Set(clues)];
-const results = [3_000, 10_000, 30_000].map((candidateCount) => {
+const results = [3_000, 10_000, 30_000, 100_000].map((candidateCount) => {
   const vocabulary = new Set(words.slice(0, candidateCount));
   const coveredObservations = clues.filter((clue) => vocabulary.has(clue)).length;
   const coveredUniqueClues = uniqueClues.filter((clue) => vocabulary.has(clue)).length;

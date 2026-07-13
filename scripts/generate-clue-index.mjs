@@ -14,8 +14,10 @@ const MODEL_DEFINITIONS = {
   "minilm-l12": "Xenova/all-MiniLM-L12-v2",
   "mpnet-base": "Xenova/all-mpnet-base-v2",
 };
-const modelIds = process.argv.slice(2).length ? process.argv.slice(2) : Object.keys(MODEL_DEFINITIONS);
-const CUTS = [3_000, 10_000, 30_000];
+const DEFAULT_MODEL_IDS = ["minilm-l3", "minilm-l6", "bge-small"];
+const modelIds = process.argv.slice(2).length ? process.argv.slice(2) : DEFAULT_MODEL_IDS;
+const CUTS = [3_000, 10_000, 30_000, 100_000];
+const CENTERING_COUNT = 30_000;
 const SCALE = 127;
 const BATCH_SIZE = 128;
 
@@ -29,26 +31,31 @@ if (candidates.length < CUTS.at(-1)) throw new Error(`Need ${CUTS.at(-1)} candid
 for (const id of modelIds) {
   const modelName = MODEL_DEFINITIONS[id];
   if (!modelName) throw new Error(`Unknown model id: ${id}`);
+  const outputDir = resolve(ROOT, `public/data/model-lab/${id}`);
+  const existing = await matchingExistingIndex(outputDir, modelName, candidates);
   console.log(`Loading ${modelName}`);
   const extractor = await pipeline("feature-extraction", modelName, { dtype: "q8" });
-  const raw = await embedInBatches(extractor, candidates.map(({ word }) => word), id);
-  const dimensions = raw[0].length;
-  const mean = meanVector(raw, dimensions);
+  const embeddingStart = existing?.candidateCount ?? 0;
+  const embeddedCandidates = candidates.slice(embeddingStart);
+  const raw = await embedInBatches(extractor, embeddedCandidates.map(({ word }) => word), id);
+  const dimensions = raw[0]?.length ?? existing.dimensions;
+  const mean = existing?.centering.mean ?? meanVector(raw.slice(0, CENTERING_COUNT), dimensions);
   const quantized = new Int8Array(raw.length * dimensions);
   raw.forEach((vector, row) => {
     const centered = centerAndNormalize(vector, mean);
     centered.forEach((value, column) => { quantized[row * dimensions + column] = Math.round(Math.max(-1, Math.min(1, value)) * SCALE); });
   });
 
-  const outputDir = resolve(ROOT, `public/data/model-lab/${id}`);
   await mkdir(outputDir, { recursive: true });
-  const shards = [];
-  let start = 0;
-  for (const end of CUTS) {
+  const shards = existing ? [...existing.shards] : [];
+  let start = embeddingStart;
+  for (const end of CUTS.filter((cut) => cut > embeddingStart)) {
+    const localStart = start - embeddingStart;
+    const localEnd = end - embeddingStart;
     const payload = {
       clues: candidates.slice(start, end).map(({ word }) => word),
       frequencies: candidates.slice(start, end).map(({ zipf }) => zipf),
-      vectors: Buffer.from(quantized.subarray(start * dimensions, end * dimensions)).toString("base64"),
+      vectors: Buffer.from(quantized.subarray(localStart * dimensions, localEnd * dimensions)).toString("base64"),
     };
     const file = `clues-${start}-${end}.json`;
     const content = `${JSON.stringify(payload)}\n`;
@@ -61,7 +68,7 @@ for (const id of modelIds) {
     version: 2, model: modelName, dimensions,
     quantization: { type: "symmetric-int8", scale: SCALE },
     centering: { method: "30000-clue-corpus-mean", mean: mean.map((v) => Number(v.toFixed(8))) },
-    vocabulary: { source: wordSource.source, sourceVersion: wordSource.sourceVersion, language: wordSource.language, filters: wordSource.filters, curatedSeedCount: CLUE_BANK.length },
+    vocabulary: { source: wordSource.source, sourceVersion: wordSource.sourceVersion, language: wordSource.language, filters: wordSource.filters, wordnetCount: wordSource.wordnetCount, fallbackCount: wordSource.fallbackCount, curatedSeedCount: CLUE_BANK.length },
     modelBytes, shards,
   };
   await writeFile(resolve(outputDir, "manifest.json"), `${JSON.stringify(manifest, null, 2)}\n`);
@@ -73,6 +80,27 @@ for (const id of modelIds) {
   }
   console.log(`Wrote ${id}: ${candidates.length} x ${dimensions}`);
   if (typeof extractor.dispose === "function") await extractor.dispose();
+}
+
+async function matchingExistingIndex(outputDir, modelName, expectedCandidates) {
+  try {
+    const manifest = JSON.parse(await readFile(resolve(outputDir, "manifest.json"), "utf8"));
+    const reusableShards = manifest.shards.filter(({ end }) => end <= CENTERING_COUNT);
+    if (
+      manifest.model !== modelName ||
+      reusableShards.at(-1)?.end !== CENTERING_COUNT ||
+      reusableShards.some(({ start }, index) => start !== (index === 0 ? 0 : reusableShards[index - 1].end))
+    ) return null;
+    const existingClues = (
+      await Promise.all(reusableShards.map(async ({ file }) =>
+        JSON.parse(await readFile(resolve(outputDir, file), "utf8")).clues,
+      ))
+    ).flat();
+    if (existingClues.some((clue, index) => clue !== expectedCandidates[index].word)) return null;
+    return { ...manifest, shards: reusableShards, candidateCount: CENTERING_COUNT };
+  } catch {
+    return null;
+  }
 }
 
 async function embedInBatches(model, terms, label) {

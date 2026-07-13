@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { readFile } from "node:fs/promises";
+import { readFile, stat } from "node:fs/promises";
 import {
   BOARD_ORDER,
   createGeneratedBoardState,
@@ -9,7 +9,7 @@ import {
   encodeBoardParam,
 } from "../src/board-share.js";
 import { hydrateClueShards } from "../src/clue-index.js";
-import { CANDIDATE_OPTIONS, MODEL_OPTIONS } from "../src/model-lab.js";
+import { CANDIDATE_OPTIONS, MODEL_OPTIONS, PICKER_MODEL_OPTIONS } from "../src/model-lab.js";
 import {
   SIDE,
   applySuggestionTurn,
@@ -24,6 +24,7 @@ import {
   analyzeEmbeddedBoard,
   applyDangerPenalty,
   calculateBoardMetrics,
+  isForbiddenClue,
 } from "../src/model.js";
 import {
   DEFAULT_BOARD,
@@ -51,15 +52,33 @@ for (const option of MODEL_OPTIONS) {
   const manifest = JSON.parse(await readFile(`public/data/model-lab/${option.id}/manifest.json`, "utf8"));
   assert.equal(manifest.model, option.model);
   assert.equal(manifest.dimensions, option.dimensions);
-  assert.deepEqual(manifest.shards.map(({ start, end }) => [start, end]), [[0, 3000], [3000, 10000], [10000, 30000]]);
+  const expectedCuts = PICKER_MODEL_OPTIONS.some(({ id }) => id === option.id)
+    ? [[0, 3000], [3000, 10000], [10000, 30000], [30000, 100000]]
+    : [[0, 3000], [3000, 10000], [10000, 30000]];
+  assert.deepEqual(manifest.shards.map(({ start, end }) => [start, end]), expectedCuts);
+  for (const shard of manifest.shards) {
+    assert.equal(
+      (await stat(`public/data/model-lab/${option.id}/${shard.file}`)).size,
+      shard.bytes,
+      `manifest byte count differs for ${option.id}/${shard.file}`,
+    );
+  }
+  if (PICKER_MODEL_OPTIONS.some(({ id }) => id === option.id)) {
+    for (const candidate of CANDIDATE_OPTIONS) {
+      const cumulativeBytes = manifest.shards
+        .filter(({ start }) => start < candidate.count)
+        .reduce((total, { bytes }) => total + bytes, 0);
+      assert.equal(cumulativeBytes, candidate.indexBytes, `index bytes differ at ${candidate.count}`);
+    }
+  }
   const firstShard = JSON.parse(await readFile(`public/data/model-lab/${option.id}/${manifest.shards[0].file}`, "utf8"));
   const hydrated = hydrateClueShards(manifest, [firstShard], 3000);
   assert.equal(hydrated.clues.length, 3000);
   assert.equal(hydrated.vectors.length, 3000 * option.dimensions);
 }
-assert.deepEqual(CANDIDATE_OPTIONS.map(({ count }) => count), [3000, 10000, 30000]);
-assert.equal(pickerBenchmark.results.length, MODEL_OPTIONS.length * CANDIDATE_OPTIONS.length);
-for (const option of MODEL_OPTIONS) {
+assert.deepEqual(CANDIDATE_OPTIONS.map(({ count }) => count), [3000, 10000, 30000, 100000]);
+assert.equal(pickerBenchmark.results.length, PICKER_MODEL_OPTIONS.length * CANDIDATE_OPTIONS.length);
+for (const option of PICKER_MODEL_OPTIONS) {
   for (const { count } of CANDIDATE_OPTIONS) {
     const benchmark = pickerBenchmark.results.find(
       ({ modelId, candidateCount }) => modelId === option.id && candidateCount === count,
@@ -79,6 +98,12 @@ assert.deepEqual(
 
 assert.ok(applyDangerPenalty(0.4, "enemy") > applyDangerPenalty(0.4, "neutral"));
 assert.ok(applyDangerPenalty(0.4, "assassin") > applyDangerPenalty(0.4, "enemy"));
+assert.equal(isForbiddenClue("pinball", ["pin"]), true);
+assert.equal(isForbiddenClue("pinball", ["ball"]), true);
+assert.equal(isForbiddenClue("pinball", ["pin", "ball"]), true);
+assert.equal(isForbiddenClue("breakdown", ["break"]), true);
+assert.equal(isForbiddenClue("horse", ["horseshoe"]), true);
+assert.equal(isForbiddenClue("sparrow", ["row"]), false);
 
 const result = analyzeEmbeddedBoard(DEFAULT_BOARD, boardVectors, clueIndex, { limit: 8 });
 const boardWithDoneCards = DEFAULT_BOARD.map((card, index) => ({

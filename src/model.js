@@ -1,3 +1,5 @@
+import { EXTENDED_WORDS } from "./word-data.js";
+
 export const HAZARD_POLICY = Object.freeze({
   friendly: { multiplier: 0, offset: 0 },
   neutral: { multiplier: 1, offset: 0 },
@@ -157,7 +159,11 @@ function buildLegalCandidateIndices(entries, clues) {
   return candidateIndices;
 }
 
-function isForbiddenClue(clue, boardWords) {
+const KNOWN_COMPOUND_COMPONENTS = new Set(
+  EXTENDED_WORDS.map((word) => normalizeTerm(word).replaceAll(" ", "")),
+);
+
+export function isForbiddenClue(clue, boardWords) {
   const compactClue = clue.replaceAll(" ", "");
   const clueStem = simpleStem(compactClue);
 
@@ -169,12 +175,33 @@ function isForbiddenClue(clue, boardWords) {
       return true;
     }
 
+    if (
+      isKnownCompoundContainment(compactClue, compactWord) ||
+      isKnownCompoundContainment(compactWord, compactClue)
+    ) {
+      return true;
+    }
+
     if (compactClue.length >= 5 && compactWord.length >= 5) {
       return compactClue.includes(compactWord) || compactWord.includes(compactClue);
     }
 
     return false;
   });
+}
+
+function isKnownCompoundContainment(container, component) {
+  if (component.length < 3 || container.length <= component.length) {
+    return false;
+  }
+
+  const remainder = container.startsWith(component)
+    ? container.slice(component.length)
+    : container.endsWith(component)
+      ? container.slice(0, -component.length)
+      : "";
+
+  return remainder.length >= 3 && KNOWN_COMPOUND_COMPONENTS.has(remainder);
 }
 
 function buildCandidateSimilarities(entries, candidateIndices, clueIndex) {

@@ -1,5 +1,5 @@
 export const DEFAULT_MODEL_ID = "minilm-l6";
-export const DEFAULT_CANDIDATE_COUNT = 3_000;
+export const DEFAULT_CANDIDATE_COUNT = 10_000;
 
 export const MODEL_OPTIONS = Object.freeze([
   {
@@ -54,10 +54,18 @@ export const MODEL_OPTIONS = Object.freeze([
   },
 ]);
 
+// Keep the picker focused on models with a meaningful size, quality, or speed
+// advantage. MiniLM-L12 is practically dominated by BGE-small at the same
+// download size, while MPNet-base is slower, larger, and lower-recall here.
+export const PICKER_MODEL_OPTIONS = Object.freeze(
+  MODEL_OPTIONS.filter(({ id }) => ["minilm-l3", "minilm-l6", "bge-small"].includes(id)),
+);
+
 export const CANDIDATE_OPTIONS = Object.freeze([
-  { count: 3_000, humanClueCoverage: 0.6179 },
-  { count: 10_000, humanClueCoverage: 0.8508 },
-  { count: 30_000, humanClueCoverage: 0.9347 },
+  { count: 3_000, humanClueCoverage: 0.6179, indexBytes: 1_578_554 },
+  { count: 10_000, humanClueCoverage: 0.8508, indexBytes: 5_268_446 },
+  { count: 30_000, humanClueCoverage: 0.9347, indexBytes: 15_820_717 },
+  { count: 100_000, humanClueCoverage: 0.9594, indexBytes: 52_791_589 },
 ]);
 
 export function modelOption(id) {

@@ -399,7 +399,9 @@
     "source": "wordfreq",
     "sourceVersion": "3.1.1",
     "language": "en",
-    "filters": "single ASCII words, 3-18 letters, WordNet content words, common function words removed",
+    "filters": "single ASCII words, 3-18 letters, common function words and profanity removed; WordNet content words first, then a 4-18 letter frequent-name/alphabetic fallback",
+    "wordnetCount": 88563,
+    "fallbackCount": 11437,
     "curatedSeedCount": 119
   },
   "modelBytes": 17452106,
@@ -421,6 +423,12 @@
       "end": 30000,
       "file": "clues-10000-30000.json",
       "bytes": 10552271
+    },
+    {
+      "start": 30000,
+      "end": 100000,
+      "file": "clues-30000-100000.json",
+      "bytes": 36970872
     }
   ]
 }

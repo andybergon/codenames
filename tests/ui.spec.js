@@ -207,6 +207,7 @@ test("model lab lazy-loads only selected model and incremental clue shards", asy
 
   await expect(page.getByRole("heading", { name: "Model picker" })).toBeVisible();
   await expect.poll(() => requests.some((path) => path.includes("minilm-l6/manifest"))).toBe(true);
+  await expect.poll(() => requests.some((path) => path.includes("minilm-l6/clues-3000-10000"))).toBe(true);
   expect(requests.some((path) => path.includes("minilm-l3"))).toBe(false);
   expect(requests.some((path) => path.includes("bge-small"))).toBe(false);
   expect(requests.some((path) => path.includes("minilm-l12"))).toBe(false);
@@ -226,6 +227,11 @@ test("model lab lazy-loads only selected model and incremental clue shards", asy
   expect(requests.some((path) => path.includes("minilm-l3"))).toBe(false);
   expect(requests.some((path) => path.includes("minilm-l12"))).toBe(false);
   expect(requests.some((path) => path.includes("mpnet-base"))).toBe(false);
+
+  const bge100k = page.locator('.model-combination[data-model-id="bge-small"][data-candidate-count="100000"]');
+  await expect(bge100k).toHaveCount(1);
+  await bge100k.click();
+  await expect.poll(() => requests.some((path) => path.includes("bge-small/clues-30000-100000"))).toBe(true);
 });
 
 test("model picker uses the fixed benchmark and shows one time per combination", async ({ page }) => {
@@ -240,7 +246,11 @@ test("model picker uses the fixed benchmark and shows one time per combination",
   });
   await page.goto(SHARED_BOARD);
 
-  await expect(page.locator(".model-combination")).toHaveCount(15);
+  await expect(page.locator(".model-combination")).toHaveCount(12);
+  await expect(page.getByRole("columnheader", { name: "3,000 clues 61.8% human clue coverage 1.6 MB index" })).toBeVisible();
+  await expect(page.getByRole("columnheader", { name: "10,000 clues 85.1% human clue coverage 5.3 MB index" })).toBeVisible();
+  await expect(page.getByRole("columnheader", { name: "30,000 clues 93.5% human clue coverage 15.8 MB index" })).toBeVisible();
+  await expect(page.getByRole("columnheader", { name: "100,000 clues 95.9% human clue coverage 52.8 MB index" })).toBeVisible();
   await expect(page.getByText("Use combination")).toHaveCount(0);
   await expect(page.getByText("Selected", { exact: true })).toHaveCount(0);
   await expect(page.locator(".model-recommendation-badge")).toHaveCount(1);
@@ -248,27 +258,32 @@ test("model picker uses the fixed benchmark and shows one time per combination",
   await expect(page.locator('#model-picker-info .info-button')).toBeVisible();
   await expect(page.locator('#candidate-filter-info .info-button')).toBeVisible();
   await expect(page.locator(".model-lab-info")).toHaveCount(0);
-  const l6 = page.locator('.model-combination[data-model-id="minilm-l6"][data-candidate-count="3000"]');
+  const l6 = page.locator('.model-combination[data-model-id="minilm-l6"][data-candidate-count="10000"]');
   const bge = page.locator('.model-combination[data-model-id="bge-small"][data-candidate-count="3000"]');
-  const mpnet30k = page.locator('.model-combination[data-model-id="mpnet-base"][data-candidate-count="30000"]');
+  const l3 = page.locator('.model-combination[data-model-id="minilm-l3"][data-candidate-count="3000"]');
   const fastest = Math.min(...pickerBenchmark.results.map(({ medianMs }) => medianMs));
   const result = (modelId, candidateCount) => pickerBenchmark.results.find(
     (entry) => entry.modelId === modelId && entry.candidateCount === candidateCount,
   );
-  await expect(l6).toContainText(`${result("minilm-l6", 3000).medianMs.toFixed(1)} ms`);
+  await expect(l6).toContainText(`${result("minilm-l6", 10000).medianMs.toFixed(1)} ms`);
+  await expect(l6).toContainText("48.9%");
   await expect(l6.locator("small")).toHaveCount(0);
   await expect(l6.locator(".lab-bar.speed i")).toHaveAttribute(
     "style",
-    `width:${Math.round((fastest / result("minilm-l6", 3000).medianMs) * 100)}%`,
+    `width:${Math.round((fastest / result("minilm-l6", 10000).medianMs) * 100)}%`,
   );
   await expect(bge.locator(".lab-bar.speed i")).toHaveAttribute(
     "style",
     `width:${Math.round((fastest / result("bge-small", 3000).medianMs) * 100)}%`,
   );
-  await expect(mpnet30k.locator(".lab-bar.speed i")).toHaveAttribute(
-    "style",
-    `width:${Math.round((fastest / result("mpnet-base", 30000).medianMs) * 100)}%`,
-  );
-  await expect(page.locator('tr[data-model-id="minilm-l3"] .lab-bar.quality i')).toHaveAttribute("style", "width:27%");
-  await expect(page.getByText("Recall", { exact: true })).toHaveCount(5);
+  await expect(l3.locator(".lab-bar.quality i")).toHaveAttribute("style", "width:62%");
+  await expect(l6.getByText("Download", { exact: true })).toBeVisible();
+  await expect(l6).toContainText("28.2 MB");
+  await expect(l6.locator(".lab-bar.download i")).toHaveAttribute("style", "width:67%");
+  await expect(page.getByText("Light", { exact: true })).toHaveCount(0);
+  await expect(page.locator(".model-pareto svg")).toBeVisible();
+  await expect(page.locator(".pareto-point")).toHaveCount(12);
+  await expect(page.locator(".pareto-point.is-recommended")).toHaveCount(1);
+  await expect(page.locator(".pareto-ticks").getByText("0 ms", { exact: true })).toHaveCount(0);
+  await expect(page.locator(".pareto-ticks")).toContainText(`${Math.round(fastest)} ms`);
 });

@@ -4,7 +4,7 @@ import { performance } from "node:perf_hooks";
 import { hydrateClueShards } from "../src/clue-index.js";
 import { boardForSide, SIDE } from "../src/gameplay.js";
 import { analyzeEmbeddedBoard, calculateBoardMetrics } from "../src/model.js";
-import { CANDIDATE_OPTIONS, MODEL_OPTIONS } from "../src/model-lab.js";
+import { CANDIDATE_OPTIONS, PICKER_MODEL_OPTIONS } from "../src/model-lab.js";
 import { DEFAULT_BOARD } from "../src/word-data.js";
 
 const WARMUPS = 2;
@@ -13,7 +13,7 @@ const REPORT_PATH = "scripts/generated/model-picker-benchmark.json";
 
 const results = [];
 
-for (const model of MODEL_OPTIONS) {
+for (const model of PICKER_MODEL_OPTIONS) {
   const directory = `public/data/model-lab/${model.id}`;
   const manifest = JSON.parse(await readFile(`${directory}/manifest.json`, "utf8"));
   const shards = await Promise.all(
