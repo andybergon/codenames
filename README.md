@@ -10,7 +10,7 @@ A local-first Codenames clue trainer. It embeds the board, searches a 3,000-word
 - **Clue set:** 30,000 frequent English words from `wordfreq` 3.1.1, filtered through WordNet and a legality filter; the fastest 3,000-word prefix remains the default.
 - **Fast search:** clue embeddings are precomputed, mean-centered, normalized, and stored as an int8 static index. Only the 25 board words are embedded at runtime.
 - **Negative scoring:** the weakest target similarity must beat the highest role-weighted neutral, enemy, or assassin similarity.
-- **Outputs:** one sortable recommendation table with per-target-count availability, a 1-to-9 target range, and a minimum Worth filter; defaults are 2-4 targets, Worth 50, and a compact view. Advanced reveals Net, Margin, and Fit/cohesion diagnostics.
+- **Outputs:** one collapsible, sortable recommendation table with per-target-count availability, a 1-to-9 target range, and a minimum Worth filter; defaults are 2-4 targets, Worth 50, and a compact view. Advanced reveals Net, Margin, and Fit/cohesion diagnostics.
 - **Board metrics:** a symmetric difficulty score and Blue-vs-Red edge computed by scoring both team perspectives.
 - **Board words:** generated boards default to the 400-word original English base-game set; Extended doubles the pool to 800 with mathematically ranked, reviewed additions.
 - **Gameplay:** switch recommendations between Blue and Red, then click a recommendation to mark its targets guessed and pass the turn automatically.

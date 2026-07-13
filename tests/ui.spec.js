@@ -165,6 +165,37 @@ test("recommendation perspective can switch between Blue and Red", async ({ page
   await expect(page.locator("#turn-status")).toBeEmpty();
 });
 
+test("recommendations collapse without losing controls or results state", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(SHARED_BOARD);
+
+  const toggle = page.locator("#toggle-recommendations");
+  const toolbar = page.locator("#recommendation-toolbar");
+  const content = page.locator("#recommendation-content");
+  const sort = page.locator("#mobile-suggestion-sort");
+  const advanced = page.locator("#advanced-metrics");
+  const red = page.getByRole("button", { name: "Red", exact: true });
+
+  await sort.selectOption("number:desc");
+  await advanced.check();
+  await red.click();
+  await toggle.click();
+
+  await expect(toggle).toHaveAttribute("aria-expanded", "false");
+  await expect(toggle).toHaveAttribute("aria-label", "Expand recommendations");
+  await expect(toolbar).toBeHidden();
+  await expect(content).toBeHidden();
+  await expect(page.getByRole("heading", { name: "Recommendations" })).toBeVisible();
+
+  await page.getByRole("button", { name: "Expand recommendations" }).click();
+
+  await expect(toolbar).toBeVisible();
+  await expect(content).toBeVisible();
+  await expect(sort).toHaveValue("number:desc");
+  await expect(advanced).toBeChecked();
+  await expect(red).toHaveAttribute("aria-pressed", "true");
+});
+
 test("model lab lazy-loads only selected model and incremental clue shards", async ({ page }) => {
   const requests = [];
   page.on("request", (request) => {

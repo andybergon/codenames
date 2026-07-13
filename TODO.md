@@ -1,11 +1,5 @@
 # TODO
 
-## Critical
-
-- Make the recommendations table collapsible like the cards table.
-  - Preserve the current filters, sort, active team, and analysis results while collapsed.
-  - Keep the collapsed state easy to understand and restore in one action on desktop and mobile.
-
 ## High
 
 - Add a self-play mode that records real guesses and turn outcomes.

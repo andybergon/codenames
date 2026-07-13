@@ -126,6 +126,7 @@ const RISK_SORT_VALUE = {
 const initialBoardState = readInitialBoardState();
 let board = cloneBoard(initialBoardState.cards);
 let boardCollapsed = false;
+let recommendationsCollapsed = false;
 let boardOrder = initialBoardState.order;
 let boardWordSet = initialBoardState.wordSet;
 let nextBoardWordSet = boardWordSet;
@@ -163,6 +164,8 @@ const elements = {
   boardCounts: document.querySelector("#board-counts"),
   boardMetrics: document.querySelector("#board-metrics"),
   recommendationResults: document.querySelector("#recommendation-results"),
+  recommendationContent: document.querySelector("#recommendation-content"),
+  recommendationToolbar: document.querySelector("#recommendation-toolbar"),
   resultsPanel: document.querySelector(".results-panel"),
   analysisStatus: document.querySelector("#analysis-status"),
   recommendationCount: document.querySelector("#recommendation-count"),
@@ -190,6 +193,7 @@ const elements = {
   wordSetButtons: [...document.querySelectorAll("[data-word-set-value]")],
   shareBoard: document.querySelector("#share-board"),
   toggleBoard: document.querySelector("#toggle-board"),
+  toggleRecommendations: document.querySelector("#toggle-recommendations"),
   themeButtons: [...document.querySelectorAll("[data-theme-value]")],
 };
 
@@ -268,6 +272,11 @@ elements.shareBoard.addEventListener("click", () => {
 elements.toggleBoard.addEventListener("click", () => {
   boardCollapsed = !boardCollapsed;
   renderBoardVisibility();
+});
+
+elements.toggleRecommendations.addEventListener("click", () => {
+  recommendationsCollapsed = !recommendationsCollapsed;
+  renderRecommendationsVisibility();
 });
 
 elements.targetMin.addEventListener("input", (event) => {
@@ -822,6 +831,20 @@ function renderBoardVisibility() {
     boardCollapsed ? "Expand board" : "Collapse board",
   );
   elements.toggleBoard.title = boardCollapsed ? "Expand board" : "Collapse board";
+}
+
+function renderRecommendationsVisibility() {
+  elements.recommendationToolbar.hidden = recommendationsCollapsed;
+  elements.recommendationContent.hidden = recommendationsCollapsed;
+  elements.resultsPanel.classList.toggle("is-collapsed", recommendationsCollapsed);
+  elements.toggleRecommendations.setAttribute("aria-expanded", String(!recommendationsCollapsed));
+  elements.toggleRecommendations.setAttribute(
+    "aria-label",
+    recommendationsCollapsed ? "Expand recommendations" : "Collapse recommendations",
+  );
+  elements.toggleRecommendations.title = recommendationsCollapsed
+    ? "Expand recommendations"
+    : "Collapse recommendations";
 }
 
 function scheduleAnalysis() {

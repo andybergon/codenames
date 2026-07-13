@@ -170,6 +170,17 @@
             <div class="recommendation-title">
               <div class="recommendation-title-row">
                 <h2>Recommendations</h2>
+                <button
+                  class="disclosure-button"
+                  id="toggle-recommendations"
+                  type="button"
+                  aria-label="Collapse recommendations"
+                  aria-controls="recommendation-toolbar recommendation-content"
+                  aria-expanded="true"
+                  title="Collapse recommendations"
+                >
+                  <span class="chevron" aria-hidden="true"></span>
+                </button>
                 <span
                   id="recommendation-count"
                   class="pill"
@@ -178,7 +189,7 @@
               </div>
               <p id="analysis-status" class="muted"></p>
             </div>
-            <div class="recommendation-toolbar">
+            <div id="recommendation-toolbar" class="recommendation-toolbar">
               <div class="target-range-filter">
                 <div class="range-filter-heading">
                   <span class="range-filter-label">Target words</span>
@@ -261,42 +272,44 @@
               </label>
             </div>
           </div>
-          <div class="recommendation-table-controls">
-            <div class="turn-controls">
-              <div class="side-switch" role="group" aria-label="Recommendation team">
-                <button
-                  type="button"
-                  data-recommendation-side="blue"
-                  aria-pressed="true"
-                  title="Show Blue recommendations"
-                >
-                  <span class="side-dot" aria-hidden="true"></span>
-                  Blue
-                </button>
-                <button
-                  type="button"
-                  data-recommendation-side="red"
-                  aria-pressed="false"
-                  title="Show Red recommendations"
-                >
-                  <span class="side-dot" aria-hidden="true"></span>
-                  Red
-                </button>
+          <div id="recommendation-content">
+            <div class="recommendation-table-controls">
+              <div class="turn-controls">
+                <div class="side-switch" role="group" aria-label="Recommendation team">
+                  <button
+                    type="button"
+                    data-recommendation-side="blue"
+                    aria-pressed="true"
+                    title="Show Blue recommendations"
+                  >
+                    <span class="side-dot" aria-hidden="true"></span>
+                    Blue
+                  </button>
+                  <button
+                    type="button"
+                    data-recommendation-side="red"
+                    aria-pressed="false"
+                    title="Show Red recommendations"
+                  >
+                    <span class="side-dot" aria-hidden="true"></span>
+                    Red
+                  </button>
+                </div>
+                <span id="turn-status" class="turn-status" role="status"></span>
               </div>
-              <span id="turn-status" class="turn-status" role="status"></span>
+              <div class="column-display-controls">
+                <span id="mobile-metric-help" class="mobile-metric-help"></span>
+                <label
+                  class="advanced-metrics-toggle"
+                  title="Show Net, Margin, and Fit/cohesion columns"
+                >
+                  <input id="advanced-metrics" type="checkbox" />
+                  <span>Advanced</span>
+                </label>
+              </div>
             </div>
-            <div class="column-display-controls">
-              <span id="mobile-metric-help" class="mobile-metric-help"></span>
-              <label
-                class="advanced-metrics-toggle"
-                title="Show Net, Margin, and Fit/cohesion columns"
-              >
-                <input id="advanced-metrics" type="checkbox" />
-                <span>Advanced</span>
-              </label>
-            </div>
+            <div id="recommendation-results" class="suggestions"></div>
           </div>
-          <div id="recommendation-results" class="suggestions"></div>
         </aside>
       </section>
 

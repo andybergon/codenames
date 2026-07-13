@@ -446,7 +446,8 @@ h3 {
   transform: rotate(-45deg) translate(-1px, -1px);
 }
 
-.board-panel.is-collapsed .panel-header {
+.board-panel.is-collapsed .panel-header,
+.results-panel.is-collapsed .panel-header {
   margin-bottom: 0;
 }
 
@@ -895,6 +896,11 @@ h3 {
   gap: 10px;
   margin-top: 6px;
   padding-bottom: 2px;
+}
+
+.recommendation-toolbar[hidden],
+#recommendation-content[hidden] {
+  display: none;
 }
 
 .turn-controls,
