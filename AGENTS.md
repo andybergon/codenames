@@ -11,6 +11,7 @@ Local-first Vite application for embedding-powered Codenames clue recommendation
 - Keep `scripts/generated/clue-words.json` and every selectable `public/data/model-lab/<model>/` manifest/shard set in sync with `npm run generate:data`. Picker indexes are incremental 0-3k, 3k-10k, 10k-30k, and 30k-100k shards and all use the 30k-corpus mean; do not change one shard independently. The hidden L12 and MPNet comparison artifacts remain capped at 30k.
 - Run `npm run evaluate:candidates` after changing clue filtering or ordering. It measures exact vocabulary coverage against cached/fetched Cultural Codes and Connector clues and updates `scripts/generated/candidate-coverage.json`. Keep only all-letter single-word observations; rejecting spaces and punctuation avoids turning multi-word clues into artificial compounds.
 - Run `npm run benchmark:picker` after changing scoring performance or selectable model/index dimensions. It benchmarks every picker cell in one Node process with warmups and repeated runs, then updates `scripts/generated/model-picker-benchmark.json`.
+- Keep `docs/clue-engine.md` synchronized with model/index selection, legality rules, scoring coefficients, lane thresholds, board metrics, generated assets, and evaluation commands. README remains the compact product and setup entry point.
 
 ## Embedding Model Evaluation
 
