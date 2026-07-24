@@ -8,6 +8,11 @@
 
 ## 🟡 Medium
 
+- 🎯 Favor useful multi-card clues in Play without suppressing justified singles.
+  - On 100 generated boards, every team perspective had a viable 2+ clue, but only 15.5% of human suggestions and 10.9% of the bot shortlist were multi-card.
+  - Prototype a Play-only hybrid score using Worth, expected net, success, margin, and risk; keep Train ranking unchanged and preserve legal typed clues outside the suggestion vocabulary.
+  - Next: add a repeatable full-game benchmark for clue numbers, correct cards per turn, wrong-team and assassin hits, and turns per game before changing the live policy.
+
 - 📊 Calibrate Play bots and Worth from recorded outcomes.
   - Play now stores intended targets, ordered guesses, passes, and reveal outcomes locally.
   - Next: aggregate local outcome summaries and fit bot confidence and Worth coefficients against actual play.
