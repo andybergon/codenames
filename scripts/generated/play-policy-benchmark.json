@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-24T22:28:06.553Z",
+  "generatedAt": "2026-07-24T23:35:12.221Z",
   "environment": {
     "node": "v26.5.0",
     "platform": "darwin",
@@ -19,6 +19,8 @@
     "resultsPerTargetSize": 6,
     "boardSeed": "Eight deterministic bytes: ASCII CODE followed by a big-endian 1-based board index.",
     "decisionSeed": "Matches Play runtime: board seed, turn number, and history length for each action.",
+    "clueSelection": "Match Play runtime by choosing uniformly from the four highest-scoring policy clues.",
+    "bonusGuesses": "Match Play runtime by allowing a number-plus-one guess.",
     "operative": "The production bot guesser sees only centered clue-to-unrevealed-word similarities.",
     "rules": "Every simulation uses the production Play state machine and stops only at an agent or assassin win.",
     "fallback": "If the production analyzer has no ranked suggestion, use the legal indexed clue closest to one remaining agent, number 1, and count the turn.",
@@ -52,6 +54,74 @@
       "passesPerGame": 8.42,
       "fallbackClues": 1,
       "fallbackClueRate": 0.000833,
+      "bonusGuesses": 269,
+      "bonusGuessesPerGame": 2.69,
+      "correctBonusGuessRate": 0.297398,
+      "clueNumberByOwnRemaining": {
+        "1": {
+          "clues": 77,
+          "meanNumber": 1,
+          "multiClueRate": 0,
+          "multiAvailableRate": 0,
+          "meanBestMultiAdvantage": 0
+        },
+        "2": {
+          "clues": 106,
+          "meanNumber": 1.113208,
+          "multiClueRate": 0.113208,
+          "multiAvailableRate": 0.40566,
+          "meanBestMultiAdvantage": -33.183437
+        },
+        "3": {
+          "clues": 151,
+          "meanNumber": 1.231788,
+          "multiClueRate": 0.231788,
+          "multiAvailableRate": 0.821192,
+          "meanBestMultiAdvantage": -37.419655
+        },
+        "4": {
+          "clues": 155,
+          "meanNumber": 1.070968,
+          "multiClueRate": 0.064516,
+          "multiAvailableRate": 0.948387,
+          "meanBestMultiAdvantage": -35.988364
+        },
+        "5": {
+          "clues": 151,
+          "meanNumber": 1.072848,
+          "multiClueRate": 0.066225,
+          "multiAvailableRate": 0.966887,
+          "meanBestMultiAdvantage": -28.666192
+        },
+        "6": {
+          "clues": 151,
+          "meanNumber": 1.099338,
+          "multiClueRate": 0.099338,
+          "multiAvailableRate": 1,
+          "meanBestMultiAdvantage": -28.219677
+        },
+        "7": {
+          "clues": 149,
+          "meanNumber": 1.120805,
+          "multiClueRate": 0.114094,
+          "multiAvailableRate": 1,
+          "meanBestMultiAdvantage": -23.728779
+        },
+        "8": {
+          "clues": 161,
+          "meanNumber": 1.118012,
+          "multiClueRate": 0.099379,
+          "multiAvailableRate": 1,
+          "meanBestMultiAdvantage": -21.188831
+        },
+        "9": {
+          "clues": 100,
+          "meanNumber": 1.18,
+          "multiClueRate": 0.16,
+          "multiAvailableRate": 1,
+          "meanBestMultiAdvantage": -18.58584
+        }
+      },
       "wins": {
         "blue": 50,
         "red": 50
@@ -65,6 +135,8 @@
           "actions": 42,
           "turns": 14,
           "fallbackClues": 0,
+          "bonusGuesses": 1,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 13,
             "2": 1
@@ -84,6 +156,8 @@
           "actions": 35,
           "turns": 11,
           "fallbackClues": 0,
+          "bonusGuesses": 1,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 8,
             "2": 3
@@ -103,6 +177,8 @@
           "actions": 40,
           "turns": 13,
           "fallbackClues": 0,
+          "bonusGuesses": 2,
+          "correctBonusGuesses": 1,
           "clues": {
             "1": 12,
             "3": 1
@@ -122,6 +198,8 @@
           "actions": 30,
           "turns": 10,
           "fallbackClues": 0,
+          "bonusGuesses": 3,
+          "correctBonusGuesses": 2,
           "clues": {
             "1": 9,
             "2": 1
@@ -141,6 +219,8 @@
           "actions": 33,
           "turns": 11,
           "fallbackClues": 0,
+          "bonusGuesses": 3,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 10,
             "2": 1
@@ -160,6 +240,8 @@
           "actions": 40,
           "turns": 13,
           "fallbackClues": 0,
+          "bonusGuesses": 2,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 11,
             "2": 2
@@ -179,6 +261,8 @@
           "actions": 38,
           "turns": 12,
           "fallbackClues": 0,
+          "bonusGuesses": 2,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 9,
             "2": 3
@@ -198,6 +282,8 @@
           "actions": 39,
           "turns": 13,
           "fallbackClues": 0,
+          "bonusGuesses": 4,
+          "correctBonusGuesses": 2,
           "clues": {
             "1": 12,
             "2": 1
@@ -217,6 +303,8 @@
           "actions": 31,
           "turns": 10,
           "fallbackClues": 0,
+          "bonusGuesses": 4,
+          "correctBonusGuesses": 2,
           "clues": {
             "1": 9,
             "2": 1
@@ -236,6 +324,8 @@
           "actions": 37,
           "turns": 12,
           "fallbackClues": 0,
+          "bonusGuesses": 1,
+          "correctBonusGuesses": 1,
           "clues": {
             "1": 10,
             "2": 2
@@ -255,6 +345,8 @@
           "actions": 37,
           "turns": 12,
           "fallbackClues": 0,
+          "bonusGuesses": 5,
+          "correctBonusGuesses": 2,
           "clues": {
             "1": 10,
             "2": 2
@@ -274,6 +366,8 @@
           "actions": 45,
           "turns": 15,
           "fallbackClues": 0,
+          "bonusGuesses": 4,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 14,
             "2": 1
@@ -293,6 +387,8 @@
           "actions": 36,
           "turns": 12,
           "fallbackClues": 0,
+          "bonusGuesses": 3,
+          "correctBonusGuesses": 3,
           "clues": {
             "1": 11,
             "2": 1
@@ -312,6 +408,8 @@
           "actions": 39,
           "turns": 13,
           "fallbackClues": 0,
+          "bonusGuesses": 5,
+          "correctBonusGuesses": 1,
           "clues": {
             "1": 12,
             "2": 1
@@ -331,6 +429,8 @@
           "actions": 12,
           "turns": 4,
           "fallbackClues": 0,
+          "bonusGuesses": 2,
+          "correctBonusGuesses": 1,
           "clues": {
             "1": 4
           },
@@ -349,6 +449,8 @@
           "actions": 45,
           "turns": 15,
           "fallbackClues": 0,
+          "bonusGuesses": 2,
+          "correctBonusGuesses": 1,
           "clues": {
             "1": 15
           },
@@ -367,6 +469,8 @@
           "actions": 38,
           "turns": 12,
           "fallbackClues": 0,
+          "bonusGuesses": 4,
+          "correctBonusGuesses": 1,
           "clues": {
             "1": 9,
             "2": 3
@@ -386,6 +490,8 @@
           "actions": 40,
           "turns": 13,
           "fallbackClues": 0,
+          "bonusGuesses": 1,
+          "correctBonusGuesses": 1,
           "clues": {
             "1": 11,
             "2": 2
@@ -405,6 +511,8 @@
           "actions": 33,
           "turns": 11,
           "fallbackClues": 0,
+          "bonusGuesses": 3,
+          "correctBonusGuesses": 3,
           "clues": {
             "1": 10,
             "2": 1
@@ -424,6 +532,8 @@
           "actions": 45,
           "turns": 15,
           "fallbackClues": 0,
+          "bonusGuesses": 3,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 14,
             "2": 1
@@ -443,6 +553,8 @@
           "actions": 42,
           "turns": 14,
           "fallbackClues": 0,
+          "bonusGuesses": 2,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 13,
             "2": 1
@@ -462,6 +574,8 @@
           "actions": 36,
           "turns": 12,
           "fallbackClues": 0,
+          "bonusGuesses": 2,
+          "correctBonusGuesses": 1,
           "clues": {
             "1": 11,
             "2": 1
@@ -481,6 +595,8 @@
           "actions": 32,
           "turns": 10,
           "fallbackClues": 0,
+          "bonusGuesses": 1,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 7,
             "2": 3
@@ -500,6 +616,8 @@
           "actions": 22,
           "turns": 7,
           "fallbackClues": 0,
+          "bonusGuesses": 1,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 6,
             "2": 1
@@ -519,6 +637,8 @@
           "actions": 34,
           "turns": 11,
           "fallbackClues": 0,
+          "bonusGuesses": 4,
+          "correctBonusGuesses": 3,
           "clues": {
             "1": 10,
             "2": 1
@@ -538,6 +658,8 @@
           "actions": 35,
           "turns": 11,
           "fallbackClues": 0,
+          "bonusGuesses": 1,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 9,
             "2": 2
@@ -557,6 +679,8 @@
           "actions": 44,
           "turns": 15,
           "fallbackClues": 0,
+          "bonusGuesses": 4,
+          "correctBonusGuesses": 1,
           "clues": {
             "1": 15
           },
@@ -575,6 +699,8 @@
           "actions": 39,
           "turns": 13,
           "fallbackClues": 1,
+          "bonusGuesses": 2,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 11,
             "2": 2
@@ -594,6 +720,8 @@
           "actions": 12,
           "turns": 4,
           "fallbackClues": 0,
+          "bonusGuesses": 2,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 4
           },
@@ -612,6 +740,8 @@
           "actions": 34,
           "turns": 11,
           "fallbackClues": 0,
+          "bonusGuesses": 1,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 9,
             "2": 2
@@ -631,6 +761,8 @@
           "actions": 42,
           "turns": 14,
           "fallbackClues": 0,
+          "bonusGuesses": 3,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 13,
             "2": 1
@@ -650,6 +782,8 @@
           "actions": 40,
           "turns": 13,
           "fallbackClues": 0,
+          "bonusGuesses": 1,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 11,
             "2": 2
@@ -669,6 +803,8 @@
           "actions": 30,
           "turns": 10,
           "fallbackClues": 0,
+          "bonusGuesses": 2,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 9,
             "2": 1
@@ -688,6 +824,8 @@
           "actions": 34,
           "turns": 11,
           "fallbackClues": 0,
+          "bonusGuesses": 1,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 9,
             "2": 2
@@ -707,6 +845,8 @@
           "actions": 47,
           "turns": 16,
           "fallbackClues": 0,
+          "bonusGuesses": 2,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 16
           },
@@ -725,6 +865,8 @@
           "actions": 27,
           "turns": 9,
           "fallbackClues": 0,
+          "bonusGuesses": 3,
+          "correctBonusGuesses": 2,
           "clues": {
             "1": 9
           },
@@ -743,6 +885,8 @@
           "actions": 41,
           "turns": 14,
           "fallbackClues": 0,
+          "bonusGuesses": 5,
+          "correctBonusGuesses": 2,
           "clues": {
             "1": 14
           },
@@ -761,6 +905,8 @@
           "actions": 35,
           "turns": 12,
           "fallbackClues": 0,
+          "bonusGuesses": 2,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 12
           },
@@ -779,6 +925,8 @@
           "actions": 35,
           "turns": 11,
           "fallbackClues": 0,
+          "bonusGuesses": 3,
+          "correctBonusGuesses": 2,
           "clues": {
             "1": 8,
             "2": 3
@@ -798,6 +946,8 @@
           "actions": 39,
           "turns": 13,
           "fallbackClues": 0,
+          "bonusGuesses": 2,
+          "correctBonusGuesses": 1,
           "clues": {
             "1": 12,
             "2": 1
@@ -817,6 +967,8 @@
           "actions": 41,
           "turns": 13,
           "fallbackClues": 0,
+          "bonusGuesses": 2,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 10,
             "2": 3
@@ -836,6 +988,8 @@
           "actions": 36,
           "turns": 12,
           "fallbackClues": 0,
+          "bonusGuesses": 3,
+          "correctBonusGuesses": 1,
           "clues": {
             "1": 11,
             "2": 1
@@ -855,6 +1009,8 @@
           "actions": 45,
           "turns": 15,
           "fallbackClues": 0,
+          "bonusGuesses": 2,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 14,
             "2": 1
@@ -874,6 +1030,8 @@
           "actions": 41,
           "turns": 13,
           "fallbackClues": 0,
+          "bonusGuesses": 1,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 10,
             "2": 3
@@ -893,6 +1051,8 @@
           "actions": 30,
           "turns": 10,
           "fallbackClues": 0,
+          "bonusGuesses": 5,
+          "correctBonusGuesses": 1,
           "clues": {
             "1": 9,
             "2": 1
@@ -912,6 +1072,8 @@
           "actions": 30,
           "turns": 10,
           "fallbackClues": 0,
+          "bonusGuesses": 5,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 9,
             "2": 1
@@ -931,6 +1093,8 @@
           "actions": 42,
           "turns": 14,
           "fallbackClues": 0,
+          "bonusGuesses": 4,
+          "correctBonusGuesses": 1,
           "clues": {
             "1": 13,
             "2": 1
@@ -950,6 +1114,8 @@
           "actions": 36,
           "turns": 12,
           "fallbackClues": 0,
+          "bonusGuesses": 1,
+          "correctBonusGuesses": 1,
           "clues": {
             "1": 11,
             "2": 1
@@ -969,6 +1135,8 @@
           "actions": 35,
           "turns": 11,
           "fallbackClues": 0,
+          "bonusGuesses": 4,
+          "correctBonusGuesses": 1,
           "clues": {
             "1": 9,
             "2": 1,
@@ -989,6 +1157,8 @@
           "actions": 44,
           "turns": 15,
           "fallbackClues": 0,
+          "bonusGuesses": 2,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 15
           },
@@ -1007,6 +1177,8 @@
           "actions": 36,
           "turns": 12,
           "fallbackClues": 0,
+          "bonusGuesses": 5,
+          "correctBonusGuesses": 2,
           "clues": {
             "1": 11,
             "2": 1
@@ -1026,6 +1198,8 @@
           "actions": 43,
           "turns": 14,
           "fallbackClues": 0,
+          "bonusGuesses": 1,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 12,
             "2": 2
@@ -1045,6 +1219,8 @@
           "actions": 34,
           "turns": 11,
           "fallbackClues": 0,
+          "bonusGuesses": 5,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 9,
             "2": 2
@@ -1064,6 +1240,8 @@
           "actions": 40,
           "turns": 13,
           "fallbackClues": 0,
+          "bonusGuesses": 2,
+          "correctBonusGuesses": 1,
           "clues": {
             "1": 11,
             "2": 2
@@ -1083,6 +1261,8 @@
           "actions": 29,
           "turns": 10,
           "fallbackClues": 0,
+          "bonusGuesses": 5,
+          "correctBonusGuesses": 1,
           "clues": {
             "1": 10
           },
@@ -1101,6 +1281,8 @@
           "actions": 40,
           "turns": 13,
           "fallbackClues": 0,
+          "bonusGuesses": 4,
+          "correctBonusGuesses": 1,
           "clues": {
             "1": 11,
             "2": 2
@@ -1120,6 +1302,8 @@
           "actions": 29,
           "turns": 9,
           "fallbackClues": 0,
+          "bonusGuesses": 3,
+          "correctBonusGuesses": 2,
           "clues": {
             "1": 7,
             "2": 1,
@@ -1140,6 +1324,8 @@
           "actions": 42,
           "turns": 14,
           "fallbackClues": 0,
+          "bonusGuesses": 3,
+          "correctBonusGuesses": 1,
           "clues": {
             "1": 13,
             "2": 1
@@ -1159,6 +1345,8 @@
           "actions": 36,
           "turns": 11,
           "fallbackClues": 0,
+          "bonusGuesses": 2,
+          "correctBonusGuesses": 1,
           "clues": {
             "1": 8,
             "2": 3
@@ -1178,6 +1366,8 @@
           "actions": 36,
           "turns": 12,
           "fallbackClues": 0,
+          "bonusGuesses": 3,
+          "correctBonusGuesses": 1,
           "clues": {
             "1": 11,
             "2": 1
@@ -1197,6 +1387,8 @@
           "actions": 40,
           "turns": 13,
           "fallbackClues": 0,
+          "bonusGuesses": 3,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 11,
             "2": 2
@@ -1216,6 +1408,8 @@
           "actions": 41,
           "turns": 13,
           "fallbackClues": 0,
+          "bonusGuesses": 2,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 10,
             "2": 3
@@ -1235,6 +1429,8 @@
           "actions": 47,
           "turns": 16,
           "fallbackClues": 0,
+          "bonusGuesses": 2,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 16
           },
@@ -1253,6 +1449,8 @@
           "actions": 33,
           "turns": 11,
           "fallbackClues": 0,
+          "bonusGuesses": 4,
+          "correctBonusGuesses": 1,
           "clues": {
             "1": 10,
             "2": 1
@@ -1272,6 +1470,8 @@
           "actions": 32,
           "turns": 10,
           "fallbackClues": 0,
+          "bonusGuesses": 3,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 7,
             "2": 3
@@ -1291,6 +1491,8 @@
           "actions": 47,
           "turns": 16,
           "fallbackClues": 0,
+          "bonusGuesses": 2,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 16
           },
@@ -1309,6 +1511,8 @@
           "actions": 27,
           "turns": 9,
           "fallbackClues": 0,
+          "bonusGuesses": 5,
+          "correctBonusGuesses": 2,
           "clues": {
             "1": 9
           },
@@ -1327,6 +1531,8 @@
           "actions": 39,
           "turns": 13,
           "fallbackClues": 0,
+          "bonusGuesses": 1,
+          "correctBonusGuesses": 1,
           "clues": {
             "1": 12,
             "2": 1
@@ -1346,6 +1552,8 @@
           "actions": 30,
           "turns": 10,
           "fallbackClues": 0,
+          "bonusGuesses": 3,
+          "correctBonusGuesses": 2,
           "clues": {
             "1": 9,
             "2": 1
@@ -1365,6 +1573,8 @@
           "actions": 37,
           "turns": 12,
           "fallbackClues": 0,
+          "bonusGuesses": 5,
+          "correctBonusGuesses": 2,
           "clues": {
             "1": 11,
             "3": 1
@@ -1384,6 +1594,8 @@
           "actions": 41,
           "turns": 14,
           "fallbackClues": 0,
+          "bonusGuesses": 5,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 14
           },
@@ -1402,6 +1614,8 @@
           "actions": 36,
           "turns": 12,
           "fallbackClues": 0,
+          "bonusGuesses": 4,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 11,
             "3": 1
@@ -1421,6 +1635,8 @@
           "actions": 44,
           "turns": 15,
           "fallbackClues": 0,
+          "bonusGuesses": 2,
+          "correctBonusGuesses": 1,
           "clues": {
             "1": 15
           },
@@ -1439,6 +1655,8 @@
           "actions": 39,
           "turns": 13,
           "fallbackClues": 0,
+          "bonusGuesses": 4,
+          "correctBonusGuesses": 1,
           "clues": {
             "1": 12,
             "2": 1
@@ -1458,6 +1676,8 @@
           "actions": 42,
           "turns": 14,
           "fallbackClues": 0,
+          "bonusGuesses": 1,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 13,
             "2": 1
@@ -1477,6 +1697,8 @@
           "actions": 42,
           "turns": 14,
           "fallbackClues": 0,
+          "bonusGuesses": 2,
+          "correctBonusGuesses": 1,
           "clues": {
             "1": 13,
             "2": 1
@@ -1496,6 +1718,8 @@
           "actions": 36,
           "turns": 12,
           "fallbackClues": 0,
+          "bonusGuesses": 2,
+          "correctBonusGuesses": 1,
           "clues": {
             "1": 11,
             "2": 1
@@ -1515,6 +1739,8 @@
           "actions": 14,
           "turns": 4,
           "fallbackClues": 0,
+          "bonusGuesses": 4,
+          "correctBonusGuesses": 2,
           "clues": {
             "1": 2,
             "2": 2
@@ -1534,6 +1760,8 @@
           "actions": 38,
           "turns": 13,
           "fallbackClues": 0,
+          "bonusGuesses": 3,
+          "correctBonusGuesses": 1,
           "clues": {
             "1": 13
           },
@@ -1552,6 +1780,8 @@
           "actions": 35,
           "turns": 11,
           "fallbackClues": 0,
+          "bonusGuesses": 2,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 9,
             "2": 1,
@@ -1572,6 +1802,8 @@
           "actions": 41,
           "turns": 13,
           "fallbackClues": 0,
+          "bonusGuesses": 1,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 10,
             "2": 3
@@ -1591,6 +1823,8 @@
           "actions": 31,
           "turns": 10,
           "fallbackClues": 0,
+          "bonusGuesses": 3,
+          "correctBonusGuesses": 1,
           "clues": {
             "1": 8,
             "2": 2
@@ -1610,6 +1844,8 @@
           "actions": 31,
           "turns": 10,
           "fallbackClues": 0,
+          "bonusGuesses": 3,
+          "correctBonusGuesses": 1,
           "clues": {
             "1": 8,
             "2": 2
@@ -1629,6 +1865,8 @@
           "actions": 40,
           "turns": 13,
           "fallbackClues": 0,
+          "bonusGuesses": 3,
+          "correctBonusGuesses": 1,
           "clues": {
             "1": 11,
             "2": 2
@@ -1648,6 +1886,8 @@
           "actions": 34,
           "turns": 11,
           "fallbackClues": 0,
+          "bonusGuesses": 3,
+          "correctBonusGuesses": 2,
           "clues": {
             "1": 9,
             "2": 2
@@ -1667,6 +1907,8 @@
           "actions": 40,
           "turns": 13,
           "fallbackClues": 0,
+          "bonusGuesses": 1,
+          "correctBonusGuesses": 1,
           "clues": {
             "1": 11,
             "2": 2
@@ -1686,6 +1928,8 @@
           "actions": 35,
           "turns": 11,
           "fallbackClues": 0,
+          "bonusGuesses": 1,
+          "correctBonusGuesses": 1,
           "clues": {
             "1": 9,
             "2": 1,
@@ -1706,6 +1950,8 @@
           "actions": 38,
           "turns": 13,
           "fallbackClues": 0,
+          "bonusGuesses": 6,
+          "correctBonusGuesses": 2,
           "clues": {
             "1": 13
           },
@@ -1724,6 +1970,8 @@
           "actions": 40,
           "turns": 13,
           "fallbackClues": 0,
+          "bonusGuesses": 4,
+          "correctBonusGuesses": 1,
           "clues": {
             "1": 11,
             "2": 2
@@ -1743,6 +1991,8 @@
           "actions": 40,
           "turns": 13,
           "fallbackClues": 0,
+          "bonusGuesses": 0,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 11,
             "2": 2
@@ -1762,6 +2012,8 @@
           "actions": 36,
           "turns": 12,
           "fallbackClues": 0,
+          "bonusGuesses": 2,
+          "correctBonusGuesses": 1,
           "clues": {
             "1": 11,
             "2": 1
@@ -1781,6 +2033,8 @@
           "actions": 41,
           "turns": 14,
           "fallbackClues": 0,
+          "bonusGuesses": 3,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 14
           },
@@ -1799,6 +2053,8 @@
           "actions": 33,
           "turns": 11,
           "fallbackClues": 0,
+          "bonusGuesses": 4,
+          "correctBonusGuesses": 1,
           "clues": {
             "1": 10,
             "2": 1
@@ -1818,6 +2074,8 @@
           "actions": 43,
           "turns": 14,
           "fallbackClues": 0,
+          "bonusGuesses": 2,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 12,
             "2": 2
@@ -1837,6 +2095,8 @@
           "actions": 35,
           "turns": 11,
           "fallbackClues": 0,
+          "bonusGuesses": 1,
+          "correctBonusGuesses": 1,
           "clues": {
             "1": 8,
             "2": 3
@@ -1856,6 +2116,8 @@
           "actions": 18,
           "turns": 6,
           "fallbackClues": 0,
+          "bonusGuesses": 2,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 6
           },
@@ -1874,6 +2136,8 @@
           "actions": 41,
           "turns": 14,
           "fallbackClues": 0,
+          "bonusGuesses": 3,
+          "correctBonusGuesses": 2,
           "clues": {
             "1": 14
           },
@@ -1892,6 +2156,8 @@
           "actions": 47,
           "turns": 16,
           "fallbackClues": 0,
+          "bonusGuesses": 2,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 16
           },
@@ -1910,6 +2176,8 @@
           "actions": 27,
           "turns": 8,
           "fallbackClues": 0,
+          "bonusGuesses": 2,
+          "correctBonusGuesses": 1,
           "clues": {
             "1": 5,
             "2": 2,
@@ -1930,6 +2198,8 @@
           "actions": 41,
           "turns": 14,
           "fallbackClues": 0,
+          "bonusGuesses": 3,
+          "correctBonusGuesses": 1,
           "clues": {
             "1": 14
           },
@@ -1967,6 +2237,74 @@
       "passesPerGame": 7.77,
       "fallbackClues": 0,
       "fallbackClueRate": 0,
+      "bonusGuesses": 216,
+      "bonusGuessesPerGame": 2.16,
+      "correctBonusGuessRate": 0.263889,
+      "clueNumberByOwnRemaining": {
+        "1": {
+          "clues": 77,
+          "meanNumber": 1,
+          "multiClueRate": 0,
+          "multiAvailableRate": 0,
+          "meanBestMultiAdvantage": 0
+        },
+        "2": {
+          "clues": 99,
+          "meanNumber": 1.131313,
+          "multiClueRate": 0.131313,
+          "multiAvailableRate": 0.444444,
+          "meanBestMultiAdvantage": -16.04921
+        },
+        "3": {
+          "clues": 134,
+          "meanNumber": 1.186567,
+          "multiClueRate": 0.186567,
+          "multiAvailableRate": 0.820896,
+          "meanBestMultiAdvantage": -16.848227
+        },
+        "4": {
+          "clues": 143,
+          "meanNumber": 1.153846,
+          "multiClueRate": 0.153846,
+          "multiAvailableRate": 0.923077,
+          "meanBestMultiAdvantage": -11.815888
+        },
+        "5": {
+          "clues": 143,
+          "meanNumber": 1.174825,
+          "multiClueRate": 0.153846,
+          "multiAvailableRate": 0.986014,
+          "meanBestMultiAdvantage": -7.184393
+        },
+        "6": {
+          "clues": 137,
+          "meanNumber": 1.248175,
+          "multiClueRate": 0.226277,
+          "multiAvailableRate": 0.992701,
+          "meanBestMultiAdvantage": -4.396187
+        },
+        "7": {
+          "clues": 112,
+          "meanNumber": 1.303571,
+          "multiClueRate": 0.267857,
+          "multiAvailableRate": 1,
+          "meanBestMultiAdvantage": 1.322734
+        },
+        "8": {
+          "clues": 138,
+          "meanNumber": 1.456522,
+          "multiClueRate": 0.376812,
+          "multiAvailableRate": 1,
+          "meanBestMultiAdvantage": 5.177355
+        },
+        "9": {
+          "clues": 100,
+          "meanNumber": 1.64,
+          "multiClueRate": 0.52,
+          "multiAvailableRate": 1,
+          "meanBestMultiAdvantage": 8.912343
+        }
+      },
       "wins": {
         "blue": 53,
         "red": 47
@@ -1980,6 +2318,8 @@
           "actions": 38,
           "turns": 12,
           "fallbackClues": 0,
+          "bonusGuesses": 1,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 10,
             "2": 1,
@@ -2000,6 +2340,8 @@
           "actions": 41,
           "turns": 13,
           "fallbackClues": 0,
+          "bonusGuesses": 2,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 10,
             "2": 3
@@ -2019,6 +2361,8 @@
           "actions": 33,
           "turns": 10,
           "fallbackClues": 0,
+          "bonusGuesses": 3,
+          "correctBonusGuesses": 2,
           "clues": {
             "1": 6,
             "2": 4
@@ -2038,6 +2382,8 @@
           "actions": 38,
           "turns": 12,
           "fallbackClues": 0,
+          "bonusGuesses": 2,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 9,
             "2": 3
@@ -2057,6 +2403,8 @@
           "actions": 38,
           "turns": 13,
           "fallbackClues": 0,
+          "bonusGuesses": 3,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 13
           },
@@ -2075,6 +2423,8 @@
           "actions": 37,
           "turns": 12,
           "fallbackClues": 0,
+          "bonusGuesses": 2,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 10,
             "2": 2
@@ -2094,6 +2444,8 @@
           "actions": 41,
           "turns": 13,
           "fallbackClues": 0,
+          "bonusGuesses": 1,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 10,
             "2": 3
@@ -2113,6 +2465,8 @@
           "actions": 45,
           "turns": 15,
           "fallbackClues": 0,
+          "bonusGuesses": 2,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 14,
             "2": 1
@@ -2132,6 +2486,8 @@
           "actions": 25,
           "turns": 8,
           "fallbackClues": 0,
+          "bonusGuesses": 4,
+          "correctBonusGuesses": 3,
           "clues": {
             "1": 6,
             "2": 2
@@ -2151,6 +2507,8 @@
           "actions": 41,
           "turns": 13,
           "fallbackClues": 0,
+          "bonusGuesses": 0,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 10,
             "2": 3
@@ -2170,6 +2528,8 @@
           "actions": 40,
           "turns": 13,
           "fallbackClues": 0,
+          "bonusGuesses": 2,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 12,
             "3": 1
@@ -2189,6 +2549,8 @@
           "actions": 39,
           "turns": 12,
           "fallbackClues": 0,
+          "bonusGuesses": 3,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 9,
             "2": 2,
@@ -2209,6 +2571,8 @@
           "actions": 37,
           "turns": 12,
           "fallbackClues": 0,
+          "bonusGuesses": 2,
+          "correctBonusGuesses": 1,
           "clues": {
             "1": 10,
             "2": 2
@@ -2228,6 +2592,8 @@
           "actions": 36,
           "turns": 11,
           "fallbackClues": 0,
+          "bonusGuesses": 3,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 7,
             "2": 4
@@ -2247,6 +2613,8 @@
           "actions": 33,
           "turns": 10,
           "fallbackClues": 0,
+          "bonusGuesses": 4,
+          "correctBonusGuesses": 2,
           "clues": {
             "1": 6,
             "2": 4
@@ -2266,6 +2634,8 @@
           "actions": 36,
           "turns": 11,
           "fallbackClues": 0,
+          "bonusGuesses": 2,
+          "correctBonusGuesses": 1,
           "clues": {
             "1": 7,
             "2": 4
@@ -2285,6 +2655,8 @@
           "actions": 39,
           "turns": 13,
           "fallbackClues": 0,
+          "bonusGuesses": 4,
+          "correctBonusGuesses": 2,
           "clues": {
             "1": 13
           },
@@ -2303,6 +2675,8 @@
           "actions": 38,
           "turns": 12,
           "fallbackClues": 0,
+          "bonusGuesses": 1,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 9,
             "2": 3
@@ -2322,6 +2696,8 @@
           "actions": 37,
           "turns": 11,
           "fallbackClues": 0,
+          "bonusGuesses": 1,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 6,
             "2": 5
@@ -2341,6 +2717,8 @@
           "actions": 36,
           "turns": 11,
           "fallbackClues": 0,
+          "bonusGuesses": 1,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 7,
             "2": 4
@@ -2360,6 +2738,8 @@
           "actions": 33,
           "turns": 11,
           "fallbackClues": 0,
+          "bonusGuesses": 4,
+          "correctBonusGuesses": 1,
           "clues": {
             "1": 10,
             "2": 1
@@ -2379,6 +2759,8 @@
           "actions": 32,
           "turns": 10,
           "fallbackClues": 0,
+          "bonusGuesses": 2,
+          "correctBonusGuesses": 1,
           "clues": {
             "1": 7,
             "2": 3
@@ -2398,6 +2780,8 @@
           "actions": 31,
           "turns": 10,
           "fallbackClues": 0,
+          "bonusGuesses": 4,
+          "correctBonusGuesses": 2,
           "clues": {
             "1": 9,
             "3": 1
@@ -2417,6 +2801,8 @@
           "actions": 36,
           "turns": 11,
           "fallbackClues": 0,
+          "bonusGuesses": 2,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 7,
             "2": 4
@@ -2436,6 +2822,8 @@
           "actions": 33,
           "turns": 11,
           "fallbackClues": 0,
+          "bonusGuesses": 5,
+          "correctBonusGuesses": 2,
           "clues": {
             "1": 10,
             "2": 1
@@ -2455,6 +2843,8 @@
           "actions": 32,
           "turns": 10,
           "fallbackClues": 0,
+          "bonusGuesses": 1,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 7,
             "2": 3
@@ -2474,6 +2864,8 @@
           "actions": 38,
           "turns": 12,
           "fallbackClues": 0,
+          "bonusGuesses": 2,
+          "correctBonusGuesses": 1,
           "clues": {
             "1": 9,
             "2": 3
@@ -2493,6 +2885,8 @@
           "actions": 15,
           "turns": 5,
           "fallbackClues": 0,
+          "bonusGuesses": 2,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 5
           },
@@ -2511,6 +2905,8 @@
           "actions": 33,
           "turns": 10,
           "fallbackClues": 0,
+          "bonusGuesses": 4,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 7,
             "2": 3
@@ -2530,6 +2926,8 @@
           "actions": 34,
           "turns": 11,
           "fallbackClues": 0,
+          "bonusGuesses": 3,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 10,
             "3": 1
@@ -2549,6 +2947,8 @@
           "actions": 42,
           "turns": 14,
           "fallbackClues": 0,
+          "bonusGuesses": 4,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 13,
             "2": 1
@@ -2568,6 +2968,8 @@
           "actions": 39,
           "turns": 13,
           "fallbackClues": 0,
+          "bonusGuesses": 2,
+          "correctBonusGuesses": 1,
           "clues": {
             "1": 12,
             "2": 1
@@ -2587,6 +2989,8 @@
           "actions": 39,
           "turns": 12,
           "fallbackClues": 0,
+          "bonusGuesses": 0,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 8,
             "2": 4
@@ -2606,6 +3010,8 @@
           "actions": 35,
           "turns": 11,
           "fallbackClues": 0,
+          "bonusGuesses": 3,
+          "correctBonusGuesses": 2,
           "clues": {
             "1": 8,
             "2": 3
@@ -2625,6 +3031,8 @@
           "actions": 40,
           "turns": 13,
           "fallbackClues": 0,
+          "bonusGuesses": 2,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 11,
             "2": 2
@@ -2644,6 +3052,8 @@
           "actions": 34,
           "turns": 11,
           "fallbackClues": 0,
+          "bonusGuesses": 2,
+          "correctBonusGuesses": 2,
           "clues": {
             "1": 9,
             "2": 2
@@ -2663,6 +3073,8 @@
           "actions": 6,
           "turns": 2,
           "fallbackClues": 0,
+          "bonusGuesses": 1,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 2
           },
@@ -2681,6 +3093,8 @@
           "actions": 26,
           "turns": 8,
           "fallbackClues": 0,
+          "bonusGuesses": 1,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 5,
             "2": 3
@@ -2700,6 +3114,8 @@
           "actions": 38,
           "turns": 12,
           "fallbackClues": 0,
+          "bonusGuesses": 1,
+          "correctBonusGuesses": 1,
           "clues": {
             "1": 9,
             "2": 3
@@ -2719,6 +3135,8 @@
           "actions": 34,
           "turns": 11,
           "fallbackClues": 0,
+          "bonusGuesses": 1,
+          "correctBonusGuesses": 1,
           "clues": {
             "1": 9,
             "2": 2
@@ -2738,6 +3156,8 @@
           "actions": 42,
           "turns": 14,
           "fallbackClues": 0,
+          "bonusGuesses": 4,
+          "correctBonusGuesses": 1,
           "clues": {
             "1": 13,
             "2": 1
@@ -2757,6 +3177,8 @@
           "actions": 36,
           "turns": 11,
           "fallbackClues": 0,
+          "bonusGuesses": 3,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 8,
             "2": 2,
@@ -2777,6 +3199,8 @@
           "actions": 45,
           "turns": 15,
           "fallbackClues": 0,
+          "bonusGuesses": 2,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 14,
             "2": 1
@@ -2796,6 +3220,8 @@
           "actions": 28,
           "turns": 8,
           "fallbackClues": 0,
+          "bonusGuesses": 0,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 5,
             "2": 1,
@@ -2816,6 +3242,8 @@
           "actions": 25,
           "turns": 8,
           "fallbackClues": 0,
+          "bonusGuesses": 5,
+          "correctBonusGuesses": 1,
           "clues": {
             "1": 7,
             "3": 1
@@ -2835,6 +3263,8 @@
           "actions": 31,
           "turns": 10,
           "fallbackClues": 0,
+          "bonusGuesses": 4,
+          "correctBonusGuesses": 1,
           "clues": {
             "1": 8,
             "2": 2
@@ -2854,6 +3284,8 @@
           "actions": 40,
           "turns": 13,
           "fallbackClues": 0,
+          "bonusGuesses": 3,
+          "correctBonusGuesses": 1,
           "clues": {
             "1": 11,
             "2": 2
@@ -2873,6 +3305,8 @@
           "actions": 36,
           "turns": 12,
           "fallbackClues": 0,
+          "bonusGuesses": 1,
+          "correctBonusGuesses": 1,
           "clues": {
             "1": 11,
             "2": 1
@@ -2892,6 +3326,8 @@
           "actions": 26,
           "turns": 8,
           "fallbackClues": 0,
+          "bonusGuesses": 6,
+          "correctBonusGuesses": 3,
           "clues": {
             "1": 6,
             "2": 1,
@@ -2912,6 +3348,8 @@
           "actions": 36,
           "turns": 12,
           "fallbackClues": 0,
+          "bonusGuesses": 3,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 11,
             "2": 1
@@ -2931,6 +3369,8 @@
           "actions": 36,
           "turns": 11,
           "fallbackClues": 0,
+          "bonusGuesses": 1,
+          "correctBonusGuesses": 1,
           "clues": {
             "1": 7,
             "2": 4
@@ -2950,6 +3390,8 @@
           "actions": 42,
           "turns": 14,
           "fallbackClues": 0,
+          "bonusGuesses": 2,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 13,
             "2": 1
@@ -2969,6 +3411,8 @@
           "actions": 34,
           "turns": 11,
           "fallbackClues": 0,
+          "bonusGuesses": 3,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 10,
             "2": 1
@@ -2988,6 +3432,8 @@
           "actions": 34,
           "turns": 10,
           "fallbackClues": 0,
+          "bonusGuesses": 0,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 7,
             "2": 1,
@@ -3008,6 +3454,8 @@
           "actions": 32,
           "turns": 10,
           "fallbackClues": 0,
+          "bonusGuesses": 1,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 7,
             "2": 3
@@ -3027,6 +3475,8 @@
           "actions": 38,
           "turns": 12,
           "fallbackClues": 0,
+          "bonusGuesses": 3,
+          "correctBonusGuesses": 1,
           "clues": {
             "1": 9,
             "2": 3
@@ -3046,6 +3496,8 @@
           "actions": 28,
           "turns": 7,
           "fallbackClues": 0,
+          "bonusGuesses": 1,
+          "correctBonusGuesses": 0,
           "clues": {
             "2": 6,
             "3": 1
@@ -3065,6 +3517,8 @@
           "actions": 35,
           "turns": 11,
           "fallbackClues": 0,
+          "bonusGuesses": 3,
+          "correctBonusGuesses": 1,
           "clues": {
             "1": 8,
             "2": 3
@@ -3084,6 +3538,8 @@
           "actions": 32,
           "turns": 9,
           "fallbackClues": 0,
+          "bonusGuesses": 1,
+          "correctBonusGuesses": 1,
           "clues": {
             "1": 5,
             "2": 3,
@@ -3104,6 +3560,8 @@
           "actions": 33,
           "turns": 10,
           "fallbackClues": 0,
+          "bonusGuesses": 2,
+          "correctBonusGuesses": 1,
           "clues": {
             "1": 6,
             "2": 4
@@ -3123,6 +3581,8 @@
           "actions": 33,
           "turns": 10,
           "fallbackClues": 0,
+          "bonusGuesses": 1,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 6,
             "2": 4
@@ -3142,6 +3602,8 @@
           "actions": 35,
           "turns": 11,
           "fallbackClues": 0,
+          "bonusGuesses": 1,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 8,
             "2": 3
@@ -3161,6 +3623,8 @@
           "actions": 41,
           "turns": 13,
           "fallbackClues": 0,
+          "bonusGuesses": 2,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 10,
             "2": 3
@@ -3180,6 +3644,8 @@
           "actions": 35,
           "turns": 11,
           "fallbackClues": 0,
+          "bonusGuesses": 2,
+          "correctBonusGuesses": 1,
           "clues": {
             "1": 9,
             "2": 1,
@@ -3200,6 +3666,8 @@
           "actions": 32,
           "turns": 10,
           "fallbackClues": 0,
+          "bonusGuesses": 2,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 7,
             "2": 3
@@ -3219,6 +3687,8 @@
           "actions": 45,
           "turns": 15,
           "fallbackClues": 0,
+          "bonusGuesses": 2,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 14,
             "2": 1
@@ -3238,6 +3708,8 @@
           "actions": 17,
           "turns": 5,
           "fallbackClues": 0,
+          "bonusGuesses": 3,
+          "correctBonusGuesses": 1,
           "clues": {
             "1": 3,
             "2": 2
@@ -3257,6 +3729,8 @@
           "actions": 29,
           "turns": 9,
           "fallbackClues": 0,
+          "bonusGuesses": 2,
+          "correctBonusGuesses": 2,
           "clues": {
             "1": 7,
             "2": 2
@@ -3276,6 +3750,8 @@
           "actions": 21,
           "turns": 6,
           "fallbackClues": 0,
+          "bonusGuesses": 2,
+          "correctBonusGuesses": 1,
           "clues": {
             "1": 2,
             "2": 4
@@ -3295,6 +3771,8 @@
           "actions": 41,
           "turns": 13,
           "fallbackClues": 0,
+          "bonusGuesses": 3,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 10,
             "2": 3
@@ -3314,6 +3792,8 @@
           "actions": 32,
           "turns": 10,
           "fallbackClues": 0,
+          "bonusGuesses": 2,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 7,
             "2": 3
@@ -3333,6 +3813,8 @@
           "actions": 35,
           "turns": 12,
           "fallbackClues": 0,
+          "bonusGuesses": 2,
+          "correctBonusGuesses": 1,
           "clues": {
             "1": 12
           },
@@ -3351,6 +3833,8 @@
           "actions": 24,
           "turns": 7,
           "fallbackClues": 0,
+          "bonusGuesses": 2,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 4,
             "2": 2,
@@ -3371,6 +3855,8 @@
           "actions": 33,
           "turns": 11,
           "fallbackClues": 0,
+          "bonusGuesses": 4,
+          "correctBonusGuesses": 1,
           "clues": {
             "1": 10,
             "2": 1
@@ -3390,6 +3876,8 @@
           "actions": 40,
           "turns": 13,
           "fallbackClues": 0,
+          "bonusGuesses": 3,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 12,
             "2": 1
@@ -3409,6 +3897,8 @@
           "actions": 43,
           "turns": 14,
           "fallbackClues": 0,
+          "bonusGuesses": 1,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 12,
             "2": 2
@@ -3428,6 +3918,8 @@
           "actions": 41,
           "turns": 14,
           "fallbackClues": 0,
+          "bonusGuesses": 2,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 14
           },
@@ -3446,6 +3938,8 @@
           "actions": 27,
           "turns": 8,
           "fallbackClues": 0,
+          "bonusGuesses": 2,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 6,
             "2": 1,
@@ -3466,6 +3960,8 @@
           "actions": 34,
           "turns": 10,
           "fallbackClues": 0,
+          "bonusGuesses": 1,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 6,
             "2": 3,
@@ -3486,6 +3982,8 @@
           "actions": 32,
           "turns": 9,
           "fallbackClues": 0,
+          "bonusGuesses": 1,
+          "correctBonusGuesses": 1,
           "clues": {
             "1": 5,
             "2": 2,
@@ -3506,6 +4004,8 @@
           "actions": 41,
           "turns": 13,
           "fallbackClues": 0,
+          "bonusGuesses": 1,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 11,
             "2": 1,
@@ -3526,6 +4026,8 @@
           "actions": 35,
           "turns": 11,
           "fallbackClues": 0,
+          "bonusGuesses": 3,
+          "correctBonusGuesses": 1,
           "clues": {
             "1": 8,
             "2": 3
@@ -3545,6 +4047,8 @@
           "actions": 36,
           "turns": 11,
           "fallbackClues": 0,
+          "bonusGuesses": 0,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 7,
             "2": 4
@@ -3564,6 +4068,8 @@
           "actions": 38,
           "turns": 12,
           "fallbackClues": 0,
+          "bonusGuesses": 2,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 10,
             "2": 2
@@ -3583,6 +4089,8 @@
           "actions": 27,
           "turns": 8,
           "fallbackClues": 0,
+          "bonusGuesses": 2,
+          "correctBonusGuesses": 1,
           "clues": {
             "1": 4,
             "2": 4
@@ -3602,6 +4110,8 @@
           "actions": 25,
           "turns": 7,
           "fallbackClues": 0,
+          "bonusGuesses": 3,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 3,
             "2": 3,
@@ -3622,6 +4132,8 @@
           "actions": 35,
           "turns": 11,
           "fallbackClues": 0,
+          "bonusGuesses": 1,
+          "correctBonusGuesses": 1,
           "clues": {
             "1": 9,
             "2": 1,
@@ -3642,6 +4154,8 @@
           "actions": 32,
           "turns": 10,
           "fallbackClues": 0,
+          "bonusGuesses": 4,
+          "correctBonusGuesses": 1,
           "clues": {
             "1": 8,
             "2": 1,
@@ -3662,6 +4176,8 @@
           "actions": 38,
           "turns": 12,
           "fallbackClues": 0,
+          "bonusGuesses": 2,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 9,
             "2": 3
@@ -3681,6 +4197,8 @@
           "actions": 39,
           "turns": 13,
           "fallbackClues": 0,
+          "bonusGuesses": 4,
+          "correctBonusGuesses": 1,
           "clues": {
             "1": 12,
             "2": 1
@@ -3700,6 +4218,8 @@
           "actions": 37,
           "turns": 12,
           "fallbackClues": 0,
+          "bonusGuesses": 3,
+          "correctBonusGuesses": 1,
           "clues": {
             "1": 10,
             "2": 2
@@ -3719,6 +4239,8 @@
           "actions": 30,
           "turns": 9,
           "fallbackClues": 0,
+          "bonusGuesses": 3,
+          "correctBonusGuesses": 2,
           "clues": {
             "1": 6,
             "2": 2,
@@ -3739,6 +4261,8 @@
           "actions": 36,
           "turns": 11,
           "fallbackClues": 0,
+          "bonusGuesses": 1,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 9,
             "2": 1,
@@ -3759,6 +4283,8 @@
           "actions": 33,
           "turns": 10,
           "fallbackClues": 0,
+          "bonusGuesses": 2,
+          "correctBonusGuesses": 1,
           "clues": {
             "1": 6,
             "2": 4
@@ -3778,6 +4304,8 @@
           "actions": 35,
           "turns": 11,
           "fallbackClues": 0,
+          "bonusGuesses": 2,
+          "correctBonusGuesses": 1,
           "clues": {
             "1": 8,
             "2": 3
@@ -3797,6 +4325,8 @@
           "actions": 25,
           "turns": 7,
           "fallbackClues": 0,
+          "bonusGuesses": 1,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 3,
             "2": 3,
@@ -3817,6 +4347,8 @@
           "actions": 31,
           "turns": 9,
           "fallbackClues": 0,
+          "bonusGuesses": 0,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 5,
             "2": 3,
@@ -3837,6 +4369,8 @@
           "actions": 42,
           "turns": 14,
           "fallbackClues": 0,
+          "bonusGuesses": 3,
+          "correctBonusGuesses": 1,
           "clues": {
             "1": 13,
             "2": 1
@@ -3856,6 +4390,8 @@
           "actions": 33,
           "turns": 9,
           "fallbackClues": 0,
+          "bonusGuesses": 0,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 5,
             "2": 2,
@@ -3877,6 +4413,8 @@
           "actions": 34,
           "turns": 11,
           "fallbackClues": 0,
+          "bonusGuesses": 2,
+          "correctBonusGuesses": 0,
           "clues": {
             "1": 9,
             "2": 2
@@ -3902,6 +4440,8 @@
     "meanTurnsPerGame": -1.18,
     "meanGuessesPerTurn": 0.11827,
     "passesPerGame": -0.65,
-    "fallbackClueRate": -0.000833
+    "fallbackClueRate": -0.000833,
+    "bonusGuessesPerGame": -0.53,
+    "correctBonusGuessRate": -0.033509
   }
 }

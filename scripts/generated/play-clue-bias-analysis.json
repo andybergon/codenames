@@ -1,0 +1,259 @@
+{
+  "generatedAt": "2026-07-24T22:59:41.362Z",
+  "methodology": {
+    "boardCount": 40,
+    "perspectivesPerBoard": 2,
+    "stateCountPerConfiguration": 80,
+    "boardSeeds": "The same deterministic 40 board seeds are used for every configuration.",
+    "state": "Opening board only, before any cards are revealed, to isolate candidate vocabulary, board word set, and embedding choice from turn progression.",
+    "selection": "Rank every generated suggestion with the candidate hybrid Play score and select its highest-scoring clue. The production top-four randomness is excluded.",
+    "baseline": "minilm-l6:official:10000"
+  },
+  "results": [
+    {
+      "id": "minilm-l6:official:3000",
+      "dimension": "candidate-depth",
+      "label": "MiniLM-L6, 3k",
+      "modelId": "minilm-l6",
+      "wordSet": "official",
+      "candidateCount": 3000,
+      "model": "Xenova/all-MiniLM-L6-v2",
+      "stateCount": 80,
+      "statesWithSuggestion": 80,
+      "viableMultiRate": 1,
+      "selectedNumberDistribution": {
+        "1": 41,
+        "2": 35,
+        "3": 3,
+        "4": 1
+      },
+      "meanSelectedNumber": 1.55,
+      "selectedMultiRate": 0.4875,
+      "shortlistMultiRate": 0.309375,
+      "meanBestMultiAdvantage": 1.916081,
+      "deltaVsBaseline": {
+        "meanSelectedNumber": -0.2875,
+        "selectedMultiRate": -0.225,
+        "shortlistMultiRate": -0.14375,
+        "meanBestMultiAdvantage": -6.145625
+      }
+    },
+    {
+      "id": "minilm-l6:official:10000",
+      "dimension": "candidate-depth",
+      "label": "MiniLM-L6, 10k",
+      "modelId": "minilm-l6",
+      "wordSet": "official",
+      "candidateCount": 10000,
+      "model": "Xenova/all-MiniLM-L6-v2",
+      "stateCount": 80,
+      "statesWithSuggestion": 80,
+      "viableMultiRate": 1,
+      "selectedNumberDistribution": {
+        "1": 23,
+        "2": 48,
+        "3": 8,
+        "4": 1
+      },
+      "meanSelectedNumber": 1.8375,
+      "selectedMultiRate": 0.7125,
+      "shortlistMultiRate": 0.453125,
+      "meanBestMultiAdvantage": 8.061706,
+      "deltaVsBaseline": null
+    },
+    {
+      "id": "minilm-l6:official:30000",
+      "dimension": "candidate-depth",
+      "label": "MiniLM-L6, 30k",
+      "modelId": "minilm-l6",
+      "wordSet": "official",
+      "candidateCount": 30000,
+      "model": "Xenova/all-MiniLM-L6-v2",
+      "stateCount": 80,
+      "statesWithSuggestion": 80,
+      "viableMultiRate": 1,
+      "selectedNumberDistribution": {
+        "1": 15,
+        "2": 55,
+        "3": 9,
+        "4": 1
+      },
+      "meanSelectedNumber": 1.95,
+      "selectedMultiRate": 0.8125,
+      "shortlistMultiRate": 0.56875,
+      "meanBestMultiAdvantage": 10.010963,
+      "deltaVsBaseline": {
+        "meanSelectedNumber": 0.1125,
+        "selectedMultiRate": 0.1,
+        "shortlistMultiRate": 0.115625,
+        "meanBestMultiAdvantage": 1.949257
+      }
+    },
+    {
+      "id": "minilm-l6:official:100000",
+      "dimension": "candidate-depth",
+      "label": "MiniLM-L6, 100k",
+      "modelId": "minilm-l6",
+      "wordSet": "official",
+      "candidateCount": 100000,
+      "model": "Xenova/all-MiniLM-L6-v2",
+      "stateCount": 80,
+      "statesWithSuggestion": 80,
+      "viableMultiRate": 1,
+      "selectedNumberDistribution": {
+        "1": 9,
+        "2": 59,
+        "3": 12
+      },
+      "meanSelectedNumber": 2.0375,
+      "selectedMultiRate": 0.8875,
+      "shortlistMultiRate": 0.665625,
+      "meanBestMultiAdvantage": 11.65349,
+      "deltaVsBaseline": {
+        "meanSelectedNumber": 0.2,
+        "selectedMultiRate": 0.175,
+        "shortlistMultiRate": 0.2125,
+        "meanBestMultiAdvantage": 3.591784
+      }
+    },
+    {
+      "id": "minilm-l6:extended:10000",
+      "dimension": "word-set",
+      "label": "MiniLM-L6, Extended",
+      "modelId": "minilm-l6",
+      "wordSet": "extended",
+      "candidateCount": 10000,
+      "model": "Xenova/all-MiniLM-L6-v2",
+      "stateCount": 80,
+      "statesWithSuggestion": 80,
+      "viableMultiRate": 1,
+      "selectedNumberDistribution": {
+        "1": 19,
+        "2": 52,
+        "3": 9
+      },
+      "meanSelectedNumber": 1.875,
+      "selectedMultiRate": 0.7625,
+      "shortlistMultiRate": 0.465625,
+      "meanBestMultiAdvantage": 6.716886,
+      "deltaVsBaseline": {
+        "meanSelectedNumber": 0.0375,
+        "selectedMultiRate": 0.05,
+        "shortlistMultiRate": 0.0125,
+        "meanBestMultiAdvantage": -1.34482
+      }
+    },
+    {
+      "id": "minilm-l3:official:10000",
+      "dimension": "embedding",
+      "label": "MiniLM-L3",
+      "modelId": "minilm-l3",
+      "wordSet": "official",
+      "candidateCount": 10000,
+      "model": "Xenova/paraphrase-MiniLM-L3-v2",
+      "stateCount": 80,
+      "statesWithSuggestion": 80,
+      "viableMultiRate": 1,
+      "selectedNumberDistribution": {
+        "1": 5,
+        "2": 54,
+        "3": 19,
+        "4": 1,
+        "5": 1
+      },
+      "meanSelectedNumber": 2.2375,
+      "selectedMultiRate": 0.9375,
+      "shortlistMultiRate": 0.740625,
+      "meanBestMultiAdvantage": 14.267256,
+      "deltaVsBaseline": {
+        "meanSelectedNumber": 0.4,
+        "selectedMultiRate": 0.225,
+        "shortlistMultiRate": 0.2875,
+        "meanBestMultiAdvantage": 6.20555
+      }
+    },
+    {
+      "id": "bge-small:official:10000",
+      "dimension": "embedding",
+      "label": "BGE-small",
+      "modelId": "bge-small",
+      "wordSet": "official",
+      "candidateCount": 10000,
+      "model": "Xenova/bge-small-en-v1.5",
+      "stateCount": 80,
+      "statesWithSuggestion": 80,
+      "viableMultiRate": 1,
+      "selectedNumberDistribution": {
+        "1": 10,
+        "2": 56,
+        "3": 13,
+        "4": 1
+      },
+      "meanSelectedNumber": 2.0625,
+      "selectedMultiRate": 0.875,
+      "shortlistMultiRate": 0.675,
+      "meanBestMultiAdvantage": 12.35498,
+      "deltaVsBaseline": {
+        "meanSelectedNumber": 0.225,
+        "selectedMultiRate": 0.1625,
+        "shortlistMultiRate": 0.221875,
+        "meanBestMultiAdvantage": 4.293274
+      }
+    },
+    {
+      "id": "minilm-l12:official:10000",
+      "dimension": "embedding",
+      "label": "MiniLM-L12",
+      "modelId": "minilm-l12",
+      "wordSet": "official",
+      "candidateCount": 10000,
+      "model": "Xenova/all-MiniLM-L12-v2",
+      "stateCount": 80,
+      "statesWithSuggestion": 80,
+      "viableMultiRate": 1,
+      "selectedNumberDistribution": {
+        "1": 20,
+        "2": 53,
+        "3": 6,
+        "4": 1
+      },
+      "meanSelectedNumber": 1.85,
+      "selectedMultiRate": 0.75,
+      "shortlistMultiRate": 0.53125,
+      "meanBestMultiAdvantage": 8.243607,
+      "deltaVsBaseline": {
+        "meanSelectedNumber": 0.0125,
+        "selectedMultiRate": 0.0375,
+        "shortlistMultiRate": 0.078125,
+        "meanBestMultiAdvantage": 0.181901
+      }
+    },
+    {
+      "id": "mpnet-base:official:10000",
+      "dimension": "embedding",
+      "label": "MPNet-base",
+      "modelId": "mpnet-base",
+      "wordSet": "official",
+      "candidateCount": 10000,
+      "model": "Xenova/all-mpnet-base-v2",
+      "stateCount": 80,
+      "statesWithSuggestion": 80,
+      "viableMultiRate": 0.975,
+      "selectedNumberDistribution": {
+        "1": 46,
+        "2": 32,
+        "3": 2
+      },
+      "meanSelectedNumber": 1.45,
+      "selectedMultiRate": 0.425,
+      "shortlistMultiRate": 0.225,
+      "meanBestMultiAdvantage": -1.691813,
+      "deltaVsBaseline": {
+        "meanSelectedNumber": -0.3875,
+        "selectedMultiRate": -0.2875,
+        "shortlistMultiRate": -0.228125,
+        "meanBestMultiAdvantage": -9.753519
+      }
+    }
+  ]
+}

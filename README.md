@@ -67,7 +67,9 @@ The browser runs bot turns with seeded decisions:
 - `src/play/mode.js` owns Play setup, rendering, model orchestration, bot pacing, and resume/undo controls.
 - `scripts/play-smoke.mjs` covers seat ownership, information boundaries, reveal outcomes, deterministic bots, and bounded self-play.
 
-Run `npm run benchmark:play` to compare the current and candidate hybrid clue policies across 100 paired, deterministic full games. The benchmark uses the production board generator, 10,000-clue index, Play rules, bot guesser, and centered MiniLM embeddings. It records clue-number distribution, correct cards per turn, wrong-team and neutral hits, assassin rate, turns, passes, wins, and every per-game result. The latest [summary table](scripts/generated/play-policy-benchmark.md) links to the [full JSON report](scripts/generated/play-policy-benchmark.json). Analyzer-exhaustion fallbacks are explicit and counted.
+Run `npm run benchmark:play` to compare the current and candidate hybrid clue policies across 100 paired, deterministic full games. The benchmark uses the production board generator, 10,000-clue index, Play rules, bot guesser, and centered MiniLM embeddings. It records clue-number distribution by game stage, correct cards per turn, wrong-team and neutral hits, assassin rate, bonus-guess accuracy, turns, passes, wins, and every per-game result. The latest [summary table](scripts/generated/play-policy-benchmark.md) links to the [full JSON report](scripts/generated/play-policy-benchmark.json). Analyzer-exhaustion fallbacks are explicit and counted.
+
+Run `npm run analyze:play-clues` to compare candidate depths, board word sets, and embedding models on identical opening boards. The checked [clue-number analysis](docs/play-clue-number-analysis.md) combines that controlled ablation with human-game evidence and the recommended Play policy experiment.
 
 At game end the full key is revealed and clue-log entries show the bot spymaster's intended targets beside the ordered guesses. This is local evaluation data; it is not uploaded.
 

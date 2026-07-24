@@ -20,6 +20,7 @@ import {
   chooseBotClue,
   chooseBotGuess,
   createSeededRandom,
+  scorePlayClue,
 } from "../src/play/bots.js";
 import {
   GAME_PHASE,
@@ -30,7 +31,7 @@ import {
   guessCard,
   passTurn,
 } from "../src/play/game-state.js";
-import { OFFICIAL_WORDS, WORD_SET } from "../src/word-data.js";
+import { WORD_SET, getWordsForSet } from "../src/word-data.js";
 import { writePlayPolicySummary } from "./play-policy-summary.mjs";
 
 const ROOT = resolve(fileURLToPath(new URL("..", import.meta.url)));
@@ -47,7 +48,7 @@ const summaryOutput = options.summaryOutput ?? summaryPathFor(options.output);
 const summaryOutputPath = isAbsolute(summaryOutput)
   ? summaryOutput
   : resolve(ROOT, summaryOutput);
-const manifestDirectory = resolve(ROOT, `public/data/model-lab/${DEFAULT_MODEL_ID}`);
+const manifestDirectory = resolve(ROOT, `public/data/model-lab/${options.modelId}`);
 const manifest = JSON.parse(
   await readFile(resolve(manifestDirectory, "manifest.json"), "utf8"),
 );
@@ -62,14 +63,15 @@ const shards = await Promise.all(
 );
 const clueIndex = hydrateClueShards(manifest, shards, options.candidates);
 
-console.log(`Embedding ${OFFICIAL_WORDS.length} Official board words with ${manifest.model}...`);
-const embeddedOfficialWords = await embedTerms(OFFICIAL_WORDS, { model: manifest.model });
-const centeredOfficialWords = centerEmbeddings(
-  embeddedOfficialWords,
+const boardWords = getWordsForSet(options.wordSet);
+console.log(`Embedding ${boardWords.length} ${options.wordSet} board words with ${manifest.model}...`);
+const embeddedBoardWords = await embedTerms(boardWords, { model: manifest.model });
+const centeredBoardWords = centerEmbeddings(
+  embeddedBoardWords,
   clueIndex.centering.mean,
 );
 const vectorByWord = new Map(
-  OFFICIAL_WORDS.map((word, index) => [word, centeredOfficialWords[index]]),
+  boardWords.map((word, index) => [word, centeredBoardWords[index]]),
 );
 const centeredClueVectors = new Map();
 const resultsByPolicy = new Map(POLICIES.map((policy) => [policy, []]));
@@ -77,7 +79,11 @@ const startedAt = performance.now();
 
 for (let boardIndex = 0; boardIndex < options.boards; boardIndex += 1) {
   const seed = boardSeed(boardIndex);
-  const boardState = createGeneratedBoardState(seed, BOARD_ORDER.RANDOM, WORD_SET.OFFICIAL);
+  const boardState = createGeneratedBoardState(
+    seed,
+    BOARD_ORDER.RANDOM,
+    options.wordSet,
+  );
   const positions = new Map(
     boardState.randomLayoutOrder.map((layoutId, index) => [layoutId, index]),
   );
@@ -101,6 +107,10 @@ for (let boardIndex = 0; boardIndex < options.boards; boardIndex += 1) {
       centeredClueVectors,
       policy,
       seed,
+      clueSelection: options.clueSelection,
+      multiTolerance: options.multiTolerance,
+      bonusGuesses: options.bonusGuesses,
+      wordSet: options.wordSet,
     });
     resultsByPolicy.get(policy).push(result);
   }
@@ -128,8 +138,8 @@ const report = {
     boardCount: options.boards,
     gamesPerPolicy: options.boards,
     pairedBoards: true,
-    wordSet: WORD_SET.OFFICIAL,
-    modelId: DEFAULT_MODEL_ID,
+    wordSet: options.wordSet,
+    modelId: options.modelId,
     model: manifest.model,
     candidateCount: options.candidates,
     resultsPerTargetSize: RESULTS_PER_SIZE,
@@ -137,6 +147,17 @@ const report = {
       "Eight deterministic bytes: ASCII CODE followed by a big-endian 1-based board index.",
     decisionSeed:
       "Matches Play runtime: board seed, turn number, and history length for each action.",
+    clueSelection: {
+      random:
+        "Match Play runtime by choosing uniformly from the four highest-scoring policy clues.",
+      top: "Always choose the highest-scoring policy clue.",
+      tempo:
+        `Prefer the highest-scoring multi clue when it is within ${options.multiTolerance} points of the best clue; otherwise choose the best clue.`,
+    }[options.clueSelection],
+    bonusGuesses:
+      options.bonusGuesses === "pass"
+        ? "Pass after reaching the declared clue number."
+        : "Match Play runtime by allowing a number-plus-one guess.",
     operative:
       "The production bot guesser sees only centered clue-to-unrevealed-word similarities.",
     rules:
@@ -168,15 +189,22 @@ async function simulateGame({
   centeredClueVectors: clueVectorCache,
   policy,
   seed,
+  clueSelection,
+  multiTolerance,
+  bonusGuesses: bonusGuessPolicy,
+  wordSet,
 }) {
   let game = createPlayGame({
     cards,
     humanSeat: { side: SIDE.BLUE, role: PLAYER_ROLE.SPYMASTER },
     seed,
-    wordSet: WORD_SET.OFFICIAL,
+    wordSet,
   });
   let actions = 0;
   let fallbackClues = 0;
+  let bonusGuesses = 0;
+  let correctBonusGuesses = 0;
+  const clueDecisions = [];
 
   while (game.phase !== GAME_PHASE.COMPLETE && actions < MAX_ACTIONS_PER_GAME) {
     actions += 1;
@@ -191,16 +219,43 @@ async function simulateGame({
         activeClueIndex,
         { limit: RESULTS_PER_SIZE },
       );
-      let suggestion = chooseBotClue({
-        analysis,
-        ownRemaining: remainingCardsForSide(game.cards, game.activeSide),
-        opponentRemaining: remainingCardsForSide(
-          game.cards,
-          otherSide(game.activeSide),
-        ),
-        policy,
-        random,
-      });
+      const ownRemaining = remainingCardsForSide(game.cards, game.activeSide);
+      const opponentRemaining = remainingCardsForSide(
+        game.cards,
+        otherSide(game.activeSide),
+      );
+      const scoredSuggestions = analysis.suggestions
+        .map((candidate) => ({
+          candidate,
+          score: scorePlayClue(candidate, {
+            ownRemaining,
+            opponentRemaining,
+            policy,
+          }),
+        }))
+        .sort((left, right) => right.score - left.score);
+      const bestSingle = scoredSuggestions.find(
+        ({ candidate }) => candidate.number === 1,
+      );
+      const bestMulti = scoredSuggestions.find(
+        ({ candidate }) => candidate.number >= 2,
+      );
+      let suggestion;
+      if (clueSelection === "tempo") {
+        const best = scoredSuggestions[0];
+        suggestion =
+          bestMulti && bestMulti.score >= best.score - multiTolerance
+            ? bestMulti.candidate
+            : best?.candidate;
+      } else {
+        suggestion = chooseBotClue({
+          analysis,
+          ownRemaining,
+          opponentRemaining,
+          policy,
+          random: clueSelection === "top" ? () => 0 : random,
+        });
+      }
       if (!suggestion) {
         suggestion = chooseFallbackClue(
           boardForSide(game.cards, game.activeSide),
@@ -209,6 +264,27 @@ async function simulateGame({
         );
         fallbackClues += 1;
       }
+      clueDecisions.push({
+        turn: game.turnNumber,
+        side: game.activeSide,
+        ownRemaining,
+        opponentRemaining,
+        clue: suggestion.clue,
+        number: suggestion.number,
+        worth: suggestion.worth ?? null,
+        expectedNet: rounded(suggestion.expectedNet ?? 0),
+        success: rounded(suggestion.success ?? 0),
+        margin: rounded(suggestion.margin ?? 0),
+        risk: suggestion.risk ?? "fallback",
+        suggestionCount: scoredSuggestions.length,
+        multiSuggestionCount: scoredSuggestions.filter(
+          ({ candidate }) => candidate.number >= 2,
+        ).length,
+        bestMultiAdvantage:
+          bestSingle && bestMulti
+            ? rounded(bestMulti.score - bestSingle.score)
+            : null,
+      });
       game = giveClue(game, {
         clue: suggestion.clue,
         number: suggestion.number,
@@ -231,13 +307,25 @@ async function simulateGame({
       }))
       .filter((candidate) => !candidate.done)
       .map(({ layoutId, similarity }) => ({ layoutId, similarity }));
-    const layoutId = chooseBotGuess({
-      candidates,
-      guessesMade: game.currentTurn.guesses.length,
-      clueNumber: game.currentTurn.number,
-      random,
-    });
+    const reachedDeclaredNumber =
+      game.currentTurn.guesses.length >= game.currentTurn.number;
+    const layoutId =
+      bonusGuessPolicy === "pass" && reachedDeclaredNumber
+        ? null
+        : chooseBotGuess({
+            candidates,
+            guessesMade: game.currentTurn.guesses.length,
+            clueNumber: game.currentTurn.number,
+            random,
+          });
     const actor = actorForSeat(game, game.activeSide, PLAYER_ROLE.OPERATIVE);
+    if (layoutId !== null && game.currentTurn.guesses.length >= game.currentTurn.number) {
+      bonusGuesses += 1;
+      const guessedCard = game.cards.find((card) => card.layoutId === layoutId);
+      correctBonusGuesses += Number(
+        guessedCard?.team === teamForSide(game.activeSide),
+      );
+    }
     game =
       layoutId === null
         ? passTurn(game, { actor })
@@ -249,7 +337,12 @@ async function simulateGame({
       `${policy} game on board ${boardIndex + 1} exceeded ${MAX_ACTIONS_PER_GAME} actions.`,
     );
   }
-  return summarizeGame(game, boardIndex, actions, fallbackClues);
+  return summarizeGame(game, boardIndex, actions, {
+    bonusGuesses,
+    clueDecisions,
+    correctBonusGuesses,
+    fallbackClues,
+  });
 }
 
 async function centeredClueVector(clue, activeClueIndex, cache) {
@@ -315,7 +408,12 @@ function chooseFallbackClue(board, boardVectors, activeClueIndex) {
   };
 }
 
-function summarizeGame(game, boardIndex, actions, fallbackClues) {
+function summarizeGame(
+  game,
+  boardIndex,
+  actions,
+  { bonusGuesses, clueDecisions, correctBonusGuesses, fallbackClues },
+) {
   const clues = game.history.filter((event) => event.type === "clue-given");
   const guesses = game.history.filter((event) => event.type === "card-guessed");
   const passes = game.history.filter((event) => event.type === "turn-passed");
@@ -336,6 +434,9 @@ function summarizeGame(game, boardIndex, actions, fallbackClues) {
     actions,
     turns: clues.length,
     fallbackClues,
+    bonusGuesses,
+    correctBonusGuesses,
+    clueDecisions,
     clues: clueDistribution(clues),
     guesses: guesses.length,
     correctGuesses,
@@ -357,6 +458,9 @@ function summarizePolicy(gameResults) {
       summary.assassinHits += game.assassinHits;
       summary.passes += game.passes;
       summary.fallbackClues += game.fallbackClues;
+      summary.bonusGuesses += game.bonusGuesses;
+      summary.correctBonusGuesses += game.correctBonusGuesses;
+      summary.clueDecisions.push(...game.clueDecisions);
       summary.blueWins += Number(game.winner === SIDE.BLUE);
       summary.redWins += Number(game.winner === SIDE.RED);
       for (const [number, count] of Object.entries(game.clues)) {
@@ -373,6 +477,9 @@ function summarizePolicy(gameResults) {
       assassinHits: 0,
       passes: 0,
       fallbackClues: 0,
+      bonusGuesses: 0,
+      correctBonusGuesses: 0,
+      clueDecisions: [],
       blueWins: 0,
       redWins: 0,
       clues: {},
@@ -408,11 +515,18 @@ function summarizePolicy(gameResults) {
     passesPerGame: ratio(totals.passes, gameCount),
     fallbackClues: totals.fallbackClues,
     fallbackClueRate: ratio(totals.fallbackClues, totals.turns),
+    bonusGuesses: totals.bonusGuesses,
+    bonusGuessesPerGame: ratio(totals.bonusGuesses, gameCount),
+    correctBonusGuessRate: ratio(
+      totals.correctBonusGuesses,
+      totals.bonusGuesses,
+    ),
+    clueNumberByOwnRemaining: summarizeClueDecisions(totals.clueDecisions),
     wins: {
       blue: totals.blueWins,
       red: totals.redWins,
     },
-    gameResults,
+    gameResults: gameResults.map(({ clueDecisions, ...result }) => result),
   };
 }
 
@@ -437,6 +551,8 @@ function metricDeltas(current, hybrid) {
       "meanGuessesPerTurn",
       "passesPerGame",
       "fallbackClueRate",
+      "bonusGuessesPerGame",
+      "correctBonusGuessRate",
     ].map((metric) => [metric, rounded(hybrid[metric] - current[metric])]),
   );
 }
@@ -452,6 +568,11 @@ function parseOptions(args) {
   const values = {
     boards: DEFAULT_BOARD_COUNT,
     candidates: DEFAULT_CANDIDATE_COUNT,
+    modelId: DEFAULT_MODEL_ID,
+    wordSet: WORD_SET.OFFICIAL,
+    clueSelection: "random",
+    multiTolerance: 5,
+    bonusGuesses: "allow",
     output: DEFAULT_OUTPUT,
     summaryOutput: null,
   };
@@ -462,6 +583,26 @@ function parseOptions(args) {
       values.boards = positiveInteger(value, option);
     } else if (option === "--candidates") {
       values.candidates = positiveInteger(value, option);
+    } else if (option === "--model") {
+      if (!value) throw new Error(`${option} requires a model ID.`);
+      values.modelId = value;
+    } else if (option === "--word-set") {
+      if (!Object.values(WORD_SET).includes(value)) {
+        throw new Error(`${option} must be official or extended.`);
+      }
+      values.wordSet = value;
+    } else if (option === "--clue-selection") {
+      if (!["random", "top", "tempo"].includes(value)) {
+        throw new Error(`${option} must be random, top, or tempo.`);
+      }
+      values.clueSelection = value;
+    } else if (option === "--multi-tolerance") {
+      values.multiTolerance = nonNegativeNumber(value, option);
+    } else if (option === "--bonus-guesses") {
+      if (!["allow", "pass"].includes(value)) {
+        throw new Error(`${option} must be allow or pass.`);
+      }
+      values.bonusGuesses = value;
     } else if (option === "--output") {
       if (!value) throw new Error(`${option} requires a path.`);
       values.output = value;
@@ -484,6 +625,14 @@ function positiveInteger(value, option) {
   return parsed;
 }
 
+function nonNegativeNumber(value, option) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed < 0) {
+    throw new Error(`${option} requires a non-negative number.`);
+  }
+  return parsed;
+}
+
 function summaryPathFor(reportPath) {
   if (reportPath === DEFAULT_OUTPUT) {
     return DEFAULT_SUMMARY_OUTPUT;
@@ -491,6 +640,48 @@ function summaryPathFor(reportPath) {
   return reportPath.endsWith(".json")
     ? `${reportPath.slice(0, -".json".length)}.md`
     : `${reportPath}.md`;
+}
+
+function summarizeClueDecisions(decisions) {
+  const grouped = new Map();
+  for (const decision of decisions) {
+    if (!grouped.has(decision.ownRemaining)) {
+      grouped.set(decision.ownRemaining, []);
+    }
+    grouped.get(decision.ownRemaining).push(decision);
+  }
+  return Object.fromEntries(
+    [...grouped.entries()]
+      .sort((left, right) => right[0] - left[0])
+      .map(([ownRemaining, group]) => {
+        const multiAdvantages = group
+          .map(({ bestMultiAdvantage }) => bestMultiAdvantage)
+          .filter(Number.isFinite);
+        return [
+          ownRemaining,
+          {
+            clues: group.length,
+            meanNumber: ratio(
+              group.reduce((total, { number }) => total + number, 0),
+              group.length,
+            ),
+            multiClueRate: ratio(
+              group.filter(({ number }) => number >= 2).length,
+              group.length,
+            ),
+            multiAvailableRate: ratio(
+              group.filter(({ multiSuggestionCount }) => multiSuggestionCount > 0)
+                .length,
+              group.length,
+            ),
+            meanBestMultiAdvantage: ratio(
+              multiAdvantages.reduce((total, value) => total + value, 0),
+              multiAdvantages.length,
+            ),
+          },
+        ];
+      }),
+  );
 }
 
 function dotVectors(left, right) {

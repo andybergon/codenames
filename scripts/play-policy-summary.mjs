@@ -21,6 +21,12 @@ export function renderPlayPolicySummary(report) {
       ...Object.keys(hybrid.clueNumberDistribution),
     ]),
   ].sort((left, right) => Number(left) - Number(right));
+  const remainingCounts = [
+    ...new Set([
+      ...Object.keys(current.clueNumberByOwnRemaining ?? {}),
+      ...Object.keys(hybrid.clueNumberByOwnRemaining ?? {}),
+    ]),
+  ].sort((left, right) => Number(right) - Number(left));
 
   return `# Play policy benchmark
 
@@ -42,12 +48,25 @@ ${clueNumbers
   )
   .join("\n")}
 
+## 🕵️ Clue number by agents left
+
+| 🕵️ Own agents left | 📍 Current mean | 🧪 Hybrid mean | ✅ Hybrid multi available | ⚖️ Hybrid multi edge |
+| --- | ---: | ---: | ---: | ---: |
+${remainingCounts
+  .map((remaining) => {
+    const currentStage = current.clueNumberByOwnRemaining?.[remaining];
+    const hybridStage = hybrid.clueNumberByOwnRemaining?.[remaining];
+    return `| 🔵 ${remaining} | ${optionalDecimal(currentStage?.meanNumber)} | ${optionalDecimal(hybridStage?.meanNumber)} | ${optionalPercent(hybridStage?.multiAvailableRate)} | ${optionalSignedDecimal(hybridStage?.meanBestMultiAdvantage)} |`;
+  })
+  .join("\n")}
+
 ## 📌 Latest outcome
 
 - 🧪 ${report.methodology.boardCount} paired boards, ${current.gameCount + hybrid.gameCount} complete games, and ${report.methodology.candidateCount.toLocaleString("en-US")} clue candidates per turn.
 - ✅ Hybrid changed multi-card share by ${signedPercentagePoints(report.hybridMinusCurrent.multiClueRate)} and correct cards per turn by ${signedDecimal(report.hybridMinusCurrent.correctCardsPerTurn)}.
 - 🔴 Hybrid changed wrong-team hits per game by ${signedDecimal(report.hybridMinusCurrent.wrongTeamHitsPerGame)} and assassin rate by ${signedPercentagePoints(report.hybridMinusCurrent.assassinRate)}.
 - ⏱️ Hybrid changed turns per game by ${signedDecimal(report.hybridMinusCurrent.meanTurnsPerGame)}.
+- ➕ Bonus guesses: ${decimal(current.bonusGuessesPerGame)} per current game at ${percent(current.correctBonusGuessRate)} correct, and ${decimal(hybrid.bonusGuessesPerGame)} per hybrid game at ${percent(hybrid.correctBonusGuessRate)} correct.
 - 🛟 Analyzer fallback clues: ${current.fallbackClues} current and ${hybrid.fallbackClues} hybrid.
 
 The full per-game data and methodology are in [play-policy-benchmark.json](./play-policy-benchmark.json). The live Play policy remains \`current\` until the policy TODO is implemented.
@@ -69,6 +88,18 @@ function percent(value) {
 
 function decimal(value) {
   return value.toFixed(2);
+}
+
+function optionalDecimal(value) {
+  return Number.isFinite(value) ? decimal(value) : "N/A";
+}
+
+function optionalPercent(value) {
+  return Number.isFinite(value) ? percent(value) : "N/A";
+}
+
+function optionalSignedDecimal(value) {
+  return Number.isFinite(value) ? signedDecimal(value) : "N/A";
 }
 
 function signedDecimal(value) {

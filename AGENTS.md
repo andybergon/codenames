@@ -33,6 +33,9 @@ Local-first Vite application for embedding-powered Codenames clue recommendation
 - Play sessions use versioned local storage key `codenames-play-session-v1`. Board share links remain board-only and retain v1-v3 compatibility.
 - `scripts/play-smoke.mjs` is the headless Play gate. Keep it in `npm run check` alongside the existing trainer smoke suite.
 - Run `npm run benchmark:play` after changing Play clue or guess policy. It runs 100 paired deterministic boards through complete games and updates `scripts/generated/play-policy-benchmark.json` plus the Markdown summary beside it; keep clue distribution, correct cards per turn, wrong-team hits, assassin rate, turns per game, and bounded completion covered by the smoke gate.
+- Run `npm run analyze:play-clues` after changing the Play embedding, candidate depth, word set, or multi-clue score. It compares identical opening boards and updates `scripts/generated/play-clue-bias-analysis.json`.
+- The full-game benchmark accepts `--model`, `--word-set`, `--clue-selection`, `--multi-tolerance`, and `--bonus-guesses` for controlled policy experiments. Keep the default command aligned with production behavior.
+- Same-model spymaster and operative self-play overstates agreement. Treat self-play safety metrics as regression signals, then validate clue policy against human guesses before using them as real-world error estimates.
 - The full-game benchmark uses and counts a legal number-1 fallback when the analyzer returns no ranked clue. Do not omit those end states from aggregate policy results.
 
 ## Deployment
