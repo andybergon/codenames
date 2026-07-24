@@ -1,7 +1,14 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import { createSampleBoardState } from "../src/board-share.js";
 import { SIDE, remainingCardsForSide } from "../src/gameplay.js";
-import { chooseBotClue, chooseBotGuess, createSeededRandom } from "../src/play/bots.js";
+import {
+  PLAY_CLUE_POLICY,
+  chooseBotClue,
+  chooseBotGuess,
+  createSeededRandom,
+  scorePlayClue,
+} from "../src/play/bots.js";
 import {
   GAME_END_REASON,
   GAME_PHASE,
@@ -16,6 +23,75 @@ import {
 } from "../src/play/game-state.js";
 
 const sample = createSampleBoardState();
+const playPolicyBenchmark = JSON.parse(
+  await readFile("scripts/generated/play-policy-benchmark.json", "utf8"),
+);
+const playPolicySummary = await readFile(
+  "scripts/generated/play-policy-benchmark.md",
+  "utf8",
+);
+
+assert.equal(playPolicyBenchmark.methodology.boardCount, 100);
+assert.equal(playPolicyBenchmark.methodology.pairedBoards, true);
+assert.equal(playPolicyBenchmark.methodology.candidateCount, 10_000);
+assert.match(playPolicySummary, /^\# Play policy benchmark/m);
+assert.ok(playPolicySummary.includes(playPolicyBenchmark.generatedAt));
+assert.match(
+  playPolicySummary,
+  /\| 🎯 Policy \| 🔢 Multi clues \| ✅ Correct per turn \| 🔴 Wrong-team per game \| ☠️ Assassin rate \| ⏱️ Turns per game \|/,
+);
+for (const policy of Object.values(PLAY_CLUE_POLICY)) {
+  const result = playPolicyBenchmark.policies[policy];
+  assert.equal(result.gameCount, 100);
+  assert.equal(result.completedGames, result.gameCount);
+  assert.equal(result.gameResults.length, result.gameCount);
+  assert.equal(
+    Object.values(result.clueNumberDistribution).reduce(
+      (total, count) => total + count,
+      0,
+    ),
+    result.clueCount,
+  );
+  assert.equal(
+    result.gameResults.reduce((total, gameResult) => total + gameResult.turns, 0),
+    result.clueCount,
+  );
+  assert.equal(
+    result.gameResults.reduce(
+      (total, gameResult) => total + gameResult.wrongTeamHits,
+      0,
+    ),
+    result.wrongTeamHits,
+  );
+  assert.equal(
+    result.gameResults.reduce(
+      (total, gameResult) => total + gameResult.assassinHits,
+      0,
+    ),
+    result.assassinHits,
+  );
+  assert.ok(
+    result.gameResults.every(
+      (gameResult) =>
+        gameResult.actions <= 500 &&
+        gameResult.turns > 0 &&
+        ["agents", "assassin"].includes(gameResult.endReason),
+    ),
+  );
+  for (const metric of [
+    "multiClueRate",
+    "correctCardsPerTurn",
+    "wrongTeamHitsPerGame",
+    "assassinRate",
+    "meanTurnsPerGame",
+  ]) {
+    assert.equal(Number.isFinite(result[metric]), true, `${policy} ${metric} is not finite`);
+  }
+  assert.ok(
+    playPolicySummary.includes(`${(result.multiClueRate * 100).toFixed(1)}%`),
+    `${policy} summary is stale`,
+  );
+}
 
 const randomValues = [0.2, 0.8];
 const randomSeat = randomHumanSeat(() => randomValues.shift());
@@ -144,8 +220,24 @@ assert.equal(spyView.cards[0].team, "friendly");
 const suggestion = chooseBotClue({
   analysis: {
     suggestions: [
-      { clue: "one", worth: 80, risk: "safe", number: 2, margin: 0.2 },
-      { clue: "two", worth: 70, risk: "risky", number: 4, margin: 0.05 },
+      {
+        clue: "one",
+        worth: 80,
+        risk: "safe",
+        number: 2,
+        margin: 0.2,
+        expectedNet: 1,
+        success: 0.9,
+      },
+      {
+        clue: "two",
+        worth: 70,
+        risk: "risky",
+        number: 4,
+        margin: 0.05,
+        expectedNet: 2,
+        success: 0.75,
+      },
     ],
   },
   ownRemaining: 7,
@@ -153,6 +245,67 @@ const suggestion = chooseBotClue({
   random: () => 0,
 });
 assert.equal(suggestion.clue, "one");
+const hybridSuggestion = chooseBotClue({
+  analysis: {
+    suggestions: [
+      {
+        clue: "single",
+        worth: 90,
+        risk: "safe",
+        number: 1,
+        margin: 0.15,
+        expectedNet: 0.8,
+        success: 0.95,
+      },
+      {
+        clue: "pair",
+        worth: 70,
+        risk: "safe",
+        number: 2,
+        margin: 0.1,
+        expectedNet: 1.6,
+        success: 0.85,
+      },
+    ],
+  },
+  ownRemaining: 7,
+  opponentRemaining: 5,
+  policy: PLAY_CLUE_POLICY.HYBRID,
+  random: () => 0,
+});
+assert.equal(hybridSuggestion.clue, "pair");
+assert.ok(
+  scorePlayClue(
+    {
+      worth: 70,
+      risk: "safe",
+      number: 2,
+      margin: 0.1,
+      expectedNet: 1.6,
+      success: 0.85,
+    },
+    {
+      ownRemaining: 7,
+      opponentRemaining: 5,
+      policy: PLAY_CLUE_POLICY.HYBRID,
+    },
+  ) > 70,
+);
+assert.throws(
+  () =>
+    scorePlayClue(
+      {
+        worth: 70,
+        risk: "safe",
+        number: 2,
+        margin: 0.1,
+        expectedNet: 1.6,
+        success: 0.85,
+      },
+      { ownRemaining: 7, opponentRemaining: 5, policy: "unknown" },
+    ),
+  /Unknown Play clue policy/,
+);
 
 assert.equal(
   chooseBotGuess({

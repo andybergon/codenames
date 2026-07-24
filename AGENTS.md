@@ -32,6 +32,8 @@ Local-first Vite application for embedding-powered Codenames clue recommendation
 - Bot operatives must receive only public clue-to-word similarity candidates. Do not pass hidden roles, intended target IDs, recommendation danger metrics, or the full analysis into `chooseBotGuess`.
 - Play sessions use versioned local storage key `codenames-play-session-v1`. Board share links remain board-only and retain v1-v3 compatibility.
 - `scripts/play-smoke.mjs` is the headless Play gate. Keep it in `npm run check` alongside the existing trainer smoke suite.
+- Run `npm run benchmark:play` after changing Play clue or guess policy. It runs 100 paired deterministic boards through complete games and updates `scripts/generated/play-policy-benchmark.json` plus the Markdown summary beside it; keep clue distribution, correct cards per turn, wrong-team hits, assassin rate, turns per game, and bounded completion covered by the smoke gate.
+- The full-game benchmark uses and counts a legal number-1 fallback when the analyzer returns no ranked clue. Do not omit those end states from aggregate policy results.
 
 ## Deployment
 
