@@ -601,8 +601,8 @@ function renderAppMode() {
   elements.trainerWorkspace.hidden = isPlay;
   elements.modelLab.hidden = isPlay;
   elements.playMode.hidden = !isPlay;
-  elements.appTitle.textContent = isPlay ? "Codenames Play" : "Codenames Trainer";
-  document.title = elements.appTitle.textContent;
+  elements.appTitle.textContent = "Codenames";
+  document.title = "Codenames";
   for (const button of elements.appModeButtons) {
     button.setAttribute("aria-pressed", String(button.dataset.appMode === appMode));
   }

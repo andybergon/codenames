@@ -49,7 +49,6 @@ export function createPlayMode({ getModelConfiguration }) {
   const elements = {
     setup: document.querySelector("#play-setup"),
     game: document.querySelector("#play-game"),
-    seatNote: document.querySelector("#play-seat-note"),
     seatButtons: [...document.querySelectorAll("[data-play-seat]")],
     randomizeSeat: document.querySelector("#randomize-play-seat"),
     wordSetButtons: [...document.querySelectorAll("[data-play-word-set]")],
@@ -83,7 +82,6 @@ export function createPlayMode({ getModelConfiguration }) {
   let active = false;
   let selectedHumanSeat = randomHumanSeat();
   let selectedWordSet = WORD_SET.OFFICIAL;
-  let seatWasRandomized = true;
   let savedGame = loadPlaySession();
   let game = null;
   let analysis = { [SIDE.BLUE]: null, [SIDE.RED]: null };
@@ -106,14 +104,12 @@ export function createPlayMode({ getModelConfiguration }) {
     button.addEventListener("click", () => {
       const [side, role] = button.dataset.playSeat.split(":");
       selectedHumanSeat = { side, role };
-      seatWasRandomized = false;
       renderSetup();
     });
   }
 
   elements.randomizeSeat.addEventListener("click", () => {
     selectedHumanSeat = randomHumanSeat();
-    seatWasRandomized = true;
     renderSetup();
   });
 
@@ -177,12 +173,6 @@ export function createPlayMode({ getModelConfiguration }) {
   };
 
   function renderSetup() {
-    const side = sideLabel(selectedHumanSeat.side);
-    const role = roleLabel(selectedHumanSeat.role);
-    elements.seatNote.textContent = seatWasRandomized
-      ? `Randomly assigned: ${side} ${role}. You can override it below.`
-      : `Selected: ${side} ${role}.`;
-
     for (const button of elements.seatButtons) {
       button.setAttribute(
         "aria-pressed",
@@ -251,7 +241,6 @@ export function createPlayMode({ getModelConfiguration }) {
     savedGame = null;
     game = null;
     selectedHumanSeat = randomHumanSeat();
-    seatWasRandomized = true;
     renderSetup();
   }
 
@@ -261,7 +250,6 @@ export function createPlayMode({ getModelConfiguration }) {
     game = null;
     undoSnapshot = null;
     selectedHumanSeat = randomHumanSeat();
-    seatWasRandomized = true;
     elements.setup.hidden = false;
     elements.game.hidden = true;
     renderSetup();

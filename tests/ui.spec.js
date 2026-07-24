@@ -169,7 +169,15 @@ test("recommendation perspective can switch between Blue and Red", async ({ page
 test("Play randomly assigns a seat and keeps all four overrides available", async ({ page }) => {
   await page.goto("/?mode=play");
 
-  await expect(page.locator("#play-seat-note")).toContainText("Randomly assigned:");
+  await expect(page.locator("#app-title")).toHaveText("Codenames");
+  await expect(page).toHaveTitle("Codenames");
+  expect(
+    await page.locator("[data-app-mode]").evaluateAll((buttons) =>
+      buttons.map((button) => button.textContent.trim()),
+    ),
+  ).toEqual(["Play", "Train"]);
+  await expect(page.locator("#play-setup .eyebrow")).toHaveCount(0);
+  await expect(page.locator("#play-seat-note")).toHaveCount(0);
   await expect(page.locator("[data-play-seat][aria-pressed='true']")).toHaveCount(1);
 
   for (const seat of [
@@ -183,9 +191,7 @@ test("Play randomly assigns a seat and keeps all four overrides available", asyn
     await expect(button).toHaveAttribute("aria-pressed", "true");
   }
 
-  await expect(page.locator("#play-seat-note")).toHaveText("Selected: Red Operative.");
   await page.getByRole("button", { name: "Randomize", exact: true }).click();
-  await expect(page.locator("#play-seat-note")).toContainText("Randomly assigned:");
   await expect(page.locator("[data-play-seat][aria-pressed='true']")).toHaveCount(1);
 });
 
