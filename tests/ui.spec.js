@@ -166,6 +166,288 @@ test("recommendation perspective can switch between Blue and Red", async ({ page
   await expect(page.locator("#turn-status")).toBeEmpty();
 });
 
+test("Play randomly assigns a seat and keeps all four overrides available", async ({ page }) => {
+  await page.goto("/?mode=play");
+
+  await expect(page.locator("#play-seat-note")).toContainText("Randomly assigned:");
+  await expect(page.locator("[data-play-seat][aria-pressed='true']")).toHaveCount(1);
+
+  for (const seat of [
+    "blue:spymaster",
+    "blue:operative",
+    "red:spymaster",
+    "red:operative",
+  ]) {
+    const button = page.locator(`[data-play-seat="${seat}"]`);
+    await button.click();
+    await expect(button).toHaveAttribute("aria-pressed", "true");
+  }
+
+  await expect(page.locator("#play-seat-note")).toHaveText("Selected: Red Operative.");
+  await page.getByRole("button", { name: "Randomize", exact: true }).click();
+  await expect(page.locator("#play-seat-note")).toContainText("Randomly assigned:");
+  await expect(page.locator("[data-play-seat][aria-pressed='true']")).toHaveCount(1);
+});
+
+test("Play enforces operative and spymaster information views", async ({ page }) => {
+  await page.goto("/?mode=play");
+
+  await page.locator('[data-play-seat="blue:operative"]').click();
+  await page.getByRole("button", { name: "Start new game", exact: true }).click();
+
+  await expect(page.locator(".play-card")).toHaveCount(25);
+  await expect(page.locator('.play-card[data-team="hidden"]')).toHaveCount(25);
+  await expect(page.locator("#play-clue-form")).toBeHidden();
+  await expect(page.getByRole("textbox", { name: "Clue", exact: true })).toBeHidden();
+
+  await page.getByRole("button", { name: "New game", exact: true }).click();
+  await page.locator('[data-play-seat="blue:spymaster"]').click();
+  await page.getByRole("button", { name: "Start new game", exact: true }).click();
+
+  await expect(page.locator("#play-clue-form")).toBeVisible();
+  await expect(page.locator("#play-suggestions")).toBeHidden();
+  await expect(
+    page.getByRole("button", { name: "💡 Show clue suggestions", exact: true }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "💡 Show clue suggestions", exact: true }).click();
+  await expect(page.locator("#play-suggestions")).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "💡 Hide clue suggestions", exact: true }),
+  ).toHaveAttribute("aria-expanded", "true");
+  await expect(page.locator('.play-card[data-team="friendly"]')).toHaveCount(9);
+  await expect(page.locator('.play-card[data-team="enemy"]')).toHaveCount(8);
+  await expect(page.locator('.play-card[data-team="neutral"]')).toHaveCount(7);
+  await expect(page.locator('.play-card[data-team="assassin"]')).toHaveCount(1);
+});
+
+test("Play validates human clues and resumes the saved seat", async ({ page }) => {
+  await page.goto("/?mode=play");
+  await page.locator('[data-play-seat="blue:spymaster"]').click();
+  await page.getByRole("button", { name: "Start new game", exact: true }).click();
+
+  await page.getByRole("textbox", { name: "Clue", exact: true }).fill("two words");
+  await page.getByRole("button", { name: "Give clue", exact: true }).click();
+  await expect(page.locator("#play-clue-error")).toHaveText("A clue must be one word.");
+
+  await page.getByRole("button", { name: "New game", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Resume game", exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Resume game", exact: true }).click();
+  await expect(page.locator("#play-human-seat")).toHaveText(
+    "🔵 🕵️ You are Blue Spymaster",
+  );
+  await expect(page.getByRole("textbox", { name: "Clue", exact: true })).toBeVisible();
+});
+
+test("Play color-codes turns and lets spymasters switch board order", async ({ page }) => {
+  await page.goto("/?mode=play");
+  await page.locator('[data-play-seat="blue:spymaster"]').click();
+  await page.getByRole("button", { name: "Start new game", exact: true }).click();
+
+  const turn = page.locator("#play-clue-display");
+  await expect(turn).toHaveAttribute("data-side", "blue");
+  await expect(turn).toContainText("🔵 Blue turn");
+  await expect(turn).toContainText("💬 Give a clue");
+
+  const cards = page.locator(".play-card");
+  const tableLayout = await cards.evaluateAll((items) =>
+    items.map((item) => item.dataset.layoutId),
+  );
+  await expect(page.locator("#play-board-toolbar")).toBeVisible();
+  await page.getByRole("button", { name: "🗂️ Teams", exact: true }).click();
+  await expect(page.getByRole("button", { name: "🗂️ Teams", exact: true })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  expect(
+    await cards.evaluateAll((items) => items.map((item) => item.dataset.team)),
+  ).toEqual([
+    ...Array(9).fill("friendly"),
+    ...Array(8).fill("enemy"),
+    ...Array(7).fill("neutral"),
+    "assassin",
+  ]);
+
+  await page.getByRole("button", { name: "🎲 Table", exact: true }).click();
+  expect(await cards.evaluateAll((items) => items.map((item) => item.dataset.layoutId))).toEqual(
+    tableLayout,
+  );
+});
+
+test("Play uses the Red turn treatment for an active Red spymaster", async ({ page }) => {
+  const teams = [
+    ...Array(9).fill("friendly"),
+    ...Array(8).fill("enemy"),
+    ...Array(7).fill("neutral"),
+    "assassin",
+  ];
+  const savedGame = {
+    schemaVersion: 1,
+    seed: "red-turn-ui",
+    wordSet: "official",
+    humanSeat: { side: "red", role: "spymaster" },
+    cards: teams.map((team, layoutId) => ({
+      word: `WORD${layoutId}`,
+      team,
+      layoutId,
+      done: false,
+      revealedBy: null,
+      revealedTurn: null,
+    })),
+    activeSide: "red",
+    phase: "awaiting-clue",
+    turnNumber: 2,
+    currentTurn: null,
+    winner: null,
+    endReason: null,
+    history: [
+      {
+        type: "game-started",
+        humanSeat: { side: "red", role: "spymaster" },
+        activeSide: "blue",
+      },
+    ],
+  };
+  await page.addInitScript((session) => {
+    localStorage.setItem("codenames-play-session-v1", JSON.stringify(session));
+  }, savedGame);
+  await page.goto("/?mode=play");
+  await page.getByRole("button", { name: "Resume game", exact: true }).click();
+
+  await expect(page.locator("#play-human-seat")).toHaveAttribute("data-side", "red");
+  await expect(page.locator("#play-clue-display")).toHaveAttribute("data-side", "red");
+  await expect(page.locator("#play-clue-display")).toContainText("🔴 Red turn");
+  await expect(page.locator("#play-clue-display")).toContainText("💬 Give a clue");
+  await expect(page.locator("#play-suggestions")).toBeHidden();
+});
+
+test("completed Play sessions reveal the key and intended targets", async ({ page }) => {
+  const teams = [
+    ...Array(9).fill("friendly"),
+    ...Array(8).fill("enemy"),
+    ...Array(7).fill("neutral"),
+    "assassin",
+  ];
+  const savedGame = {
+    schemaVersion: 1,
+    seed: "completed-ui",
+    wordSet: "official",
+    humanSeat: { side: "blue", role: "operative" },
+    cards: teams.map((team, layoutId) => ({
+      word: `WORD${layoutId}`,
+      team,
+      layoutId,
+      done: layoutId === 0,
+      revealedBy: layoutId === 0 ? "blue" : null,
+      revealedTurn: layoutId === 0 ? 1 : null,
+    })),
+    activeSide: "blue",
+    phase: "complete",
+    turnNumber: 1,
+    currentTurn: null,
+    winner: "blue",
+    endReason: "agents",
+    history: [
+      {
+        type: "game-started",
+        humanSeat: { side: "blue", role: "operative" },
+        activeSide: "blue",
+      },
+      {
+        type: "clue-given",
+        turn: 1,
+        side: "blue",
+        actor: "bot",
+        clue: "FIRST",
+        number: 1,
+        intendedLayoutIds: [0],
+      },
+      {
+        type: "card-guessed",
+        turn: 1,
+        side: "blue",
+        layoutId: 0,
+        word: "WORD0",
+        team: "friendly",
+        actor: "human",
+      },
+      { type: "game-ended", turn: 1, winner: "blue", reason: "agents" },
+    ],
+  };
+  await page.addInitScript((session) => {
+    localStorage.setItem("codenames-play-session-v1", JSON.stringify(session));
+  }, savedGame);
+  await page.goto("/?mode=play");
+  await page.getByRole("button", { name: "Resume game", exact: true }).click();
+
+  await expect(page.locator("#play-clue-display")).toContainText("🔵 Blue wins");
+  await expect(page.locator('.play-card[data-team="friendly"]')).toHaveCount(9);
+  await expect(page.locator('.play-card[data-team="enemy"]')).toHaveCount(8);
+  await expect(page.locator("#play-history-list")).toContainText(
+    "Blue clue: FIRST 1, intended WORD0",
+  );
+  await expect(page.locator("#play-history-list")).toContainText(
+    "Blue guessed WORD0, Blue",
+  );
+});
+
+test("Play sharing copies a board-only link", async ({ page }) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: {
+        writeText(value) {
+          window.__copiedBoardLink = value;
+          return Promise.resolve();
+        },
+      },
+    });
+  });
+  await page.goto("/?mode=play");
+  await page.locator('[data-play-seat="blue:spymaster"]').click();
+  await page.getByRole("button", { name: "Start new game", exact: true }).click();
+  await page.getByRole("button", { name: "Share board", exact: true }).click();
+
+  await expect(page.getByRole("button", { name: "Board copied", exact: true })).toBeVisible();
+  const copied = new URL(await page.evaluate(() => window.__copiedBoardLink));
+  expect(copied.searchParams.has("b")).toBe(true);
+  expect(copied.searchParams.has("mode")).toBe(false);
+});
+
+test("Play board remains usable at phone, tablet, and desktop widths", async ({ page }) => {
+  await page.goto("/?mode=play");
+  await page.locator('[data-play-seat="blue:spymaster"]').click();
+  await page.getByRole("button", { name: "Start new game", exact: true }).click();
+
+  for (const viewport of [
+    { width: 390, height: 844 },
+    { width: 768, height: 1024 },
+    { width: 1440, height: 900 },
+  ]) {
+    await page.setViewportSize(viewport);
+    const layout = await page.evaluate(() => {
+      const board = document.querySelector("#play-board-grid");
+      const cards = [...document.querySelectorAll(".play-card")];
+      return {
+        pageOverflows:
+          document.documentElement.scrollWidth > document.documentElement.clientWidth,
+        columns: getComputedStyle(board).gridTemplateColumns.split(" ").length,
+        cardsFit: cards.every((card) => {
+          const cardBounds = card.getBoundingClientRect();
+          const boardBounds = board.getBoundingClientRect();
+          return (
+            cardBounds.left >= boardBounds.left - 1 &&
+            cardBounds.right <= boardBounds.right + 1
+          );
+        }),
+      };
+    });
+
+    expect(layout.pageOverflows, `page overflow at ${viewport.width}px`).toBe(false);
+    expect(layout.columns, `board columns at ${viewport.width}px`).toBe(5);
+    expect(layout.cardsFit, `card clipping at ${viewport.width}px`).toBe(true);
+  }
+});
+
 test("recommendations collapse without losing controls or results state", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto(SHARED_BOARD);

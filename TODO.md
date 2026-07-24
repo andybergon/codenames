@@ -2,26 +2,15 @@
 
 ## 🔴 High
 
-- 🎮 Add a self-play mode that records real guesses and turn outcomes.
-  - Selecting a clue should start a turn rather than assume every intended target was guessed correctly.
-  - Record guesses in order, support pass and undo, and end on neutral, enemy, or assassin reveals.
-  - Compare predicted and actual outcomes locally so clue quality and Worth can eventually be calibrated against real play.
-
-- 👁️ Add a compact read-only board for normal play and keep editing explicit.
-  - Put recommendations first: show clues beside the compact board on desktop and prioritize Clues after analysis on mobile.
-  - Preserve roles, guessed state, active team, board order, and share-link behavior without relying only on color.
-  - Move the existing word and role controls into an Edit mode, while keeping corrections one action away.
-
 - 🛡️ Regenerate the clue vocabulary with consistent profanity filtering.
   - The WordNet-backed first 88,563 words currently bypass `better_profanity`; only the experimental fallback applies it.
   - Regenerate all affected shards, reports, and the stable-prefix baseline together after reviewing benign false positives.
 
 ## 🟡 Medium
 
-- 💾 Persist sessions and support resumable games.
-  - Autosave board progress, active side, selected clue, and turn history locally; offer resume and discard actions.
-  - Use a versioned event history that can also support undo/redo and optional progress-inclusive share links.
-  - Keep board-only sharing as the default and preserve v1-v3 link decoding.
+- 📊 Calibrate Play bots and Worth from recorded outcomes.
+  - Play now stores intended targets, ordered guesses, passes, and reveal outcomes locally.
+  - Next: aggregate local outcome summaries and fit bot confidence and Worth coefficients against actual play.
 
 - 💬 Explain recommendations in plain language from existing scores.
   - Summarize intended targets, weakest target, closest danger, and the main failure risk without an LLM call.

@@ -27,6 +27,7 @@ import {
   winningSide,
 } from "./gameplay.js";
 import { analyzeEmbeddedBoard, calculateBoardMetrics } from "./model.js";
+import { createPlayMode } from "./play/mode.js";
 import { ROLE_SEQUENCE, TEAMS, WORD_SET } from "./word-data.js";
 
 const TEAM_BY_ID = new Map(TEAMS.map((team) => [team.id, team]));
@@ -165,6 +166,7 @@ const clueIndexPromises = new Map();
 let selectedModelId = DEFAULT_MODEL_ID;
 let selectedCandidateCount = DEFAULT_CANDIDATE_COUNT;
 let shareFeedbackTimer = 0;
+let appMode = readAppMode();
 
 board =
   boardOrder === BOARD_ORDER.RANDOM ? sortBoardByRandomLayout(board) : sortBoardByRole(board);
@@ -206,7 +208,19 @@ const elements = {
   toggleBoard: document.querySelector("#toggle-board"),
   toggleRecommendations: document.querySelector("#toggle-recommendations"),
   themeButtons: [...document.querySelectorAll("[data-theme-value]")],
+  appTitle: document.querySelector("#app-title"),
+  appModeButtons: [...document.querySelectorAll("[data-app-mode]")],
+  trainerWorkspace: document.querySelector("#trainer-workspace"),
+  modelLab: document.querySelector("#model-lab"),
+  playMode: document.querySelector("#play-mode"),
 };
+
+const playMode = createPlayMode({
+  getModelConfiguration: () => ({
+    modelId: selectedModelId,
+    candidateCount: selectedCandidateCount,
+  }),
+});
 
 elements.modelLabModel.addEventListener("change", (event) => {
   selectedModelId = event.target.value;
@@ -223,6 +237,10 @@ createIcons({
   icons: { Check, Monitor, Moon, Share2, Sun },
   attrs: { width: 18, height: 18, "stroke-width": 2 },
 });
+
+for (const button of elements.appModeButtons) {
+  button.addEventListener("click", () => setAppMode(button.dataset.appMode));
+}
 
 for (const button of elements.themeButtons) {
   button.addEventListener("click", () => setTheme(button.dataset.themeValue));
@@ -398,8 +416,12 @@ elements.candidateFilterInfo.append(
   createInfoControl(CANDIDATE_FILTER_INFO, "recommendation-status"),
 );
 applyTheme(readThemeSetting());
-renderModelLab();
-render();
+renderAppMode();
+playMode.setActive(appMode === "play");
+if (appMode === "train") {
+  renderModelLab();
+  render();
+}
 
 function switchModelLabConfiguration() {
   analysisRun += 1;
@@ -545,7 +567,45 @@ function createParetoChart(configurations) {
 function render() {
   renderBoard();
   renderTurnControls();
-  void runAnalysis();
+  if (appMode === "train") {
+    void runAnalysis();
+  }
+}
+
+function readAppMode() {
+  return new URL(window.location.href).searchParams.get("mode") === "play" ? "play" : "train";
+}
+
+function setAppMode(nextMode) {
+  if (nextMode !== "train" && nextMode !== "play") {
+    return;
+  }
+  appMode = nextMode;
+  const url = new URL(window.location.href);
+  if (appMode === "play") {
+    url.searchParams.set("mode", "play");
+  } else {
+    url.searchParams.delete("mode");
+  }
+  window.history.replaceState(null, "", url);
+  renderAppMode();
+  playMode.setActive(appMode === "play");
+  if (appMode === "train") {
+    renderModelLab();
+    render();
+  }
+}
+
+function renderAppMode() {
+  const isPlay = appMode === "play";
+  elements.trainerWorkspace.hidden = isPlay;
+  elements.modelLab.hidden = isPlay;
+  elements.playMode.hidden = !isPlay;
+  elements.appTitle.textContent = isPlay ? "Codenames Play" : "Codenames Trainer";
+  document.title = elements.appTitle.textContent;
+  for (const button of elements.appModeButtons) {
+    button.setAttribute("aria-pressed", String(button.dataset.appMode === appMode));
+  }
 }
 
 function readThemeSetting() {

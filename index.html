@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Codenames Trainer</title>
+    <title>Codenames</title>
     <script>
       (() => {
         const storageKey = "codenames-theme";
@@ -27,7 +27,13 @@
   <body>
     <main class="app-shell">
       <header class="topbar">
-        <h1>Codenames Clue Trainer</h1>
+        <div class="app-identity">
+          <h1 id="app-title">Codenames</h1>
+          <div class="app-mode-switch" role="group" aria-label="App mode">
+            <button type="button" data-app-mode="train" aria-pressed="true">Train</button>
+            <button type="button" data-app-mode="play" aria-pressed="false">Play</button>
+          </div>
+        </div>
         <div class="theme-switcher" role="group" aria-label="Color theme">
           <button
             type="button"
@@ -59,7 +65,7 @@
         </div>
       </header>
 
-      <section class="workspace">
+      <section id="trainer-workspace" class="workspace">
         <div class="board-panel" aria-label="Codenames board editor">
           <div class="panel-header board-header">
             <div class="board-primary-row">
@@ -316,7 +322,174 @@
         </aside>
       </section>
 
-      <section class="model-lab" aria-labelledby="model-lab-title">
+      <section id="play-mode" class="play-mode" aria-label="Codenames Play" hidden>
+        <section id="play-setup" class="play-setup">
+          <div class="play-setup-heading">
+            <div>
+              <p class="eyebrow">One human, three bots</p>
+              <h2 id="play-title">Choose your seat</h2>
+              <p id="play-seat-note" class="muted"></p>
+            </div>
+            <button id="randomize-play-seat" class="button secondary" type="button">
+              Randomize
+            </button>
+          </div>
+
+          <div class="seat-grid" role="group" aria-label="Your Play seat">
+            <button type="button" data-play-seat="blue:spymaster" aria-pressed="false">
+              <span class="seat-team blue">Blue</span>
+              <strong>Spymaster</strong>
+              <span>Give clues</span>
+            </button>
+            <button type="button" data-play-seat="blue:operative" aria-pressed="false">
+              <span class="seat-team blue">Blue</span>
+              <strong>Operative</strong>
+              <span>Guess cards</span>
+            </button>
+            <button type="button" data-play-seat="red:spymaster" aria-pressed="false">
+              <span class="seat-team red">Red</span>
+              <strong>Spymaster</strong>
+              <span>Give clues</span>
+            </button>
+            <button type="button" data-play-seat="red:operative" aria-pressed="false">
+              <span class="seat-team red">Red</span>
+              <strong>Operative</strong>
+              <span>Guess cards</span>
+            </button>
+          </div>
+
+          <div class="play-setup-footer">
+            <div class="play-word-set">
+              <span>Board words</span>
+              <div class="word-set-switch" role="group" aria-label="Play board word set">
+                <button
+                  type="button"
+                  data-play-word-set="official"
+                  aria-pressed="true"
+                >
+                  Official <span>400</span>
+                </button>
+                <button
+                  type="button"
+                  data-play-word-set="extended"
+                  aria-pressed="false"
+                >
+                  Extended <span>800</span>
+                </button>
+              </div>
+            </div>
+            <div class="play-setup-actions">
+              <div id="saved-play-actions" class="saved-play-actions" hidden>
+                <button id="discard-play-session" class="button secondary" type="button">
+                  Discard saved
+                </button>
+                <button id="resume-play-session" class="button secondary" type="button">
+                  Resume game
+                </button>
+              </div>
+              <button id="start-play-game" class="button primary" type="button">
+                Start new game
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <section id="play-game" class="play-game" hidden>
+          <header class="play-game-header">
+            <p id="play-human-seat" class="play-human-seat"></p>
+            <div class="play-game-actions">
+              <button id="undo-play-action" class="button secondary" type="button" disabled>
+                Undo
+              </button>
+              <button id="share-play-board" class="button secondary" type="button">
+                Share board
+              </button>
+              <button id="leave-play-game" class="button secondary" type="button">
+                New game
+              </button>
+            </div>
+          </header>
+
+          <div id="play-score" class="play-score" aria-label="Remaining team cards"></div>
+
+          <div class="play-workspace">
+            <div class="play-board-panel">
+              <div id="play-board-toolbar" class="play-board-toolbar" hidden>
+                <span>Board order</span>
+                <div class="play-board-order" role="group" aria-label="Spymaster board order">
+                  <button type="button" data-play-board-order="table" aria-pressed="true">
+                    🎲 Table
+                  </button>
+                  <button type="button" data-play-board-order="teams" aria-pressed="false">
+                    🗂️ Teams
+                  </button>
+                </div>
+              </div>
+              <div id="play-board-grid" class="play-board-grid" aria-label="Codenames play board"></div>
+            </div>
+
+            <aside class="play-turn-panel" aria-label="Current Play turn">
+              <div id="play-clue-display" class="play-clue-display"></div>
+
+              <form id="play-clue-form" class="play-clue-form" hidden>
+                <label>
+                  Clue
+                  <input
+                    id="play-clue-input"
+                    type="text"
+                    autocomplete="off"
+                    spellcheck="false"
+                    placeholder="One word"
+                    required
+                  />
+                </label>
+                <label>
+                  Number
+                  <select id="play-clue-number"></select>
+                </label>
+                <button class="button primary" type="submit">Give clue</button>
+                <p id="play-clue-error" class="form-error" role="alert"></p>
+              </form>
+
+              <button
+                id="toggle-play-suggestions"
+                class="button secondary play-suggestions-toggle"
+                type="button"
+                aria-controls="play-suggestions"
+                aria-expanded="false"
+                hidden
+              >
+                💡 Show clue suggestions
+              </button>
+
+              <div id="play-suggestions" class="play-suggestions" hidden>
+                <div class="play-section-heading">
+                  <strong>Suggested clues</strong>
+                  <span>Optional assistant</span>
+                </div>
+                <div id="play-suggestion-list" class="play-suggestion-list"></div>
+              </div>
+
+              <div id="play-operative-controls" class="play-operative-controls" hidden>
+                <p id="play-guess-progress"></p>
+                <button id="pass-play-turn" class="button secondary" type="button">
+                  Pass turn
+                </button>
+              </div>
+
+              <div class="play-history">
+                <div class="play-section-heading">
+                  <strong>Game log</strong>
+                  <span id="play-history-count"></span>
+                </div>
+                <ol id="play-history-list"></ol>
+              </div>
+            </aside>
+          </div>
+        </section>
+      </section>
+
+      <section id="model-lab" class="model-lab" aria-labelledby="model-lab-title">
         <div class="model-lab-heading">
           <div>
             <div class="model-lab-title-row">

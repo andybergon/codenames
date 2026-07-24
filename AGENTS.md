@@ -23,6 +23,16 @@ Local-first Vite application for embedding-powered Codenames clue recommendation
 - Current share links use v3 and the 800-word Extended pool.
 - Preserve v1 links against the historical 366-word pool and v2 links against the former 407-word Extended pool. Do not silently decode old links with the current word bank.
 
+## Play Mode
+
+- Train and Play are separate UI modes. Preserve Train recommendation/apply behavior when changing Play.
+- Play defaults to the preserved table order. Spymasters can switch to a team-grouped key view; operatives must remain in the preserved table order so sorting never reveals hidden roles.
+- `src/play/game-state.js` is the pure rules and event-history owner. Keep clue, guess, pass, turn-end, assassin, and final-agent behavior out of UI event handlers.
+- `src/play/mode.js` owns Play DOM rendering, model orchestration, bot pacing, setup, undo, and resume. Keep `src/app.js` focused on Train and top-level mode switching.
+- Bot operatives must receive only public clue-to-word similarity candidates. Do not pass hidden roles, intended target IDs, recommendation danger metrics, or the full analysis into `chooseBotGuess`.
+- Play sessions use versioned local storage key `codenames-play-session-v1`. Board share links remain board-only and retain v1-v3 compatibility.
+- `scripts/play-smoke.mjs` is the headless Play gate. Keep it in `npm run check` alongside the existing trainer smoke suite.
+
 ## Deployment
 
 - GitHub: `https://github.com/andybergon/codenames`

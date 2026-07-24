@@ -1,26 +1,30 @@
-# Codenames Trainer
+# Codenames
 
-A local-first Codenames clue trainer. It embeds the board, searches a 10,000-word clue index by default, and ranks clue options for every possible target count. A built-in model picker compares smaller and larger vocabularies with alternative embeddings.
+A local-first Codenames clue trainer and one-human game. Train mode ranks clue options for every possible target count. Play mode fills the other three seats with bots and runs a standard two-team game entirely in the browser.
 
-[Open the live trainer](https://codenames.andybergon.me)
+[Open Codenames](https://codenames.andybergon.me)
 
 ## TLDR
 
 - **Embedding:** `Xenova/all-MiniLM-L6-v2`, run locally in the browser with Transformers.js.
+- **Modes:** Train preserves the full clue-analysis workflow. Play creates two teams of a spymaster and operative, with the human in one seat and bots in the other three.
+- **Play setup:** each page load independently randomizes the human's Blue/Red team and Spymaster/Operative role; all four seats remain available as overrides before starting.
+- **Fair bot play:** bot spymasters use ranked recommendations, while bot operatives receive only the clue, clue number, and public unrevealed words. Hidden roles and intended targets never enter the operative policy.
+- **Play sessions:** standard `number + 1` guessing, pass, neutral/opponent turn endings, assassin losses, final-agent wins, undo before the next bot action, a local event log, and automatic resume from local storage.
 - **Clue set:** 100,000 frequency-ranked English words from `wordfreq` 3.1.1, filtered through WordNet, a controlled alphabetic/name fallback, and a legality filter; the balanced 10,000-word prefix is the default.
 - **Fast search:** clue embeddings are precomputed, mean-centered, normalized, and stored as an int8 static index. Only the 25 board words are embedded at runtime.
 - **Negative scoring:** the weakest target similarity must beat the highest role-weighted neutral, enemy, or assassin similarity.
 - **Outputs:** one collapsible, sortable recommendation table with per-target-count availability, a 1-to-9 target range, and a minimum Worth filter; defaults are 2-4 targets, Worth 50, and a compact view. Advanced reveals Net, Margin, and Fit/cohesion diagnostics.
 - **Board metrics:** a symmetric difficulty score and Blue-vs-Red edge computed by scoring both team perspectives.
 - **Board words:** generated boards default to the 400-word original English base-game set; Extended doubles the pool to 800 with mathematically ranked, reviewed additions.
-- **Gameplay:** switch recommendations between Blue and Red, then click a recommendation to mark its targets guessed and pass the turn automatically.
+- **Training gameplay:** switch recommendations between Blue and Red, then click a recommendation to mark its targets guessed and pass the turn automatically.
 - **Guessed cards:** guessed cards flip in place and are excluded from role counts, scoring, clue legality, and later recommendations; each card can be restored individually.
 - **Theme:** follow the system appearance or persist an explicit light or dark mode.
 - **Shareable boards:** versioned `?b=` links reproduce words, roles, word set, the stable random layout, and the selected layout mode; generated boards use short seeds while edited boards fall back to compact explicit payloads.
 
 The model download happens on first use and is then cached by the browser. Board words are processed locally and are not sent to an application server.
 
-Turn progress is session-local. Reloading a shared board restores its words, roles, and layout without guessed-card or active-turn state.
+Training progress is session-local. Play progress is saved after every event and can be resumed or discarded from Play setup. Shared board links still restore board words, roles, and layout without Play history.
 
 ## Run
 
@@ -50,6 +54,20 @@ npm run test:ui
 ```
 
 Run both the static/smoke checks and responsive browser suite with `npm test`.
+
+## Play Mode
+
+Play defaults to the preserved table order. Operatives see only unrevealed words and public card reveals. Spymasters see the full key, can switch between table and team-grouped order, type any one-word clue, and open clue suggestions only when wanted.
+
+The browser runs bot turns with seeded decisions:
+
+- `src/play/game-state.js` owns the rules, seat authorization, event history, public projection, and win conditions.
+- `src/play/bots.js` chooses bot clues and guesses. The operative API accepts only clue-to-word similarities and never receives card roles or intended targets.
+- `src/play/session-store.js` persists the versioned game state under `codenames-play-session-v1`.
+- `src/play/mode.js` owns Play setup, rendering, model orchestration, bot pacing, and resume/undo controls.
+- `scripts/play-smoke.mjs` covers seat ownership, information boundaries, reveal outcomes, deterministic bots, and bounded self-play.
+
+At game end the full key is revealed and clue-log entries show the bot spymaster's intended targets beside the ordered guesses. This is local evaluation data; it is not uploaded.
 
 Refresh the controlled Model picker speed comparison with `npm run benchmark:picker`. It excludes loading, runs every model/vocabulary combination in one Node process, and records warmups, repeated samples, medians, spread, and machine metadata in `scripts/generated/model-picker-benchmark.json`.
 
