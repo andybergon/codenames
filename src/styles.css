@@ -2550,6 +2550,7 @@ button.play-card:not(:disabled):hover {
 }
 
 .play-turn-panel {
+  container: play-turn / inline-size;
   display: grid;
   gap: 14px;
 }
@@ -2715,8 +2716,34 @@ button.play-card:not(:disabled):hover {
   font-size: 0.72rem;
 }
 
+.play-clue-actions {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+}
+
 .play-suggestions-toggle {
-  justify-self: start;
+  padding-inline: 12px;
+  white-space: nowrap;
+}
+
+.play-suggestions-toggle[aria-expanded="true"] {
+  border-color: var(--ink);
+  background: var(--subtle-fill);
+}
+
+@container play-turn (max-width: 560px) {
+  .play-clue-form {
+    grid-template-columns: minmax(0, 1fr) 72px;
+  }
+
+  .play-clue-actions {
+    grid-column: 1 / -1;
+  }
+
+  .play-clue-actions .primary {
+    flex: 1 1 auto;
+  }
 }
 
 .play-section-heading {
@@ -3031,14 +3058,6 @@ button.play-card:not(:disabled):hover {
 
   .play-card.is-done::after {
     display: none;
-  }
-
-  .play-clue-form {
-    grid-template-columns: minmax(0, 1fr) 72px;
-  }
-
-  .play-clue-form .button {
-    grid-column: 1 / -1;
   }
 
   .play-history-team-lists {

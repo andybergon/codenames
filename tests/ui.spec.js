@@ -601,10 +601,14 @@ test("Play enforces operative and spymaster information views", async ({ page })
   await expect(clueInput).toHaveValue("");
   await expect(clearClue).toBeHidden();
   await expect(page.locator("#play-suggestions")).toBeHidden();
-  await expect(
-    page.getByRole("button", { name: "💡 Show clue suggestions", exact: true }),
-  ).toBeVisible();
-  await page.getByRole("button", { name: "💡 Show clue suggestions", exact: true }).click();
+  const hintsButton = page.getByRole("button", {
+    name: "Show clue suggestions",
+    exact: true,
+  });
+  await expect(hintsButton).toBeVisible();
+  await expect(hintsButton).toHaveText("💡 Hints");
+  await expect(hintsButton).toHaveAttribute("aria-expanded", "false");
+  await hintsButton.click();
   await expect(page.locator("#play-suggestions")).toBeVisible();
   await expect(page.getByText("Optional assistant", { exact: true })).toHaveCount(0);
   const firstPlaySuggestion = page.locator(".play-suggestion").first();
@@ -616,7 +620,7 @@ test("Play enforces operative and spymaster information views", async ({ page })
     firstPlaySuggestion.locator('.play-suggestion-metric[data-risk]'),
   ).toContainText(/(Safe|Medium|Risky) \d+/);
   await expect(
-    page.getByRole("button", { name: "💡 Hide clue suggestions", exact: true }),
+    page.getByRole("button", { name: "Hide clue suggestions", exact: true }),
   ).toHaveAttribute("aria-expanded", "true");
   await expect(page.locator('.play-card[data-team="friendly"]')).toHaveCount(9);
   await expect(page.locator('.play-card[data-team="enemy"]')).toHaveCount(8);
@@ -858,7 +862,7 @@ test("starting a second Play game clears the previous clue and analysis", async 
   await page.getByRole("button", { name: "Start new game", exact: true }).click();
 
   await page.getByRole("button", {
-    name: "💡 Show clue suggestions",
+    name: "Show clue suggestions",
     exact: true,
   }).click();
   await expect(page.locator(".play-suggestion").first()).toBeVisible({
@@ -1498,6 +1502,16 @@ test("Play board remains usable at phone, tablet, and desktop widths", async ({ 
       const header = document.querySelector(".play-game-header");
       const score = document.querySelector("#play-score");
       const cards = [...document.querySelectorAll(".play-card")];
+      const clueActions = document.querySelector(".play-clue-actions");
+      const giveClue = clueActions.querySelector('[type="submit"]');
+      const hints = document.querySelector("#toggle-play-suggestions");
+      const clueField = document.querySelector(".play-clue-field");
+      const clueNumberField = document.querySelector(".play-clue-form > label");
+      const clueActionBounds = clueActions.getBoundingClientRect();
+      const giveClueBounds = giveClue.getBoundingClientRect();
+      const hintsBounds = hints.getBoundingClientRect();
+      const clueFieldBounds = clueField.getBoundingClientRect();
+      const clueNumberBounds = clueNumberField.getBoundingClientRect();
       return {
         pageOverflows:
           document.documentElement.scrollWidth > document.documentElement.clientWidth,
@@ -1512,6 +1526,15 @@ test("Play board remains usable at phone, tablet, and desktop widths", async ({ 
             cardBounds.right <= boardBounds.right + 1
           );
         }),
+        clueActionsFit: clueActions.scrollWidth <= clueActions.clientWidth,
+        hintsBesideClue:
+          Math.abs(giveClueBounds.top - hintsBounds.top) <= 1 &&
+          hintsBounds.left >= giveClueBounds.right &&
+          hintsBounds.left - giveClueBounds.right <= 9 &&
+          hintsBounds.right <= clueActionBounds.right + 1,
+        clueFieldsFit:
+          clueFieldBounds.width >= 120 &&
+          clueFieldBounds.right <= clueNumberBounds.left,
       };
     });
 
@@ -1520,6 +1543,9 @@ test("Play board remains usable at phone, tablet, and desktop widths", async ({ 
     expect(layout.scoreWidth, `score width at ${viewport.width}px`).toBeLessThan(190);
     expect(layout.columns, `board columns at ${viewport.width}px`).toBe(5);
     expect(layout.cardsFit, `card clipping at ${viewport.width}px`).toBe(true);
+    expect(layout.clueActionsFit, `clue action overflow at ${viewport.width}px`).toBe(true);
+    expect(layout.hintsBesideClue, `Hints placement at ${viewport.width}px`).toBe(true);
+    expect(layout.clueFieldsFit, `clue field overlap at ${viewport.width}px`).toBe(true);
   }
 });
 

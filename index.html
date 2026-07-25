@@ -608,22 +608,25 @@
                   Number
                   <select id="play-clue-number"></select>
                 </label>
-                <button class="button primary" type="submit">
-                  <span aria-hidden="true">🕵️</span> Give clue
-                </button>
+                <div class="play-clue-actions">
+                  <button class="button primary" type="submit">
+                    <span aria-hidden="true">🕵️</span> Give clue
+                  </button>
+                  <button
+                    id="toggle-play-suggestions"
+                    class="button secondary play-suggestions-toggle"
+                    type="button"
+                    aria-controls="play-suggestions"
+                    aria-expanded="false"
+                    aria-label="Show clue suggestions"
+                    title="Show clue suggestions"
+                    hidden
+                  >
+                    <span aria-hidden="true">💡</span> Hints
+                  </button>
+                </div>
                 <p id="play-clue-error" class="form-error" role="alert"></p>
               </form>
-
-              <button
-                id="toggle-play-suggestions"
-                class="button secondary play-suggestions-toggle"
-                type="button"
-                aria-controls="play-suggestions"
-                aria-expanded="false"
-                hidden
-              >
-                💡 Show clue suggestions
-              </button>
 
               <div id="play-suggestions" class="play-suggestions" hidden>
                 <div class="play-section-heading">

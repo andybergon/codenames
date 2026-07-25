@@ -1163,9 +1163,11 @@ export function createPlayMode(options = {}) {
       "aria-expanded",
       String(humanSpymaster && suggestionsExpanded),
     );
-    elements.toggleSuggestions.textContent = suggestionsExpanded
-      ? "💡 Hide clue suggestions"
-      : "💡 Show clue suggestions";
+    const toggleLabel = suggestionsExpanded
+      ? "Hide clue suggestions"
+      : "Show clue suggestions";
+    elements.toggleSuggestions.setAttribute("aria-label", toggleLabel);
+    elements.toggleSuggestions.title = toggleLabel;
     elements.suggestions.hidden = !humanSpymaster || !suggestionsExpanded;
     if (humanSpymaster && suggestionsExpanded) {
       renderSuggestions();
