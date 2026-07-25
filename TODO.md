@@ -20,10 +20,6 @@
 - 📊 Calibrate Play bots and Worth from recorded outcomes.
   - Aggregate archived outcome summaries and fit bot confidence, multi tolerance, and Worth coefficients against actual play.
 
-- 💬 Explain recommendations in plain language from existing scores.
-  - Summarize intended targets, weakest target, closest danger, and the main failure risk without an LLM call.
-  - Keep Worth, margin, fit, cohesion, and similarity values available behind expandable technical details.
-
 - 🧠 Evaluate a more game-specific semantic embedding or reranker.
   - Current: Gemini Embedding 2 reached 72.9% human target recall, and Qwen3 Embedding 0.6B reached 88.19 Fun, but no tested model passes the human-data, Fun Index, and cross-model transfer gates together. See `docs/play-fun-optimization.md`.
   - Next: test Gemini or ConceptNet as a secondary human-alignment feature, then validate the best ensemble against human ratings of generated clues and recorded gameplay outcomes before changing the default.

@@ -8,7 +8,7 @@ Back to [README](../README.md).
 - 📦 **Index** · mean-centered, normalized, int8 static vectors
 - 🎯 **Runtime work** · embed active board words · score precomputed clue candidates
 - 🛡️ **Outputs** · safe one-to-three target lane · stretch four-to-nine target lane
-- 🔒 **Network boundary** · static assets download to the browser · board words stay local
+- 🔒 **Network boundary** · scoring and roles stay local · semantic explanations send only clue and targets
 
 ## 🔁 Pipeline
 
@@ -26,6 +26,9 @@ flowchart LR
   Danger --> Rank["📊 Worth and risk"]
   Rank --> Safe["🛡️ Safe · 1–3"]
   Rank --> Stretch["🚀 Stretch · 4–9"]
+  Rank --> Explain["💬 Explanation request"]
+  Explain --> API["⚙️ Vercel function"]
+  API --> OpenAI["🧠 OpenAI"]
 ```
 
 The runtime embeds only active board words. Guessed cards are excluded from embeddings, candidate legality, role counts, target combinations, and later recommendations.
@@ -75,6 +78,44 @@ expected net = target count × success - miss cost × (1 - success)
 | ⚫ Assassin | `5.5` |
 
 Worth is a `0–99` score combining expected net, margin, centroid fit, weakest-target similarity, cohesion, consistency, and clue familiarity. Final ordering also rewards larger useful target sets and safe classifications before diversifying repeated clues and target combinations.
+
+## 💬 Recommendation explanations
+
+Train makes no hosted request while rendering recommendations. Selecting **Explain** sends only that clue and its intended targets through [`api/explain-recommendations.js`](../api/explain-recommendations.js), and GPT-5.4 nano returns one semantic sentence. The browser caches successful results for the tab, so revisiting the same clue-target combination does not create another paid request.
+
+The prompt is owned by [`server/recommendation-explanation-prompt.js`](../server/recommendation-explanation-prompt.js):
+
+```text
+You explain why Codenames target words fit a proposed clue.
+
+Goal:
+- Write one natural sentence for each recommendation.
+- Begin with "These words connect through [short shared concept]:".
+- After the colon, give every target its own short clause explaining the relationship.
+
+Constraints:
+- Use common, broadly accepted meanings only.
+- Mention every target exactly once.
+- Do not group multiple targets into one clause, even when their relationships are similar.
+- Write clue and target words in ordinary sentence case.
+- Do not mention scores, embeddings, safety, danger words, guessing, or strategy.
+- Do not invent a relationship when the connection is weak. State the weaker association plainly.
+- Keep each explanation between 12 and 36 words.
+- Return only schema-valid JSON.
+```
+
+Only the clue and intended target words cross the application boundary. The full board, roles, scores, and closest danger stay in the browser. The server validates bounded inputs, fixes the model and prompt, requests strict structured output, and keeps `OPENAI_API_KEY` server-side.
+
+The risk sentence follows the scoring contract:
+
+- An assassin is always the main risk.
+- A non-positive margin says the danger matches at least as strongly as the weakest target.
+- A positive margin below the `0.11` safe threshold says the danger sits close behind the weakest target.
+- A margin of at least `0.11` says the closest danger remains clearly behind every target.
+
+The default table shows the explicit **Explain** action followed by the local risk sentence. After a successful request, the generated sentence replaces the action. **Score details** reveals Worth, expected net, estimated hit, closest-danger similarity, margin, fit, and cohesion.
+
+Completed Play games relabel the game log as **Post-game analysis** and use the same action beside clues with recorded intended targets. The action is absent during active play, and Play does not construct its request until the completed game has already revealed those targets.
 
 ## 🛣️ Output lanes
 
@@ -159,6 +200,7 @@ The picker exposes MiniLM-L3, MiniLM-L6, and BGE-small because each offers a dis
 | ✅ `npm run check` | Smoke result + build | Both output lanes |
 | 🧠 `npm run evaluate:embeddings` | [`embedding-model-comparison.json`](../scripts/generated/embedding-model-comparison.json) | Human target/avoid fit |
 | 📚 `npm run evaluate:candidates` | [`candidate-coverage.json`](../scripts/generated/candidate-coverage.json) | Human clue coverage |
+| 💬 `npm run evaluate:explanations -- --max-cost-usd 0.08` | [`recommendation-explanation-evaluation.json`](../scripts/generated/recommendation-explanation-evaluation.json) | Plain-language explanation quality and model cost |
 | ⏱️ `npm run benchmark:picker` | [`model-picker-benchmark.json`](../scripts/generated/model-picker-benchmark.json) | Controlled scoring cost |
 | 🎮 `npm run benchmark:play` | [`play-policy-benchmark.md`](../scripts/generated/play-policy-benchmark.md) | Full-game clue and operative policy |
 | 🔢 `npm run analyze:play-clues` | [`play-clue-bias-analysis.json`](../scripts/generated/play-clue-bias-analysis.json) | Opening-board clue depth |
@@ -170,11 +212,19 @@ Embedding evaluation uses the pinned Cultural Codes and Connector datasets witho
 
 Hosted challengers stay out of the browser and production bundle until they pass the same promotion gates. `npm run experiment:api-index -- --max-cost-usd 0.03` builds a batch-cached OpenAI index after a cost preflight, checks billed usage after each request, and keeps every vector under `.cache`. `npm run evaluate:api-embeddings` reuses that cache for the human datasets. Supply the key through `OPENAI_API_KEY`; neither command writes it to disk.
 
+The explanation evaluation compares GPT-5 nano, GPT-5.4 nano, and GPT-5.6 Luna across eight varied target combinations. GPT-5.6 Sol judges semantic accuracy, target coverage, specificity, clarity, and concision with randomized candidate labels. With the explicit clause-per-target prompt, Luna scored `5.00/5`, GPT-5.4 nano scored `4.85/5`, and GPT-5 nano scored `4.78/5`. The production gate chooses the cheapest model scoring at least `4.8/5`, so GPT-5.4 nano wins. The estimated generation cost is `$0.745` per 1,000 fifteen-recommendation batches, and the successful evaluation billed about `$0.032`.
+
 The first 1,024-dimensional `text-embedding-3-large` experiment improved human clue recovery but failed default-policy fun and cross-model transfer safety, so BGE-small remains the production choice. See [Play fun optimization](play-fun-optimization.md) for the compact result and promotion workflow.
 
 ## 🧩 Source map
 
 - [`src/model.js`](../src/model.js) · legality, similarity, scoring, lanes, risk, and board metrics
+- [`src/recommendation-explanation.js`](../src/recommendation-explanation.js) · local score summary and danger wording
+- [`src/recommendation-explanation-client.js`](../src/recommendation-explanation-client.js) · bounded requests and tab cache
+- [`src/recommendation-explanation-control.js`](../src/recommendation-explanation-control.js) · shared paid-action UI for Train and completed Play games
+- [`server/recommendation-explanation-prompt.js`](../server/recommendation-explanation-prompt.js) · semantic prompt and output schema
+- [`server/recommendation-explanation-service.js`](../server/recommendation-explanation-service.js) · validation and OpenAI request
+- [`api/explain-recommendations.js`](../api/explain-recommendations.js) · Vercel function adapter
 - [`src/embeddings.js`](../src/embeddings.js) · browser embedding pipeline and vector transforms
 - [`src/clue-index.js`](../src/clue-index.js) · manifest and incremental shard loading
 - [`src/model-lab.js`](../src/model-lab.js) · model-picker configurations and measurements

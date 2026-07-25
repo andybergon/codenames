@@ -26,6 +26,7 @@ import {
   calculateBoardMetrics,
   isForbiddenClue,
 } from "../src/model.js";
+import { explainRecommendation } from "../src/recommendation-explanation.js";
 import {
   DEFAULT_BOARD,
   EXTENDED_ADDITIONS,
@@ -136,6 +137,41 @@ assert.equal(isForbiddenClue("stopped", ["stop"]), true);
 assert.equal(isForbiddenClue("making", ["make"]), true);
 assert.equal(isForbiddenClue("carried", ["carry"]), true);
 assert.equal(isForbiddenClue("planet", ["plane"]), false);
+
+assert.deepEqual(
+  explainRecommendation({
+    targets: [
+      { word: "MOON", sim: 0.61 },
+      { word: "STAR", sim: 0.42 },
+    ],
+    closestDanger: { word: "MARS", team: "enemy", sim: 0.2 },
+    margin: 0.14,
+  }),
+  {
+    targetSummary: "Connects MOON and STAR, with STAR as the weakest match.",
+    riskSummary:
+      "MARS is the closest danger, but the opposing agent stays clearly behind every target.",
+  },
+);
+assert.equal(
+  explainRecommendation({
+    targets: [
+      { word: "MOON", sim: 0.61 },
+      { word: "STAR", sim: 0.2 },
+    ],
+    closestDanger: { word: "MARS", team: "enemy", sim: 0.24 },
+    margin: -0.04,
+  }).riskSummary,
+  "MARS is the main risk: the opposing agent matches at least as strongly as STAR.",
+);
+assert.equal(
+  explainRecommendation({
+    targets: [{ word: "MOON", sim: 0.61 }],
+    closestDanger: { word: "BOMB", team: "assassin", sim: 0.12 },
+    margin: 0.2,
+  }).riskSummary,
+  "BOMB is the main risk: the assassin is also drawn to this clue.",
+);
 
 const morphologyBoard = [
   { word: "LIFE", team: "friendly", layoutId: 0 },

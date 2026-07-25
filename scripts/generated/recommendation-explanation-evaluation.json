@@ -1,0 +1,151 @@
+{
+  "version": 2,
+  "generatedAt": "2026-07-26T01:27:35.393Z",
+  "methodology": {
+    "caseCount": 8,
+    "candidateModels": [
+      "gpt-5-nano",
+      "gpt-5.4-nano",
+      "gpt-5.6-luna"
+    ],
+    "judgeModel": "gpt-5.6-sol",
+    "judgeReasoningEffort": "none",
+    "criteria": [
+      "accuracy",
+      "coverage",
+      "specificity",
+      "clarity",
+      "concision"
+    ],
+    "scoreRange": [
+      1,
+      5
+    ],
+    "selectionRule": "Choose the cheapest model with a mean semantic-explanation score of at least 4.8; fall back to the highest-scoring model if none qualify.",
+    "promptVersion": 4,
+    "pricingCheckedAt": "2026-07-26"
+  },
+  "cost": {
+    "maxCostUsd": 0.08,
+    "projectedMaxCostUsd": 0.052349,
+    "billedCostUsd": 0.032109,
+    "usage": {
+      "gpt-5-nano": {
+        "inputTokens": 391,
+        "outputTokens": 291
+      },
+      "gpt-5.4-nano": {
+        "inputTokens": 391,
+        "outputTokens": 319
+      },
+      "gpt-5.6-luna": {
+        "inputTokens": 391,
+        "outputTokens": 295
+      },
+      "gpt-5.6-sol": {
+        "inputTokens": 1265,
+        "outputTokens": 767
+      }
+    }
+  },
+  "cases": [
+    {
+      "id": "medical-3",
+      "clue": "MEDICAL",
+      "targetWords": [
+        "DOCTOR",
+        "HOSPITAL",
+        "NURSE"
+      ]
+    },
+    {
+      "id": "royal-3",
+      "clue": "ROYAL",
+      "targetWords": [
+        "KING",
+        "QUEEN",
+        "CROWN"
+      ]
+    },
+    {
+      "id": "flight-3",
+      "clue": "FLIGHT",
+      "targetWords": [
+        "PILOT",
+        "PLANE",
+        "AIR"
+      ]
+    },
+    {
+      "id": "space-3",
+      "clue": "SPACE",
+      "targetWords": [
+        "MOON",
+        "SATELLITE",
+        "STAR"
+      ]
+    },
+    {
+      "id": "winter-3",
+      "clue": "WINTER",
+      "targetWords": [
+        "SNOW",
+        "ICE",
+        "GLOVE"
+      ]
+    },
+    {
+      "id": "sailing-3",
+      "clue": "SAILING",
+      "targetWords": [
+        "SHIP",
+        "ANCHOR",
+        "PORT"
+      ]
+    },
+    {
+      "id": "footwear-2",
+      "clue": "FOOTWEAR",
+      "targetWords": [
+        "BOOT",
+        "SHOE"
+      ]
+    },
+    {
+      "id": "cooking-3",
+      "clue": "COOKING",
+      "targetWords": [
+        "COOK",
+        "PAN",
+        "FIRE"
+      ]
+    }
+  ],
+  "aggregate": [
+    {
+      "id": "gpt-5.6-luna",
+      "meanScore": 5,
+      "caseWins": 8,
+      "estimatedUsdPerThousand": 3.6
+    },
+    {
+      "id": "gpt-5.4-nano",
+      "meanScore": 4.85,
+      "caseWins": 5,
+      "estimatedUsdPerThousand": 0.745
+    },
+    {
+      "id": "gpt-5-nano",
+      "meanScore": 4.775,
+      "caseWins": 1,
+      "estimatedUsdPerThousand": 0.23
+    }
+  ],
+  "recommendation": {
+    "id": "gpt-5.4-nano",
+    "meanScore": 4.85,
+    "caseWins": 5,
+    "estimatedUsdPerThousand": 0.745,
+    "reason": "gpt-5.4-nano is the cheapest model scoring at least 4.8."
+  }
+}

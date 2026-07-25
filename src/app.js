@@ -6,6 +6,7 @@ import {
   RefreshCw,
   Redo2,
   Share2,
+  Sparkles,
   Sun,
   Undo2,
   createIcons,
@@ -39,6 +40,8 @@ import {
 } from "./gameplay.js";
 import { closeInfoPopovers, createInfoControl } from "./info-control.js";
 import { analyzeEmbeddedBoard, calculateBoardMetrics } from "./model.js";
+import { explainRecommendation } from "./recommendation-explanation.js";
+import { createRecommendationExplanationControl } from "./recommendation-explanation-control.js";
 import { createPlayMode } from "./play/mode.js";
 import { ROLE_SEQUENCE, TEAMS, WORD_SET } from "./word-data.js";
 
@@ -90,10 +93,16 @@ const SUGGESTION_COLUMNS = [
   { id: "items", label: "Items", key: "number", direction: "desc" },
   { id: "targets", label: "Targets" },
   {
+    id: "explanation",
+    label: "Why it works",
+    info: "Explain makes one paid AI request for this clue and its intended targets, then caches the result for this tab. The separate risk sentence remains grounded in the local scores shown under Score details.",
+  },
+  {
     id: "worth",
     label: "Worth",
     key: "worth",
     direction: "desc",
+    advanced: true,
     info: "Overall usefulness from 0-99. It rewards more likely targets, stronger semantic fit, cohesive target words, safety margin, and clue familiarity. Risk is shown separately.",
   },
   {
@@ -109,6 +118,7 @@ const SUGGESTION_COLUMNS = [
     label: "Est. hit",
     key: "success",
     direction: "desc",
+    advanced: true,
     info: "Estimated chance that teammates get every intended target before hitting another card. This is a model estimate, not a percentage measured from real games.",
   },
   {
@@ -123,6 +133,7 @@ const SUGGESTION_COLUMNS = [
     label: "Closest danger",
     key: "danger",
     direction: "desc",
+    advanced: true,
     info: "The non-friendly card most attracted to the clue after role penalties. The chip shows its word and raw similarity; its color shows the role.",
   },
   {
@@ -1341,7 +1352,8 @@ function renderSuggestions(container, suggestions, emptyMessage) {
   header.append(headerRow);
 
   const body = document.createElement("tbody");
-  for (const suggestion of [...suggestions].sort(compareSuggestionsForDisplay)) {
+  const displayedSuggestions = [...suggestions].sort(compareSuggestionsForDisplay);
+  for (const suggestion of displayedSuggestions) {
     body.append(renderSuggestionRow(suggestion, columns));
   }
 
@@ -1349,7 +1361,7 @@ function renderSuggestions(container, suggestions, emptyMessage) {
   wrapper.append(table);
   container.append(wrapper);
   createIcons({
-    icons: { Check },
+    icons: { Check, Sparkles },
     attrs: { width: 15, height: 15, "stroke-width": 2.5 },
     root: wrapper,
   });
@@ -1500,6 +1512,16 @@ function renderSuggestionRow(suggestion, columns) {
   }
   targetsCell.append(targets);
 
+  const explanationCell = createTableCell("Why it works", "explanation-cell");
+  const { riskSummary: riskExplanation } = explainRecommendation(suggestion);
+  const riskSummary = document.createElement("span");
+  riskSummary.className = "explanation-risk";
+  riskSummary.textContent = riskExplanation;
+  explanationCell.append(
+    createRecommendationExplanationControl(suggestion),
+    riskSummary,
+  );
+
   const worthCell = createScoreCell("Worth", String(suggestion.worth), "worth-cell");
   const netCell = createScoreCell("Net", formatSigned(suggestion.expectedNet, 1), "net-cell");
   const hitCell = createScoreCell(
@@ -1551,6 +1573,7 @@ function renderSuggestionRow(suggestion, columns) {
     clue: clueCell,
     items: itemCell,
     targets: targetsCell,
+    explanation: explanationCell,
     worth: worthCell,
     net: netCell,
     hit: hitCell,

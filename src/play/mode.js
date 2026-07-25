@@ -20,6 +20,7 @@ import {
   modelOption,
 } from "../model-lab.js";
 import { analyzeEmbeddedBoard } from "../model.js";
+import { createRecommendationExplanationControl } from "../recommendation-explanation-control.js";
 import { WORD_SET } from "../word-data.js";
 import {
   chooseBotClue,
@@ -286,6 +287,7 @@ export function createPlayMode(options = {}) {
     operativeControls: document.querySelector("#play-operative-controls"),
     guessProgress: document.querySelector("#play-guess-progress"),
     passTurn: document.querySelector("#pass-play-turn"),
+    historyLabel: document.querySelector("#play-history-heading-label"),
     historyCount: document.querySelector("#play-history-count"),
     historyViewButtons: [...document.querySelectorAll("[data-play-history-view]")],
     historyList: document.querySelector("#play-history-list"),
@@ -1315,6 +1317,8 @@ export function createPlayMode(options = {}) {
     const visible = history.filter((event) =>
       ["clue-given", "card-guessed", "turn-passed", "game-ended"].includes(event.type),
     );
+    elements.historyLabel.textContent =
+      game.phase === GAME_PHASE.COMPLETE ? "Post-game analysis" : "Game log";
     elements.historyCount.textContent = `${visible.length} events`;
     for (const button of elements.historyViewButtons) {
       button.setAttribute(
@@ -1356,13 +1360,24 @@ export function createPlayMode(options = {}) {
               .map((layoutId) => game.cards.find((card) => card.layoutId === layoutId)?.word)
               .filter(Boolean)
           : [];
-      item.append(
+      const summary = document.createElement("div");
+      summary.className = "play-history-event-summary";
+      summary.append(
         `${sideLabel(event.side)} clue: `,
         createCluePill(event.clue),
         ` ${event.number}${
           intendedWords.length ? `, intended ${intendedWords.join(" + ")}` : ""
         }`,
       );
+      item.append(summary);
+      if (intendedWords.length) {
+        const explanation = createRecommendationExplanationControl({
+          clue: event.clue,
+          targets: intendedWords.map((word) => ({ word })),
+        });
+        explanation.classList.add("play-history-explanation");
+        item.append(explanation);
+      }
     } else if (event.type === "card-guessed") {
       const card = document.createElement("span");
       card.className = "play-history-card";
