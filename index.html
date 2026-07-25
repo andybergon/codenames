@@ -32,8 +32,8 @@
       <header class="topbar">
         <h1 id="app-title">Codenames</h1>
         <div class="app-mode-switch" role="group" aria-label="App mode">
-          <button type="button" data-app-mode="play" aria-pressed="true">Play</button>
-          <button type="button" data-app-mode="train" aria-pressed="false">Train</button>
+          <button type="button" data-app-mode="play" data-i18n="play" aria-pressed="true">Play</button>
+          <button type="button" data-app-mode="train" data-i18n="train" aria-pressed="false">Train</button>
         </div>
         <div class="theme-switcher" role="group" aria-label="Color theme">
           <button
@@ -75,8 +75,8 @@
       >
         <div class="train-loading-card">
           <div class="train-loading-heading">
-            <strong>Loading trainer</strong>
-            <span>Preparing the board and recommendations</span>
+            <strong data-i18n="loadingTrainer">Loading trainer</strong>
+            <span data-i18n="preparingTrainer">Preparing the board and recommendations</span>
           </div>
           <div class="train-loading-board" aria-hidden="true">
             <span></span><span></span><span></span><span></span><span></span>
@@ -90,7 +90,7 @@
           <div class="panel-header board-header">
             <div class="board-primary-row">
               <div class="board-title-row">
-                <h2>Board</h2>
+                <h2 data-i18n="board">Board</h2>
                 <button
                   class="disclosure-button"
                   id="toggle-board"
@@ -111,7 +111,7 @@
                     type="button"
                     title="Generate 25 new words and assign new roles"
                   >
-                    New
+                    <span data-i18n="newBoard">New</span>
                   </button>
                   <button
                     class="button secondary board-action"
@@ -119,11 +119,30 @@
                     type="button"
                     title="Restore the fixed training board"
                   >
-                    Sample
+                    <span data-i18n="sampleBoard">Sample</span>
                   </button>
                 </div>
+                <div class="board-control board-language-control">
+                  <span class="board-control-label" data-i18n="nextLanguage">Next board language</span>
+                  <div class="language-switch" role="group" aria-label="Language for the next new board">
+                    <button
+                      type="button"
+                      data-language-value="en"
+                      aria-pressed="true"
+                    >
+                      English
+                    </button>
+                    <button
+                      type="button"
+                      data-language-value="it"
+                      aria-pressed="false"
+                    >
+                      Italiano <span>Beta</span>
+                    </button>
+                  </div>
+                </div>
                 <div class="board-control board-word-control">
-                  <span class="board-control-label">Words</span>
+                  <span class="board-control-label" data-i18n="words">Words</span>
                   <div class="word-set-switch" role="group" aria-label="Board word set">
                     <button
                       type="button"
@@ -146,7 +165,7 @@
                   </div>
                 </div>
                 <div class="board-control board-order-control">
-                  <span class="board-control-label">Order</span>
+                  <span class="board-control-label" data-i18n="order">Order</span>
                   <div class="order-switch" role="group" aria-label="Card layout">
                     <button
                       id="order-grouped"
@@ -155,7 +174,7 @@
                       aria-pressed="true"
                       title="Group cards by Friendly, Enemy, Neutral, and Assassin"
                     >
-                      Sorted
+                      <span data-i18n="sorted">Sorted</span>
                     </button>
                     <button
                       id="order-random"
@@ -164,7 +183,7 @@
                       aria-pressed="false"
                       title="Show this board's preserved random arrangement"
                     >
-                      Random
+                      <span data-i18n="random">Random</span>
                     </button>
                   </div>
                 </div>
@@ -195,7 +214,7 @@
           <div class="panel-header recommendation-header">
             <div class="recommendation-title">
               <div class="recommendation-title-row">
-                <h2>Recommendations</h2>
+                <h2 data-i18n="recommendations">Recommendations</h2>
                 <button
                   class="disclosure-button"
                   id="toggle-recommendations"
@@ -775,21 +794,22 @@
         <div class="model-lab-heading">
           <div>
             <div class="model-lab-title-row">
-              <h2 id="model-lab-title">Model picker</h2>
+              <h2 id="model-lab-title" data-i18n="modelPicker">Model picker</h2>
               <span id="model-picker-info"></span>
             </div>
-            <p>Choose using human-game quality, download size, and measured speed. Alternatives load only when selected.</p>
+            <p data-i18n="modelPickerDescription">Choose using human-game quality, download size, and measured speed. Alternatives load only when selected.</p>
           </div>
         </div>
         <div class="model-lab-controls">
-          <label>Embedding model
+          <label><span data-i18n="embeddingModel">Embedding model</span>
             <select id="model-lab-model">
               <option value="minilm-l3">MiniLM-L3 (smallest)</option>
               <option value="minilm-l6">MiniLM-L6 (default)</option>
               <option value="bge-small">BGE-small</option>
+              <option value="multilingual-e5-small">Multilingual E5 small (Italian beta)</option>
             </select>
           </label>
-          <label>Clue vocabulary
+          <label><span data-i18n="clueVocabulary">Clue vocabulary</span>
             <select id="model-lab-candidates">
               <option value="3000">3,000</option>
               <option value="10000">10,000 (default)</option>

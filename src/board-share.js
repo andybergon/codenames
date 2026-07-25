@@ -2,6 +2,8 @@ import {
   DEFAULT_BOARD,
   EXTENDED_V2_WORDS,
   EXTENDED_WORDS,
+  ITALIAN_EXTENDED_WORDS,
+  LANGUAGE,
   LEGACY_WORD_BANK,
   ROLE_SEQUENCE,
   TEAMS,
@@ -17,6 +19,8 @@ export const BOARD_ORDER = Object.freeze({
 const LEGACY_VERSION = "1";
 const PREVIOUS_VERSION = "2";
 const VERSION = "3";
+const LANGUAGE_VERSION = "4";
+const ITALIAN_ASSET_VERSION = "1";
 const SAMPLE_RANDOM_CODE = `${LEGACY_VERSION}pr`;
 const SAMPLE_LAYOUT_SEED = "Q09ERU5BTUU";
 const CARD_COUNT = 25;
@@ -51,6 +55,7 @@ export function createSampleBoardState(order = BOARD_ORDER.SORTED) {
       random,
     ),
     order,
+    language: LANGUAGE.ENGLISH,
     wordSet: WORD_SET.OFFICIAL,
     source: { type: "sample" },
   };
@@ -60,14 +65,23 @@ export function createGeneratedBoardState(
   seed,
   order = BOARD_ORDER.SORTED,
   wordSet = WORD_SET.OFFICIAL,
+  language = LANGUAGE.ENGLISH,
 ) {
-  validateWordSet(wordSet);
+  validateLanguageWordSet(language, wordSet);
   return createSeededBoardState({
     seed,
     order,
+    language,
     wordSet,
-    words: getWordsForSet(wordSet),
-    source: { type: "seed", seed, version: VERSION },
+    words: getWordsForSet(wordSet, language),
+    source: {
+      type: "seed",
+      seed,
+      version: language === LANGUAGE.ITALIAN ? LANGUAGE_VERSION : VERSION,
+      ...(language === LANGUAGE.ITALIAN
+        ? { assetVersion: ITALIAN_ASSET_VERSION }
+        : {}),
+    },
   });
 }
 
@@ -76,8 +90,12 @@ function createPreviousGeneratedBoardState(seed, order, wordSet) {
   return createSeededBoardState({
     seed,
     order,
+    language: LANGUAGE.ENGLISH,
     wordSet,
-    words: wordSet === WORD_SET.OFFICIAL ? getWordsForSet(wordSet) : EXTENDED_V2_WORDS,
+    words:
+      wordSet === WORD_SET.OFFICIAL
+        ? getWordsForSet(wordSet, LANGUAGE.ENGLISH)
+        : EXTENDED_V2_WORDS,
     source: { type: "seed", seed, version: PREVIOUS_VERSION },
   });
 }
@@ -86,13 +104,14 @@ function createLegacyGeneratedBoardState(seed, order) {
   return createSeededBoardState({
     seed,
     order,
+    language: LANGUAGE.ENGLISH,
     wordSet: WORD_SET.EXTENDED,
     words: LEGACY_WORD_BANK,
     source: { type: "legacy-seed", seed },
   });
 }
 
-function createSeededBoardState({ seed, order, wordSet, words, source }) {
+function createSeededBoardState({ seed, order, language, wordSet, words, source }) {
   const random = createSeededRandom(seed);
   const boardWords = shuffle([...words], random).slice(0, CARD_COUNT);
   const cards = withLayoutIds(
@@ -110,6 +129,7 @@ function createSeededBoardState({ seed, order, wordSet, words, source }) {
       random,
     ),
     order,
+    language,
     wordSet,
     source,
   };
@@ -142,6 +162,19 @@ export function decodeBoardParam(value) {
       ? createPreviousGeneratedBoardState(seedMatch[2], order, wordSet)
       : createGeneratedBoardState(seedMatch[2], order, wordSet);
   }
+  const languageSeedMatch = value.match(
+    /^4s([A-Za-z0-9_-]{11})i1x([sr])$/,
+  );
+  if (languageSeedMatch) {
+    return createGeneratedBoardState(
+      languageSeedMatch[1],
+      languageSeedMatch[2] === "r"
+        ? BOARD_ORDER.RANDOM
+        : BOARD_ORDER.SORTED,
+      WORD_SET.EXTENDED,
+      LANGUAGE.ITALIAN,
+    );
+  }
   if (value.startsWith(`${LEGACY_VERSION}e`)) {
     return decodeExplicitBoard(
       value.slice(2),
@@ -149,6 +182,7 @@ export function decodeBoardParam(value) {
       WORD_SET.EXTENDED,
       LEGACY_VERSION,
       PREVIOUS_WORD_BITS,
+      LANGUAGE.ENGLISH,
     );
   }
   const explicitMatch = value.match(/^([23])e([ox])(.+)$/);
@@ -160,21 +194,45 @@ export function decodeBoardParam(value) {
       WORD_SET_FROM_CODE.get(explicitMatch[2]),
       explicitMatch[1],
       isPrevious ? PREVIOUS_WORD_BITS : WORD_BITS,
+      LANGUAGE.ENGLISH,
+    );
+  }
+  const languageExplicitMatch = value.match(/^4ei1x(.+)$/);
+  if (languageExplicitMatch) {
+    return decodeExplicitBoard(
+      languageExplicitMatch[1],
+      ITALIAN_EXTENDED_WORDS,
+      WORD_SET.EXTENDED,
+      LANGUAGE_VERSION,
+      WORD_BITS,
+      LANGUAGE.ITALIAN,
     );
   }
 
   throw new Error("Unsupported board code.");
 }
 
-export function encodeBoardParam({ cards, randomLayoutOrder, order, source, wordSet }) {
+export function encodeBoardParam({
+  cards,
+  randomLayoutOrder,
+  order,
+  source,
+  wordSet,
+  language = LANGUAGE.ENGLISH,
+}) {
   validateOrder(order);
-  validateWordSet(wordSet);
+  validateLanguageWordSet(language, wordSet);
 
   if (source.type === "sample") {
     return order === BOARD_ORDER.RANDOM ? SAMPLE_RANDOM_CODE : null;
   }
   if (source.type === "seed") {
     validateSeed(source.seed);
+    if (language === LANGUAGE.ITALIAN) {
+      return `${LANGUAGE_VERSION}s${source.seed}i${ITALIAN_ASSET_VERSION}x${
+        order === BOARD_ORDER.RANDOM ? "r" : "s"
+      }`;
+    }
     const version = source.version === PREVIOUS_VERSION ? PREVIOUS_VERSION : VERSION;
     return `${version}s${source.seed}${WORD_SET_CODE[wordSet]}${
       order === BOARD_ORDER.RANDOM ? "r" : "s"
@@ -187,6 +245,18 @@ export function encodeBoardParam({ cards, randomLayoutOrder, order, source, word
     }`;
   }
   if (source.type === "explicit") {
+    if (language === LANGUAGE.ITALIAN) {
+      const wordIndex = new Map(
+        ITALIAN_EXTENDED_WORDS.map((word, index) => [word, index]),
+      );
+      return `${LANGUAGE_VERSION}ei${ITALIAN_ASSET_VERSION}x${encodeExplicitBoard(
+        cards,
+        randomLayoutOrder,
+        order,
+        wordIndex,
+        WORD_BITS,
+      )}`;
+    }
     const version = [LEGACY_VERSION, PREVIOUS_VERSION].includes(source.version)
       ? source.version
       : VERSION;
@@ -243,7 +313,14 @@ function encodeExplicitBoard(cards, randomLayoutOrder, order, wordIndex, wordBit
   return bytesToBase64Url(writer.finish());
 }
 
-function decodeExplicitBoard(value, wordBank, wordSet, version, wordBits) {
+function decodeExplicitBoard(
+  value,
+  wordBank,
+  wordSet,
+  version,
+  wordBits,
+  language,
+) {
   const reader = createBitReader(base64UrlToBytes(value));
   const order = reader.read(1) === 1 ? BOARD_ORDER.RANDOM : BOARD_ORDER.SORTED;
   const cards = [];
@@ -284,6 +361,7 @@ function decodeExplicitBoard(value, wordBank, wordSet, version, wordBits) {
     cards,
     randomLayoutOrder,
     order,
+    language,
     wordSet,
     source: { type: "explicit", version },
   };
@@ -362,6 +440,16 @@ function validateOrder(order) {
 function validateWordSet(wordSet) {
   if (wordSet !== WORD_SET.OFFICIAL && wordSet !== WORD_SET.EXTENDED) {
     throw new Error("Board word set is invalid.");
+  }
+}
+
+function validateLanguageWordSet(language, wordSet) {
+  if (language !== LANGUAGE.ENGLISH && language !== LANGUAGE.ITALIAN) {
+    throw new Error("Board language is invalid.");
+  }
+  validateWordSet(wordSet);
+  if (language === LANGUAGE.ITALIAN && wordSet !== WORD_SET.EXTENDED) {
+    throw new Error("Italian Official words are not available.");
   }
 }
 

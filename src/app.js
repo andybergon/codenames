@@ -27,8 +27,11 @@ import {
   CANDIDATE_OPTIONS,
   DEFAULT_CANDIDATE_COUNT,
   DEFAULT_MODEL_ID,
+  ITALIAN_CANDIDATE_OPTIONS,
+  ITALIAN_MODEL_ID,
   PICKER_MODEL_OPTIONS,
   indexManifestUrl,
+  modelConfigurationForLanguage,
   modelOption,
 } from "./model-lab.js";
 import {
@@ -40,11 +43,17 @@ import {
   winningSide,
 } from "./gameplay.js";
 import { closeInfoPopovers, createInfoControl } from "./info-control.js";
+import { applyStaticLocale, translate } from "./locales.js";
 import { analyzeEmbeddedBoard, calculateBoardMetrics } from "./model.js";
 import { explainRecommendation } from "./recommendation-explanation.js";
 import { createRecommendationExplanationControl } from "./recommendation-explanation-control.js";
 import { createPlayMode } from "./play/mode.js";
-import { ROLE_SEQUENCE, TEAMS, WORD_SET } from "./word-data.js";
+import {
+  LANGUAGE,
+  ROLE_SEQUENCE,
+  TEAMS,
+  WORD_SET,
+} from "./word-data.js";
 
 const TEAM_BY_ID = new Map(TEAMS.map((team) => [team.id, team]));
 const TEAM_SORT_ORDER = new Map(TEAMS.map((team, index) => [team.id, index]));
@@ -164,6 +173,8 @@ let board = cloneBoard(initialBoardState.cards);
 let boardCollapsed = false;
 let recommendationsCollapsed = false;
 let boardOrder = initialBoardState.order;
+let boardLanguage = initialBoardState.language ?? LANGUAGE.ENGLISH;
+let nextBoardLanguage = boardLanguage;
 let boardWordSet = initialBoardState.wordSet;
 let nextBoardWordSet = boardWordSet;
 let randomLayoutOrder = [...initialBoardState.randomLayoutOrder];
@@ -187,8 +198,9 @@ let analyzeTimer = 0;
 let analysisRun = 0;
 let hasAnalysis = false;
 const clueIndexPromises = new Map();
-let selectedModelId = DEFAULT_MODEL_ID;
-let selectedCandidateCount = DEFAULT_CANDIDATE_COUNT;
+let selectedModelId = modelConfigurationForLanguage(boardLanguage).modelId;
+let selectedCandidateCount =
+  modelConfigurationForLanguage(boardLanguage).candidateCount;
 let shareFeedbackTimer = 0;
 let appMode = readAppMode();
 let trainerInitialized = false;
@@ -231,6 +243,7 @@ const elements = {
   orderRandom: document.querySelector("#order-random"),
   orderGrouped: document.querySelector("#order-grouped"),
   wordSetButtons: [...document.querySelectorAll("[data-word-set-value]")],
+  languageButtons: [...document.querySelectorAll("[data-language-value]")],
   shareBoard: document.querySelector("#share-board"),
   toggleBoard: document.querySelector("#toggle-board"),
   toggleRecommendations: document.querySelector("#toggle-recommendations"),
@@ -251,11 +264,21 @@ const playMode = createPlayMode(
 const calibrationMode = createCalibrationMode();
 
 elements.modelLabModel.addEventListener("change", (event) => {
+  if (boardLanguage === LANGUAGE.ITALIAN) {
+    return;
+  }
   selectedModelId = event.target.value;
   switchModelLabConfiguration();
 });
 elements.modelLabCandidates.addEventListener("change", (event) => {
-  selectedCandidateCount = Number(event.target.value);
+  const candidateCount = Number(event.target.value);
+  if (
+    boardLanguage === LANGUAGE.ITALIAN &&
+    !ITALIAN_CANDIDATE_OPTIONS.some(({ count }) => count === candidateCount)
+  ) {
+    return;
+  }
+  selectedCandidateCount = candidateCount;
   switchModelLabConfiguration();
 });
 
@@ -298,7 +321,12 @@ elements.loadSample.addEventListener("click", () => {
 
 elements.randomBoard.addEventListener("click", () => {
   loadBoardState(
-    createGeneratedBoardState(createRandomSeed(), BOARD_ORDER.SORTED, nextBoardWordSet),
+    createGeneratedBoardState(
+      createRandomSeed(),
+      BOARD_ORDER.SORTED,
+      nextBoardWordSet,
+      nextBoardLanguage,
+    ),
   );
   syncBoardUrl();
   render();
@@ -307,6 +335,12 @@ elements.randomBoard.addEventListener("click", () => {
 for (const button of elements.wordSetButtons) {
   button.addEventListener("click", () => {
     setNewBoardWordSet(button.dataset.wordSetValue);
+  });
+}
+
+for (const button of elements.languageButtons) {
+  button.addEventListener("click", () => {
+    setNewBoardLanguage(button.dataset.languageValue);
   });
 }
 
@@ -471,6 +505,35 @@ function switchModelLabConfiguration() {
 function renderModelLab() {
   elements.modelLabModel.value = selectedModelId;
   elements.modelLabCandidates.value = String(selectedCandidateCount);
+  const italian = boardLanguage === LANGUAGE.ITALIAN;
+  elements.modelLabModel.disabled = italian;
+  for (const option of elements.modelLabModel.options) {
+    option.hidden =
+      italian !== (option.value === ITALIAN_MODEL_ID);
+  }
+  for (const option of elements.modelLabCandidates.options) {
+    const supported =
+      !italian ||
+      ITALIAN_CANDIDATE_OPTIONS.some(
+        ({ count }) => count === Number(option.value),
+      );
+    option.hidden = !supported;
+    option.disabled = !supported;
+  }
+  if (italian) {
+    const summary = document.createElement("div");
+    summary.className = "italian-model-summary";
+    const title = document.createElement("strong");
+    title.textContent = `Multilingual E5 small · ${selectedCandidateCount.toLocaleString("it")} indizi`;
+    const description = document.createElement("p");
+    description.textContent = translate(boardLanguage, "italianBetaSummary");
+    const rights = document.createElement("p");
+    rights.textContent = translate(boardLanguage, "officialUnavailable");
+    summary.append(title, description, rights);
+    elements.modelLabMatrix.replaceChildren(summary);
+    return;
+  }
+
   const smallestConfigurationBytes = Math.min(
     ...PICKER_MODEL_OPTIONS.flatMap((model) =>
       CANDIDATE_OPTIONS.map((candidate) => model.modelBytes + candidate.indexBytes),
@@ -650,6 +713,7 @@ function renderAppMode() {
   const isPlay = appMode === "play";
   const isTrain = appMode === "train";
   const isCalibration = appMode === "calibrate";
+  applyStaticLocale(isPlay || isCalibration ? LANGUAGE.ENGLISH : boardLanguage);
   const isTrainerLoading = isTrain && !trainerInitialized;
   elements.trainModeLoading.hidden = !isTrainerLoading;
   elements.trainerWorkspace.hidden = !isTrain || isTrainerLoading;
@@ -760,6 +824,7 @@ function syncBoardUrl() {
       cards: board,
       randomLayoutOrder,
       order: boardOrder,
+      language: boardLanguage,
       wordSet: boardWordSet,
       source: boardSource,
     });
@@ -940,6 +1005,7 @@ function renderBoard() {
 
   renderBoardCounts(board);
   renderBoardOrderControl();
+  renderBoardLanguageControl();
   renderBoardWordSetControl();
   renderBoardVisibility();
 }
@@ -957,6 +1023,34 @@ function renderBoardOrderControl() {
 
 function renderBoardWordSetControl() {
   for (const button of elements.wordSetButtons) {
+    const official = button.dataset.wordSetValue === WORD_SET.OFFICIAL;
+    const unavailable =
+      nextBoardLanguage === LANGUAGE.ITALIAN && official;
+    const label =
+      nextBoardLanguage === LANGUAGE.ITALIAN
+        ? "Esteso"
+        : official
+          ? "Official"
+          : "Extended";
+    const count = official ? 400 : 800;
+    button.replaceChildren(
+      document.createTextNode(`${label} `),
+      Object.assign(document.createElement("span"), {
+        textContent: String(count),
+      }),
+    );
+    button.disabled = unavailable;
+    button.hidden = unavailable;
+    button.setAttribute(
+      "aria-label",
+      nextBoardLanguage === LANGUAGE.ITALIAN
+        ? "Usa le parole italiane Estese per il prossimo tabellone"
+        : `Use ${label} words for the next new board`,
+    );
+    button.title =
+      nextBoardLanguage === LANGUAGE.ITALIAN
+        ? translate(LANGUAGE.ITALIAN, "italianBetaSummary")
+        : button.getAttribute("aria-label");
     button.setAttribute(
       "aria-pressed",
       String(button.dataset.wordSetValue === nextBoardWordSet),
@@ -964,15 +1058,41 @@ function renderBoardWordSetControl() {
   }
 }
 
+function renderBoardLanguageControl() {
+  for (const button of elements.languageButtons) {
+    button.setAttribute(
+      "aria-pressed",
+      String(button.dataset.languageValue === nextBoardLanguage),
+    );
+  }
+}
+
 function setNewBoardWordSet(nextWordSet) {
   if (
     nextWordSet === nextBoardWordSet ||
+    (nextBoardLanguage === LANGUAGE.ITALIAN &&
+      nextWordSet !== WORD_SET.EXTENDED) ||
     (nextWordSet !== WORD_SET.OFFICIAL && nextWordSet !== WORD_SET.EXTENDED)
   ) {
     return;
   }
 
   nextBoardWordSet = nextWordSet;
+  renderBoardWordSetControl();
+}
+
+function setNewBoardLanguage(nextLanguage) {
+  if (
+    nextLanguage === nextBoardLanguage ||
+    (nextLanguage !== LANGUAGE.ENGLISH && nextLanguage !== LANGUAGE.ITALIAN)
+  ) {
+    return;
+  }
+  nextBoardLanguage = nextLanguage;
+  if (nextLanguage === LANGUAGE.ITALIAN) {
+    nextBoardWordSet = WORD_SET.EXTENDED;
+  }
+  renderBoardLanguageControl();
   renderBoardWordSetControl();
 }
 
@@ -1093,11 +1213,29 @@ async function runAnalysis() {
   }
 
   try {
-    const configuration = `${selectedModelId}:${selectedCandidateCount}`;
+    const configuration = `${boardLanguage}:${selectedModelId}:${selectedCandidateCount}`;
     if (!clueIndexPromises.has(configuration)) {
-      const candidateOption = CANDIDATE_OPTIONS.find(({ count }) => count === selectedCandidateCount);
-      elements.analysisStatus.textContent = `Loading ${selectedCandidateCount.toLocaleString()} clues (${(candidateOption.indexBytes / 1_000_000).toFixed(1)} MB index)`;
-      const clueIndexPromise = loadShardedClueIndex(indexManifestUrl(selectedModelId), selectedCandidateCount)
+      const candidateOptions =
+        boardLanguage === LANGUAGE.ITALIAN
+          ? ITALIAN_CANDIDATE_OPTIONS
+          : CANDIDATE_OPTIONS;
+      const candidateOption = candidateOptions.find(
+        ({ count }) => count === selectedCandidateCount,
+      );
+      elements.analysisStatus.textContent = translate(
+        boardLanguage,
+        "loadingClues",
+        {
+          count: selectedCandidateCount.toLocaleString(
+            boardLanguage === LANGUAGE.ITALIAN ? "it" : "en",
+          ),
+          megabytes: (candidateOption.indexBytes / 1_000_000).toFixed(1),
+        },
+      );
+      const clueIndexPromise = loadShardedClueIndex(
+        indexManifestUrl(selectedModelId, boardLanguage),
+        selectedCandidateCount,
+      )
         .catch((error) => {
           clueIndexPromises.delete(configuration);
           throw error;
@@ -1112,6 +1250,8 @@ async function runAnalysis() {
         boardSnapshot.map((card) => card.word),
         {
           model: activeModel.model,
+          revision: activeModel.revision,
+          inputPrefix: activeModel.inputPrefix,
           onProgress: (event) => renderModelProgress(event, runId),
         },
       ),
@@ -1125,17 +1265,23 @@ async function runAnalysis() {
         `Clue index ${clueIndex.model}/${clueIndex.dimensions}d is incompatible with ${activeModel.model}/${activeModel.dimensions}d`,
       );
     }
+    if (clueIndex.language && clueIndex.language !== boardLanguage) {
+      throw new Error(
+        `Clue index language ${clueIndex.language} is incompatible with ${boardLanguage}`,
+      );
+    }
 
     const scoreStartedAt = performance.now();
     const centeredBoardVectors = centerEmbeddings(boardVectors, clueIndex.centering.mean);
     const blueResult = analyzeEmbeddedBoard(boardSnapshot, centeredBoardVectors, clueIndex, {
       limit: RESULTS_PER_SIZE,
+      language: boardLanguage,
     });
     const redResult = analyzeEmbeddedBoard(
       boardForSide(boardSnapshot, SIDE.RED),
       centeredBoardVectors,
       clueIndex,
-      { limit: RESULTS_PER_SIZE },
+      { limit: RESULTS_PER_SIZE, language: boardLanguage },
     );
     const boardMetrics = calculateBoardMetrics(blueResult, redResult);
     latestAnalyses = { [SIDE.BLUE]: blueResult, [SIDE.RED]: redResult };
@@ -1144,7 +1290,14 @@ async function runAnalysis() {
     renderBoardMetrics(boardMetrics);
     renderAnalysisSummary(latestAnalysis);
     const scoreMs = Math.round(performance.now() - scoreStartedAt);
-    elements.analysisStatus.textContent = `${latestAnalysis.summary.candidateTotal} candidates | ${scoreMs} ms score`;
+    elements.analysisStatus.textContent = translate(
+      boardLanguage,
+      "analysisSummary",
+      {
+        count: latestAnalysis.summary.candidateTotal,
+        milliseconds: scoreMs,
+      },
+    );
     hasAnalysis = true;
   } catch (error) {
     if (runId !== analysisRun) {
@@ -1164,12 +1317,19 @@ function renderModelProgress(event, runId) {
   }
 
   if (event.status === "progress" && typeof event.progress === "number") {
-    elements.analysisStatus.textContent = `Loading local model ${Math.round(event.progress)}%`;
+    elements.analysisStatus.textContent = translate(
+      boardLanguage,
+      "loadingModel",
+      { progress: Math.round(event.progress) },
+    );
     return;
   }
 
   if (event.status === "ready") {
-    elements.analysisStatus.textContent = "Scoring candidates";
+    elements.analysisStatus.textContent = translate(
+      boardLanguage,
+      "scoringCandidates",
+    );
   }
 }
 
@@ -1640,8 +1800,20 @@ function loadBoardState(state) {
   board = cloneBoard(state.cards);
   randomLayoutOrder = [...state.randomLayoutOrder];
   boardOrder = state.order;
+  boardLanguage = state.language ?? LANGUAGE.ENGLISH;
+  nextBoardLanguage = boardLanguage;
   boardWordSet = state.wordSet;
+  nextBoardWordSet = boardWordSet;
   boardSource = { ...state.source };
+  const configuration = modelConfigurationForLanguage(boardLanguage);
+  selectedModelId = configuration.modelId;
+  selectedCandidateCount = configuration.candidateCount;
+  if (appMode === "train") {
+    applyStaticLocale(boardLanguage);
+  }
+  if (trainerInitialized) {
+    renderModelLab();
+  }
   board =
     boardOrder === BOARD_ORDER.RANDOM
       ? sortBoardByRandomLayout(board)

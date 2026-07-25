@@ -1,5 +1,8 @@
+import { LANGUAGE } from "./word-data.js";
+
 export const DEFAULT_MODEL_ID = "minilm-l6";
 export const DEFAULT_CANDIDATE_COUNT = 10_000;
+export const ITALIAN_MODEL_ID = "multilingual-e5-small";
 
 export const MODEL_OPTIONS = Object.freeze([
   {
@@ -54,6 +57,20 @@ export const MODEL_OPTIONS = Object.freeze([
   },
 ]);
 
+export const ITALIAN_MODEL_OPTION = Object.freeze({
+  id: ITALIAN_MODEL_ID,
+  model: "Xenova/multilingual-e5-small",
+  revision: "761b726dd34fb83930e26aab4e9ac3899aa1fa78",
+  inputPrefix: "query: ",
+  label: "Multilingual E5 small",
+  dimensions: 384,
+  modelBytes: 118_308_185,
+  humanQuality: 0.8125,
+  avoidRate: 0.125,
+  languages: [LANGUAGE.ITALIAN],
+  note: "Italian beta model, evaluated on the source-created feasibility fixture.",
+});
+
 // Keep the picker focused on models with a meaningful size, quality, or speed
 // advantage. MiniLM-L12 is practically dominated by BGE-small at the same
 // download size, while MPNet-base is slower, larger, and lower-recall here.
@@ -68,10 +85,38 @@ export const CANDIDATE_OPTIONS = Object.freeze([
   { count: 100_000, humanClueCoverage: 0.9627, indexBytes: 52_791_589 },
 ]);
 
+export const ITALIAN_CANDIDATE_OPTIONS = Object.freeze(
+  [
+    { count: 3_000, indexBytes: 1_587_237 },
+    { count: 10_000, indexBytes: 5_299_485 },
+  ],
+);
+
 export function modelOption(id) {
-  return MODEL_OPTIONS.find((option) => option.id === id) ?? MODEL_OPTIONS[0];
+  return (
+    MODEL_OPTIONS.find((option) => option.id === id) ??
+    (id === ITALIAN_MODEL_ID ? ITALIAN_MODEL_OPTION : MODEL_OPTIONS[0])
+  );
 }
 
-export function indexManifestUrl(modelId) {
+export function modelConfigurationForLanguage(language) {
+  if (language === LANGUAGE.ITALIAN) {
+    return {
+      modelId: ITALIAN_MODEL_ID,
+      candidateCount: DEFAULT_CANDIDATE_COUNT,
+      candidateOptions: ITALIAN_CANDIDATE_OPTIONS,
+    };
+  }
+  return {
+    modelId: DEFAULT_MODEL_ID,
+    candidateCount: DEFAULT_CANDIDATE_COUNT,
+    candidateOptions: CANDIDATE_OPTIONS,
+  };
+}
+
+export function indexManifestUrl(modelId, language = LANGUAGE.ENGLISH) {
+  if (language === LANGUAGE.ITALIAN) {
+    return `/data/model-lab/it/${modelId}/manifest.json`;
+  }
   return `/data/model-lab/${modelId}/manifest.json`;
 }

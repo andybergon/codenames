@@ -2,6 +2,10 @@ import {
   CURATED_EXTENDED_ADDITIONS,
   EXTENDED_WORD_REPORT,
 } from "./generated/extended-word-data.js";
+import {
+  ITALIAN_EXTENDED_WORDS,
+  ITALIAN_WORD_REPORT,
+} from "./generated/italian-word-data.js";
 
 export const TEAMS = [
   { id: "friendly", label: "Blue", short: "B" },
@@ -518,6 +522,26 @@ export const WORD_SET = Object.freeze({
   EXTENDED: "extended",
 });
 
+export const LANGUAGE = Object.freeze({
+  ENGLISH: "en",
+  ITALIAN: "it",
+});
+
+export const LANGUAGE_OPTIONS = Object.freeze({
+  [LANGUAGE.ENGLISH]: Object.freeze({
+    id: LANGUAGE.ENGLISH,
+    label: "English",
+    locale: "en",
+    beta: false,
+  }),
+  [LANGUAGE.ITALIAN]: Object.freeze({
+    id: LANGUAGE.ITALIAN,
+    label: "Italiano",
+    locale: "it",
+    beta: true,
+  }),
+});
+
 export const WORD_SET_OPTIONS = Object.freeze({
   [WORD_SET.OFFICIAL]: Object.freeze({
     id: WORD_SET.OFFICIAL,
@@ -531,12 +555,39 @@ export const WORD_SET_OPTIONS = Object.freeze({
   }),
 });
 
-export function getWordsForSet(wordSet) {
-  const option = WORD_SET_OPTIONS[wordSet];
+export const WORD_SET_OPTIONS_BY_LANGUAGE = Object.freeze({
+  [LANGUAGE.ENGLISH]: WORD_SET_OPTIONS,
+  [LANGUAGE.ITALIAN]: Object.freeze({
+    [WORD_SET.EXTENDED]: Object.freeze({
+      id: WORD_SET.EXTENDED,
+      assetId: ITALIAN_WORD_REPORT.id,
+      label: "Esteso",
+      words: ITALIAN_EXTENDED_WORDS,
+    }),
+  }),
+});
+
+export { ITALIAN_EXTENDED_WORDS, ITALIAN_WORD_REPORT };
+
+export function getWordsForSet(wordSet, language = LANGUAGE.ENGLISH) {
+  const option = WORD_SET_OPTIONS_BY_LANGUAGE[language]?.[wordSet];
   if (!option) {
-    throw new Error(`Unknown word set: ${wordSet}`);
+    throw new Error(`Unknown word set: ${language}:${wordSet}`);
   }
   return option.words;
+}
+
+export function wordSetAssetId(wordSet, language = LANGUAGE.ENGLISH) {
+  if (language === LANGUAGE.ITALIAN && wordSet === WORD_SET.EXTENDED) {
+    return ITALIAN_WORD_REPORT.id;
+  }
+  if (language === LANGUAGE.ENGLISH && wordSet === WORD_SET.OFFICIAL) {
+    return "en:official-v1";
+  }
+  if (language === LANGUAGE.ENGLISH && wordSet === WORD_SET.EXTENDED) {
+    return "en:extended-v3";
+  }
+  throw new Error(`Unknown word set: ${language}:${wordSet}`);
 }
 
 export const CLUE_BANK = [

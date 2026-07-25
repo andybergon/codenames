@@ -14,6 +14,7 @@ Local-first Vite application for embedding-powered Codenames clue recommendation
 - Run `npm run evaluate:explanations -- --max-cost-usd 0.08` after changing recommendation explanation rules or prompts. It compares three low-cost OpenAI models across varied semantic relationships, uses GPT-5.6 Sol as a blinded judge, and updates `scripts/generated/recommendation-explanation-evaluation.json`. Refresh model availability and prices from official OpenAI docs before a paid rerun, inject only `OPENAI_API_KEY`, and keep the hard cap.
 - Run `npm run benchmark:picker` after changing scoring performance or selectable model/index dimensions. It benchmarks every picker cell in one Node process with warmups and repeated runs, then updates `scripts/generated/model-picker-benchmark.json`.
 - Run `npm run evaluate:italian` when changing the Italian feasibility fixture or candidate models. It uses only original test terms, writes `scripts/generated/italian-embedding-feasibility.json`, and does not import the official Italian card list.
+- Run `npm run generate:italian` after changing `scripts/italian/extended-words.txt`, the pinned Leipzig source, Italian clue filters, E5 revision or prefix, centering, or shard boundaries. Keep `src/generated/italian-word-data.js` and `public/data/model-lab/it/multilingual-e5-small/` synchronized. The source-created pool is not an official Italian list.
 - Keep `docs/clue-engine.md` synchronized with model/index selection, legality rules, scoring coefficients, lane thresholds, board metrics, generated assets, and evaluation commands. README remains the compact product and setup entry point.
 - `server/recommendation-explanation-prompt.js` owns Train's semantic explanation contract. Keep the shared-concept opening, explicit relationship for every target, bounded structured output, and current judge-selected model synchronized with `docs/clue-engine.md`.
 - `src/recommendation-explanation.js` owns the local score summary and score-grounded risk sentence. Keep danger roles and margins out of the hosted semantic prompt.
@@ -36,8 +37,9 @@ Local-first Vite application for embedding-powered Codenames clue recommendation
 
 ## Share Compatibility
 
-- Current share links use v3 and the 800-word Extended pool.
+- English share links use v3 and the 800-word Extended pool. Italian Train links use v4 with language and `it:extended-v1` asset identity.
 - Preserve v1 links against the historical 366-word pool and v2 links against the former 407-word Extended pool. Do not silently decode old links with the current word bank.
+- Unknown v4 language or asset versions must fail closed. Do not fall back to English.
 
 ## Play Mode
 
@@ -51,7 +53,7 @@ Local-first Vite application for embedding-powered Codenames clue recommendation
 - `src/play/mode.js` owns Play DOM rendering, model orchestration, bot pacing, setup, resume, backward/forward history controls, and post-game score overlays. Keep `src/app.js` focused on Train and top-level mode switching.
 - `src/info-control.js` owns the accessible tooltip control and viewport-aware positioning shared by Train and Play.
 - Bot operatives must receive only public clue-to-word similarity candidates. Do not pass hidden roles, intended target IDs, recommendation danger metrics, or the full analysis into `chooseBotGuess`.
-- Play sessions use versioned local storage key `codenames-play-session-v1`. Recent-word history uses `codenames-play-word-reuse-v1` and keeps at most 32 boards. Board share links remain board-only and retain v1-v3 compatibility; avoid-recent boards require explicit links because their words are history-dependent.
+- Play sessions use versioned local storage key `codenames-play-session-v1`. Recent-word history uses `codenames-play-word-reuse-v1` and keeps at most 32 boards. Board share links remain board-only and retain v1-v4 compatibility; avoid-recent boards require explicit links because their words are history-dependent. Italian boards remain Train-only until the complete-game promotion gates pass.
 - `scripts/play-smoke.mjs` is the headless Play gate. Keep it in `npm run check` alongside the existing trainer smoke suite.
 - Run `npm run benchmark:play` after changing Play clue or guess policy. It supports frozen smoke, calibration, development, and test board splits. Use `--comparison-only` for embedding selection, then compare full reports with `npm run benchmark:compare`. Keep first-half mean clue number, clue distribution, low-similarity clue-number fills, pre-number passes, correct cards per turn, wrong-team hits, assassin rate, turns per game, and bounded completion covered by the smoke gate.
 - The Play Fun Index balances ambition, momentum, suspense, and flow. Treat wrong-team hits, assassin losses, neutral hits, fallbacks, human embedding agreement, and cross-model transfer as promotion guardrails, not point-scoring opportunities.

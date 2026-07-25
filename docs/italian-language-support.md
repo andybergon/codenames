@@ -6,12 +6,26 @@ Italian support is technically feasible, but it should launch first with an inde
 
 | 🧭 Path | 🎯 Rating | ⚖️ Rights | 🧠 Model | 🚦 Readiness |
 | --- | --- | --- | --- | --- |
-| 🇮🇹 Open Extended beta | 🟢 4.5 | CC BY source | Multilingual E5 small | Buildable |
+| 🇮🇹 Open Extended beta | 🟢 4.5 | Original + CC BY | Multilingual E5 small | Train beta |
 | 🔒 User-supplied local deck | 🟡 3.5 | Private input | Multilingual E5 small | Feasible |
 | 🃏 Official Italian preset | 🟠 3 | Permission needed | Multilingual E5 small | Legally blocked |
 | 🌐 Translated English set | 🔴 1 | Not official | Any | Reject |
 
-Keep English as the production default throughout the work. Add Italian behind an explicit language choice only after Unicode, generated assets, share compatibility, and evaluation gates are complete.
+English remains the production default. Italian is an explicit Train beta and does not change Play defaults or a bare app URL.
+
+## Implemented Train beta
+
+- **Vocabulary:** `it:extended-v1` contains 800 unique single-word entries authored for this project across ten semantic categories. It is not copied from or aligned to an official list.
+- **Clue corpus:** Leipzig Italian News 2024 100K supplies the CC BY 4.0 frequency tail. The generated manifest pins archive SHA-256 `669acde110a865bbdcd974ccff6838461ed3aff9106a9a743bde22153e6b7a6c`.
+- **Model:** `Xenova/multilingual-e5-small` is pinned at revision `761b726dd34fb83930e26aab4e9ac3899aa1fa78` with q8 model SHA-256 `f80102d3f2a1229f387d3c81909990d8945513e347b0eab049f7de3c6f98c193`. Board and clue terms both use the `query: ` prefix.
+- **Assets:** 3,000 and 10,000 candidate tiers use one mean over 30,000 Italian candidates. The 10k index is 5.30 MB.
+- **Compatibility:** v1 through v3 remain English. V4 encodes Italian, asset version 1, Extended, layout, roles, and UTF-8 custom words. Unsupported asset versions fail closed.
+- **Legality:** normalization preserves Unicode. Accent-folded comparison, Italian inflection stems, checked irregular families, and stem containment block examples such as `citta` against `città`, `attrice` against `attore`, and `abbraccia` against `braccio`.
+- **Interface:** the next-board language control exposes `Italiano Beta`. Loading, board, recommendation, and model copy use locale dictionaries. Play returns to English and keeps its saved settings independent.
+
+The in-app Chromium verification loaded a real Italian v4 board with 10,000 candidates. It retained 9,915 legal candidates and scored the board in 845 to 874 ms after model load. Post-analysis JavaScript heap was 115.4 MB used and 118.8 MB allocated. At viewport overrides 390x844, 768x1024, and 1440x900, the page had no horizontal overflow, controls remained visible, and Italian card labels were adjusted for the narrow five-column tablet board.
+
+The beta label is material. The 800 words and Italian interface copy still require two native reviewers, the evaluation fixture still needs at least 100 reviewed turns, and Play remains unavailable in Italian until complete-game and cross-model safety gates pass.
 
 ## Evidence boundary
 
@@ -22,6 +36,7 @@ This analysis uses three distinct evidence classes:
 - **Repo prototype:** [`italian-embedding-feasibility.json`](../scripts/generated/italian-embedding-feasibility.json) measures three q8 browser models on an original 16-turn Italian fixture. It contains no official Codenames vocabulary.
 
 The legal section is a conservative engineering recommendation, not legal advice.
+Checked asset attribution lives in [Data licenses and attribution](data-licenses.md).
 
 ## Vocabulary and licensing
 
@@ -47,7 +62,7 @@ Safe implementation choices:
 
 ### Independent Extended vocabulary
 
-The best base is an independently selected Italian noun pool derived from a clearly licensed frequency corpus:
+The production implementation separates the authored board pool from the licensed frequency corpus:
 
 | 📚 Source | 🎯 Rating | ⚖️ License | 💼 Commercial-safe | 📌 Use |
 | --- | --- | --- | --- | --- |
@@ -61,15 +76,15 @@ The [Leipzig Corpora Collection terms](https://www.wortschatz.uni-leipzig.de/en/
 
 [PAISÀ](https://www.corpusitaliano.it/en/index.html) combines CC BY-SA and CC BY-NC-SA texts. That mixed noncommercial restriction makes it a poor production source for an unrestricted public app.
 
-Create the Italian Extended set as an original 800-word pool, not as a translation:
+The checked implementation creates the Italian Extended set as an original 800-word pool, not as a translation:
 
-1. Extract common single-word Italian terms from the pinned Leipzig corpus.
-2. Keep concrete and evocative nouns. Remove function words, most verbs and adjectives, unmarked proper names, inflection duplicates, slurs, and terms that are primarily abbreviations.
-3. Normalize with Unicode NFKC while preserving accents in display and identity.
-4. Group inflections by lemma before selection so singular and plural variants cannot occupy separate slots.
-5. Score familiarity, association breadth, semantic-domain balance, polysemy, taboo risk, and redundancy.
-6. Have at least two native Italian speakers independently review every finalist for familiarity, regional bias, clue potential, and accidental offensiveness.
-7. Publish the selected list with corpus attribution, generation parameters, reviewer rubric, source checksum, and its own version.
+1. Author common, concrete, and evocative single-word entries across ten semantic categories without consulting an official list.
+2. Validate exactly 800 unique Unicode-letter entries and publish the source hash.
+3. Use the pinned Leipzig corpus only for clue-candidate frequency, not as ownership evidence for the board pool.
+4. Prioritize the authored 800 words as game-friendly clue candidates before the licensed frequency tail.
+5. Preserve accents in display and identity, then use accent folding only inside the legality comparison.
+6. Have at least two native Italian speakers independently review every entry for familiarity, regional bias, clue potential, and accidental offensiveness.
+7. Publish the reviewer rubric and reviewer version alongside a future reviewed asset revision.
 
 The English Extended pool's 14-domain balance is a useful shape, but the Italian categories and final words must be reviewed independently. A translated selection would preserve English assumptions instead of Italian playfulness.
 
@@ -260,7 +275,7 @@ Do not translate or redistribute the current unlicensed Cultural Codes and Conne
 
 ## Staged implementation plan
 
-### Stage 0: rights and source pinning
+### Stage 0: rights and source pinning, partially complete
 
 - Request the official second-edition Italian list and redistribution terms from Cranio Creations and CGE.
 - Pin the Leipzig Italian corpus archive, checksum, attribution, and transformation rules.
@@ -268,7 +283,7 @@ Do not translate or redistribute the current unlicensed Cultural Codes and Conne
 
 Exit: every proposed checked-in word asset has documented provenance and redistribution terms.
 
-### Stage 1: language-safe substrate
+### Stage 1: language-safe substrate, complete
 
 - Add Unicode-preserving normalization and lemma-family legality tests.
 - Introduce locale dictionaries without exposing an Italian production choice.
@@ -277,16 +292,16 @@ Exit: every proposed checked-in word asset has documented provenance and redistr
 
 Exit: all English tests and share fixtures pass unchanged, plus Italian Unicode fixtures pass.
 
-### Stage 2: Extended Train beta
+### Stage 2: Extended Train beta, technical release complete
 
 - Generate and review `it:extended-v1`.
 - Build the Multilingual E5 3k and 10k indexes with a 30k Italian mean.
 - Add Italian as an explicit Train beta choice.
 - Measure actual first-load time, memory, scoring latency, and responsive UI at 390x844, 768x1024, and 1440x900.
 
-Exit: native reviewers accept the pool and generated clues, and browser performance is usable.
+Technical exit: generated assets, browser performance, responsive UI, and compatibility checks pass. Promotion exit remains pending native review of the pool, copy, and generated clues.
 
-### Stage 3: Play validation
+### Stage 3: Play validation, pending
 
 - Run the complete 100-board paired benchmark.
 - Run a cross-model operative stress test.
@@ -295,7 +310,7 @@ Exit: native reviewers accept the pool and generated clues, and browser performa
 
 Exit: Fun, safety, legality, completion, and human-review gates all pass.
 
-### Stage 4: official preset
+### Stage 4: official preset, legally blocked
 
 - Add `it:official-v1` only after written redistribution permission.
 - Pin the exact edition and list version.

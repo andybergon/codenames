@@ -266,6 +266,91 @@ test("choosing a word pool does not replace the current board", async ({ page })
   expect(page.url()).toBe(originalUrl);
 });
 
+test("Italian beta creates a versioned Train board and survives reload", async ({
+  page,
+}) => {
+  await page.goto(SHARED_BOARD);
+  const firstWord = page.getByRole("textbox", { name: "Word 1", exact: true });
+  const originalWord = await firstWord.inputValue();
+  const originalUrl = page.url();
+
+  await page.getByRole("button", { name: /Italiano Beta/ }).click();
+
+  await expect(
+    page.getByRole("button", {
+      name: "Usa le parole italiane Estese per il prossimo tabellone",
+    }),
+  ).toHaveAttribute("aria-pressed", "true");
+  await expect(
+    page.getByRole("button", {
+      name: "Use Official words for the next new board",
+    }),
+  ).toBeHidden();
+  await expect(firstWord).toHaveValue(originalWord);
+  expect(page.url()).toBe(originalUrl);
+
+  await page.getByRole("button", { name: "New", exact: true }).click();
+
+  await expect(page.locator("html")).toHaveAttribute("lang", "it");
+  await expect(page.getByRole("heading", { name: "Tabellone" })).toBeVisible();
+  await expect(page.locator("#model-lab-model")).toHaveValue(
+    "multilingual-e5-small",
+  );
+  await expect(page.locator("#model-lab-model")).toBeDisabled();
+  await expect(page.locator("#model-lab-candidates")).toHaveValue("10000");
+  await expect(page.locator(".italian-model-summary")).toContainText(
+    "insieme Esteso originale di 800 parole",
+  );
+  expect(new URL(page.url()).searchParams.get("b")).toMatch(
+    /^4s[A-Za-z0-9_-]{11}i1xs$/,
+  );
+
+  const words = await page
+    .locator(".word-input")
+    .evaluateAll((inputs) => inputs.map((input) => input.value));
+  expect(words).toHaveLength(25);
+  expect(new Set(words).size).toBe(25);
+  expect(words).not.toContain(originalWord);
+
+  await page.reload();
+  await expect(page.locator("html")).toHaveAttribute("lang", "it");
+  await expect(page.locator(".word-input")).toHaveCount(25);
+  await expect(page.locator(".word-input").first()).toHaveValue(words[0]);
+});
+
+test("Italian Train controls fit phone, tablet, and desktop viewports", async ({
+  page,
+}) => {
+  await page.goto(SHARED_BOARD);
+  await page.getByRole("button", { name: /Italiano Beta/ }).click();
+  await page.getByRole("button", { name: "New", exact: true }).click();
+
+  for (const viewport of [
+    { width: 390, height: 844 },
+    { width: 768, height: 1024 },
+    { width: 1440, height: 900 },
+  ]) {
+    await page.setViewportSize(viewport);
+    const layout = await page.evaluate(() => ({
+      pageOverflows:
+        document.documentElement.scrollWidth >
+        document.documentElement.clientWidth,
+      languageControlVisible:
+        document.querySelector(".language-switch").getBoundingClientRect().width >
+        0,
+      boardWidth: document.querySelector(".board-panel").getBoundingClientRect()
+        .width,
+      viewportWidth: document.documentElement.clientWidth,
+    }));
+    expect(layout.pageOverflows, `overflow at ${viewport.width}px`).toBe(false);
+    expect(
+      layout.languageControlVisible,
+      `language control hidden at ${viewport.width}px`,
+    ).toBe(true);
+    expect(layout.boardWidth).toBeLessThanOrEqual(layout.viewportWidth);
+  }
+});
+
 test("recommendation perspective can switch between Blue and Red", async ({ page }) => {
   await page.goto(SHARED_BOARD);
 

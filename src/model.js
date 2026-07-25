@@ -1,4 +1,8 @@
-import { EXTENDED_WORDS } from "./word-data.js";
+import {
+  EXTENDED_WORDS,
+  ITALIAN_EXTENDED_WORDS,
+  LANGUAGE,
+} from "./word-data.js";
 
 export const HAZARD_POLICY = Object.freeze({
   friendly: { multiplier: 0, offset: 0 },
@@ -35,7 +39,11 @@ export function analyzeEmbeddedBoard(board, boardVectors, clueIndex, options = {
 
   const friendlies = entries.filter((card) => card.team === "friendly");
   const hazards = entries.filter((card) => card.team !== "friendly");
-  const candidateIndices = buildLegalCandidateIndices(entries, clueIndex.clues);
+  const candidateIndices = buildLegalCandidateIndices(
+    entries,
+    clueIndex.clues,
+    options.language,
+  );
 
   if (friendlies.length < 1 || hazards.length === 0 || candidateIndices.length === 0) {
     return emptyAnalysis(friendlies.length, candidateIndices.length);
@@ -126,8 +134,9 @@ export function calculateBoardMetrics(blueAnalysis, redAnalysis) {
 
 export function normalizeTerm(term) {
   return String(term ?? "")
+    .normalize("NFKC")
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, " ")
+    .replace(/[^\p{L}\p{N}]+/gu, " ")
     .trim()
     .replace(/\s+/g, " ");
 }
@@ -156,10 +165,10 @@ function emptyAnalysis(friendlyTotal, candidateTotal) {
   };
 }
 
-function buildLegalCandidateIndices(entries, clues) {
+function buildLegalCandidateIndices(entries, clues, language = LANGUAGE.ENGLISH) {
   const boardWords = entries.map((entry) => normalizeTerm(entry.word));
   const candidateIndices = [];
-  const isForbidden = buildClueLegalityFilter(boardWords);
+  const isForbidden = buildClueLegalityFilter(boardWords, language);
 
   clues.forEach((clue, candidateIndex) => {
     if (!isForbidden(normalizeTerm(clue))) {
@@ -170,37 +179,104 @@ function buildLegalCandidateIndices(entries, clues) {
   return candidateIndices;
 }
 
-const KNOWN_COMPOUND_COMPONENTS = new Set([
-  ...EXTENDED_WORDS.map((word) => normalizeTerm(word).replaceAll(" ", "")),
-  "down",
-]);
+const KNOWN_COMPOUND_COMPONENTS = new Map(
+  [
+    [LANGUAGE.ENGLISH, [...EXTENDED_WORDS, "down"]],
+    [LANGUAGE.ITALIAN, ITALIAN_EXTENDED_WORDS],
+  ].map(([language, words]) => [
+    language,
+    new Set(
+      words.map((word) =>
+        foldAccents(normalizeTerm(word)).replaceAll(" ", ""),
+      ),
+    ),
+  ]),
+);
 
-export function isForbiddenClue(clue, boardWords) {
-  return buildClueLegalityFilter(boardWords)(clue);
+export function isForbiddenClue(
+  clue,
+  boardWords,
+  options = {},
+) {
+  const language = options.language ?? LANGUAGE.ENGLISH;
+  return buildClueLegalityFilter(boardWords, language)(
+    normalizeTerm(clue),
+  );
 }
 
-function buildClueLegalityFilter(boardWords) {
-  const compactBoardWords = boardWords.map((word) => word.replaceAll(" ", ""));
-  const boardWordSet = new Set(compactBoardWords);
-  const boardStemSet = new Set(compactBoardWords.map(simpleStem));
-  const boardInflections = new Set(compactBoardWords.flatMap(simpleInflections));
+function buildClueLegalityFilter(boardWords, language) {
+  if (language === LANGUAGE.ENGLISH) {
+    const compactBoardWords = boardWords.map((word) =>
+      normalizeTerm(word).replaceAll(" ", ""),
+    );
+    const boardWordSet = new Set(compactBoardWords);
+    const boardStemSet = new Set(compactBoardWords.map(simpleStem));
+    const boardInflections = new Set(
+      compactBoardWords.flatMap(simpleInflections),
+    );
+
+    return (clue) => {
+      const compactClue = normalizeTerm(clue).replaceAll(" ", "");
+      if (
+        boardWordSet.has(compactClue) ||
+        boardStemSet.has(simpleStem(compactClue)) ||
+        boardInflections.has(compactClue) ||
+        simpleInflections(compactClue).some((form) =>
+          boardWordSet.has(form),
+        )
+      ) {
+        return true;
+      }
+
+      return compactBoardWords.some(
+        (compactWord) =>
+          isKnownCompoundContainment(
+            compactClue,
+            compactWord,
+            LANGUAGE.ENGLISH,
+          ) ||
+          isKnownCompoundContainment(
+            compactWord,
+            compactClue,
+            LANGUAGE.ENGLISH,
+          ),
+      );
+    };
+  }
 
   return (clue) => {
-    const compactClue = clue.replaceAll(" ", "");
-    if (
-      boardWordSet.has(compactClue) ||
-      boardStemSet.has(simpleStem(compactClue)) ||
-      boardInflections.has(compactClue) ||
-      simpleInflections(compactClue).some((form) => boardWordSet.has(form))
-    ) {
-      return true;
-    }
+    const compactClue = foldAccents(normalizeTerm(clue)).replaceAll(" ", "");
+    const clueStem = simpleStem(compactClue, language);
 
-    return compactBoardWords.some(
-      (compactWord) =>
-        isKnownCompoundContainment(compactClue, compactWord) ||
-        isKnownCompoundContainment(compactWord, compactClue),
-    );
+    return boardWords.some((word) => {
+      const compactWord = foldAccents(normalizeTerm(word)).replaceAll(" ", "");
+      const wordStem = simpleStem(compactWord, language);
+
+      if (compactClue === compactWord || clueStem === wordStem) {
+        return true;
+      }
+      if (
+        clueStem.length >= 4 &&
+        wordStem.length >= 4 &&
+        (clueStem.includes(wordStem) || wordStem.includes(clueStem))
+      ) {
+        return true;
+      }
+      if (
+        isKnownCompoundContainment(compactClue, compactWord, language) ||
+        isKnownCompoundContainment(compactWord, compactClue, language)
+      ) {
+        return true;
+      }
+      if (compactClue.length >= 5 && compactWord.length >= 5) {
+        return (
+          compactClue.includes(compactWord) ||
+          compactWord.includes(compactClue)
+        );
+      }
+
+      return false;
+    });
   };
 }
 
@@ -257,7 +333,7 @@ function shouldDoubleFinalConsonant(value) {
   );
 }
 
-function isKnownCompoundContainment(container, component) {
+function isKnownCompoundContainment(container, component, language) {
   if (component.length < 3 || container.length <= component.length) {
     return false;
   }
@@ -268,7 +344,10 @@ function isKnownCompoundContainment(container, component) {
       ? container.slice(0, -component.length)
       : "";
 
-  return remainder.length >= 3 && KNOWN_COMPOUND_COMPONENTS.has(remainder);
+  return (
+    remainder.length >= 3 &&
+    KNOWN_COMPOUND_COMPONENTS.get(language)?.has(remainder)
+  );
 }
 
 function buildCandidateSimilarities(
@@ -681,11 +760,46 @@ function averageTopWorth(suggestions, limit) {
   return average(worths);
 }
 
-function simpleStem(value) {
+function simpleStem(value, language = LANGUAGE.ENGLISH) {
+  if (language === LANGUAGE.ITALIAN) {
+    return italianStem(value);
+  }
   return value
     .replace(/(ization|ational|fulness|ousness|iveness|tional)$/u, "")
     .replace(/(ments|ment|ness|able|ible)$/u, "")
     .replace(/(ing|ers|ies|ied|ed|ly|es|s)$/u, "");
+}
+
+const ITALIAN_IRREGULAR_FAMILIES = new Map(
+  [
+    ["attore", "attrice"],
+    ["scrivere", "scritto"],
+    ["fare", "fatto"],
+    ["uomo", "uomini"],
+    ["bue", "buoi"],
+  ].flatMap((family, index) =>
+    family.map((word) => [word, `irregular-${index}`]),
+  ),
+);
+
+function italianStem(value) {
+  const irregular = ITALIAN_IRREGULAR_FAMILIES.get(value);
+  if (irregular) {
+    return irregular;
+  }
+
+  const verbStem = value
+    .replace(/(erebbe|irebbe|eranno|iranno|avano|evano|ivano)$/u, "")
+    .replace(/(ando|endo|ato|uto|ito|are|ere|ire)$/u, "");
+  if (verbStem !== value && verbStem.length >= 3) {
+    return verbStem;
+  }
+
+  return value.length >= 4 ? value.replace(/[aeio]$/u, "") : value;
+}
+
+function foldAccents(value) {
+  return value.normalize("NFD").replace(/\p{M}+/gu, "");
 }
 
 function cleanDisplayWord(word) {

@@ -7,16 +7,27 @@ const extractorPromises = new Map();
 
 export async function embedTerms(terms, options = {}) {
   const model = options.model ?? EMBEDDING_MODEL;
-  const vectorCache = getVectorCache(model);
+  const revision = options.revision ?? "main";
+  const inputPrefix = options.inputPrefix ?? "";
+  const configuration = `${model}@${revision}:${inputPrefix}`;
+  const vectorCache = getVectorCache(configuration);
   const normalizedTerms = terms.map(normalizeEmbeddingTerm);
   const missingTerms = [...new Set(normalizedTerms.filter((term) => term && !vectorCache.has(term)))];
 
   if (missingTerms.length > 0) {
-    const extractor = await getExtractor(model, options.onProgress);
-    const output = await extractor(missingTerms, {
-      pooling: "mean",
-      normalize: true,
-    });
+    const extractor = await getExtractor(
+      model,
+      revision,
+      configuration,
+      options.onProgress,
+    );
+    const output = await extractor(
+      missingTerms.map((term) => `${inputPrefix}${term}`),
+      {
+        pooling: "mean",
+        normalize: true,
+      },
+    );
     const vectors = output.tolist();
 
     missingTerms.forEach((term, index) => {
@@ -49,26 +60,33 @@ export function centerEmbeddings(vectors, mean) {
   });
 }
 
-function getExtractor(model, onProgress) {
-  if (!extractorPromises.has(model)) {
-    extractorPromises.set(model, pipeline("feature-extraction", model, {
-      dtype: "q8",
-      progress_callback: onProgress,
-    }));
+function getExtractor(model, revision, configuration, onProgress) {
+  if (!extractorPromises.has(configuration)) {
+    extractorPromises.set(
+      configuration,
+      pipeline("feature-extraction", model, {
+        dtype: "q8",
+        revision,
+        progress_callback: onProgress,
+      }),
+    );
   }
 
-  return extractorPromises.get(model);
+  return extractorPromises.get(configuration);
 }
 
-function getVectorCache(model) {
-  if (!vectorCaches.has(model)) vectorCaches.set(model, new Map());
-  return vectorCaches.get(model);
+function getVectorCache(configuration) {
+  if (!vectorCaches.has(configuration)) {
+    vectorCaches.set(configuration, new Map());
+  }
+  return vectorCaches.get(configuration);
 }
 
-function normalizeEmbeddingTerm(term) {
+export function normalizeEmbeddingTerm(term) {
   return String(term ?? "")
+    .normalize("NFKC")
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, " ")
+    .replace(/[^\p{L}\p{N}]+/gu, " ")
     .trim()
     .replace(/\s+/g, " ");
 }

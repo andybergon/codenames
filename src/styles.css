@@ -116,6 +116,18 @@ body {
 .model-lab-controls label { display: grid; gap: 5px; color: var(--muted); font-size: .7rem; font-weight: 800; }
 .model-lab-controls select { min-height: 38px; border: 1px solid var(--line); border-radius: 7px; padding: 0 30px 0 10px; background: var(--panel); color: var(--ink); }
 .model-lab-matrix { min-width: 0; }
+.italian-model-summary {
+  display: grid;
+  max-width: 680px;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--green);
+  border-radius: 9px;
+  padding: 14px;
+  background: var(--panel);
+}
+.italian-model-summary strong { font-size: .86rem; }
+.italian-model-summary p { color: var(--muted); font-size: .76rem; line-height: 1.5; }
 .model-table-scroll { overflow-x: auto; }
 .model-comparison-table { width: 100%; min-width: 940px; border-spacing: 8px; table-layout: fixed; }
 .model-comparison-table th, .model-comparison-table td { padding: 0; border: 0; text-align: left; vertical-align: top; }
@@ -423,6 +435,7 @@ h3 {
 }
 
 .word-set-switch,
+.language-switch,
 .order-switch {
   display: inline-flex;
   gap: 2px;
@@ -433,6 +446,7 @@ h3 {
 }
 
 .word-set-switch button,
+.language-switch button,
 .order-switch button {
   min-height: 30px;
   border: 0;
@@ -444,24 +458,28 @@ h3 {
   font-weight: 850;
 }
 
-.word-set-switch button span {
+.word-set-switch button span,
+.language-switch button span {
   color: inherit;
   font-size: 0.62rem;
   opacity: 0.72;
 }
 
 .word-set-switch button:hover,
+.language-switch button:hover,
 .order-switch button:hover {
   color: var(--ink);
 }
 
 .word-set-switch button[aria-pressed="true"],
+.language-switch button[aria-pressed="true"],
 .order-switch button[aria-pressed="true"] {
   background: var(--ink);
   color: var(--on-ink);
 }
 
 .word-set-switch button:focus-visible,
+.language-switch button:focus-visible,
 .order-switch button:focus-visible {
   outline: 2px solid var(--blue);
   outline-offset: 1px;
@@ -3677,6 +3695,13 @@ button.play-card:not(:disabled):hover {
   }
 }
 
+@media (min-width: 721px) and (max-width: 820px) {
+  html[lang="it"] .word-input {
+    font-size: 0.6rem;
+    letter-spacing: -0.02em;
+  }
+}
+
 @media (max-width: 820px) {
   .app-shell {
     width: min(100vw - 20px, 720px);
@@ -4140,6 +4165,7 @@ button.play-card:not(:disabled):hover {
   .board-source-actions,
   .board-control,
   .word-set-switch,
+  .language-switch,
   .order-switch {
     width: 100%;
   }
@@ -4148,11 +4174,16 @@ button.play-card:not(:disabled):hover {
     grid-column: 1 / -1;
   }
 
+  .board-order-control {
+    grid-column: 1 / -1;
+  }
+
   .board-control-label {
     display: none;
   }
 
   .word-set-switch,
+  .language-switch,
   .order-switch {
     display: flex;
     flex: 1;
@@ -4160,6 +4191,7 @@ button.play-card:not(:disabled):hover {
 
   .board-source-actions .board-action,
   .word-set-switch button,
+  .language-switch button,
   .order-switch button {
     flex: 1;
     min-width: 0;
@@ -4171,12 +4203,14 @@ button.play-card:not(:disabled):hover {
   }
 
   .word-set-switch button,
+  .language-switch button,
   .order-switch button {
     padding: 0 6px;
     font-size: 0.68rem;
   }
 
-  .word-set-switch button span {
+  .word-set-switch button span,
+  .language-switch button span {
     display: none;
   }
 

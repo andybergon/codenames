@@ -7,22 +7,24 @@ A local-first Codenames clue trainer and one-human game. Train mode ranks clue o
 ## Current product
 
 - 🎮 **Modes** · Play is the default · Train keeps the complete analysis workflow at `?mode=train`
+- 🌍 **Languages** · English remains the default · Italian Extended is available as a Train beta
 - 🤖 **Play bots** · configurable model, vocabulary, clue policy, operative aggression, and bonus guesses
-- 🧠 **Train model** · MiniLM-L6 by default · browser-local inference
+- 🧠 **Train model** · MiniLM-L6 for English · Multilingual E5 small for Italian · browser-local inference
 - 📚 **Clue index** · balanced 10,000-word default · selectable 3k, 30k, and experimental 100k tiers
 - 🛡️ **Recommendations** · safe clues for one to three targets · stretch clues for four to nine
 - 💬 **Explanations** · shared concept and target relationships · score-based danger stays separate
 - 🎴 **Board words** · Official 400-word set · Extended 800-word strict superset
 - 🔁 **New boards** · fully random or avoid words from recent local games
-- 🔗 **Sharing** · versioned `?b=` links preserve the board, roles, word set, and layout
+- 🔗 **Sharing** · versioned `?b=` links preserve language, board, roles, word set, and layout
 - 🎨 **Appearance** · system, light, and dark modes
 - 🔒 **Privacy** · scoring and roles stay in the browser · explanations send only the clue and intended targets
 
-The first model load is cached by the browser. Training progress is session-local. Play progress is saved after every event and can be resumed or discarded from setup. During an active game, history can move backward and forward. Shared board links open Train without Play history.
+The first model load is cached by the browser. Italian Train loads about 123.6 MB on a cold browser, primarily the 118.3 MB E5 model. Training progress is session-local. Play progress is saved after every event and can be resumed or discarded from setup. During an active game, history can move backward and forward. Shared board links open Train without Play history.
 
 ## Docs
 
 - [Clue engine](docs/clue-engine.md) explains the embedding pipeline, legality filter, scoring contract, model assets, and evaluation commands.
+- [Data licenses and attribution](docs/data-licenses.md) records Italian board, corpus, and model provenance.
 - [Play clue number analysis](docs/play-clue-number-analysis.md) records the controlled Play-policy evidence.
 - [Play fun optimization](docs/play-fun-optimization.md) defines the Fun Index and hosted-model promotion gates.
 - [Italian language support](docs/italian-language-support.md) evaluates vocabulary rights, multilingual models, compatibility, cost, and staged implementation.
@@ -97,13 +99,16 @@ Embedding selection uses frozen board splits, model-specific similarity calibrat
 
 **Extended** is a strict 800-word superset. Its 400 additions are selected from a reviewed candidate universe using frequency, association breadth, semantic-domain entropy, and category fit across 14 domains.
 
+**Italian Extended beta** is an independently authored 800-word pool. It is not a translation or transcription of an official Codenames list. The Italian clue corpus is derived from the CC BY 4.0 Leipzig Italian News 2024 100K corpus, with the source archive, checksum, filters, model revision, task prefix, and 30,000-word centering mean recorded in the generated manifest. The official Italian preset remains unavailable until public redistribution permission is documented.
+
 Regenerate the checked-in Extended set and audit report with:
 
 ```sh
 npm run generate:extended
+npm run generate:italian
 ```
 
-Version 3 share links encode the selected word set. Version 1 retains the historical 366-word pool, and version 2 retains the former Official 400 and Extended 407 pools so existing shared boards remain reproducible.
+Version 4 share links encode Italian, the `it:extended-v1` asset version, and UTF-8 custom words. English remains on version 3. Version 1 retains the historical 366-word pool, and version 2 retains the former Official 400 and Extended 407 pools so existing shared boards remain reproducible.
 
 ## Generated assets
 
