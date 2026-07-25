@@ -195,6 +195,34 @@ test("Play randomly assigns a seat and keeps all four overrides available", asyn
   await expect(page.locator("[data-play-seat][aria-pressed='true']")).toHaveCount(1);
 });
 
+test("switching modes keeps shared layout positions stable", async ({ page }) => {
+  await page.setViewportSize({ width: 857, height: 998 });
+  await page.goto("/?mode=play");
+
+  const positions = async () =>
+    page.evaluate(() => ({
+      title: document.querySelector("#app-title").getBoundingClientRect().left,
+      modeSwitch: document
+        .querySelector(".app-mode-switch")
+        .getBoundingClientRect().left,
+      mainCard: document
+        .querySelector(
+          document.querySelector("#play-mode").hidden
+            ? ".board-panel"
+            : "#play-setup",
+        )
+        .getBoundingClientRect().left,
+    }));
+
+  const playPositions = await positions();
+  await page.getByRole("button", { name: "Train", exact: true }).click();
+  const trainPositions = await positions();
+
+  expect(trainPositions.title).toBeCloseTo(playPositions.title, 1);
+  expect(trainPositions.modeSwitch).toBeCloseTo(playPositions.modeSwitch, 1);
+  expect(trainPositions.mainCard).toBeCloseTo(playPositions.mainCard, 1);
+});
+
 test("Play exposes and saves bot policy settings", async ({ page }) => {
   await page.goto("/?mode=play");
 
