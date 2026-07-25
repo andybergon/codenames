@@ -20,6 +20,11 @@
 - 📊 Calibrate Play bots and Worth from recorded outcomes.
   - Aggregate archived outcome summaries and fit bot confidence, multi tolerance, and Worth coefficients against actual play.
 
+- 🗣️ Add a plain-language post-game clue explainer.
+  - Explain why each clue may connect to its intended targets and why high-scoring mistakes or danger words were tempting, using the selected turn's event history and completion-gated analysis.
+  - Prototype deterministic score, rank, and margin language first, then compare an on-demand LLM explanation for the semantic “why”; embeddings alone measure relationship strength but cannot name the relationship.
+  - Evaluate usefulness, latency, cost, privacy, and caching before choosing the production approach. Never expose or send analysis during live play.
+
 - 💬 Explain recommendations in plain language from existing scores.
   - Summarize intended targets, weakest target, closest danger, and the main failure risk without an LLM call.
   - Keep Worth, margin, fit, cohesion, and similarity values available behind expandable technical details.
