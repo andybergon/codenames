@@ -14,7 +14,6 @@ import {
   teamForSide,
 } from "../src/gameplay.js";
 import { analyzeEmbeddedBoard, isForbiddenClue, normalizeTerm } from "../src/model.js";
-import { DEFAULT_CANDIDATE_COUNT, DEFAULT_MODEL_ID } from "../src/model-lab.js";
 import {
   PLAY_CLUE_POLICY,
   chooseBotClue,
@@ -22,6 +21,10 @@ import {
   createSeededRandom,
   scorePlayClue,
 } from "../src/play/bots.js";
+import {
+  DEFAULT_PLAY_BOT_SETTINGS,
+  PLAY_BONUS_POLICY,
+} from "../src/play/settings.js";
 import {
   GAME_PHASE,
   PLAYER_ROLE,
@@ -164,6 +167,8 @@ const report = {
       "Every simulation uses the production Play state machine and stops only at an agent or assassin win.",
     fallback:
       "If the production analyzer has no ranked suggestion, use the legal indexed clue closest to one remaining agent, number 1, and count the turn.",
+    firstHalf:
+      "For each completed game, take the first ceiling(total clue turns / 2) clue turns, then aggregate their clue numbers.",
     policies: {
       current:
         "Worth + current risk adjustment + state-dependent clue-number bonus + 18 x margin.",
@@ -195,6 +200,13 @@ async function simulateGame({
   wordSet,
 }) {
   let game = createPlayGame({
+    botSettings: {
+      modelId: options.modelId,
+      candidateCount: options.candidates,
+      cluePolicy: policy,
+      multiTolerance,
+      bonusGuesses: bonusGuessPolicy,
+    },
     cards,
     humanSeat: { side: SIDE.BLUE, role: PLAYER_ROLE.SPYMASTER },
     seed,
@@ -438,6 +450,9 @@ function summarizeGame(
     correctBonusGuesses,
     clueDecisions,
     clues: clueDistribution(clues),
+    firstHalfClueNumbers: clues
+      .slice(0, Math.ceil(clues.length / 2))
+      .map(({ number }) => number),
     guesses: guesses.length,
     correctGuesses,
     wrongTeamHits,
@@ -461,6 +476,7 @@ function summarizePolicy(gameResults) {
       summary.bonusGuesses += game.bonusGuesses;
       summary.correctBonusGuesses += game.correctBonusGuesses;
       summary.clueDecisions.push(...game.clueDecisions);
+      summary.firstHalfClueNumbers.push(...game.firstHalfClueNumbers);
       summary.blueWins += Number(game.winner === SIDE.BLUE);
       summary.redWins += Number(game.winner === SIDE.RED);
       for (const [number, count] of Object.entries(game.clues)) {
@@ -480,6 +496,7 @@ function summarizePolicy(gameResults) {
       bonusGuesses: 0,
       correctBonusGuesses: 0,
       clueDecisions: [],
+      firstHalfClueNumbers: [],
       blueWins: 0,
       redWins: 0,
       clues: {},
@@ -502,6 +519,7 @@ function summarizePolicy(gameResults) {
     clueNumberDistribution: totals.clues,
     multiClueRate: ratio(multiClues, totals.turns),
     meanClueNumber: ratio(clueNumberTotal, totals.turns),
+    firstHalfMeanClueNumber: mean(totals.firstHalfClueNumbers),
     correctCardsPerTurn: ratio(totals.correctGuesses, totals.turns),
     wrongTeamHits: totals.wrongTeamHits,
     wrongTeamHitsPerGame: ratio(totals.wrongTeamHits, gameCount),
@@ -542,6 +560,7 @@ function metricDeltas(current, hybrid) {
     [
       "multiClueRate",
       "meanClueNumber",
+      "firstHalfMeanClueNumber",
       "correctCardsPerTurn",
       "wrongTeamHitsPerGame",
       "wrongTeamGuessRate",
@@ -567,12 +586,12 @@ function boardSeed(boardIndex) {
 function parseOptions(args) {
   const values = {
     boards: DEFAULT_BOARD_COUNT,
-    candidates: DEFAULT_CANDIDATE_COUNT,
-    modelId: DEFAULT_MODEL_ID,
+    candidates: DEFAULT_PLAY_BOT_SETTINGS.candidateCount,
+    modelId: DEFAULT_PLAY_BOT_SETTINGS.modelId,
     wordSet: WORD_SET.OFFICIAL,
-    clueSelection: "random",
-    multiTolerance: 5,
-    bonusGuesses: "allow",
+    clueSelection: "tempo",
+    multiTolerance: DEFAULT_PLAY_BOT_SETTINGS.multiTolerance,
+    bonusGuesses: PLAY_BONUS_POLICY.PASS,
     output: DEFAULT_OUTPUT,
     summaryOutput: null,
   };
@@ -696,6 +715,13 @@ function ratio(numerator, denominator) {
   return denominator ? rounded(numerator / denominator) : 0;
 }
 
+function mean(values) {
+  return ratio(
+    values.reduce((total, value) => total + value, 0),
+    values.length,
+  );
+}
+
 function rounded(value) {
   return Number(value.toFixed(6));
 }
@@ -706,6 +732,7 @@ function printSummary(policyResults) {
       policy,
       games: policyResults[policy].gameCount,
       "multi clues": policyResults[policy].multiClueRate,
+      "first-half mean": policyResults[policy].firstHalfMeanClueNumber,
       "correct/turn": policyResults[policy].correctCardsPerTurn,
       "wrong/game": policyResults[policy].wrongTeamHitsPerGame,
       "assassin rate": policyResults[policy].assassinRate,

@@ -1,3 +1,10 @@
+import {
+  PLAY_BONUS_POLICY,
+  PLAY_CLUE_POLICY,
+} from "./settings.js";
+
+export { PLAY_CLUE_POLICY } from "./settings.js";
+
 const RISK_VALUE = Object.freeze({
   safe: 8,
   medium: 0,
@@ -10,17 +17,13 @@ const HYBRID_RISK_VALUE = Object.freeze({
   risky: -18,
 });
 
-export const PLAY_CLUE_POLICY = Object.freeze({
-  CURRENT: "current",
-  HYBRID: "hybrid",
-});
-
 export function chooseBotClue({
   analysis,
   ownRemaining,
   opponentRemaining,
   random,
   policy = PLAY_CLUE_POLICY.CURRENT,
+  multiTolerance = null,
 }) {
   const suggestions = analysis?.suggestions ?? [];
   if (suggestions.length === 0) {
@@ -33,6 +36,14 @@ export function chooseBotClue({
       score: scorePlayClue(suggestion, { ownRemaining, opponentRemaining, policy }),
     }))
     .sort((left, right) => right.score - left.score);
+
+  if (Number.isFinite(multiTolerance)) {
+    const best = ranked[0];
+    const bestMulti = ranked.find(({ suggestion }) => suggestion.number >= 2);
+    return bestMulti && bestMulti.score >= best.score - multiTolerance
+      ? bestMulti.suggestion
+      : best.suggestion;
+  }
 
   const shortlist = ranked.slice(0, Math.min(4, ranked.length));
   const pick = Math.min(shortlist.length - 1, Math.floor(random() * shortlist.length));
@@ -87,6 +98,17 @@ export function chooseBotGuess({ candidates, guessesMade, clueNumber, random }) 
     return null;
   }
   return best.layoutId;
+}
+
+export function shouldBotTakeAnotherGuess({
+  bonusGuesses,
+  clueNumber,
+  guessesMade,
+}) {
+  return (
+    guessesMade < clueNumber ||
+    bonusGuesses === PLAY_BONUS_POLICY.ALLOW
+  );
 }
 
 export function createSeededRandom(seed) {

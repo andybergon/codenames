@@ -14,7 +14,12 @@ import {
 import { indexManifestUrl, modelOption } from "../model-lab.js";
 import { analyzeEmbeddedBoard } from "../model.js";
 import { WORD_SET } from "../word-data.js";
-import { chooseBotClue, chooseBotGuess, createSeededRandom } from "./bots.js";
+import {
+  chooseBotClue,
+  chooseBotGuess,
+  createSeededRandom,
+  shouldBotTakeAnotherGuess,
+} from "./bots.js";
 import {
   GAME_END_REASON,
   GAME_PHASE,
@@ -32,6 +37,7 @@ import {
   loadPlaySession,
   savePlaySession,
 } from "./session-store.js";
+import { PLAY_BONUS_POLICY, normalizePlayBotSettings } from "./settings.js";
 
 const RESULTS_PER_SIZE = 6;
 const PLAY_BOARD_ORDER = Object.freeze({
@@ -45,13 +51,19 @@ const TEAM_ORDER = Object.freeze({
   assassin: 3,
 });
 
-export function createPlayMode({ getModelConfiguration }) {
+export function createPlayMode() {
   const elements = {
     setup: document.querySelector("#play-setup"),
     game: document.querySelector("#play-game"),
     seatButtons: [...document.querySelectorAll("[data-play-seat]")],
     randomizeSeat: document.querySelector("#randomize-play-seat"),
     wordSetButtons: [...document.querySelectorAll("[data-play-word-set]")],
+    botModel: document.querySelector("#play-bot-model"),
+    botCandidates: document.querySelector("#play-bot-candidates"),
+    cluePolicy: document.querySelector("#play-clue-policy"),
+    multiTolerance: document.querySelector("#play-multi-tolerance"),
+    bonusGuesses: document.querySelector("#play-bonus-guesses"),
+    botSettingsSummary: document.querySelector("#play-bot-settings-summary"),
     startGame: document.querySelector("#start-play-game"),
     savedActions: document.querySelector("#saved-play-actions"),
     resumeSession: document.querySelector("#resume-play-session"),
@@ -82,6 +94,7 @@ export function createPlayMode({ getModelConfiguration }) {
   let active = false;
   let selectedHumanSeat = randomHumanSeat();
   let selectedWordSet = WORD_SET.OFFICIAL;
+  let selectedBotSettings = normalizePlayBotSettings();
   let savedGame = loadPlaySession();
   let game = null;
   let analysis = { [SIDE.BLUE]: null, [SIDE.RED]: null };
@@ -116,6 +129,22 @@ export function createPlayMode({ getModelConfiguration }) {
   for (const button of elements.wordSetButtons) {
     button.addEventListener("click", () => {
       selectedWordSet = button.dataset.playWordSet;
+      renderSetup();
+    });
+  }
+
+  for (const [element, key, transform] of [
+    [elements.botModel, "modelId", String],
+    [elements.botCandidates, "candidateCount", Number],
+    [elements.cluePolicy, "cluePolicy", String],
+    [elements.multiTolerance, "multiTolerance", Number],
+    [elements.bonusGuesses, "bonusGuesses", String],
+  ]) {
+    element.addEventListener("change", () => {
+      selectedBotSettings = normalizePlayBotSettings({
+        ...selectedBotSettings,
+        [key]: transform(element.value),
+      });
       renderSetup();
     });
   }
@@ -185,6 +214,12 @@ export function createPlayMode({ getModelConfiguration }) {
         String(button.dataset.playWordSet === selectedWordSet),
       );
     }
+    elements.botModel.value = selectedBotSettings.modelId;
+    elements.botCandidates.value = String(selectedBotSettings.candidateCount);
+    elements.cluePolicy.value = selectedBotSettings.cluePolicy;
+    elements.multiTolerance.value = String(selectedBotSettings.multiTolerance);
+    elements.bonusGuesses.value = selectedBotSettings.bonusGuesses;
+    elements.botSettingsSummary.textContent = botSettingsLabel(selectedBotSettings);
     elements.savedActions.hidden = !savedGame;
   }
 
@@ -199,6 +234,7 @@ export function createPlayMode({ getModelConfiguration }) {
       (left, right) => positions.get(left.layoutId) - positions.get(right.layoutId),
     );
     game = createPlayGame({
+      botSettings: selectedBotSettings,
       cards,
       humanSeat: selectedHumanSeat,
       seed,
@@ -219,6 +255,7 @@ export function createPlayMode({ getModelConfiguration }) {
     game = structuredClone(savedGame);
     selectedHumanSeat = { ...game.humanSeat };
     selectedWordSet = game.wordSet ?? WORD_SET.OFFICIAL;
+    selectedBotSettings = normalizePlayBotSettings(game.botSettings);
     resetRuntimeState("Saved game resumed.");
     showActiveGame();
     ensureAnalysis();
@@ -361,7 +398,7 @@ export function createPlayMode({ getModelConfiguration }) {
     renderGame();
 
     try {
-      const { modelId, candidateCount } = getModelConfiguration();
+      const { modelId, candidateCount } = gameAtStart.botSettings;
       const configuration = `${modelId}:${candidateCount}`;
       if (!clueIndexPromises.has(configuration)) {
         const promise = loadShardedClueIndex(
@@ -450,6 +487,8 @@ export function createPlayMode({ getModelConfiguration }) {
             game.cards,
             game.activeSide === SIDE.BLUE ? SIDE.RED : SIDE.BLUE,
           ),
+          policy: game.botSettings.cluePolicy,
+          multiTolerance: game.botSettings.multiTolerance,
           random: decisionRandom,
         });
         if (!clue) {
@@ -464,12 +503,19 @@ export function createPlayMode({ getModelConfiguration }) {
         statusMessage = `${sideLabel(game.activeSide)} bot spymaster gave ${clue.clue.toUpperCase()} ${clue.number}.`;
       } else {
         const candidates = await buildBotGuessCandidates(game.currentTurn.clue);
-        const layoutId = chooseBotGuess({
-          candidates,
-          guessesMade: game.currentTurn.guesses.length,
-          clueNumber: game.currentTurn.number,
-          random: decisionRandom,
-        });
+        const layoutId =
+          !shouldBotTakeAnotherGuess({
+            bonusGuesses: game.botSettings.bonusGuesses,
+            clueNumber: game.currentTurn.number,
+            guessesMade: game.currentTurn.guesses.length,
+          })
+            ? null
+            : chooseBotGuess({
+                candidates,
+                guessesMade: game.currentTurn.guesses.length,
+                clueNumber: game.currentTurn.number,
+                random: decisionRandom,
+              });
         if (layoutId === null) {
           game = passTurn(game, { actor: "bot" });
           statusMessage = "Bot operative passed.";
@@ -812,6 +858,16 @@ function teamLabel(team) {
 
 function labelRisk(risk) {
   return risk === "safe" ? "Safe" : risk === "risky" ? "Risky" : "Medium";
+}
+
+function botSettingsLabel(settings) {
+  const model = modelOption(settings.modelId);
+  const style = settings.cluePolicy === "hybrid" ? "human-like" : "conservative";
+  const bonus =
+    settings.bonusGuesses === PLAY_BONUS_POLICY.PASS
+      ? "stop at number"
+      : "allow +1";
+  return `${model.label}, ${settings.candidateCount / 1000}k, ${style}, ${bonus}`;
 }
 
 function dotVectors(left, right) {

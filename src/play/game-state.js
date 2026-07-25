@@ -1,4 +1,5 @@
 import { SIDE, otherSide, remainingCardsForSide } from "../gameplay.js";
+import { normalizePlayBotSettings } from "./settings.js";
 
 export const PLAYER_ROLE = Object.freeze({
   SPYMASTER: "spymaster",
@@ -27,16 +28,24 @@ export function randomHumanSeat(random = Math.random) {
   };
 }
 
-export function createPlayGame({ cards, humanSeat, seed, wordSet }) {
+export function createPlayGame({
+  botSettings,
+  cards,
+  humanSeat,
+  seed,
+  wordSet,
+}) {
   validateSeat(humanSeat);
   if (!Array.isArray(cards) || cards.length !== 25) {
     throw new Error("A Play game requires exactly 25 cards.");
   }
 
+  const normalizedBotSettings = normalizePlayBotSettings(botSettings);
   return {
     schemaVersion: 1,
     seed: String(seed ?? ""),
     wordSet,
+    botSettings: normalizedBotSettings,
     humanSeat: { ...humanSeat },
     cards: cards.map((card) => ({
       ...card,
@@ -54,6 +63,7 @@ export function createPlayGame({ cards, humanSeat, seed, wordSet }) {
       {
         type: "game-started",
         humanSeat: { ...humanSeat },
+        botSettings: normalizedBotSettings,
         activeSide: SIDE.BLUE,
       },
     ],
@@ -222,7 +232,10 @@ export function validateStoredGame(value) {
     throw new Error("Unsupported saved Play session.");
   }
   validateSeat(value.humanSeat);
-  return value;
+  return {
+    ...value,
+    botSettings: normalizePlayBotSettings(value.botSettings),
+  };
 }
 
 function endTurn(game, reason) {

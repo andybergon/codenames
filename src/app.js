@@ -215,12 +215,7 @@ const elements = {
   playMode: document.querySelector("#play-mode"),
 };
 
-const playMode = createPlayMode({
-  getModelConfiguration: () => ({
-    modelId: selectedModelId,
-    candidateCount: selectedCandidateCount,
-  }),
-});
+const playMode = createPlayMode();
 
 elements.modelLabModel.addEventListener("change", (event) => {
   selectedModelId = event.target.value;

@@ -195,6 +195,54 @@ test("Play randomly assigns a seat and keeps all four overrides available", asyn
   await expect(page.locator("[data-play-seat][aria-pressed='true']")).toHaveCount(1);
 });
 
+test("Play exposes and saves bot policy settings", async ({ page }) => {
+  await page.goto("/?mode=play");
+
+  const settings = page.locator(".play-bot-settings");
+  await expect(settings).toContainText(
+    "BGE-small, 10k, human-like, stop at number",
+  );
+  await expect(settings).not.toHaveAttribute("open", "");
+  await expect(settings.locator(".play-bot-settings-toggle")).toContainText(
+    "Customize",
+  );
+  expect(
+    await settings.evaluate((details) =>
+      details.previousElementSibling?.classList.contains("play-setup-footer"),
+    ),
+  ).toBe(true);
+  await settings.locator("summary").click();
+  await expect(settings).toHaveAttribute("open", "");
+  await expect(page.locator("#play-bot-model")).toHaveValue("bge-small");
+  await expect(page.locator("#play-bot-candidates")).toHaveValue("10000");
+  await expect(page.locator("#play-clue-policy")).toHaveValue("hybrid");
+  await expect(page.locator("#play-multi-tolerance")).toHaveValue("5");
+  await expect(page.locator("#play-bonus-guesses")).toHaveValue("pass");
+
+  await page.locator("#play-bot-model").selectOption("minilm-l6");
+  await page.locator("#play-bot-candidates").selectOption("30000");
+  await page.locator("#play-clue-policy").selectOption("current");
+  await page.locator("#play-multi-tolerance").selectOption("10");
+  await page.locator("#play-bonus-guesses").selectOption("allow");
+  await page.locator('[data-play-seat="blue:spymaster"]').click();
+  await page.getByRole("button", { name: "Start new game", exact: true }).click();
+
+  expect(
+    await page.evaluate(() => {
+      const game = JSON.parse(
+        localStorage.getItem("codenames-play-session-v1"),
+      );
+      return game.botSettings;
+    }),
+  ).toEqual({
+    modelId: "minilm-l6",
+    candidateCount: 30000,
+    cluePolicy: "current",
+    multiTolerance: 10,
+    bonusGuesses: "allow",
+  });
+});
+
 test("Play enforces operative and spymaster information views", async ({ page }) => {
   await page.goto("/?mode=play");
 

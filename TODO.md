@@ -8,18 +8,12 @@
 
 ## 🟡 Medium
 
-- 🎯 Favor useful multi-card clues in Play without suppressing justified singles.
-  - BGE-small plus hybrid scoring and a five-point multi tolerance reached 2.18 opening mean, 1.58 full-game mean, and 50.4% multi clues without forcing late-game pairs.
-  - Candidate depth above 10k had weak full-game returns, and Official versus Extended was not causal. Keep the 10k Official defaults.
-  - Next: implement the Play-only model and tempo policy, then calibrate its tolerance against recorded human guesses. Keep Train ranking and legal typed clues unchanged.
-
-- ➕ Stop bot operatives from taking unrelated automatic bonus guesses.
-  - The hybrid baseline makes 2.16 bonus guesses per game, but only 26.4% are correct.
-  - Pass at the declared count until the operative can justify a bonus from prior clues.
+- 📝 Keep completed Play game action records for calibration.
+  - Current session history contains clues, intended targets, guesses, passes, outcomes, and bot settings, but starting another game replaces it.
+  - Store a bounded local archive with export and clear controls so benchmarks can replay real human decisions.
 
 - 📊 Calibrate Play bots and Worth from recorded outcomes.
-  - Play now stores intended targets, ordered guesses, passes, and reveal outcomes locally.
-  - Next: aggregate local outcome summaries and fit bot confidence and Worth coefficients against actual play.
+  - Aggregate archived outcome summaries and fit bot confidence, multi tolerance, and Worth coefficients against actual play.
 
 - 💬 Explain recommendations in plain language from existing scores.
   - Summarize intended targets, weakest target, closest danger, and the main failure risk without an LLM call.

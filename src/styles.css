@@ -1961,6 +1961,136 @@ h3 {
   color: var(--red-text);
 }
 
+.play-bot-settings {
+  overflow: hidden;
+  margin-top: 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--subtle-fill-soft);
+}
+
+.play-bot-settings summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  cursor: pointer;
+  list-style: none;
+  transition: background 120ms ease;
+}
+
+.play-bot-settings summary:hover {
+  background: var(--surface-hover);
+}
+
+.play-bot-settings summary:focus-visible {
+  outline: 3px solid rgb(47 111 179 / 28%);
+  outline-offset: -3px;
+}
+
+.play-bot-settings[open] summary {
+  background: var(--surface);
+}
+
+.play-bot-settings summary::-webkit-details-marker {
+  display: none;
+}
+
+.play-bot-settings-copy {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+}
+
+.play-bot-settings-copy > span {
+  color: var(--muted);
+  font-size: 0.72rem;
+}
+
+.play-bot-settings-toggle {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid var(--line);
+  border-radius: 99px;
+  padding: 5px 7px 5px 10px;
+  background: var(--control-fill);
+  color: var(--ink);
+  font-size: 0.7rem;
+  font-weight: 900;
+}
+
+.play-bot-settings-chevron {
+  font-size: 1.15rem;
+  line-height: 1;
+  transform-origin: center;
+  transition: transform 120ms ease;
+}
+
+.play-bot-settings[open] .play-bot-settings-chevron {
+  transform: rotate(90deg);
+}
+
+.play-bot-settings-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  border-top: 1px solid var(--hairline);
+  padding: 12px;
+}
+
+.play-bot-settings-grid label {
+  position: relative;
+  display: grid;
+  gap: 6px;
+  border: 1px solid var(--hairline);
+  border-radius: 8px;
+  padding: 10px;
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 0.65rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.play-bot-settings-grid label::after {
+  position: absolute;
+  right: 20px;
+  bottom: 20px;
+  color: var(--muted);
+  content: "⌄";
+  font-size: 0.85rem;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.play-bot-settings-grid select {
+  appearance: none;
+  min-width: 0;
+  width: 100%;
+  min-height: 38px;
+  border: 1px solid var(--input-line);
+  border-radius: 7px;
+  padding: 0 32px 0 10px;
+  background: var(--control-fill);
+  color: var(--ink);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: none;
+}
+
+.play-bot-settings-grid select:hover {
+  border-color: var(--muted);
+}
+
+.play-bot-settings-grid select:focus-visible {
+  border-color: var(--blue);
+  outline: 3px solid rgb(47 111 179 / 20%);
+  outline-offset: 1px;
+}
+
 .play-setup-footer {
   gap: 18px;
   border-top: 1px solid var(--hairline);
@@ -2367,6 +2497,10 @@ button.play-card:not(:disabled):hover {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .play-bot-settings-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .play-workspace {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -2425,6 +2559,14 @@ button.play-card:not(:disabled):hover {
 
   .play-setup-actions > .button {
     width: 100%;
+  }
+
+  .play-bot-settings summary {
+    align-items: center;
+  }
+
+  .play-bot-settings-grid {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .play-board-grid {

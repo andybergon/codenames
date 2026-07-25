@@ -9,10 +9,12 @@ Play's single-clue bias is primarily a scoring and policy problem. The standard 
 | 🧮 Scoring policy | 🔴 Primary | Multi edge falls from +8.9 to -7.2 |
 | 🧠 Embedding model | 🟠 Material | BGE raises full-game multi rate to 37.7% |
 | ➕ Bonus guesses | 🟠 Harmful | Only 26.4% correct |
-| 📚 Candidate count | 🟡 Secondary | 30k raises full-game multi rate by 4.5 points |
+| 📚 Candidate count | 🟡 Secondary | 30k adds 7.3 percentage points |
 | 🗂️ Board word set | 🟢 Not causal | Official and Extended differ by 5 points at opening |
 
-The recommended Play experiment is BGE-small, the hybrid score, a five-point multi-clue tolerance, and passing after the declared clue number. Across 100 paired deterministic games, that combination produced a 1.58 mean clue number and 50.4% multi-card clues. Opening clues averaged 2.18, while late-game singles remained available.
+The implemented Play default is BGE-small, the hybrid score, a five-point multi-clue tolerance, and passing after the declared clue number. Across 100 paired deterministic games, that combination produced a 1.58 mean clue number and 50.4% multi-card clues. Opening clues averaged 2.18, the chronological first half averaged 1.92, and late-game singles remained available.
+
+BGE-small is `Xenova/bge-small-en-v1.5`. Its quantized model is 34.0 MB versus 23.0 MB for the previous MiniLM-L6 model. With the same 5.3 MB 10k clue index, the total download is about 39.3 MB versus 28.2 MB.
 
 This is a policy benchmark, not proof of human-level safety. The simulated spymaster and operative share the same embedding geometry, so their agreement is higher than agreement with a human player.
 
@@ -49,7 +51,7 @@ The opening-board ablation uses the same 40 deterministic boards from both team 
 
 BGE-small is the most promising model change because it also has the strongest human Duet target recall among the selectable models, 58.57% versus MiniLM-L6's 57.43%. MiniLM-L3 produces more multi clues but has lower human target recall, so its larger numbers are not automatically better.
 
-Larger vocabularies improve opening multi-clue availability, but the full-game effect is small. Moving MiniLM-L6 from 10k to 30k candidates raised the full-game multi rate from 22.8% to 27.3% while roughly tripling scoring work. The deeper tiers also contain less familiar clues: the separate candidate evaluation found that the share of top suggestions matching human-used clues fell from 37.5% at 10k to 16.7% at 30k and 14.6% at 100k.
+Larger vocabularies improve opening multi-clue availability, but the full-game effect is smaller than the model and policy changes. On the same first 50 boards, moving MiniLM-L6 from 10k to 30k candidates raised the full-game multi rate from 20.0% to 27.3%, an increase of 7.3 percentage points, while roughly tripling scoring work. The deeper tiers also contain less familiar clues: the separate candidate evaluation found that the share of top suggestions matching human-used clues fell from 37.5% at 10k to 16.7% at 30k and 14.6% at 100k.
 
 ## 🧮 Why the score collapses toward singles
 
@@ -71,16 +73,16 @@ The current expected-net score treats multi-card success mostly as all-or-nothin
 
 The bot operative also takes an automatic number-plus-one guess using the current clue. In the baseline hybrid benchmark it made 2.16 bonus guesses per game and only 26.4% were correct. The official extra guess is strategically useful for revisiting earlier clues, but the bot has no prior-clue reasoning. Passing at the declared count is the sound default until that memory exists.
 
-## 🧪 Recommended policy experiment
+## 🧪 Implemented policy benchmark
 
-| 🎛️ Policy | 📈 Mean number | 🔢 Multi clues | ✅ Correct per turn | 🔴 Wrong hits | ☠️ Assassin | ⏱️ Turns |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| 🧪 BGE, tempo, pass | 1.58 | 50.4% | 1.58 | 0.00 | 0.0% | 9.85 |
-| 🧠 BGE, random, bonus | 1.42 | 37.7% | 1.49 | 0.57 | 3.0% | 9.74 |
-| 📍 MiniLM, hybrid | 1.26 | 22.8% | 1.31 | 0.50 | 7.0% | 10.83 |
-| 🧱 MiniLM, current | 1.12 | 10.9% | 1.18 | 0.62 | 8.0% | 12.01 |
+| 🎛️ Policy | 📈 Full mean | ⏩ First-half mean | 🔢 Multi clues | ✅ Correct per turn | 🔴 Wrong hits | ☠️ Assassin | ⏱️ Turns |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 🧪 BGE hybrid, tempo, pass | 1.58 | 1.92 | 50.4% | 1.58 | 0.00 | 0.0% | 9.85 |
+| 📍 BGE current, tempo, pass | 1.17 | 1.19 | 15.7% | 1.17 | 0.00 | 0.0% | 13.34 |
+| 🧠 BGE hybrid, random, bonus | 1.42 | N/A | 37.7% | 1.49 | 0.57 | 3.0% | 9.74 |
+| 🧱 MiniLM hybrid, random, bonus | 1.26 | N/A | 22.8% | 1.31 | 0.50 | 7.0% | 10.83 |
 
-The recommended experiment prefers the best multi-card clue when its hybrid score is within five points of the overall best clue. It does not force a pair when the score gap is larger. Its clue-number shape changes naturally with the board:
+The first-half mean takes the first `ceiling(total clue turns / 2)` clue turns from each completed game, then aggregates their clue numbers. The implemented policy prefers the best multi-card clue when its hybrid score is within five points of the overall best clue. It does not force a pair when the score gap is larger. Its clue-number shape changes naturally with the board:
 
 | 🕵️ Own agents left | 📈 Mean number | 🔢 Multi clues |
 | --- | ---: | ---: |
@@ -96,14 +98,14 @@ The recommended experiment prefers the best multi-card clue when its hybrid scor
 
 The zero-error self-play result must not be treated as a human safety estimate. A real validation should replay human operative choices or collect Play sessions where the human guesses bot clues.
 
-## ✅ Recommended next change
+## ✅ Implemented Play defaults
 
-1. Use BGE-small for bot turns in Play while leaving Train's default unchanged.
-2. Use the hybrid score with a five-point tolerance for a near-equal multi clue.
-3. Pass after the declared clue number until the operative models previous clues.
-4. Keep the default candidate vocabulary at 10,000.
-5. Keep Official as the default 400-word board set.
-6. Calibrate the tolerance against recorded human Play outcomes.
+1. Play bot turns use BGE-small while Train keeps its independent default.
+2. The hybrid score prefers a multi clue within five points of the best clue.
+3. Bot operatives pass after the declared clue number.
+4. The default candidate vocabulary remains 10,000.
+5. Official remains the default 400-word board set.
+6. Play setup can override every bot parameter.
 
 The product target should be stage-dependent rather than a forced full-game mean of two. Aim for an opening mean around two, frequent pairs while five or more agents remain, and justified singles near the end.
 

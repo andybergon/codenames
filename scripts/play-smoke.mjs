@@ -8,6 +8,7 @@ import {
   chooseBotGuess,
   createSeededRandom,
   scorePlayClue,
+  shouldBotTakeAnotherGuess,
 } from "../src/play/bots.js";
 import {
   GAME_END_REASON,
@@ -20,7 +21,13 @@ import {
   passTurn,
   publicGameView,
   randomHumanSeat,
+  validateStoredGame,
 } from "../src/play/game-state.js";
+import {
+  DEFAULT_PLAY_BOT_SETTINGS,
+  PLAY_BONUS_POLICY,
+  normalizePlayBotSettings,
+} from "../src/play/settings.js";
 
 const sample = createSampleBoardState();
 const playPolicyBenchmark = JSON.parse(
@@ -38,7 +45,7 @@ assert.match(playPolicySummary, /^\# Play policy benchmark/m);
 assert.ok(playPolicySummary.includes(playPolicyBenchmark.generatedAt));
 assert.match(
   playPolicySummary,
-  /\| 🎯 Policy \| 🔢 Multi clues \| ✅ Correct per turn \| 🔴 Wrong-team per game \| ☠️ Assassin rate \| ⏱️ Turns per game \|/,
+  /\| 🎯 Policy \| 🔢 Multi clues \| ⏩ First-half mean \| ✅ Correct per turn \| 🔴 Wrong-team per game \| ☠️ Assassin rate \| ⏱️ Turns per game \|/,
 );
 for (const policy of Object.values(PLAY_CLUE_POLICY)) {
   const result = playPolicyBenchmark.policies[policy];
@@ -75,11 +82,14 @@ for (const policy of Object.values(PLAY_CLUE_POLICY)) {
       (gameResult) =>
         gameResult.actions <= 500 &&
         gameResult.turns > 0 &&
+        gameResult.firstHalfClueNumbers.length ===
+          Math.ceil(gameResult.turns / 2) &&
         ["agents", "assassin"].includes(gameResult.endReason),
     ),
   );
   for (const metric of [
     "multiClueRate",
+    "firstHalfMeanClueNumber",
     "correctCardsPerTurn",
     "wrongTeamHitsPerGame",
     "assassinRate",
@@ -96,6 +106,7 @@ for (const policy of Object.values(PLAY_CLUE_POLICY)) {
 const randomValues = [0.2, 0.8];
 const randomSeat = randomHumanSeat(() => randomValues.shift());
 assert.deepEqual(randomSeat, { side: SIDE.BLUE, role: PLAYER_ROLE.OPERATIVE });
+assert.deepEqual(normalizePlayBotSettings(), DEFAULT_PLAY_BOT_SETTINGS);
 
 let game = createPlayGame({
   cards: sample.cards,
@@ -105,6 +116,7 @@ let game = createPlayGame({
 });
 assert.equal(game.activeSide, SIDE.BLUE);
 assert.equal(game.phase, GAME_PHASE.AWAITING_CLUE);
+assert.deepEqual(game.botSettings, DEFAULT_PLAY_BOT_SETTINGS);
 assert.equal(actorForSeat(game, SIDE.BLUE, PLAYER_ROLE.SPYMASTER), "bot");
 assert.equal(actorForSeat(game, SIDE.BLUE, PLAYER_ROLE.OPERATIVE), "human");
 
@@ -274,6 +286,36 @@ const hybridSuggestion = chooseBotClue({
   random: () => 0,
 });
 assert.equal(hybridSuggestion.clue, "pair");
+const tempoSuggestion = chooseBotClue({
+  analysis: {
+    suggestions: [
+      {
+        clue: "single",
+        worth: 80,
+        risk: "safe",
+        number: 1,
+        margin: 0.2,
+        expectedNet: 1,
+        success: 0.9,
+      },
+      {
+        clue: "pair",
+        worth: 75,
+        risk: "safe",
+        number: 2,
+        margin: 0.2,
+        expectedNet: 1,
+        success: 0.9,
+      },
+    ],
+  },
+  ownRemaining: 7,
+  opponentRemaining: 5,
+  policy: PLAY_CLUE_POLICY.HYBRID,
+  multiTolerance: 5,
+  random: () => 0,
+});
+assert.equal(tempoSuggestion.clue, "pair");
 assert.ok(
   scorePlayClue(
     {
@@ -331,6 +373,29 @@ assert.equal(
   }),
   null,
 );
+assert.equal(
+  shouldBotTakeAnotherGuess({
+    bonusGuesses: PLAY_BONUS_POLICY.PASS,
+    clueNumber: 2,
+    guessesMade: 2,
+  }),
+  false,
+);
+assert.equal(
+  shouldBotTakeAnotherGuess({
+    bonusGuesses: PLAY_BONUS_POLICY.ALLOW,
+    clueNumber: 2,
+    guessesMade: 2,
+  }),
+  true,
+);
+
+const upgradedStoredGame = validateStoredGame({
+  ...game,
+  botSettings: undefined,
+});
+assert.equal(upgradedStoredGame.botSettings.modelId, "bge-small");
+assert.equal(upgradedStoredGame.botSettings.bonusGuesses, PLAY_BONUS_POLICY.PASS);
 
 const seededA = createSeededRandom("same");
 const seededB = createSeededRandom("same");

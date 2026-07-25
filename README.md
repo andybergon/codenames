@@ -9,7 +9,8 @@ A local-first Codenames clue trainer and one-human game. Train mode ranks clue o
 - **Embedding:** `Xenova/all-MiniLM-L6-v2`, run locally in the browser with Transformers.js.
 - **Modes:** Train preserves the full clue-analysis workflow. Play creates two teams of a spymaster and operative, with the human in one seat and bots in the other three.
 - **Play setup:** each page load independently randomizes the human's Blue/Red team and Spymaster/Operative role; all four seats remain available as overrides before starting.
-- **Fair bot play:** bot spymasters use ranked recommendations, while bot operatives receive only the clue, clue number, and public unrevealed words. Hidden roles and intended targets never enter the operative policy.
+- **Fair bot play:** bot spymasters default to BGE-small, hybrid clue scoring, and a five-point preference for near-equal multi clues. Bot operatives receive only the clue, clue number, and public unrevealed words, and stop at the declared number by default.
+- **Configurable bots:** Play setup can override the embedding model, clue vocabulary size, scoring policy, multi-clue tolerance, and optional extra guess.
 - **Play sessions:** standard `number + 1` guessing, pass, neutral/opponent turn endings, assassin losses, final-agent wins, undo before the next bot action, a local event log, and automatic resume from local storage.
 - **Clue set:** 100,000 frequency-ranked English words from `wordfreq` 3.1.1, filtered through WordNet, a controlled alphabetic/name fallback, and a legality filter; the balanced 10,000-word prefix is the default.
 - **Fast search:** clue embeddings are precomputed, mean-centered, normalized, and stored as an int8 static index. Only the 25 board words are embedded at runtime.
@@ -59,6 +60,8 @@ Run both the static/smoke checks and responsive browser suite with `npm test`.
 
 Play defaults to the preserved table order. Operatives see only unrevealed words and public card reveals. Spymasters see the full key, can switch between table and team-grouped order, type any one-word clue, and open clue suggestions only when wanted.
 
+Bot settings are independent from Train's Model picker and persist with each saved game. The default is BGE-small with 10,000 candidates, hybrid scoring, a five-point multi-clue tolerance, and no automatic extra guess. The setup panel can restore the previous MiniLM/current-policy behavior or tune each parameter separately.
+
 The browser runs bot turns with seeded decisions:
 
 - `src/play/game-state.js` owns the rules, seat authorization, event history, public projection, and win conditions.
@@ -67,7 +70,7 @@ The browser runs bot turns with seeded decisions:
 - `src/play/mode.js` owns Play setup, rendering, model orchestration, bot pacing, and resume/undo controls.
 - `scripts/play-smoke.mjs` covers seat ownership, information boundaries, reveal outcomes, deterministic bots, and bounded self-play.
 
-Run `npm run benchmark:play` to compare the current and candidate hybrid clue policies across 100 paired, deterministic full games. The benchmark uses the production board generator, 10,000-clue index, Play rules, bot guesser, and centered MiniLM embeddings. It records clue-number distribution by game stage, correct cards per turn, wrong-team and neutral hits, assassin rate, bonus-guess accuracy, turns, passes, wins, and every per-game result. The latest [summary table](scripts/generated/play-policy-benchmark.md) links to the [full JSON report](scripts/generated/play-policy-benchmark.json). Analyzer-exhaustion fallbacks are explicit and counted.
+Run `npm run benchmark:play` to compare current and hybrid clue scoring across 100 paired, deterministic full games under the production Play defaults. It records the chronological first-half mean clue number, clue-number distribution by game stage, correct cards per turn, wrong-team and neutral hits, assassin rate, bonus-guess accuracy, turns, passes, wins, and every per-game result. The latest [summary table](scripts/generated/play-policy-benchmark.md) links to the [full JSON report](scripts/generated/play-policy-benchmark.json). Analyzer-exhaustion fallbacks are explicit and counted.
 
 Run `npm run analyze:play-clues` to compare candidate depths, board word sets, and embedding models on identical opening boards. The checked [clue-number analysis](docs/play-clue-number-analysis.md) combines that controlled ablation with human-game evidence and the recommended Play policy experiment.
 
@@ -95,7 +98,7 @@ New v3 share links encode the selected word set and support the larger pool. Exi
 
 `all-MiniLM-L6-v2` produces 384-dimensional vectors. The generator computes the mean vector over the stable first-30k centering corpus, subtracts it from every clue vector—including the experimental 100k tail—and normalizes the result. Runtime board embeddings receive the same transform. Mean-centering removes much of the shared single-word cosine baseline that otherwise makes generic clues appear close to unrelated cards.
 
-The default is MiniLM-L6 with 10,000 candidates. The Model picker compares the three model families with a meaningful size, quality, or speed advantage—MiniLM-L3, MiniLM-L6, and BGE-small—across 3k, 10k, 30k, and experimental 100k candidate vocabularies. Its cells combine human fit, controlled median Node scoring time, and total model-plus-index download; the Pareto chart shows the same trade-offs on a logarithmic speed axis. A model and its compatible static index load only after selection. Indexes are split into 0-3k, 3k-10k, 10k-30k, and 30k-100k int8 shards under `public/data/model-lab/`, so moving upward downloads only the additional candidate tiers. Board words remain fully dynamic.
+The Train default is MiniLM-L6 with 10,000 candidates. The Model picker compares three model families with a meaningful size, quality, or speed advantage: MiniLM-L3, MiniLM-L6, and BGE-small. It tests each across 3k, 10k, 30k, and experimental 100k candidate vocabularies. Its cells combine human fit, controlled median Node scoring time, and total model-plus-index download; the Pareto chart shows the same trade-offs on a logarithmic speed axis. A model and its compatible static index load only after selection. Indexes are split into 0-3k, 3k-10k, 10k-30k, and 30k-100k int8 shards under `public/data/model-lab/`, so moving upward downloads only the additional candidate tiers. Board words remain fully dynamic.
 
 ## Human Gameplay Embedding Evaluation
 

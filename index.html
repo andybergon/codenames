@@ -388,6 +388,60 @@
               </button>
             </div>
           </div>
+
+          <details class="play-bot-settings">
+            <summary>
+              <span class="play-bot-settings-copy">
+                <strong>🤖 Bot settings</strong>
+                <span id="play-bot-settings-summary"></span>
+              </span>
+              <span class="play-bot-settings-toggle" aria-hidden="true">
+                Customize
+                <span class="play-bot-settings-chevron">›</span>
+              </span>
+            </summary>
+            <div class="play-bot-settings-grid">
+              <label>
+                Embedding model
+                <select id="play-bot-model">
+                  <option value="bge-small">BGE-small, 34 MB</option>
+                  <option value="minilm-l6">MiniLM-L6, 23 MB</option>
+                  <option value="minilm-l3">MiniLM-L3, 17 MB</option>
+                </select>
+              </label>
+              <label>
+                Clue vocabulary
+                <select id="play-bot-candidates">
+                  <option value="3000">3,000 clues</option>
+                  <option value="10000">10,000 clues</option>
+                  <option value="30000">30,000 clues</option>
+                  <option value="100000">100,000 clues</option>
+                </select>
+              </label>
+              <label>
+                Clue scoring
+                <select id="play-clue-policy">
+                  <option value="hybrid">Human-like</option>
+                  <option value="current">Conservative</option>
+                </select>
+              </label>
+              <label>
+                Multi-clue preference
+                <select id="play-multi-tolerance">
+                  <option value="0">Strict, best score only</option>
+                  <option value="5">Balanced, within 5</option>
+                  <option value="10">Strong, within 10</option>
+                </select>
+              </label>
+              <label>
+                Extra guess
+                <select id="play-bonus-guesses">
+                  <option value="pass">Stop at clue number</option>
+                  <option value="allow">Allow one extra guess</option>
+                </select>
+              </label>
+            </div>
+          </details>
         </section>
 
         <section id="play-game" class="play-game" hidden>
