@@ -394,7 +394,7 @@ export function createPlayMode() {
     }
     const runId = ++analysisRun;
     const gameAtStart = game;
-    statusMessage = `${sideLabel(game.activeSide)} spymaster is studying the board.`;
+    statusMessage = `${sideEmoji(game.activeSide)} ${roleEmoji(PLAYER_ROLE.SPYMASTER)} ${sideLabel(game.activeSide)} spymaster is studying the board.`;
     renderGame();
 
     try {
@@ -477,6 +477,7 @@ export function createPlayMode() {
     const decisionRandom = createSeededRandom(
       `${game.seed}:${game.turnNumber}:${game.history.length}`,
     );
+    const actingSide = game.activeSide;
 
     try {
       if (game.phase === GAME_PHASE.AWAITING_CLUE) {
@@ -492,7 +493,9 @@ export function createPlayMode() {
           random: decisionRandom,
         });
         if (!clue) {
-          throw new Error("The bot spymaster could not find a legal clue.");
+          throw new Error(
+            `${roleEmoji(PLAYER_ROLE.SPYMASTER)} The bot spymaster could not find a legal clue.`,
+          );
         }
         game = giveClue(game, {
           clue: clue.clue,
@@ -500,7 +503,7 @@ export function createPlayMode() {
           actor: "bot",
           intendedLayoutIds: clue.targets.map((target) => target.layoutId),
         });
-        statusMessage = `${sideLabel(game.activeSide)} bot spymaster gave ${clue.clue.toUpperCase()} ${clue.number}.`;
+        statusMessage = `${sideEmoji(actingSide)} 🤖 ${roleEmoji(PLAYER_ROLE.SPYMASTER)} ${sideLabel(actingSide)} bot spymaster gave ${clue.clue.toUpperCase()} ${clue.number}.`;
       } else {
         const candidates = await buildBotGuessCandidates(game.currentTurn.clue);
         const layoutId =
@@ -518,11 +521,11 @@ export function createPlayMode() {
               });
         if (layoutId === null) {
           game = passTurn(game, { actor: "bot" });
-          statusMessage = "Bot operative passed.";
+          statusMessage = `${sideEmoji(actingSide)} 🤖 ${roleEmoji(PLAYER_ROLE.OPERATIVE)} ${sideLabel(actingSide)} bot operative passed.`;
         } else {
           const word = game.cards.find((card) => card.layoutId === layoutId)?.word;
           game = guessCard(game, { layoutId, actor: "bot" });
-          statusMessage = `Bot operative guessed ${word}.`;
+          statusMessage = `${sideEmoji(actingSide)} 🤖 ${roleEmoji(PLAYER_ROLE.OPERATIVE)} ${sideLabel(actingSide)} bot operative guessed ${word}.`;
         }
       }
       savedGame = game;
@@ -680,8 +683,8 @@ export function createPlayMode() {
       turnAction.textContent = `💬 ${game.currentTurn.clue} ${game.currentTurn.number}`;
       turnNote.textContent =
         currentActor === "human"
-          ? "🔎 Choose a card or pass."
-          : "🤖 Bot operative is choosing.";
+          ? `${roleEmoji(PLAYER_ROLE.OPERATIVE)} Choose a card or pass.`
+          : `🤖 ${roleEmoji(PLAYER_ROLE.OPERATIVE)} Bot operative is choosing.`;
     } else if (game.phase === GAME_PHASE.COMPLETE) {
       const reason =
         game.endReason === GAME_END_REASON.ASSASSIN
@@ -693,11 +696,13 @@ export function createPlayMode() {
     } else {
       turnLabel.textContent = `${sideEmoji(game.activeSide)} ${sideLabel(game.activeSide)} turn`;
       turnAction.textContent =
-        currentActor === "human" ? "💬 Give a clue" : "🤖 Choosing a clue";
+        currentActor === "human"
+          ? `${roleEmoji(PLAYER_ROLE.SPYMASTER)} Give a clue`
+          : `🤖 ${roleEmoji(PLAYER_ROLE.SPYMASTER)} Choosing a clue`;
       turnNote.textContent =
         currentActor === "human"
           ? "One word and a number."
-          : "The bot spymaster is studying the board.";
+          : `${roleEmoji(PLAYER_ROLE.SPYMASTER)} The bot spymaster is studying the board.`;
     }
     if (statusMessage && !turnNote.textContent.includes(statusMessage)) {
       turnNote.textContent = statusMessage;
@@ -810,15 +815,15 @@ export function createPlayMode() {
                 .map((layoutId) => game.cards.find((card) => card.layoutId === layoutId)?.word)
                 .filter(Boolean)
             : [];
-        item.textContent = `${sideLabel(event.side)} clue: ${event.clue} ${event.number}${
+        item.textContent = `${sideEmoji(event.side)} ${roleEmoji(PLAYER_ROLE.SPYMASTER)} ${sideLabel(event.side)} clue: ${event.clue} ${event.number}${
           intendedWords.length ? `, intended ${intendedWords.join(" + ")}` : ""
         }`;
       } else if (event.type === "card-guessed") {
-        item.textContent = `${sideLabel(event.side)} guessed ${event.word}, ${teamLabel(event.team)}`;
+        item.textContent = `${sideEmoji(event.side)} ${roleEmoji(PLAYER_ROLE.OPERATIVE)} ${sideLabel(event.side)} guessed ${event.word}, ${teamLabel(event.team)}`;
       } else if (event.type === "turn-passed") {
-        item.textContent = `${sideLabel(event.side)} passed`;
+        item.textContent = `${sideEmoji(event.side)} ${roleEmoji(PLAYER_ROLE.OPERATIVE)} ${sideLabel(event.side)} passed`;
       } else {
-        item.textContent = `${sideLabel(event.winner)} won by ${
+        item.textContent = `🏁 ${sideEmoji(event.winner)} ${sideLabel(event.winner)} won by ${
           event.reason === GAME_END_REASON.ASSASSIN ? "assassin" : "finding every agent"
         }`;
       }

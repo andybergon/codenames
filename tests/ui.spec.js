@@ -322,9 +322,19 @@ test("Play exposes and saves bot policy settings", async ({ page }) => {
 test("Play enforces operative and spymaster information views", async ({ page }) => {
   await page.goto("/?mode=play");
 
+  await expect(page.locator('[data-play-seat="blue:spymaster"] strong')).toHaveText(
+    "🕵️ Spymaster",
+  );
+  await expect(page.locator('[data-play-seat="blue:operative"] strong')).toHaveText(
+    "🔎 Operative",
+  );
+
   await page.locator('[data-play-seat="blue:operative"]').click();
   await page.getByRole("button", { name: "Start new game", exact: true }).click();
 
+  await expect(page.locator("#play-human-seat")).toHaveText(
+    "🔵 🔎 You are Blue Operative",
+  );
   await expect(page.locator(".play-card")).toHaveCount(25);
   await expect(page.locator('.play-card[data-team="hidden"]')).toHaveCount(25);
   await expect(page.locator("#play-clue-form")).toBeHidden();
@@ -376,7 +386,7 @@ test("Play color-codes turns and lets spymasters switch board order", async ({ p
   const turn = page.locator("#play-clue-display");
   await expect(turn).toHaveAttribute("data-side", "blue");
   await expect(turn).toContainText("🔵 Blue turn");
-  await expect(turn).toContainText("💬 Give a clue");
+  await expect(turn).toContainText("🕵️ Give a clue");
 
   const cards = page.locator(".play-card");
   const tableLayout = await cards.evaluateAll((items) =>
@@ -446,7 +456,7 @@ test("Play uses the Red turn treatment for an active Red spymaster", async ({ pa
   await expect(page.locator("#play-human-seat")).toHaveAttribute("data-side", "red");
   await expect(page.locator("#play-clue-display")).toHaveAttribute("data-side", "red");
   await expect(page.locator("#play-clue-display")).toContainText("🔴 Red turn");
-  await expect(page.locator("#play-clue-display")).toContainText("💬 Give a clue");
+  await expect(page.locator("#play-clue-display")).toContainText("🕵️ Give a clue");
   await expect(page.locator("#play-suggestions")).toBeHidden();
 });
 
@@ -513,10 +523,10 @@ test("completed Play sessions reveal the key and intended targets", async ({ pag
   await expect(page.locator('.play-card[data-team="friendly"]')).toHaveCount(9);
   await expect(page.locator('.play-card[data-team="enemy"]')).toHaveCount(8);
   await expect(page.locator("#play-history-list")).toContainText(
-    "Blue clue: FIRST 1, intended WORD0",
+    "🔵 🕵️ Blue clue: FIRST 1, intended WORD0",
   );
   await expect(page.locator("#play-history-list")).toContainText(
-    "Blue guessed WORD0, Blue",
+    "🔵 🔎 Blue guessed WORD0, Blue",
   );
 });
 

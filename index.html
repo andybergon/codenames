@@ -353,22 +353,22 @@
           <div class="seat-grid" role="group" aria-label="Your Play seat">
             <button type="button" data-play-seat="blue:spymaster" aria-pressed="false">
               <span class="seat-team blue">Blue</span>
-              <strong>Spymaster</strong>
+              <strong><span aria-hidden="true">🕵️</span> Spymaster</strong>
               <span>Give clues</span>
             </button>
             <button type="button" data-play-seat="blue:operative" aria-pressed="false">
               <span class="seat-team blue">Blue</span>
-              <strong>Operative</strong>
+              <strong><span aria-hidden="true">🔎</span> Operative</strong>
               <span>Guess cards</span>
             </button>
             <button type="button" data-play-seat="red:spymaster" aria-pressed="false">
               <span class="seat-team red">Red</span>
-              <strong>Spymaster</strong>
+              <strong><span aria-hidden="true">🕵️</span> Spymaster</strong>
               <span>Give clues</span>
             </button>
             <button type="button" data-play-seat="red:operative" aria-pressed="false">
               <span class="seat-team red">Red</span>
-              <strong>Operative</strong>
+              <strong><span aria-hidden="true">🔎</span> Operative</strong>
               <span>Guess cards</span>
             </button>
           </div>
@@ -516,7 +516,9 @@
                   Number
                   <select id="play-clue-number"></select>
                 </label>
-                <button class="button primary" type="submit">Give clue</button>
+                <button class="button primary" type="submit">
+                  <span aria-hidden="true">🕵️</span> Give clue
+                </button>
                 <p id="play-clue-error" class="form-error" role="alert"></p>
               </form>
 
@@ -542,7 +544,7 @@
               <div id="play-operative-controls" class="play-operative-controls" hidden>
                 <p id="play-guess-progress"></p>
                 <button id="pass-play-turn" class="button secondary" type="button">
-                  Pass turn
+                  <span aria-hidden="true">🔎</span> Pass turn
                 </button>
               </div>
 
