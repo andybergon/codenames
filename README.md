@@ -57,7 +57,7 @@ npm run benchmark:picker
 
 Play defaults to the preserved table order. Operatives see only unrevealed words and public card reveals. Spymasters see the full key, can switch between table and team-grouped order, type any one-word clue, and open clue suggestions only when wanted.
 
-Bot settings are independent from Train's Model picker and persist with each saved game. The default is BGE-small with 10,000 candidates, hybrid scoring, a five-point multi-clue tolerance, Dynamic operative aggression, and no automatic extra guess. Conservative passes on doubtful follow-up guesses, Aggressive pursues the declared clue number with the former thresholds, and Dynamic adapts using only the public remaining-agent counts. The setup panel can tune each parameter separately. Each setting's info control compares the checked quality, speed, and risk tradeoffs in a compact table.
+Play settings are grouped by ownership: Game controls the board word set, All bots controls the shared embedding model, Spymaster controls clue generation, and Operative controls guessing behavior. Bot settings remain independent from Train's Model picker and persist with each saved game. The default is BGE-small with 10,000 candidates, hybrid scoring, a five-point multi-clue tolerance, Dynamic operative aggression, and no automatic extra guess. Conservative passes on doubtful follow-up guesses, Aggressive pursues the declared clue number with the former thresholds, and Dynamic adapts using only the public remaining-agent counts. Each bot setting's info control compares the checked quality, speed, and risk tradeoffs in a compact table.
 
 The Play implementation keeps rules, bot choices, persistence, and rendering separate:
 

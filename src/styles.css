@@ -1643,6 +1643,7 @@ h3 {
   text-transform: none;
   white-space: normal;
   box-shadow: 0 10px 28px rgb(0 0 0 / 24%);
+  pointer-events: none;
 }
 
 .info-control:not(.is-dismissed):hover .info-popover,
@@ -2005,7 +2006,6 @@ h3 {
 }
 
 .play-setup-heading,
-.play-setup-footer,
 .play-game-header,
 .play-game-actions,
 .play-primary-actions,
@@ -2018,7 +2018,6 @@ h3 {
 }
 
 .play-setup-heading,
-.play-setup-footer,
 .saved-play-actions,
 .play-game-header,
 .play-section-heading {
@@ -2095,7 +2094,7 @@ h3 {
   color: var(--red-text);
 }
 
-.play-bot-settings {
+.play-settings {
   overflow: hidden;
   margin-top: 14px;
   border: 1px solid var(--line);
@@ -2103,7 +2102,7 @@ h3 {
   background: var(--subtle-fill-soft);
 }
 
-.play-bot-settings summary {
+.play-settings summary {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -2114,35 +2113,41 @@ h3 {
   transition: background 120ms ease;
 }
 
-.play-bot-settings summary:hover {
+.play-settings summary:hover {
   background: var(--surface-hover);
 }
 
-.play-bot-settings summary:focus-visible {
+.play-settings summary:focus-visible {
   outline: 3px solid rgb(47 111 179 / 28%);
   outline-offset: -3px;
 }
 
-.play-bot-settings[open] summary {
+.play-settings[open] summary {
   background: var(--surface);
 }
 
-.play-bot-settings summary::-webkit-details-marker {
+.play-settings summary::-webkit-details-marker {
   display: none;
 }
 
-.play-bot-settings-copy {
+.play-settings-copy {
   display: grid;
   min-width: 0;
   gap: 3px;
 }
 
-.play-bot-settings-copy > span {
+.play-settings-copy strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.play-settings-copy > span {
   color: var(--muted);
   font-size: 0.72rem;
 }
 
-.play-bot-settings-toggle {
+.play-settings-toggle {
   display: inline-flex;
   flex: none;
   align-items: center;
@@ -2156,33 +2161,61 @@ h3 {
   font-weight: 900;
 }
 
-.play-bot-settings-chevron {
+.play-settings-chevron {
   font-size: 1.15rem;
   line-height: 1;
   transform-origin: center;
   transition: transform 120ms ease;
 }
 
-.play-bot-settings[open] .play-bot-settings-chevron {
+.play-settings[open] .play-settings-chevron {
   transform: rotate(90deg);
 }
 
-.play-bot-settings-grid {
+.play-settings-sections {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
+  gap: 10px;
   border-top: 1px solid var(--hairline);
   padding: 12px;
 }
 
-.play-bot-settings-grid label {
+.play-settings-section {
+  min-width: 0;
+  margin: 0;
+  border: 1px solid var(--hairline);
+  border-radius: 9px;
+  padding: 10px;
+  background: var(--surface);
+}
+
+.play-settings-section-wide,
+.play-settings-section[data-play-settings-section="game"] {
+  grid-column: span 2;
+}
+
+.play-settings-section legend {
+  padding: 0 5px;
+  color: var(--ink);
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+.play-settings-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 9px;
+}
+
+.play-setting {
   position: relative;
   display: grid;
   gap: 6px;
-  border: 1px solid var(--hairline);
+  min-width: 0;
+  border: 1px solid var(--input-line);
   border-radius: 8px;
   padding: 10px;
-  background: var(--surface);
+  background: var(--subtle-fill-soft);
   color: var(--muted);
   font-size: 0.65rem;
   font-weight: 900;
@@ -2216,7 +2249,7 @@ h3 {
   width: min(460px, calc(100vw - 24px));
 }
 
-.play-bot-settings-grid label::after {
+.play-setting:has(select)::after {
   position: absolute;
   right: 20px;
   bottom: 20px;
@@ -2227,7 +2260,7 @@ h3 {
   pointer-events: none;
 }
 
-.play-bot-settings-grid select {
+.play-setting select {
   appearance: none;
   min-width: 0;
   width: 100%;
@@ -2242,32 +2275,54 @@ h3 {
   text-transform: none;
 }
 
-.play-bot-settings-grid select:hover {
+.play-setting select:hover {
   border-color: var(--muted);
 }
 
-.play-bot-settings-grid select:focus-visible {
+.play-setting select:focus-visible {
   border-color: var(--blue);
   outline: 3px solid rgb(47 111 179 / 20%);
   outline-offset: 1px;
 }
 
-.play-setup-footer {
-  gap: 18px;
-  border-top: 1px solid var(--hairline);
-  padding-top: 16px;
-}
-
 .play-word-set {
-  display: grid;
-  gap: 5px;
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 5px 2px;
 }
 
-.play-word-set > span {
+.play-word-set .play-setting-label {
+  flex: none;
   color: var(--muted);
   font-size: 0.65rem;
   font-weight: 900;
   text-transform: uppercase;
+}
+
+.play-word-set .word-set-switch {
+  display: grid;
+  flex: 0 1 300px;
+  width: min(300px, 100%);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  border-color: var(--input-line);
+  padding: 3px;
+  background: var(--control-fill);
+}
+
+.play-word-set .word-set-switch button {
+  min-width: 0;
+  min-height: 36px;
+}
+
+.play-word-set .word-set-switch button[aria-pressed="true"] {
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow:
+    inset 0 0 0 1px var(--input-line),
+    0 1px 2px rgb(0 0 0 / 10%);
 }
 
 .saved-play-actions,
@@ -2947,8 +3002,28 @@ button.play-card:not(:disabled):hover {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .play-bot-settings-grid {
+  .play-settings-sections {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .play-settings-section[data-play-settings-section="game"] {
+    grid-column: auto;
+  }
+
+  .play-settings-section-wide {
+    grid-column: 1 / -1;
+  }
+
+  .play-word-set {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 6px;
+    padding: 2px 0;
+  }
+
+  .play-word-set .word-set-switch {
+    flex-basis: auto;
+    width: 100%;
   }
 
   .play-workspace {
@@ -2988,8 +3063,7 @@ button.play-card:not(:disabled):hover {
     padding: 12px;
   }
 
-  .play-setup-heading,
-  .play-setup-footer {
+  .play-setup-heading {
     align-items: flex-start;
     flex-direction: column;
     gap: 12px;
@@ -3036,12 +3110,17 @@ button.play-card:not(:disabled):hover {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .play-bot-settings summary {
+  .play-settings summary {
     align-items: center;
   }
 
-  .play-bot-settings-grid {
+  .play-settings-sections {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .play-settings-section-wide,
+  .play-settings-section[data-play-settings-section="game"] {
+    grid-column: auto;
   }
 
   .play-board-grid {

@@ -343,21 +343,44 @@ test("returning to an initialized Train mode reuses its rendered UI", async ({
 test("Play exposes and saves bot policy settings", async ({ page }) => {
   await page.goto("/?mode=play");
 
-  const settings = page.locator(".play-bot-settings");
+  const settings = page.locator(".play-settings");
   await expect(settings).toContainText(
-    "BGE-small, 10k, human-like, dynamic operative, stop at number",
+    "Official, BGE-small, 10k, human-like, dynamic operative, stop at number",
   );
   await expect(settings).not.toHaveAttribute("open", "");
-  await expect(settings.locator(".play-bot-settings-toggle")).toContainText(
-    "Customize",
-  );
+  await expect(settings.locator(".play-settings-toggle")).toContainText("Edit");
   expect(
     await settings.evaluate((details) =>
-      details.previousElementSibling?.classList.contains("play-setup-footer"),
+      details.previousElementSibling?.classList.contains("seat-grid"),
     ),
   ).toBe(true);
-  await settings.locator("summary").click();
+  await expect(page.locator(".play-setup > .play-word-set")).toHaveCount(0);
+  await settings.locator("summary").focus();
+  await page.keyboard.press("Enter");
   await expect(settings).toHaveAttribute("open", "");
+
+  const gameSettings = settings.locator('[data-play-settings-section="game"]');
+  const allBotSettings = settings.locator(
+    '[data-play-settings-section="all-bots"]',
+  );
+  const spymasterSettings = settings.locator(
+    '[data-play-settings-section="spymaster"]',
+  );
+  const operativeSettings = settings.locator(
+    '[data-play-settings-section="operative"]',
+  );
+  await expect(gameSettings.locator("legend")).toHaveText("🎮 Game");
+  await expect(allBotSettings.locator("legend")).toHaveText("🤖 All bots");
+  await expect(spymasterSettings.locator("legend")).toHaveText("🕵️ Spymaster");
+  await expect(operativeSettings.locator("legend")).toHaveText("🔎 Operative");
+  await expect(gameSettings.locator("[data-play-word-set]")).toHaveCount(2);
+  await expect(gameSettings.locator(".play-word-set.play-setting")).toHaveCount(
+    0,
+  );
+  await expect(allBotSettings.locator("#play-bot-model")).toHaveCount(1);
+  await expect(spymasterSettings.locator("select")).toHaveCount(3);
+  await expect(operativeSettings.locator("select")).toHaveCount(2);
+
   await expect(page.locator("#play-bot-model")).toHaveValue("bge-small");
   await expect(page.locator("#play-bot-candidates")).toHaveValue("10000");
   await expect(page.locator("#play-clue-policy")).toHaveValue("hybrid");
@@ -368,6 +391,10 @@ test("Play exposes and saves bot policy settings", async ({ page }) => {
   await expect(page.locator("#play-bonus-guesses")).toHaveValue("pass");
   await expect(settings.locator(".play-setting-label .info-button")).toHaveCount(6);
 
+  await page.getByRole("button", { name: "Extended 800", exact: true }).click();
+  await expect(settings).toContainText(
+    "Extended, BGE-small, 10k, human-like, dynamic operative, stop at number",
+  );
   await page.locator("#play-bot-model").selectOption("minilm-l6");
   await page.locator("#play-bot-candidates").selectOption("30000");
   await page.locator("#play-clue-policy").selectOption("current");
@@ -413,7 +440,7 @@ test("Play bot setting help explains measured tradeoffs and stays on-screen", as
   ]) {
     await page.setViewportSize(viewport);
     await page.goto("/?mode=play");
-    await page.locator(".play-bot-settings summary").click();
+    await page.locator(".play-settings summary").click();
 
     for (const [label, rowCount, explanation] of settingHelp) {
       const button = page.getByRole("button", { name: `About ${label}`, exact: true });
@@ -856,7 +883,7 @@ test("starting a second Play game clears the previous clue and analysis", async 
 }) => {
   await page.goto("/?mode=play");
   await page.locator('[data-play-seat="blue:spymaster"]').click();
-  await page.locator(".play-bot-settings summary").click();
+  await page.locator(".play-settings summary").click();
   await page.locator("#play-bot-model").selectOption("minilm-l3");
   await page.locator("#play-bot-candidates").selectOption("3000");
   await page.getByRole("button", { name: "Start new game", exact: true }).click();

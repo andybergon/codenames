@@ -235,7 +235,7 @@ export function createPlayMode(options = {}) {
     ),
     bonusGuesses: document.querySelector("#play-bonus-guesses"),
     bonusGuessesInfo: document.querySelector("#play-bonus-guesses-info"),
-    botSettingsSummary: document.querySelector("#play-bot-settings-summary"),
+    settingsSummary: document.querySelector("#play-settings-summary"),
     startGame: document.querySelector("#start-play-game"),
     savedActions: document.querySelector("#saved-play-actions"),
     resumeSession: document.querySelector("#resume-play-session"),
@@ -441,7 +441,10 @@ export function createPlayMode(options = {}) {
     elements.operativeAggression.value =
       selectedBotSettings.operativeAggression;
     elements.bonusGuesses.value = selectedBotSettings.bonusGuesses;
-    elements.botSettingsSummary.textContent = botSettingsLabel(selectedBotSettings);
+    elements.settingsSummary.textContent = settingsLabel(
+      selectedWordSet,
+      selectedBotSettings,
+    );
     elements.savedActions.hidden = !savedGame;
     elements.startGame.classList.toggle("primary", !savedGame);
     elements.startGame.classList.toggle("secondary", Boolean(savedGame));
@@ -1367,7 +1370,7 @@ function formatRelativeWork(count) {
   return relative === 1 ? "1×" : `~${Number(relative.toFixed(1))}×`;
 }
 
-function botSettingsLabel(settings) {
+function settingsLabel(wordSet, settings) {
   const model = modelOption(settings.modelId);
   const style = settings.cluePolicy === "hybrid" ? "human-like" : "conservative";
   const aggression = {
@@ -1379,7 +1382,8 @@ function botSettingsLabel(settings) {
     settings.bonusGuesses === PLAY_BONUS_POLICY.PASS
       ? "stop at number"
       : "allow +1";
-  return `${model.label}, ${settings.candidateCount / 1000}k, ${style}, ${aggression}, ${bonus}`;
+  const words = wordSet === WORD_SET.EXTENDED ? "Extended" : "Official";
+  return `${words}, ${model.label}, ${settings.candidateCount / 1000}k, ${style}, ${aggression}, ${bonus}`;
 }
 
 function dotVectors(left, right) {
