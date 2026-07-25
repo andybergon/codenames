@@ -1,7 +1,6 @@
 import { Check, Share2, TriangleAlert, createIcons } from "lucide";
 import {
   BOARD_ORDER,
-  createGeneratedBoardState,
   createRandomSeed,
   encodeBoardParam,
 } from "../board-share.js";
@@ -53,6 +52,16 @@ import {
   PLAY_OPERATIVE_AGGRESSION,
   normalizePlayBotSettings,
 } from "./settings.js";
+import {
+  PLAY_WORD_REUSE_POLICY,
+  clearWordReuseHistory,
+  createPlayBoardWithWordReuse,
+  loadWordReuseState,
+  recordBoardWords,
+  saveWordReuseState,
+  setWordReusePolicy,
+  wordReuseStatus,
+} from "./word-reuse.js";
 
 const RESULTS_PER_SIZE = 6;
 const BOT_WAIT_DETAIL_DELAY = 1800;
@@ -205,6 +214,18 @@ const BOT_SETTING_INFO = Object.freeze({
     note: "Allow uses only the current clue and cannot revisit unresolved earlier clues.",
   },
 });
+const WORD_REUSE_INFO = Object.freeze({
+  id: "new-board-words",
+  label: "New board words",
+  table: {
+    headers: ["🔁 Policy", "🎲 Selection", "💾 History"],
+    rows: [
+      ["🎲 Fully random", "Any pool word", "Still recorded"],
+      ["🧠 Avoid recent", "Unseen first", "Last 32 boards"],
+    ],
+  },
+  note: "When fewer than 25 unseen words remain, the next board uses only the least-recently-used repeats needed. Clear history makes every word available again without changing the selected policy.",
+});
 
 export function createPlayMode(options = {}) {
   const botActionDelay =
@@ -221,6 +242,10 @@ export function createPlayMode(options = {}) {
     seatButtons: [...document.querySelectorAll("[data-play-seat]")],
     randomizeSeat: document.querySelector("#randomize-play-seat"),
     wordSetButtons: [...document.querySelectorAll("[data-play-word-set]")],
+    wordReusePolicy: document.querySelector("#play-word-reuse-policy"),
+    wordReuseInfo: document.querySelector("#play-word-reuse-info"),
+    wordReuseStatus: document.querySelector("#play-word-reuse-status"),
+    clearWordHistory: document.querySelector("#clear-play-word-history"),
     botModel: document.querySelector("#play-bot-model"),
     botModelInfo: document.querySelector("#play-bot-model-info"),
     botCandidates: document.querySelector("#play-bot-candidates"),
@@ -270,6 +295,7 @@ export function createPlayMode(options = {}) {
   };
 
   for (const [container, definition] of [
+    [elements.wordReuseInfo, WORD_REUSE_INFO],
     [elements.botModelInfo, BOT_SETTING_INFO.model],
     [elements.botCandidatesInfo, BOT_SETTING_INFO.candidates],
     [elements.cluePolicyInfo, BOT_SETTING_INFO.cluePolicy],
@@ -287,6 +313,7 @@ export function createPlayMode(options = {}) {
   let selectedHumanSeat = randomHumanSeat();
   let selectedWordSet = WORD_SET.OFFICIAL;
   let selectedBotSettings = normalizePlayBotSettings();
+  let wordReuseState = loadWordReuseState();
   let savedGame = loadPlaySession();
   let game = null;
   let analysis = { [SIDE.BLUE]: null, [SIDE.RED]: null };
@@ -330,6 +357,21 @@ export function createPlayMode(options = {}) {
       renderSetup();
     });
   }
+
+  elements.wordReusePolicy.addEventListener("change", () => {
+    wordReuseState = setWordReusePolicy(
+      wordReuseState,
+      elements.wordReusePolicy.value,
+    );
+    saveWordReuseState(wordReuseState);
+    renderSetup();
+  });
+
+  elements.clearWordHistory.addEventListener("click", () => {
+    wordReuseState = clearWordReuseHistory(wordReuseState);
+    saveWordReuseState(wordReuseState);
+    renderSetup();
+  });
 
   for (const [element, key, transform] of [
     [elements.botModel, "modelId", String],
@@ -443,17 +485,28 @@ export function createPlayMode(options = {}) {
     elements.bonusGuesses.value = selectedBotSettings.bonusGuesses;
     elements.settingsSummary.textContent = settingsLabel(
       selectedWordSet,
+      wordReuseState.policy,
       selectedBotSettings,
     );
     elements.savedActions.hidden = !savedGame;
     elements.startGame.classList.toggle("primary", !savedGame);
     elements.startGame.classList.toggle("secondary", Boolean(savedGame));
+    elements.wordReusePolicy.value = wordReuseState.policy;
+    elements.clearWordHistory.disabled = wordReuseState.boards.length === 0;
+    const reuseStatus = wordReuseStatus(wordReuseState, selectedWordSet);
+    elements.wordReuseStatus.textContent = reuseStatus.text;
+    elements.wordReuseStatus.dataset.tone = reuseStatus.tone;
+    elements.wordReuseStatus.hidden = reuseStatus.tone !== "warning";
   }
 
   function startNewGame() {
     window.clearTimeout(botTimer);
     const seed = createRandomSeed();
-    const generated = createGeneratedBoardState(seed, BOARD_ORDER.RANDOM, selectedWordSet);
+    const { board: generated } = createPlayBoardWithWordReuse({
+      seed,
+      state: wordReuseState,
+      wordSet: selectedWordSet,
+    });
     const positions = new Map(
       generated.randomLayoutOrder.map((layoutId, index) => [layoutId, index]),
     );
@@ -466,7 +519,10 @@ export function createPlayMode(options = {}) {
       humanSeat: selectedHumanSeat,
       seed,
       wordSet: selectedWordSet,
+      wordReusePolicy: wordReuseState.policy,
     });
+    wordReuseState = recordBoardWords(wordReuseState, game.cards);
+    saveWordReuseState(wordReuseState);
     savedGame = game;
     resetRuntimeState("");
     savePlaySession(game);
@@ -549,7 +605,10 @@ export function createPlayMode(options = {}) {
       randomLayoutOrder: game.cards.map((card) => card.layoutId),
       order: BOARD_ORDER.RANDOM,
       wordSet: game.wordSet,
-      source: { type: "seed", seed: game.seed, version: "3" },
+      source:
+        game.wordReusePolicy === PLAY_WORD_REUSE_POLICY.AVOID_RECENT
+          ? { type: "explicit" }
+          : { type: "seed", seed: game.seed, version: "3" },
     });
     const url = new URL(window.location.href);
     url.search = "";
@@ -1370,7 +1429,7 @@ function formatRelativeWork(count) {
   return relative === 1 ? "1×" : `~${Number(relative.toFixed(1))}×`;
 }
 
-function settingsLabel(wordSet, settings) {
+function settingsLabel(wordSet, wordReusePolicy, settings) {
   const model = modelOption(settings.modelId);
   const style = settings.cluePolicy === "hybrid" ? "human-like" : "conservative";
   const aggression = {
@@ -1383,7 +1442,11 @@ function settingsLabel(wordSet, settings) {
       ? "stop at number"
       : "allow +1";
   const words = wordSet === WORD_SET.EXTENDED ? "Extended" : "Official";
-  return `${words}, ${model.label}, ${settings.candidateCount / 1000}k, ${style}, ${aggression}, ${bonus}`;
+  const reuse =
+    wordReusePolicy === PLAY_WORD_REUSE_POLICY.AVOID_RECENT
+      ? "avoid recent"
+      : "fully random";
+  return `${words}, ${reuse}, ${model.label}, ${settings.candidateCount / 1000}k, ${style}, ${aggression}, ${bonus}`;
 }
 
 function dotVectors(left, right) {

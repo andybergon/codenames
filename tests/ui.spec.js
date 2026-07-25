@@ -1,5 +1,7 @@
 import { expect, test } from "@playwright/test";
 import pickerBenchmark from "../scripts/generated/model-picker-benchmark.json" with { type: "json" };
+import { decodeBoardParam } from "../src/board-share.js";
+import { OFFICIAL_WORDS } from "../src/word-data.js";
 
 const SHARED_BOARD = "/?mode=train&b=2sw7fIwN9dL7Yos";
 
@@ -345,7 +347,7 @@ test("Play exposes and saves bot policy settings", async ({ page }) => {
 
   const settings = page.locator(".play-settings");
   await expect(settings).toContainText(
-    "Official, BGE-small, 10k, human-like, dynamic operative, stop at number",
+    "Official, fully random, BGE-small, 10k, human-like, dynamic operative, stop at number",
   );
   await expect(settings).not.toHaveAttribute("open", "");
   await expect(settings.locator(".play-settings-toggle")).toContainText("Edit");
@@ -374,6 +376,9 @@ test("Play exposes and saves bot policy settings", async ({ page }) => {
   await expect(spymasterSettings.locator("legend")).toHaveText("🕵️ Spymaster");
   await expect(operativeSettings.locator("legend")).toHaveText("🔎 Operative");
   await expect(gameSettings.locator("[data-play-word-set]")).toHaveCount(2);
+  await expect(
+    gameSettings.locator(".play-settings-fields > #play-word-reuse-setting"),
+  ).toHaveCount(1);
   await expect(gameSettings.locator(".play-word-set.play-setting")).toHaveCount(
     0,
   );
@@ -389,11 +394,11 @@ test("Play exposes and saves bot policy settings", async ({ page }) => {
     "dynamic",
   );
   await expect(page.locator("#play-bonus-guesses")).toHaveValue("pass");
-  await expect(settings.locator(".play-setting-label .info-button")).toHaveCount(6);
+  await expect(settings.locator(".play-setting-label .info-button")).toHaveCount(7);
 
   await page.getByRole("button", { name: "Extended 800", exact: true }).click();
   await expect(settings).toContainText(
-    "Extended, BGE-small, 10k, human-like, dynamic operative, stop at number",
+    "Extended, fully random, BGE-small, 10k, human-like, dynamic operative, stop at number",
   );
   await page.locator("#play-bot-model").selectOption("minilm-l6");
   await page.locator("#play-bot-candidates").selectOption("30000");
@@ -404,14 +409,12 @@ test("Play exposes and saves bot policy settings", async ({ page }) => {
   await page.locator('[data-play-seat="blue:spymaster"]').click();
   await page.getByRole("button", { name: "Start new game", exact: true }).click();
 
-  expect(
-    await page.evaluate(() => {
-      const game = JSON.parse(
-        localStorage.getItem("codenames-play-session-v1"),
-      );
-      return game.botSettings;
-    }),
-  ).toEqual({
+  const storedGame = await page.evaluate(() =>
+    JSON.parse(localStorage.getItem("codenames-play-session-v1")),
+  );
+  expect(storedGame.wordSet).toBe("extended");
+  expect(storedGame.wordReusePolicy).toBe("fully-random");
+  expect(storedGame.botSettings).toEqual({
     modelId: "minilm-l6",
     candidateCount: 30000,
     cluePolicy: "current",
@@ -419,6 +422,207 @@ test("Play exposes and saves bot policy settings", async ({ page }) => {
     operativeAggression: "conservative",
     bonusGuesses: "allow",
   });
+  expect(storedGame.botSettings).not.toHaveProperty("wordReusePolicy");
+});
+
+test("Play avoids recent words across pools and persists policy", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: {
+        writeText(value) {
+          window.__copiedBoardLink = value;
+          return Promise.resolve();
+        },
+      },
+    });
+  });
+  await page.goto("/?mode=play");
+  await page.locator(".play-settings summary").click();
+  const reusePolicy = page.locator("#play-word-reuse-policy");
+  const reuseStatus = page.locator("#play-word-reuse-status");
+  await expect(reusePolicy).toHaveValue("fully-random");
+  await expect(reuseStatus).toBeHidden();
+  await reusePolicy.selectOption("avoid-recent");
+  await expect(reuseStatus).toBeHidden();
+  await page.locator('[data-play-seat="blue:spymaster"]').click();
+
+  await page.getByRole("button", { name: "Start new game", exact: true }).click();
+  const firstOfficial = await page
+    .locator(".play-card")
+    .evaluateAll((cards) => cards.map((card) => card.textContent.trim()));
+  await page.getByRole("button", { name: "Share board", exact: true }).click();
+  const shared = decodeBoardParam(
+    new URL(await page.evaluate(() => window.__copiedBoardLink)).searchParams.get("b"),
+  );
+  expect(shared.source.type).toBe("explicit");
+  expect(shared.cards.map(({ word }) => word).sort()).toEqual(
+    [...firstOfficial].sort(),
+  );
+  await page.getByRole("button", { name: "Start new game", exact: true }).click();
+  await expect(reusePolicy).toHaveValue("avoid-recent");
+  await page.getByRole("button", { name: "Start new game", exact: true }).click();
+  const secondOfficial = await page
+    .locator(".play-card")
+    .evaluateAll((cards) => cards.map((card) => card.textContent.trim()));
+  expect(secondOfficial.filter((word) => firstOfficial.includes(word))).toEqual([]);
+
+  await page.getByRole("button", { name: "Start new game", exact: true }).click();
+  await page.locator('[data-play-word-set="extended"]').click();
+  await page.getByRole("button", { name: "Start new game", exact: true }).click();
+  const extended = await page
+    .locator(".play-card")
+    .evaluateAll((cards) => cards.map((card) => card.textContent.trim()));
+  expect(
+    extended.filter((word) => [...firstOfficial, ...secondOfficial].includes(word)),
+  ).toEqual([]);
+
+  await page.reload();
+  await page.locator(".play-settings summary").click();
+  await expect(reusePolicy).toHaveValue("avoid-recent");
+  expect(
+    await page.evaluate(
+      () =>
+        JSON.parse(localStorage.getItem("codenames-play-word-reuse-v1"))
+          .boards.length,
+    ),
+  ).toBe(3);
+
+  for (const viewport of [
+    { width: 390, height: 844 },
+    { width: 768, height: 1024 },
+    { width: 1024, height: 900 },
+    { width: 1440, height: 900 },
+  ]) {
+    await page.setViewportSize(viewport);
+    const layout = await page
+      .locator('[data-play-settings-section="game"] .play-settings-fields')
+      .evaluate((fields) => {
+        const reuse = fields
+          .querySelector("#play-word-reuse-setting")
+          .getBoundingClientRect();
+        const wordSet = fields
+          .querySelector(".play-word-set")
+          .getBoundingClientRect();
+        const overlaps =
+          reuse.left < wordSet.right &&
+          reuse.right > wordSet.left &&
+          reuse.top < wordSet.bottom &&
+          reuse.bottom > wordSet.top;
+        return {
+          overlaps,
+          pageOverflows:
+            document.documentElement.scrollWidth >
+            document.documentElement.clientWidth,
+        };
+      });
+    expect(layout.overlaps, `Game setting overlap at ${viewport.width}px`).toBe(false);
+    expect(layout.pageOverflows, `page overflow at ${viewport.width}px`).toBe(false);
+  }
+
+  await reusePolicy.selectOption("fully-random");
+  await page.reload();
+  await expect(reusePolicy).toHaveValue("fully-random");
+  await page.locator(".play-settings summary").click();
+  await reusePolicy.selectOption("avoid-recent");
+  await page.getByRole("button", { name: "Clear history", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "Clear history", exact: true }),
+  ).toBeDisabled();
+  expect(
+    await page.evaluate(() =>
+      JSON.parse(localStorage.getItem("codenames-play-word-reuse-v1")),
+    ),
+  ).toMatchObject({ policy: "avoid-recent", boards: [] });
+});
+
+test("Play explains new-board reuse in a responsive info control", async ({
+  page,
+}) => {
+  for (const viewport of [
+    { width: 390, height: 844 },
+    { width: 768, height: 1024 },
+    { width: 1440, height: 900 },
+  ]) {
+    await page.setViewportSize(viewport);
+    await page.goto("/?mode=play");
+    await page.locator(".play-settings summary").click();
+    const help = page.getByRole("button", {
+      name: "About New board words",
+      exact: true,
+    });
+    await help.hover();
+    const popover = page.locator(`#${await help.getAttribute("aria-controls")}`);
+    await expect(popover).toBeVisible();
+    await expect(popover.locator("tbody tr")).toHaveCount(2);
+    await expect(popover).toContainText("Any pool word");
+    await expect(popover).toContainText("least-recently-used repeats");
+    const bounds = await popover.boundingBox();
+    const clientViewport = await page.evaluate(() => ({
+      height: document.documentElement.clientHeight,
+      width: document.documentElement.clientWidth,
+    }));
+    expect(bounds.x).toBeGreaterThanOrEqual(0);
+    expect(bounds.y).toBeGreaterThanOrEqual(0);
+    expect(bounds.x + bounds.width).toBeLessThanOrEqual(clientViewport.width);
+    expect(bounds.y + bounds.height).toBeLessThanOrEqual(clientViewport.height);
+  }
+});
+
+test("Play warns and fills a board when recent words exhaust the pool", async ({
+  page,
+}) => {
+  await page.addInitScript((words) => {
+    const boards = [];
+    for (let index = 0; index < words.length; index += 25) {
+      boards.push(words.slice(index, index + 25));
+    }
+    localStorage.setItem(
+      "codenames-play-word-reuse-v1",
+      JSON.stringify({
+        schemaVersion: 1,
+        policy: "avoid-recent",
+        boards,
+      }),
+    );
+  }, OFFICIAL_WORDS);
+
+  for (const viewport of [
+    { width: 390, height: 844 },
+    { width: 768, height: 1024 },
+    { width: 1440, height: 900 },
+  ]) {
+    await page.setViewportSize(viewport);
+    await page.goto("/?mode=play");
+    await page.locator(".play-settings summary").click();
+    await expect(page.locator("#play-word-reuse-status")).toContainText(
+      "must reuse at least 25",
+    );
+    const layout = await page.locator("#play-word-reuse-setting").evaluate(
+      (setting) => ({
+        pageOverflows:
+          document.documentElement.scrollWidth >
+          document.documentElement.clientWidth,
+        settingOverflows: setting.scrollWidth > setting.clientWidth,
+      }),
+    );
+    expect(layout.pageOverflows, `page overflow at ${viewport.width}px`).toBe(false);
+    expect(
+      layout.settingOverflows,
+      `reuse setting overflow at ${viewport.width}px`,
+    ).toBe(false);
+  }
+
+  await page.locator('[data-play-seat="blue:spymaster"]').click();
+  await page.getByRole("button", { name: "Start new game", exact: true }).click();
+  const words = await page
+    .locator(".play-card")
+    .evaluateAll((cards) => cards.map((card) => card.textContent.trim()));
+  expect(words).toHaveLength(25);
+  expect(new Set(words).size).toBe(25);
+  expect(words.every((word) => OFFICIAL_WORDS.includes(word))).toBe(true);
 });
 
 test("Play bot setting help explains measured tradeoffs and stays on-screen", async ({

@@ -449,6 +449,30 @@
                       </button>
                     </div>
                   </div>
+                  <div id="play-word-reuse-setting" class="play-word-reuse play-setting">
+                    <span class="play-setting-label">
+                      <label for="play-word-reuse-policy">New board words</label>
+                      <span id="play-word-reuse-info"></span>
+                    </span>
+                    <div class="play-word-reuse-controls">
+                      <select id="play-word-reuse-policy">
+                        <option value="fully-random">Fully random</option>
+                        <option value="avoid-recent">Avoid recent words</option>
+                      </select>
+                      <button
+                        id="clear-play-word-history"
+                        class="button secondary"
+                        type="button"
+                      >
+                        Clear history
+                      </button>
+                    </div>
+                    <span
+                      id="play-word-reuse-status"
+                      class="play-word-reuse-status"
+                      role="status"
+                    ></span>
+                  </div>
                 </div>
               </fieldset>
 

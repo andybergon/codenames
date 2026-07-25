@@ -1,7 +1,16 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
-import { createSampleBoardState } from "../src/board-share.js";
+import {
+  BOARD_ORDER,
+  createGeneratedBoardState,
+  createSampleBoardState,
+} from "../src/board-share.js";
 import { SIDE, remainingCardsForSide } from "../src/gameplay.js";
+import {
+  EXTENDED_WORDS,
+  OFFICIAL_WORDS,
+  WORD_SET,
+} from "../src/word-data.js";
 import {
   PLAY_CLUE_POLICY,
   chooseBotClue,
@@ -32,6 +41,19 @@ import {
   PLAY_OPERATIVE_AGGRESSION,
   normalizePlayBotSettings,
 } from "../src/play/settings.js";
+import {
+  MAX_WORD_HISTORY_BOARDS,
+  PLAY_WORD_REUSE_POLICY,
+  clearWordReuseHistory,
+  createDefaultWordReuseState,
+  createPlayBoardWithWordReuse,
+  loadWordReuseState,
+  normalizeWordReuseState,
+  recordBoardWords,
+  saveWordReuseState,
+  setWordReusePolicy,
+  wordReuseStatus,
+} from "../src/play/word-reuse.js";
 
 const sample = createSampleBoardState();
 const playPolicyBenchmark = JSON.parse(
@@ -660,6 +682,140 @@ assert.equal(
   PLAY_OPERATIVE_AGGRESSION.DYNAMIC,
 );
 assert.equal(upgradedStoredGame.botSettings.bonusGuesses, PLAY_BONUS_POLICY.PASS);
+assert.equal(
+  upgradedStoredGame.wordReusePolicy,
+  PLAY_WORD_REUSE_POLICY.FULLY_RANDOM,
+);
+
+const randomSeed = boardSeed(1);
+const randomReuseBoard = createPlayBoardWithWordReuse({
+  seed: randomSeed,
+  state: createDefaultWordReuseState(),
+  wordSet: WORD_SET.OFFICIAL,
+}).board;
+assert.deepEqual(
+  randomReuseBoard,
+  createGeneratedBoardState(
+    randomSeed,
+    BOARD_ORDER.RANDOM,
+    WORD_SET.OFFICIAL,
+  ),
+);
+
+let officialHistory = setWordReusePolicy(
+  createDefaultWordReuseState(),
+  PLAY_WORD_REUSE_POLICY.AVOID_RECENT,
+);
+const officialBoards = [];
+for (let index = 0; index < OFFICIAL_WORDS.length / 25; index += 1) {
+  const result = createPlayBoardWithWordReuse({
+    seed: boardSeed(index + 10),
+    state: officialHistory,
+    wordSet: WORD_SET.OFFICIAL,
+  });
+  const words = result.board.cards.map(({ word }) => word);
+  assert.equal(result.repeatsRequired, 0);
+  assert.equal(
+    words.some((word) => officialBoards.flat().includes(word)),
+    false,
+  );
+  officialBoards.push(words);
+  officialHistory = recordBoardWords(
+    officialHistory,
+    result.board.cards,
+  );
+}
+assert.equal(
+  new Set(officialBoards.flat()).size,
+  OFFICIAL_WORDS.length,
+);
+assert.match(
+  wordReuseStatus(
+    {
+      ...officialHistory,
+      boards: officialHistory.boards.slice(0, -1),
+    },
+    WORD_SET.OFFICIAL,
+  ).text,
+  /Last repeat-free Official board/,
+);
+assert.equal(
+  createPlayBoardWithWordReuse({
+    seed: boardSeed(100),
+    state: officialHistory,
+    wordSet: WORD_SET.OFFICIAL,
+  }).repeatsRequired,
+  25,
+);
+assert.match(
+  wordReuseStatus(officialHistory, WORD_SET.OFFICIAL).text,
+  /must reuse at least 25/,
+);
+
+let extendedHistory = setWordReusePolicy(
+  createDefaultWordReuseState(),
+  PLAY_WORD_REUSE_POLICY.AVOID_RECENT,
+);
+const extendedWordsSeen = new Set();
+for (let index = 0; index < EXTENDED_WORDS.length / 25; index += 1) {
+  const result = createPlayBoardWithWordReuse({
+    seed: boardSeed(index + 200),
+    state: extendedHistory,
+    wordSet: WORD_SET.EXTENDED,
+  });
+  assert.equal(result.repeatsRequired, 0);
+  for (const card of result.board.cards) {
+    assert.equal(extendedWordsSeen.has(card.word), false);
+    extendedWordsSeen.add(card.word);
+  }
+  extendedHistory = recordBoardWords(
+    extendedHistory,
+    result.board.cards,
+  );
+}
+assert.equal(extendedWordsSeen.size, EXTENDED_WORDS.length);
+assert.equal(
+  extendedHistory.boards.length,
+  MAX_WORD_HISTORY_BOARDS,
+);
+assert.equal(
+  createPlayBoardWithWordReuse({
+    seed: boardSeed(300),
+    state: extendedHistory,
+    wordSet: WORD_SET.EXTENDED,
+  }).repeatsRequired,
+  25,
+);
+
+const randomAfterAvoid = setWordReusePolicy(
+  officialHistory,
+  PLAY_WORD_REUSE_POLICY.FULLY_RANDOM,
+);
+assert.equal(randomAfterAvoid.boards.length, officialHistory.boards.length);
+assert.equal(
+  clearWordReuseHistory(randomAfterAvoid).boards.length,
+  0,
+);
+
+const storedValues = new Map();
+const fakeStorage = {
+  getItem(key) {
+    return storedValues.get(key) ?? null;
+  },
+  setItem(key, value) {
+    storedValues.set(key, value);
+  },
+};
+assert.equal(saveWordReuseState(extendedHistory, fakeStorage), true);
+assert.deepEqual(
+  loadWordReuseState(fakeStorage),
+  normalizeWordReuseState(extendedHistory),
+);
+storedValues.set("codenames-play-word-reuse-v1", "{invalid");
+assert.deepEqual(
+  loadWordReuseState(fakeStorage),
+  createDefaultWordReuseState(),
+);
 
 const seededA = createSeededRandom("same");
 const seededB = createSeededRandom("same");
@@ -697,3 +853,9 @@ assert.ok(
 );
 
 console.log("Play smoke passed.");
+
+function boardSeed(index) {
+  const bytes = Buffer.alloc(8);
+  bytes.writeBigUInt64BE(BigInt(index));
+  return bytes.toString("base64url");
+}

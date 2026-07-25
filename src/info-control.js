@@ -68,13 +68,17 @@ function positionInfoPopover(button, popover) {
     const popoverBounds = popover.getBoundingClientRect();
     const gutter = 12;
     const gap = 8;
+    const viewportWidth =
+      document.documentElement.clientWidth || window.innerWidth;
+    const viewportHeight =
+      document.documentElement.clientHeight || window.innerHeight;
     const left = Math.max(
       gutter,
-      Math.min(buttonBounds.left, window.innerWidth - popoverBounds.width - gutter),
+      Math.min(buttonBounds.left, viewportWidth - popoverBounds.width - gutter),
     );
     const below = buttonBounds.bottom + gap;
     const top =
-      below + popoverBounds.height <= window.innerHeight - gutter
+      below + popoverBounds.height <= viewportHeight - gutter
         ? below
         : Math.max(gutter, buttonBounds.top - popoverBounds.height - gap);
     popover.style.setProperty("--info-left", `${left}px`);

@@ -2325,6 +2325,43 @@ h3 {
     0 1px 2px rgb(0 0 0 / 10%);
 }
 
+.play-word-reuse {
+  align-content: start;
+}
+
+.play-word-reuse::after {
+  content: none;
+}
+
+.play-word-reuse-controls {
+  display: flex;
+  align-items: stretch;
+  gap: 6px;
+}
+
+.play-word-reuse select {
+  flex: 1 1 130px;
+  min-width: 0;
+  width: auto;
+  appearance: auto;
+  padding-right: 8px;
+}
+
+.play-word-reuse .button {
+  flex: none;
+  min-height: 38px;
+  padding: 0 10px;
+  font-size: 0.68rem;
+}
+
+.play-word-reuse-status {
+  color: var(--red-text);
+  font-size: 0.67rem;
+  line-height: 1.35;
+  font-weight: 800;
+  text-transform: none;
+}
+
 .saved-play-actions,
 .saved-play-buttons,
 .play-game-actions,

@@ -12,6 +12,7 @@ A local-first Codenames clue trainer and one-human game. Train mode ranks clue o
 - 📚 **Clue index** · balanced 10,000-word default · selectable 3k, 30k, and experimental 100k tiers
 - 🛡️ **Recommendations** · safe clues for one to three targets · stretch clues for four to nine
 - 🎴 **Board words** · Official 400-word set · Extended 800-word strict superset
+- 🔁 **New boards** · fully random or avoid words from recent local games
 - 🔗 **Sharing** · versioned `?b=` links preserve the board, roles, word set, and layout
 - 🎨 **Appearance** · system, light, and dark modes
 - 🔒 **Privacy** · board words stay in the browser and are not sent to an application server
@@ -59,11 +60,14 @@ Play defaults to the preserved table order. Operatives see only unrevealed words
 
 Play settings are grouped by ownership: Game controls the board word set, All bots controls the shared embedding model, Spymaster controls clue generation, and Operative controls guessing behavior. Bot settings remain independent from Train's Model picker and persist with each saved game. The default is BGE-small with 10,000 candidates, hybrid scoring, a five-point multi-clue tolerance, Dynamic operative aggression, and no automatic extra guess. Conservative passes on doubtful follow-up guesses, Aggressive pursues the declared clue number with the former thresholds, and Dynamic adapts using only the public remaining-agent counts. Each bot setting's info control compares the checked quality, speed, and risk tradeoffs in a compact table.
 
+New boards remain fully random by default. The optional Avoid recent words policy records the last 32 local Play boards, uses every unseen word in the selected pool before the least-recently-used repeats, and warns when fewer than 25 unseen words remain. Clear history resets board reuse without changing the selected policy. History and policy stay local under `codenames-play-word-reuse-v1`.
+
 The Play implementation keeps rules, bot choices, persistence, and rendering separate:
 
 - `src/play/game-state.js` owns the rules, seat authorization, event history, public projection, and win conditions.
 - `src/play/bots.js` chooses bot clues and guesses. The operative API accepts only clue-to-word similarities and never receives card roles or intended targets.
 - `src/play/session-store.js` persists the versioned game state under `codenames-play-session-v1`.
+- `src/play/word-reuse.js` owns new-board reuse policy, bounded local history, exhaustion fallback, and reset behavior.
 - `src/play/mode.js` owns Play setup, rendering, model orchestration, bot pacing, and resume/backward/forward controls.
 - `scripts/play-smoke.mjs` covers seat ownership, information boundaries, reveal outcomes, deterministic bots, and bounded self-play.
 

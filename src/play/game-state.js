@@ -1,6 +1,7 @@
 import { SIDE, otherSide, remainingCardsForSide } from "../gameplay.js";
 import { isForbiddenClue, normalizeTerm } from "../model.js";
 import { normalizePlayBotSettings } from "./settings.js";
+import { normalizeWordReusePolicy } from "./word-reuse.js";
 
 export const PLAYER_ROLE = Object.freeze({
   SPYMASTER: "spymaster",
@@ -36,6 +37,7 @@ export function createPlayGame({
   humanSeat,
   seed,
   wordSet,
+  wordReusePolicy,
 }) {
   validateSeat(humanSeat);
   if (!Array.isArray(cards) || cards.length !== 25) {
@@ -47,6 +49,7 @@ export function createPlayGame({
     schemaVersion: 1,
     seed: String(seed ?? ""),
     wordSet,
+    wordReusePolicy: normalizeWordReusePolicy(wordReusePolicy),
     botSettings: normalizedBotSettings,
     humanSeat: { ...humanSeat },
     cards: cards.map((card) => ({
@@ -294,6 +297,9 @@ export function validateStoredGame(value) {
   return {
     ...value,
     botSettings: normalizePlayBotSettings(value.botSettings),
+    wordReusePolicy: normalizeWordReusePolicy(
+      value.wordReusePolicy,
+    ),
   };
 }
 
