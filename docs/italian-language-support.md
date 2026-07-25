@@ -6,14 +6,14 @@ Italian support is technically feasible, but it should launch first with an inde
 
 | 🧭 Path | 🎯 Rating | ⚖️ Rights | 🧠 Model | 🚦 Readiness |
 | --- | --- | --- | --- | --- |
-| 🇮🇹 Open Extended beta | 🟢 4.5 | Original + CC BY | Multilingual E5 small | Train beta |
+| 🇮🇹 Open Extended beta | 🟢 4.5 | Original + CC BY | Multilingual E5 small | Train + Play beta |
 | 🔒 User-supplied local deck | 🟡 3.5 | Private input | Multilingual E5 small | Feasible |
 | 🃏 Official Italian preset | 🟠 3 | Permission needed | Multilingual E5 small | Legally blocked |
 | 🌐 Translated English set | 🔴 1 | Not official | Any | Reject |
 
-English remains the production default. Italian is an explicit Train beta and does not change Play defaults or a bare app URL.
+English remains the production default. Italian is an explicit Train and Play beta selected through the top-right EN/IT control. A first visit to the bare app URL still opens English Play.
 
-## Implemented Train beta
+## Implemented beta
 
 - **Vocabulary:** `it:extended-v1` contains 800 unique single-word entries authored for this project across ten semantic categories. It is not copied from or aligned to an official list.
 - **Clue corpus:** Leipzig Italian News 2024 100K supplies the CC BY 4.0 frequency tail. The generated manifest pins archive SHA-256 `669acde110a865bbdcd974ccff6838461ed3aff9106a9a743bde22153e6b7a6c`.
@@ -21,11 +21,12 @@ English remains the production default. Italian is an explicit Train beta and do
 - **Assets:** 3,000 and 10,000 candidate tiers use one mean over 30,000 Italian candidates. The 10k index is 5.30 MB.
 - **Compatibility:** v1 through v3 remain English. V4 encodes Italian, asset version 1, Extended, layout, roles, and UTF-8 custom words. Unsupported asset versions fail closed.
 - **Legality:** normalization preserves Unicode. Accent-folded comparison, Italian inflection stems, checked irregular families, and stem containment block examples such as `citta` against `città`, `attrice` against `attore`, and `abbraccia` against `braccio`.
-- **Interface:** the next-board language control exposes `Italiano Beta`. Loading, board, recommendation, and model copy use locale dictionaries. Play returns to English and keeps its saved settings independent.
+- **Interface:** the top-right EN/IT control applies to Train and Play. Primary setup, action, status, history, board, recommendation, and model copy use locale dictionaries. Italian Play is visibly marked experimental.
+- **Play:** new Italian games use Extended, Multilingual E5 small, and the 3k or 10k Italian clue index. The game language persists with the session and v4 board shares.
 
-The in-app Chromium verification loaded a real Italian v4 board with 10,000 candidates. It retained 9,915 legal candidates and scored the board in 845 to 874 ms after model load. Post-analysis JavaScript heap was 115.4 MB used and 118.8 MB allocated. At viewport overrides 390x844, 768x1024, and 1440x900, the page had no horizontal overflow, controls remained visible, and Italian card labels were adjusted for the narrow five-column tablet board.
+The in-app Chromium verification loaded real Italian Train and Play boards with 10,000 candidates. Train retained 9,915 legal candidates and scored its board in 845 to 874 ms after model load. Post-analysis JavaScript heap was 115.4 MB used and 118.8 MB allocated. At viewport overrides 390x844, 768x1024, and 1440x900, both modes had no horizontal overflow, the EN/IT control remained visible, and every five-column card stayed within the board.
 
-The beta label is material. The 800 words and Italian interface copy still require two native reviewers, the evaluation fixture still needs at least 100 reviewed turns, and Play remains unavailable in Italian until complete-game and cross-model safety gates pass.
+The beta label is material. The 800 words and Italian interface copy still require two native reviewers, the human evaluation fixture still needs at least 100 reviewed turns, and the cross-model stress result is not safe enough to treat bot self-play as a human outcome estimate.
 
 ## Evidence boundary
 
@@ -96,11 +97,11 @@ The prototype uses centered semantic metrics because centering improved target r
 
 | 🧠 Model | 🎯 Rating | 📦 q8 | 📐 Dim | 📚 Published Italian evidence | 🎯 Target recall | 🛡️ Risk hit | 🔤 Morphology | ⏱️ 25 words | ⚖️ License |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 🌍 Multilingual E5 small | 🟢 4.5 | 118.3 MB | 384 | STS17 77.3 · Tatoeba 87.6 | 81.3% | 12.5% | 0.936 | 13.0 ms | MIT |
-| 🌐 Multilingual MiniLM L12 | 🟡 3.5 | 118.3 MB | 384 | 50 languages | 78.1% | 31.3% | 0.821 | 15.5 ms | Apache 2.0 |
+| 🌍 Multilingual E5 small | 🟢 4.5 | 118.3 MB | 384 | STS17 77.3 · Tatoeba 87.6 | 81.3% | 12.5% | 0.936 | 12.6 ms | MIT |
+| 🌐 Multilingual MiniLM L12 | 🟡 3.5 | 118.3 MB | 384 | 50 languages | 78.1% | 31.3% | 0.821 | 8.8 ms | Apache 2.0 |
 | 🧬 GTE multilingual base | 🟠 3 | ~305 MB | 768 | Tatoeba 91.4 | Not run | Not run | Not run | Not run | Apache 2.0 |
 | 🧠 BGE-M3 | 🟠 2.5 | ~568 MB | 1,024 | 100+ languages | Not run | Not run | Not run | Not run | MIT |
-| 🇬🇧 BGE-small English | 🔴 1.5 | 34.0 MB | 384 | English only | 56.3% | 37.5% | 0.765 | 10.3 ms | MIT |
+| 🇬🇧 BGE-small English | 🔴 1.5 | 34.0 MB | 384 | English only | 56.3% | 37.5% | 0.765 | 9.7 ms | MIT |
 
 Published figures come from the model cards for [Multilingual E5 small](https://huggingface.co/intfloat/multilingual-e5-small), [Multilingual MiniLM L12](https://huggingface.co/sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2), [GTE multilingual base](https://huggingface.co/Alibaba-NLP/gte-multilingual-base), and [BGE-M3](https://huggingface.co/BAAI/bge-m3). GTE reports 305 million parameters, while BGE-M3 is based on a much larger multilingual encoder. Their q8 sizes are planning estimates, not repo measurements.
 
@@ -124,35 +125,28 @@ The checked report records:
 
 Multilingual E5 small is the clear browser candidate. Against the English BGE control, centered target recall rises from 56.3% to 81.3%, risk intrusion falls from 37.5% to 12.5%, and raw morphology similarity rises from 0.765 to 0.936. Multilingual MiniLM improves semantic recall but has a 31.3% centered risk rate, so equal bundle size does not justify choosing it.
 
-The 13.0 ms versus 10.3 ms warm Node result is close enough for active-board inference. Network transfer is the dominant regression: Multilingual E5 adds 84.3 MB over BGE-small and 95.3 MB over the current Train MiniLM-L6 model.
+The 12.6 ms versus 9.7 ms warm Node result is close enough for active-board inference. Network transfer is the dominant regression: Multilingual E5 adds 84.3 MB over BGE-small and 95.3 MB over the current Train MiniLM-L6 model.
 
 These results are directional. They do not establish native-speaker quality, legality, cultural fit, or complete-game fun.
 
 ### Full-game behavior
 
-No responsible Italian full-game score is available yet. Complete games need all of the following:
+Both checked runs use 100 paired deterministic boards per clue policy and the production Play state machine. Every one of the 400 simulated policy games completed within the 500-action bound.
 
-- A legally distributable 400 or 800-word Italian board pool.
-- A reviewed 3,000 or 10,000-clue Italian candidate index.
-- A representative Italian centering mean.
-- Italian legality filtering.
-- Same-model and cross-model operative runs.
+| 🧪 Hybrid run | 🤖 Operative | 🎉 Fun | 🔢 Multi | ✅ Correct/turn | 🔴 Wrong/game | ☠️ Assassin | ⏱️ Turns |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| 🇮🇹 Same E5 | E5 | 59.56 | 31.0% | 1.25 | 0.00 | 0% | 12.33 |
+| 🔀 Transfer | MiniLM-L6 | 42.45 | 51.5% | 0.56 | 2.64 | 65% | 12.98 |
 
-The existing English Fun Index cannot be transferred to Italian because clue ambition, ambiguity, inflection, and danger associations change with the language. Once assets exist, run at least 100 paired deterministic games per policy and preserve:
+The [same-model report](../scripts/generated/italian-play-policy-benchmark.md) confirms bounded runtime behavior and no analyzer fallbacks, but it shares one geometry between clue giver and guesser. The [transfer report](../scripts/generated/italian-play-minilm-transfer-benchmark.md) deliberately uses English MiniLM-L6 as an independent operative. Its poor result is a warning about geometry agreement, not a prediction that Italian players hit the assassin 65% of the time. The transfer simulation forces the highest-similarity available guess after a complete round of passes so every stress-test game terminates, and reports those interventions separately.
 
-- Fun Index and its ambition, momentum, suspense, and flow components.
-- First-half mean clue number and clue-number distribution.
-- Correct cards per turn, wrong-team hits, neutral hits, and assassin rate.
-- Fallback rate, turns per game, bounded completion, and team win balance.
-- A cross-model operative run to expose same-model geometry optimism.
-
-Promotion requires the Italian candidate to match or improve the English production guardrails after native-speaker review. A higher self-play Fun score alone is insufficient.
+Promotion beyond beta still requires at least 100 native-reviewed turns and human operative guesses. A higher self-play Fun score alone is insufficient.
 
 ## Italian morphology and clue legality
 
-Italian support cannot reuse the current ASCII normalization. Today `normalizeTerm` changes `città` to `citt`, `caffè` to `caff`, `perché` to `perch`, and `più` to `pi`. This can create false equality, miss real words, and let display text disagree with the embedded term.
+Runtime normalization preserves Unicode letters, numbers, and Italian accents through NFKC. Legality comparisons additionally fold accents and apply conservative Italian stem families, while display and embedding terms keep their original letters.
 
-Use two explicit forms:
+The implementation uses two explicit forms:
 
 - **Display form:** Unicode NFKC, original accents, approved capitalization.
 - **Comparison form:** Unicode NFKC, Italian locale lowercase, letters and combining marks preserved, whitespace collapsed.
@@ -184,7 +178,7 @@ Language is independent from mode, word set, model, and UI appearance. Add it as
 
 Use namespaced asset IDs such as `en:official-v1`, `en:extended-v3`, `it:extended-v1`, and eventually `it:official-v1`. Do not reuse `official` or `extended` without language and version context.
 
-The bare app URL continues to open English Play. A language choice changes only new boards and localized UI. Existing boards, active sessions, and shared links retain their encoded language.
+The bare app URL continues to open English Play for first-time visitors. The EN/IT choice is saved locally. Switching language during a Play game returns to setup without deleting the saved game, while resuming restores the session's encoded language.
 
 ### UI copy
 
@@ -301,14 +295,15 @@ Exit: all English tests and share fixtures pass unchanged, plus Italian Unicode 
 
 Technical exit: generated assets, browser performance, responsive UI, and compatibility checks pass. Promotion exit remains pending native review of the pool, copy, and generated clues.
 
-### Stage 3: Play validation, pending
+### Stage 3: Play beta, technical release complete
 
-- Run the complete 100-board paired benchmark.
-- Run a cross-model operative stress test.
+- Add Italian language, assets, legality, persistence, and v4 sharing to Play.
+- Run the complete 100-board paired same-model benchmark.
+- Run a 100-board cross-model operative stress test.
 - Collect native-player games and compare bot outcomes with human guesses.
 - Tune clue policy only if the language-specific evidence requires it.
 
-Exit: Fun, safety, legality, completion, and human-review gates all pass.
+Technical exit: Play behavior, completion, compatibility, and responsive UI checks pass. Promotion exit remains pending native-player evidence, copy review, and an operative model that supplies a meaningful Italian transfer comparison.
 
 ### Stage 4: official preset, legally blocked
 

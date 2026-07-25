@@ -7,7 +7,7 @@ A local-first Codenames clue trainer and one-human game. Train mode ranks clue o
 ## Current product
 
 - 🎮 **Modes** · Play is the default · Train keeps the complete analysis workflow at `?mode=train`
-- 🌍 **Languages** · English remains the default · Italian Extended is available as a Train beta
+- 🌍 **Languages** · English remains the default · Italian Extended is available as a Train and Play beta
 - 🤖 **Play bots** · configurable model, vocabulary, clue policy, operative aggression, and bonus guesses
 - 🧠 **Train model** · MiniLM-L6 for English · Multilingual E5 small for Italian · browser-local inference
 - 📚 **Clue index** · balanced 10,000-word default · selectable 3k, 30k, and experimental 100k tiers
@@ -19,7 +19,7 @@ A local-first Codenames clue trainer and one-human game. Train mode ranks clue o
 - 🎨 **Appearance** · system, light, and dark modes
 - 🔒 **Privacy** · scoring and roles stay in the browser · explanations send only the clue and intended targets
 
-The first model load is cached by the browser. Italian Train loads about 123.6 MB on a cold browser, primarily the 118.3 MB E5 model. Training progress is session-local. Play progress is saved after every event and can be resumed or discarded from setup. During an active game, history can move backward and forward. Shared board links open Train without Play history.
+The first model load is cached by the browser. Italian Train and Play load about 123.6 MB on a cold browser, primarily the 118.3 MB E5 model. Training progress is session-local. Play progress, including language, is saved after every event and can be resumed or discarded from setup. During an active game, history can move backward and forward. Shared board links open Train without Play history.
 
 ## Docs
 
@@ -70,9 +70,9 @@ npm run benchmark:picker
 
 ## Play mode
 
-Play defaults to the preserved table order. Operatives see only unrevealed words and public card reveals. Spymasters see the full key, can switch between table and team-grouped order, type any one-word clue, and open clue suggestions only when wanted.
+Play defaults to the preserved table order. The top-right EN/IT control selects English or Italian Extended for a new game, while first-time visitors remain on English. Operatives see only unrevealed words and public card reveals. Spymasters see the full key, can switch between table and team-grouped order, type any one-word clue, and open clue suggestions only when wanted.
 
-Play settings are grouped by ownership: Game controls the board word set, All bots controls the shared embedding model, Spymaster controls clue generation, and Operative controls guessing behavior. Bot settings remain independent from Train's Model picker and persist with each saved game. The default is BGE-small with 10,000 candidates, hybrid scoring, a five-point multi-clue tolerance, Dynamic operative aggression, and no automatic extra guess. Conservative passes on doubtful follow-up guesses, Aggressive pursues the declared clue number with the former thresholds, and Dynamic adapts using only the public remaining-agent counts. Each bot setting's info control compares the checked quality, speed, and risk tradeoffs in a compact table.
+Play settings are grouped by ownership: Game controls the board word set and reuse policy, All bots controls the shared embedding model, Spymaster controls clue generation, and Operative controls guessing behavior. Bot settings remain independent from Train's Model picker and persist with each saved game. English defaults to BGE-small with 10,000 candidates. Italian uses Multilingual E5 small with 3,000 or 10,000 candidates. Both default to hybrid scoring, a five-point multi-clue tolerance, Dynamic operative aggression, and no automatic extra guess. Conservative passes on doubtful follow-up guesses, Aggressive pursues the declared clue number with the former thresholds, and Dynamic adapts using only the public remaining-agent counts.
 
 New boards remain fully random by default. The optional Avoid recent words policy records the last 32 local Play boards, uses every unseen word in the selected pool before the least-recently-used repeats, and warns when fewer than 25 unseen words remain. Clear history resets board reuse without changing the selected policy. History and policy stay local under `codenames-play-word-reuse-v1`.
 
@@ -87,7 +87,7 @@ The Play implementation keeps rules, bot choices, persistence, and rendering sep
 - `src/play/mode.js` owns Play setup, rendering, model orchestration, bot pacing, resume/backward/forward controls, and post-game score overlays.
 - `scripts/play-smoke.mjs` covers seat ownership, information boundaries, reveal outcomes, deterministic bots, and bounded self-play.
 
-Run `npm run benchmark:play` for paired full-game comparisons and `npm run analyze:play-clues` for controlled opening-board analysis. The latest [same-model benchmark](scripts/generated/play-policy-benchmark.md), [cross-model operative stress test](scripts/generated/play-operative-aggression-cross-model.md), and [clue-number analysis](docs/play-clue-number-analysis.md) preserve the checked evidence.
+Run `npm run benchmark:play` for English comparisons, `npm run benchmark:play:italian` for Italian E5 self-play, `npm run benchmark:play:italian-transfer` for the independent MiniLM operative stress test, and `npm run analyze:play-clues` for controlled opening-board analysis. The checked summaries preserve the [English same-model benchmark](scripts/generated/play-policy-benchmark.md), [English cross-model stress test](scripts/generated/play-operative-aggression-cross-model.md), [Italian same-model result](scripts/generated/italian-play-policy-benchmark.md), and [Italian transfer result](scripts/generated/italian-play-minilm-transfer-benchmark.md).
 
 The benchmark also reports a 0-100 Fun Index that balances ambitious multi-card clues, productive guesses, close finishes, and games in the 8 to 12 turn range. Wrong-team hits, assassin losses, neutral hits, and fallbacks remain promotion guardrails rather than sources of points. Use `--operative-model <model-id>` to stress-test whether clues transfer to a different embedding geometry instead of relying only on optimistic same-model self-play.
 

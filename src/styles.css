@@ -223,7 +223,15 @@ button {
   color: var(--on-ink);
 }
 
-.theme-switcher {
+.topbar-controls {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.theme-switcher,
+.app-language-switch {
   display: inline-flex;
   flex: 0 0 auto;
   justify-self: end;
@@ -234,7 +242,8 @@ button {
   background: var(--panel);
 }
 
-.theme-switcher button {
+.theme-switcher button,
+.app-language-switch button {
   display: inline-grid;
   width: 32px;
   min-height: 32px;
@@ -244,22 +253,27 @@ button {
   padding: 0;
   background: transparent;
   color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 900;
 }
 
 .theme-switcher svg {
   display: block;
 }
 
-.theme-switcher button:hover {
+.theme-switcher button:hover,
+.app-language-switch button:hover {
   color: var(--ink);
 }
 
-.theme-switcher button[aria-pressed="true"] {
+.theme-switcher button[aria-pressed="true"],
+.app-language-switch button[aria-pressed="true"] {
   background: var(--ink);
   color: var(--on-ink);
 }
 
-.theme-switcher button:focus-visible {
+.theme-switcher button:focus-visible,
+.app-language-switch button:focus-visible {
   outline: 3px solid rgb(47 111 179 / 28%);
   outline-offset: 2px;
 }
@@ -275,6 +289,22 @@ h1 {
   font-size: 2.8rem;
   line-height: 1;
   letter-spacing: 0;
+}
+
+#app-title {
+  display: inline-block;
+  border-radius: 4px;
+  color: inherit;
+  text-decoration: none;
+}
+
+#app-title:hover {
+  opacity: 0.78;
+}
+
+#app-title:focus-visible {
+  outline: 3px solid rgb(47 111 179 / 28%);
+  outline-offset: 3px;
 }
 
 h2 {
@@ -435,7 +465,6 @@ h3 {
 }
 
 .word-set-switch,
-.language-switch,
 .order-switch {
   display: inline-flex;
   gap: 2px;
@@ -446,7 +475,6 @@ h3 {
 }
 
 .word-set-switch button,
-.language-switch button,
 .order-switch button {
   min-height: 30px;
   border: 0;
@@ -458,28 +486,24 @@ h3 {
   font-weight: 850;
 }
 
-.word-set-switch button span,
-.language-switch button span {
+.word-set-switch button span {
   color: inherit;
   font-size: 0.62rem;
   opacity: 0.72;
 }
 
 .word-set-switch button:hover,
-.language-switch button:hover,
 .order-switch button:hover {
   color: var(--ink);
 }
 
 .word-set-switch button[aria-pressed="true"],
-.language-switch button[aria-pressed="true"],
 .order-switch button[aria-pressed="true"] {
   background: var(--ink);
   color: var(--on-ink);
 }
 
 .word-set-switch button:focus-visible,
-.language-switch button:focus-visible,
 .order-switch button:focus-visible {
   outline: 2px solid var(--blue);
   outline-offset: 1px;
@@ -2015,6 +2039,7 @@ h3 {
 .play-clue-form[hidden],
 .play-suggestions[hidden],
 .play-operative-controls[hidden],
+.italian-play-note[hidden],
 .saved-play-actions[hidden] {
   display: none;
 }
@@ -2363,6 +2388,18 @@ h3 {
 .play-setup {
   width: min(900px, 100%);
   margin: 0 auto;
+}
+
+.italian-play-note {
+  grid-column: 1 / -1;
+  margin: 0;
+  border-left: 4px solid var(--orange);
+  border-radius: 7px;
+  padding: 10px 12px;
+  background: var(--subtle-fill);
+  color: var(--muted);
+  font-size: 0.76rem;
+  line-height: 1.45;
 }
 
 .play-setup-heading,
@@ -4093,12 +4130,14 @@ button.play-card:not(:disabled):hover {
     font-size: 1.7rem;
   }
 
-  .theme-switcher {
+  .theme-switcher,
+  .app-language-switch {
     gap: 1px;
     padding: 2px;
   }
 
-  .theme-switcher button {
+  .theme-switcher button,
+  .app-language-switch button {
     width: 30px;
     min-height: 30px;
   }
@@ -4165,7 +4204,6 @@ button.play-card:not(:disabled):hover {
   .board-source-actions,
   .board-control,
   .word-set-switch,
-  .language-switch,
   .order-switch {
     width: 100%;
   }
@@ -4183,7 +4221,6 @@ button.play-card:not(:disabled):hover {
   }
 
   .word-set-switch,
-  .language-switch,
   .order-switch {
     display: flex;
     flex: 1;
@@ -4191,7 +4228,6 @@ button.play-card:not(:disabled):hover {
 
   .board-source-actions .board-action,
   .word-set-switch button,
-  .language-switch button,
   .order-switch button {
     flex: 1;
     min-width: 0;
@@ -4203,14 +4239,12 @@ button.play-card:not(:disabled):hover {
   }
 
   .word-set-switch button,
-  .language-switch button,
   .order-switch button {
     padding: 0 6px;
     font-size: 0.68rem;
   }
 
-  .word-set-switch button span,
-  .language-switch button span {
+  .word-set-switch button span {
     display: none;
   }
 

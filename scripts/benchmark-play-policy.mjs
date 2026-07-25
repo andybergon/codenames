@@ -20,6 +20,7 @@ import {
   isForbiddenClue,
   normalizeTerm,
 } from "../src/model.js";
+import { ITALIAN_MODEL_ID } from "../src/model-lab.js";
 import {
   PLAY_CLUE_POLICY,
   chooseBotClue,
@@ -41,7 +42,11 @@ import {
   guessCard,
   passTurn,
 } from "../src/play/game-state.js";
-import { WORD_SET, getWordsForSet } from "../src/word-data.js";
+import {
+  LANGUAGE,
+  WORD_SET,
+  getWordsForSet,
+} from "../src/word-data.js";
 import { PLAY_FUN_OBJECTIVE, scorePlayFun } from "./play-fun-score.mjs";
 import { writePlayPolicySummary } from "./play-policy-summary.mjs";
 
@@ -70,7 +75,12 @@ const summaryOutputPath = isAbsolute(summaryOutput)
   : resolve(ROOT, summaryOutput);
 const manifestDirectory = options.indexDir
   ? resolve(ROOT, options.indexDir)
-  : resolve(ROOT, `public/data/model-lab/${options.modelId}`);
+  : resolve(
+      ROOT,
+      options.language === LANGUAGE.ITALIAN
+        ? `public/data/model-lab/it/${options.modelId}`
+        : `public/data/model-lab/${options.modelId}`,
+    );
 const manifest = JSON.parse(
   await readFile(resolve(manifestDirectory, "manifest.json"), "utf8"),
 );
@@ -85,7 +95,7 @@ const shards = await Promise.all(
 );
 const clueIndex = hydrateClueShards(manifest, shards, options.candidates);
 
-const boardWords = getWordsForSet(options.wordSet);
+const boardWords = getWordsForSet(options.wordSet, options.language);
 const centeredBoardWords =
   manifest.embeddingRuntime === "precomputed"
     ? await loadPrecomputedBoardVectors(
@@ -135,6 +145,7 @@ for (let boardIndex = 0; boardIndex < options.boards; boardIndex += 1) {
     seed,
     BOARD_ORDER.RANDOM,
     options.wordSet,
+    options.language,
   );
   const positions = new Map(
     boardState.randomLayoutOrder.map((layoutId, index) => [layoutId, index]),
@@ -176,6 +187,7 @@ for (let boardIndex = 0; boardIndex < options.boards; boardIndex += 1) {
       multiTolerance: options.multiTolerance,
       bonusGuesses: options.bonusGuesses,
       operativeAggression: options.operativeAggression,
+      language: options.language,
       wordSet: options.wordSet,
       maxActions: options.maxActions,
       similarityCalibration,
@@ -204,6 +216,7 @@ for (let boardIndex = 0; boardIndex < options.boards; boardIndex += 1) {
         multiTolerance: options.multiTolerance,
         bonusGuesses: options.bonusGuesses,
         operativeAggression,
+        language: options.language,
         wordSet: options.wordSet,
         maxActions: options.maxActions,
         similarityCalibration,
@@ -251,11 +264,16 @@ const report = {
     pairedBoards: true,
     comparisonOnly: options.comparisonOnly,
     wordSet: options.wordSet,
+    language: options.language,
     modelId: options.modelId,
     model: manifest.model,
     provider: manifest.provider ?? "local",
     dimensions: manifest.dimensions,
-    indexDirectory: options.indexDir ?? `public/data/model-lab/${options.modelId}`,
+    indexDirectory:
+      options.indexDir ??
+      (options.language === LANGUAGE.ITALIAN
+        ? `public/data/model-lab/it/${options.modelId}`
+        : `public/data/model-lab/${options.modelId}`),
     candidateCount: options.candidates,
     resultsPerTargetSize: RESULTS_PER_SIZE,
     boardSeed:
@@ -277,6 +295,8 @@ const report = {
       `The bot guesser sees only centered clue-to-unrevealed-word similarities from ${operativeContext.model}.`,
     operativeAggression:
       `Policy comparison uses ${options.operativeAggression} for the clue-policy rows and holds hybrid clue scoring fixed across all three operative modes.`,
+    stalledGameResolution:
+      "After two consecutive passes, the next operative takes its highest-similarity available guess. This keeps cross-model simulations bounded and is counted separately.",
     operativeAggressionModes: {
       conservative:
         "Uses the highest similarity and separation thresholds and does not adapt to score.",
@@ -361,6 +381,7 @@ async function simulateGame({
   multiTolerance,
   bonusGuesses: bonusGuessPolicy,
   operativeAggression,
+  language,
   wordSet,
   maxActions,
   similarityCalibration,
@@ -376,6 +397,7 @@ async function simulateGame({
     },
     cards,
     humanSeat: { side: SIDE.BLUE, role: PLAYER_ROLE.SPYMASTER },
+    language,
     seed,
     wordSet,
   });
@@ -383,6 +405,8 @@ async function simulateGame({
   let fallbackClues = 0;
   let bonusGuesses = 0;
   let correctBonusGuesses = 0;
+  let consecutivePasses = 0;
+  let forcedProgressGuesses = 0;
   const clueDecisions = [];
   const guessDecisions = [];
 
@@ -397,7 +421,7 @@ async function simulateGame({
         boardForSide(game.cards, game.activeSide),
         boardVectors,
         activeClueIndex,
-        { limit: RESULTS_PER_SIZE, similarityCalibration },
+        { limit: RESULTS_PER_SIZE, language, similarityCalibration },
       );
       const ownRemaining = remainingCardsForSide(game.cards, game.activeSide);
       const opponentRemaining = remainingCardsForSide(
@@ -441,6 +465,7 @@ async function simulateGame({
           boardForSide(game.cards, game.activeSide),
           boardVectors,
           activeClueIndex,
+          language,
         );
         fallbackClues += 1;
       }
@@ -512,7 +537,7 @@ async function simulateGame({
       game.cards,
       otherSide(game.activeSide),
     );
-    const layoutId =
+    let layoutId =
       bonusGuessPolicy === "pass" && reachedDeclaredNumber
         ? null
         : chooseBotGuess({
@@ -524,6 +549,13 @@ async function simulateGame({
             opponentRemaining,
             random,
           });
+    const forcedProgress = layoutId === null && consecutivePasses >= 2;
+    if (forcedProgress) {
+      layoutId = candidates.reduce((best, candidate) =>
+        !best || candidate.similarity > best.similarity ? candidate : best,
+      ).layoutId;
+      forcedProgressGuesses += 1;
+    }
     const actor = actorForSeat(game, game.activeSide, PLAYER_ROLE.OPERATIVE);
     const selectedCandidate = candidates.find(
       (candidate) => candidate.layoutId === layoutId,
@@ -531,6 +563,7 @@ async function simulateGame({
     const selectedCard = game.cards.find((card) => card.layoutId === layoutId);
     guessDecisions.push({
       accepted: layoutId !== null,
+      forcedProgress,
       similarity: selectedCandidate?.similarity ?? null,
       bestSimilarity: Math.max(...candidates.map(({ similarity }) => similarity)),
       guessesMade,
@@ -546,6 +579,7 @@ async function simulateGame({
         selectedCard?.team === teamForSide(game.activeSide),
       );
     }
+    consecutivePasses = layoutId === null ? consecutivePasses + 1 : 0;
     game =
       layoutId === null
         ? passTurn(game, { actor })
@@ -557,16 +591,17 @@ async function simulateGame({
     clueDecisions,
     correctBonusGuesses,
     fallbackClues,
+    forcedProgressGuesses,
     guessDecisions,
     stalled: game.phase !== GAME_PHASE.COMPLETE,
   });
 }
 
 async function centeredClueVector(clue, context) {
-  const { cache, centeringMean, model } = context;
+  const { cache, centeringMean, embeddingOptions } = context;
   const normalized = clue.toLowerCase();
   if (!cache.has(normalized)) {
-    const vectors = await embedTerms([normalized], { model });
+    const vectors = await embedTerms([normalized], embeddingOptions);
     cache.set(
       normalized,
       centerEmbeddings(vectors, centeringMean)[0],
@@ -575,7 +610,12 @@ async function centeredClueVector(clue, context) {
   return cache.get(normalized);
 }
 
-function chooseFallbackClue(board, boardVectors, activeClueIndex) {
+function chooseFallbackClue(
+  board,
+  boardVectors,
+  activeClueIndex,
+  language,
+) {
   const unrevealed = board
     .map((card, index) => ({ ...card, vector: boardVectors[index] }))
     .filter((card) => !card.done);
@@ -589,7 +629,9 @@ function chooseFallbackClue(board, boardVectors, activeClueIndex) {
     candidateIndex += 1
   ) {
     const clue = activeClueIndex.clues[candidateIndex];
-    if (isForbiddenClue(normalizeTerm(clue), boardWords)) {
+    if (
+      isForbiddenClue(normalizeTerm(clue), boardWords, { language })
+    ) {
       continue;
     }
     const vectorOffset = candidateIndex * activeClueIndex.dimensions;
@@ -635,6 +677,7 @@ function summarizeGame(
     clueDecisions,
     correctBonusGuesses,
     fallbackClues,
+    forcedProgressGuesses,
     guessDecisions,
     stalled,
   },
@@ -669,6 +712,7 @@ function summarizeGame(
     actions,
     turns: clues.length,
     fallbackClues,
+    forcedProgressGuesses,
     bonusGuesses,
     correctBonusGuesses,
     clueDecisions,
@@ -708,6 +752,7 @@ function summarizePolicy(gameResults) {
         : 0;
       summary.passes += game.passes;
       summary.fallbackClues += game.fallbackClues;
+      summary.forcedProgressGuesses += game.forcedProgressGuesses;
       summary.bonusGuesses += game.bonusGuesses;
       summary.correctBonusGuesses += game.correctBonusGuesses;
       summary.clueDecisions.push(...game.clueDecisions);
@@ -733,6 +778,7 @@ function summarizePolicy(gameResults) {
       losingAgentsRemaining: 0,
       passes: 0,
       fallbackClues: 0,
+      forcedProgressGuesses: 0,
       bonusGuesses: 0,
       correctBonusGuesses: 0,
       clueDecisions: [],
@@ -781,6 +827,11 @@ function summarizePolicy(gameResults) {
     passesPerGame: ratio(totals.passes, gameCount),
     fallbackClues: totals.fallbackClues,
     fallbackClueRate: ratio(totals.fallbackClues, totals.turns),
+    forcedProgressGuesses: totals.forcedProgressGuesses,
+    forcedProgressGuessesPerGame: ratio(
+      totals.forcedProgressGuesses,
+      gameCount,
+    ),
     bonusGuesses: totals.bonusGuesses,
     bonusGuessesPerGame: ratio(totals.bonusGuesses, gameCount),
     correctBonusGuessRate: ratio(
@@ -900,6 +951,7 @@ function compactOperativeSummary(policy) {
     stallRate: policy.stallRate,
     meanTurnsPerGame: policy.meanTurnsPerGame,
     passesPerGame: policy.passesPerGame,
+    forcedProgressGuessesPerGame: policy.forcedProgressGuessesPerGame,
     operativeGuessQuality: policy.operativeGuessQuality,
     fun: policy.fun,
     wins: policy.wins,
@@ -916,6 +968,7 @@ function operativeMetricDeltas(dynamic, candidate) {
       "stallRate",
       "meanTurnsPerGame",
       "passesPerGame",
+      "forcedProgressGuessesPerGame",
     ].map((metric) => [metric, rounded(candidate[metric] - dynamic[metric])]),
   );
 }
@@ -960,6 +1013,7 @@ function parseOptions(args) {
     split: requestedSplit,
     maxActions: DEFAULT_MAX_ACTIONS_PER_GAME,
     candidates: DEFAULT_PLAY_BOT_SETTINGS.candidateCount,
+    language: LANGUAGE.ENGLISH,
     modelId: DEFAULT_PLAY_BOT_SETTINGS.modelId,
     wordSet: WORD_SET.OFFICIAL,
     clueSelection: "tempo",
@@ -976,6 +1030,7 @@ function parseOptions(args) {
     comparisonOnly: false,
     testProtocol: null,
   };
+  const explicit = new Set();
   for (let index = 0; index < args.length; index += 1) {
     const option = args[index];
     const value = args[index + 1];
@@ -989,9 +1044,16 @@ function parseOptions(args) {
       values.maxActions = positiveInteger(value, option);
     } else if (option === "--candidates") {
       values.candidates = positiveInteger(value, option);
+      explicit.add("candidates");
+    } else if (option === "--language") {
+      if (!Object.values(LANGUAGE).includes(value)) {
+        throw new Error(`${option} must be en or it.`);
+      }
+      values.language = value;
     } else if (option === "--model") {
       if (!value) throw new Error(`${option} requires a model ID.`);
       values.modelId = value;
+      explicit.add("model");
     } else if (option === "--index-dir") {
       if (!value) throw new Error(`${option} requires a directory.`);
       values.indexDir = value;
@@ -1003,6 +1065,7 @@ function parseOptions(args) {
         throw new Error(`${option} must be official or extended.`);
       }
       values.wordSet = value;
+      explicit.add("wordSet");
     } else if (option === "--clue-selection") {
       if (!["random", "top", "tempo"].includes(value)) {
         throw new Error(`${option} must be random, top, or tempo.`);
@@ -1046,6 +1109,17 @@ function parseOptions(args) {
       throw new Error(`Unknown benchmark option: ${option}`);
     }
     index += 1;
+  }
+  if (values.language === LANGUAGE.ITALIAN) {
+    if (!explicit.has("model")) {
+      values.modelId = ITALIAN_MODEL_ID;
+    }
+    if (!explicit.has("wordSet")) {
+      values.wordSet = WORD_SET.EXTENDED;
+    }
+    if (values.wordSet !== WORD_SET.EXTENDED) {
+      throw new Error("Italian Play requires the Extended word set.");
+    }
   }
   return values;
 }
@@ -1267,7 +1341,10 @@ async function embedLocalBoardWords(words, activeManifest, activeClueIndex) {
   console.log(
     `Embedding ${words.length} ${options.wordSet} board words with ${activeManifest.model}...`,
   );
-  const vectors = await embedTerms(words, { model: activeManifest.model });
+  const vectors = await embedTerms(
+    words,
+    embeddingOptionsForManifest(activeManifest),
+  );
   return centerEmbeddings(vectors, activeClueIndex.centering.mean);
 }
 
@@ -1286,6 +1363,7 @@ async function loadOperativeContext({
       ),
       cache: spymasterClueVectors,
       centeringMean: activeClueIndex.centering.mean,
+      embeddingOptions: embeddingOptionsForManifest(activeManifest),
       model: activeManifest.model,
     };
   }
@@ -1295,6 +1373,22 @@ async function loadOperativeContext({
       "utf8",
     ),
   );
+  const operativeEmbeddingOptions =
+    embeddingOptionsForManifest(operativeManifest);
+  if (activeManifest.language === LANGUAGE.ITALIAN) {
+    const raw = await embedTerms(words, operativeEmbeddingOptions);
+    const centered = centerEmbeddings(raw, operativeManifest.centering.mean);
+    return {
+      vectorByWord: new Map(
+        words.map((word, index) => [word, centered[index]]),
+      ),
+      cache: new Map(),
+      centeringMean: operativeManifest.centering.mean,
+      embeddingOptions: operativeEmbeddingOptions,
+      model: operativeManifest.model,
+    };
+  }
+
   const operativeDirectory = resolve(
     ROOT,
     `public/data/model-lab/${modelId}`,
@@ -1333,7 +1427,16 @@ async function loadOperativeContext({
     ),
     cache: buildPrecomputedClueVectorCache(operativeClueIndex),
     centeringMean: operativeClueIndex.centering.mean,
+    embeddingOptions: operativeEmbeddingOptions,
     model: operativeManifest.model,
+  };
+}
+
+function embeddingOptionsForManifest(activeManifest) {
+  return {
+    model: activeManifest.model,
+    revision: activeManifest.modelRevision,
+    inputPrefix: activeManifest.taskPrefix,
   };
 }
 

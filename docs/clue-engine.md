@@ -3,7 +3,7 @@
 Back to [README](../README.md).
 
 - 🧠 **Train default** · MiniLM-L6 · 384 dimensions · browser-local inference
-- 🇮🇹 **Italian Train beta** · Multilingual E5 small · 10,000 clues · English remains default
+- 🇮🇹 **Italian beta** · Train + Play · Multilingual E5 small · English remains default
 - 🤖 **Play spymaster default** · BGE-small · hybrid scoring · five-point multi-clue tolerance
 - 📚 **Default vocabulary** · 10,000 frequency-ranked and filtered clues
 - 📦 **Index** · mean-centered, normalized, int8 static vectors
@@ -214,6 +214,8 @@ The Italian board pool is original project data in [`scripts/italian/extended-wo
 | 📐 `npm run benchmark:calibrate-similarity` | Calibration JSON | Comparable score geometry |
 | 👥 `npm run calibration:build` | Calibration round JSON | Blinded human tasks |
 | 🧾 `npm run calibration:evaluate` | Human result JSON | Exported answer scoring |
+| 🇮🇹 `npm run benchmark:play:italian` | [`italian-play-policy-benchmark.md`](../scripts/generated/italian-play-policy-benchmark.md) | Italian same-model games |
+| 🔀 `npm run benchmark:play:italian-transfer` | [`italian-play-minilm-transfer-benchmark.md`](../scripts/generated/italian-play-minilm-transfer-benchmark.md) | Italian transfer stress |
 | 🔢 `npm run analyze:play-clues` | [`play-clue-bias-analysis.json`](../scripts/generated/play-clue-bias-analysis.json) | Opening-board clue depth |
 | 🌐 `npm run experiment:api-index` | Gitignored API index | Cost-capped hosted model |
 | 👥 `npm run evaluate:api-embeddings` | [`api-embedding-comparison.json`](../scripts/generated/api-embedding-comparison.json) | Hosted human fit |
@@ -249,7 +251,7 @@ The first 1,024-dimensional `text-embedding-3-large` experiment improved human c
 - [`src/embeddings.js`](../src/embeddings.js) · browser embedding pipeline and vector transforms
 - [`src/clue-index.js`](../src/clue-index.js) · manifest and incremental shard loading
 - [`src/model-lab.js`](../src/model-lab.js) · model-picker configurations and measurements
-- [`src/locales.js`](../src/locales.js) · English and Italian Train interface copy
+- [`src/locales.js`](../src/locales.js) · English and Italian Train and Play interface copy
 - [`src/app.js`](../src/app.js) · board lifecycle, team perspectives, and rendered recommendations
 - [`src/play/bots.js`](../src/play/bots.js) · Play clue selection and public-only operative guesses
 - [`src/play/game-state.js`](../src/play/game-state.js) · Play rules, event history, public projection, and completed-turn replay

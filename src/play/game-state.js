@@ -1,5 +1,6 @@
 import { SIDE, otherSide, remainingCardsForSide } from "../gameplay.js";
 import { isForbiddenClue, normalizeTerm } from "../model.js";
+import { LANGUAGE } from "../word-data.js";
 import { normalizePlayBotSettings } from "./settings.js";
 import { normalizeWordReusePolicy } from "./word-reuse.js";
 
@@ -31,23 +32,44 @@ export function randomHumanSeat(random = Math.random) {
   };
 }
 
+export function differentRandomHumanSeat(currentSeat, random = Math.random) {
+  validateSeat(currentSeat);
+  const alternatives = [
+    { side: SIDE.BLUE, role: PLAYER_ROLE.SPYMASTER },
+    { side: SIDE.BLUE, role: PLAYER_ROLE.OPERATIVE },
+    { side: SIDE.RED, role: PLAYER_ROLE.SPYMASTER },
+    { side: SIDE.RED, role: PLAYER_ROLE.OPERATIVE },
+  ].filter(
+    ({ side, role }) =>
+      side !== currentSeat.side || role !== currentSeat.role,
+  );
+  const index = Math.min(
+    alternatives.length - 1,
+    Math.floor(random() * alternatives.length),
+  );
+  return alternatives[index];
+}
+
 export function createPlayGame({
   botSettings,
   cards,
   humanSeat,
+  language = LANGUAGE.ENGLISH,
   seed,
   wordSet,
   wordReusePolicy,
 }) {
   validateSeat(humanSeat);
+  validateLanguage(language);
   if (!Array.isArray(cards) || cards.length !== 25) {
     throw new Error("A Play game requires exactly 25 cards.");
   }
 
-  const normalizedBotSettings = normalizePlayBotSettings(botSettings);
+  const normalizedBotSettings = normalizePlayBotSettings(botSettings, language);
   return {
     schemaVersion: 1,
     seed: String(seed ?? ""),
+    language,
     wordSet,
     wordReusePolicy: normalizeWordReusePolicy(wordReusePolicy),
     botSettings: normalizedBotSettings,
@@ -68,6 +90,7 @@ export function createPlayGame({
       {
         type: "game-started",
         humanSeat: { ...humanSeat },
+        language,
         botSettings: normalizedBotSettings,
         activeSide: SIDE.BLUE,
       },
@@ -85,7 +108,11 @@ export function giveClue(game, { clue, number, actor, intendedLayoutIds = [] }) 
   assertActive(game, GAME_PHASE.AWAITING_CLUE);
   assertActor(game, PLAYER_ROLE.SPYMASTER, actor);
 
-  const normalizedClue = validateClue(clue, game.cards);
+  const normalizedClue = validateClue(
+    clue,
+    game.cards,
+    game.language ?? LANGUAGE.ENGLISH,
+  );
   const normalizedNumber = Number(number);
   const maximum = remainingCardsForSide(game.cards, game.activeSide);
   if (!Number.isInteger(normalizedNumber) || normalizedNumber < 1 || normalizedNumber > maximum) {
@@ -350,9 +377,13 @@ export function validateStoredGame(value) {
     throw new Error("Unsupported saved Play session.");
   }
   validateSeat(value.humanSeat);
+  const language = Object.values(LANGUAGE).includes(value.language)
+    ? value.language
+    : LANGUAGE.ENGLISH;
   return {
     ...value,
-    botSettings: normalizePlayBotSettings(value.botSettings),
+    language,
+    botSettings: normalizePlayBotSettings(value.botSettings, language),
     wordReusePolicy: normalizeWordReusePolicy(
       value.wordReusePolicy,
     ),
@@ -398,7 +429,7 @@ function completeGame(game, winner, endReason) {
   };
 }
 
-function validateClue(clue, cards) {
+function validateClue(clue, cards, language) {
   const normalized = String(clue ?? "").trim();
   if (!normalized || /\s/u.test(normalized)) {
     throw new Error("A clue must be one word.");
@@ -406,12 +437,16 @@ function validateClue(clue, cards) {
   const boardWords = cards
     .filter((card) => !card.done)
     .map((card) => normalizeTerm(card.word));
-  if (isForbiddenClue(normalizeTerm(normalized), boardWords)) {
+  if (
+    isForbiddenClue(normalizeTerm(normalized), boardWords, {
+      language,
+    })
+  ) {
     throw new Error(
       "A clue cannot match the stem or inflection of an unrevealed board word.",
     );
   }
-  return normalized.toUpperCase();
+  return normalized.toLocaleUpperCase(language);
 }
 
 function assertActive(game, phase) {
@@ -451,6 +486,12 @@ function validateSeat(seat) {
 function validateSide(side) {
   if (!SIDES.has(side)) {
     throw new Error(`Unknown side: ${side}.`);
+  }
+}
+
+function validateLanguage(language) {
+  if (!Object.values(LANGUAGE).includes(language)) {
+    throw new Error(`Unknown language: ${language}.`);
   }
 }
 

@@ -28,6 +28,8 @@
     "benchmark:calibrate-similarity": "node scripts/derive-similarity-calibration.mjs",
     "calibration:build": "node scripts/build-human-calibration-round.mjs",
     "calibration:evaluate": "node scripts/evaluate-human-calibration.mjs",
+    "benchmark:play:italian": "node scripts/benchmark-play-policy.mjs --language it --output scripts/generated/italian-play-policy-benchmark.json",
+    "benchmark:play:italian-transfer": "node scripts/benchmark-play-policy.mjs --language it --operative-model minilm-l6 --output scripts/generated/italian-play-minilm-transfer-benchmark.json",
     "generate:words": "python3 scripts/generate-clue-words.py",
     "generate:index": "node scripts/generate-clue-index.mjs",
     "experiment:api-index": "node scripts/generate-api-clue-index.mjs",

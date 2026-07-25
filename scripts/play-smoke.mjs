@@ -8,6 +8,8 @@ import {
 import { SIDE, remainingCardsForSide } from "../src/gameplay.js";
 import {
   EXTENDED_WORDS,
+  ITALIAN_EXTENDED_WORDS,
+  LANGUAGE,
   OFFICIAL_WORDS,
   WORD_SET,
 } from "../src/word-data.js";
@@ -26,6 +28,7 @@ import {
   actorForSeat,
   canUndoPlayGame,
   createPlayGame,
+  differentRandomHumanSeat,
   giveClue,
   guessCard,
   passTurn,
@@ -55,6 +58,7 @@ import {
   setWordReusePolicy,
   wordReuseStatus,
 } from "../src/play/word-reuse.js";
+import { ITALIAN_MODEL_ID } from "../src/model-lab.js";
 
 const sample = createSampleBoardState();
 const playPolicyBenchmark = JSON.parse(
@@ -78,6 +82,18 @@ const apiEmbeddingComparison = JSON.parse(
 );
 const playFunExperiments = JSON.parse(
   await readFile("scripts/generated/play-fun-experiments.json", "utf8"),
+);
+const italianPlayBenchmark = JSON.parse(
+  await readFile(
+    "scripts/generated/italian-play-policy-benchmark.json",
+    "utf8",
+  ),
+);
+const italianPlayTransferBenchmark = JSON.parse(
+  await readFile(
+    "scripts/generated/italian-play-minilm-transfer-benchmark.json",
+    "utf8",
+  ),
 );
 
 assert.equal(playPolicyBenchmark.methodology.boardCount, 100);
@@ -192,11 +208,58 @@ assert.ok(
     ({ passed }) => passed === false,
   ),
 );
+for (const [report, operativeModelId] of [
+  [italianPlayBenchmark, "same"],
+  [italianPlayTransferBenchmark, "minilm-l6"],
+]) {
+  assert.equal(report.methodology.language, LANGUAGE.ITALIAN);
+  assert.equal(report.methodology.wordSet, WORD_SET.EXTENDED);
+  assert.equal(report.methodology.modelId, ITALIAN_MODEL_ID);
+  assert.equal(report.methodology.operativeModelId, operativeModelId);
+  assert.equal(report.methodology.boardCount, 100);
+  for (const policy of Object.values(PLAY_CLUE_POLICY)) {
+    const result = report.policies[policy];
+    assert.equal(result.completedGames, 100);
+    assert.equal(result.gameResults.length, 100);
+    assert.ok(
+      result.gameResults.every(
+        ({ actions, endReason }) =>
+          actions <= 500 &&
+          ["agents", "assassin"].includes(endReason),
+      ),
+    );
+  }
+  assert.deepEqual(
+    Object.keys(report.operativeAggression).sort(),
+    ["aggressive", "conservative", "dynamic"],
+  );
+  assert.equal(report.operativeAggression.dynamic.gameCount, 100);
+}
+assert.ok(
+  italianPlayTransferBenchmark.policies.hybrid.assassinRate >
+    italianPlayBenchmark.policies.hybrid.assassinRate,
+);
 
 const randomValues = [0.2, 0.8];
 const randomSeat = randomHumanSeat(() => randomValues.shift());
 assert.deepEqual(randomSeat, { side: SIDE.BLUE, role: PLAYER_ROLE.OPERATIVE });
+const currentSeat = { side: SIDE.BLUE, role: PLAYER_ROLE.SPYMASTER };
+assert.deepEqual(differentRandomHumanSeat(currentSeat, () => 0), {
+  side: SIDE.BLUE,
+  role: PLAYER_ROLE.OPERATIVE,
+});
+assert.deepEqual(differentRandomHumanSeat(currentSeat, () => 0.999), {
+  side: SIDE.RED,
+  role: PLAYER_ROLE.OPERATIVE,
+});
 assert.deepEqual(normalizePlayBotSettings(), DEFAULT_PLAY_BOT_SETTINGS);
+assert.deepEqual(
+  normalizePlayBotSettings(undefined, LANGUAGE.ITALIAN),
+  {
+    ...DEFAULT_PLAY_BOT_SETTINGS,
+    modelId: ITALIAN_MODEL_ID,
+  },
+);
 
 let game = createPlayGame({
   cards: sample.cards,
@@ -206,6 +269,7 @@ let game = createPlayGame({
 });
 assert.equal(game.activeSide, SIDE.BLUE);
 assert.equal(game.phase, GAME_PHASE.AWAITING_CLUE);
+assert.equal(game.language, LANGUAGE.ENGLISH);
 assert.deepEqual(game.botSettings, DEFAULT_PLAY_BOT_SETTINGS);
 assert.equal(actorForSeat(game, SIDE.BLUE, PLAYER_ROLE.SPYMASTER), "bot");
 assert.equal(actorForSeat(game, SIDE.BLUE, PLAYER_ROLE.OPERATIVE), "human");
@@ -855,6 +919,44 @@ assert.equal(
   25,
 );
 
+let italianHistory = setWordReusePolicy(
+  createDefaultWordReuseState(),
+  PLAY_WORD_REUSE_POLICY.AVOID_RECENT,
+);
+const italianWordsSeen = new Set();
+for (let index = 0; index < ITALIAN_EXTENDED_WORDS.length / 25; index += 1) {
+  const result = createPlayBoardWithWordReuse({
+    seed: boardSeed(index + 400),
+    state: italianHistory,
+    language: LANGUAGE.ITALIAN,
+    wordSet: WORD_SET.EXTENDED,
+  });
+  assert.equal(result.repeatsRequired, 0);
+  for (const card of result.board.cards) {
+    assert.equal(italianWordsSeen.has(card.word), false);
+    italianWordsSeen.add(card.word);
+  }
+  italianHistory = recordBoardWords(italianHistory, result.board.cards);
+}
+assert.equal(italianWordsSeen.size, ITALIAN_EXTENDED_WORDS.length);
+assert.equal(
+  createPlayBoardWithWordReuse({
+    seed: boardSeed(500),
+    state: italianHistory,
+    language: LANGUAGE.ITALIAN,
+    wordSet: WORD_SET.EXTENDED,
+  }).repeatsRequired,
+  25,
+);
+assert.match(
+  wordReuseStatus(
+    italianHistory,
+    WORD_SET.EXTENDED,
+    LANGUAGE.ITALIAN,
+  ).text,
+  /ripeterne almeno 25/,
+);
+
 const randomAfterAvoid = setWordReusePolicy(
   officialHistory,
   PLAY_WORD_REUSE_POLICY.FULLY_RANDOM,
@@ -884,6 +986,39 @@ assert.deepEqual(
   loadWordReuseState(fakeStorage),
   createDefaultWordReuseState(),
 );
+assert.equal(upgradedStoredGame.language, LANGUAGE.ENGLISH);
+
+const italianCards = sample.cards.map((card, index) => ({
+  ...card,
+  word: index === 0 ? "braccio" : `parola${index}`,
+}));
+let italianGame = createPlayGame({
+  cards: italianCards,
+  humanSeat: { side: SIDE.BLUE, role: PLAYER_ROLE.SPYMASTER },
+  language: LANGUAGE.ITALIAN,
+  seed: "italian-play",
+  wordSet: WORD_SET.EXTENDED,
+});
+assert.equal(italianGame.language, LANGUAGE.ITALIAN);
+assert.equal(italianGame.botSettings.modelId, ITALIAN_MODEL_ID);
+assert.throws(
+  () =>
+    giveClue(italianGame, {
+      clue: "abbraccia",
+      number: 1,
+      actor: "human",
+    }),
+  /unrevealed board word/,
+);
+italianGame = giveClue(italianGame, {
+  clue: "oceano",
+  number: 1,
+  actor: "human",
+});
+assert.equal(italianGame.currentTurn.clue, "OCEANO");
+const restoredItalianGame = validateStoredGame(italianGame);
+assert.equal(restoredItalianGame.language, LANGUAGE.ITALIAN);
+assert.equal(restoredItalianGame.botSettings.modelId, ITALIAN_MODEL_ID);
 
 const seededA = createSeededRandom("same");
 const seededB = createSeededRandom("same");

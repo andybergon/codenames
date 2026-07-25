@@ -19,12 +19,15 @@ import {
 import { createInfoControl } from "../info-control.js";
 import {
   CANDIDATE_OPTIONS,
+  ITALIAN_CANDIDATE_OPTIONS,
   indexManifestUrl,
+  modelConfigurationForLanguage,
   modelOption,
 } from "../model-lab.js";
 import { analyzeEmbeddedBoard } from "../model.js";
 import { createRecommendationExplanationControl } from "../recommendation-explanation-control.js";
-import { WORD_SET } from "../word-data.js";
+import { translate } from "../locales.js";
+import { LANGUAGE, WORD_SET } from "../word-data.js";
 import {
   chooseBotClue,
   chooseBotGuess,
@@ -38,6 +41,7 @@ import {
   actorForSeat,
   canUndoPlayGame,
   createPlayGame,
+  differentRandomHumanSeat,
   giveClue,
   guessCard,
   passTurn,
@@ -233,6 +237,12 @@ const WORD_REUSE_INFO = Object.freeze({
 });
 
 export function createPlayMode(options = {}) {
+  const initialLanguage =
+    options.initialLanguage ?? LANGUAGE.ENGLISH;
+  const onLanguageChange =
+    typeof options.onLanguageChange === "function"
+      ? options.onLanguageChange
+      : () => {};
   const botActionDelay =
     import.meta.env.DEV && Number.isFinite(options.botActionDelay)
       ? Math.max(0, options.botActionDelay)
@@ -244,6 +254,7 @@ export function createPlayMode(options = {}) {
   const elements = {
     setup: document.querySelector("#play-setup"),
     game: document.querySelector("#play-game"),
+    italianNote: document.querySelector("#italian-play-note"),
     seatButtons: [...document.querySelectorAll("[data-play-seat]")],
     randomizeSeat: document.querySelector("#randomize-play-seat"),
     wordSetButtons: [...document.querySelectorAll("[data-play-word-set]")],
@@ -267,8 +278,12 @@ export function createPlayMode(options = {}) {
     bonusGuessesInfo: document.querySelector("#play-bonus-guesses-info"),
     settingsSummary: document.querySelector("#play-settings-summary"),
     startGame: document.querySelector("#start-play-game"),
+    startGameLabel: document.querySelector("#start-play-game-label"),
     savedActions: document.querySelector("#saved-play-actions"),
+    savedTitle: document.querySelector("#saved-play-title"),
+    savedHelp: document.querySelector("#saved-play-help"),
     resumeSession: document.querySelector("#resume-play-session"),
+    resumeSessionLabel: document.querySelector("#resume-play-session-label"),
     discardSession: document.querySelector("#discard-play-session"),
     leaveGame: document.querySelector("#leave-play-game"),
     undoAction: document.querySelector("#undo-play-action"),
@@ -318,9 +333,17 @@ export function createPlayMode(options = {}) {
   }
 
   let active = false;
+  let selectedLanguage = initialLanguage;
   let selectedHumanSeat = randomHumanSeat();
-  let selectedWordSet = WORD_SET.OFFICIAL;
-  let selectedBotSettings = normalizePlayBotSettings();
+  let selectedEnglishWordSet = WORD_SET.OFFICIAL;
+  let selectedWordSet =
+    selectedLanguage === LANGUAGE.ITALIAN
+      ? WORD_SET.EXTENDED
+      : selectedEnglishWordSet;
+  let selectedBotSettings = normalizePlayBotSettings(
+    undefined,
+    selectedLanguage,
+  );
   let wordReuseState = loadWordReuseState();
   let savedGame = loadPlaySession();
   let game = null;
@@ -360,13 +383,17 @@ export function createPlayMode(options = {}) {
   }
 
   elements.randomizeSeat.addEventListener("click", () => {
-    selectedHumanSeat = randomHumanSeat();
+    selectedHumanSeat = differentRandomHumanSeat(selectedHumanSeat);
     renderSetup();
   });
 
   for (const button of elements.wordSetButtons) {
     button.addEventListener("click", () => {
+      if (selectedLanguage === LANGUAGE.ITALIAN) {
+        return;
+      }
       selectedWordSet = button.dataset.playWordSet;
+      selectedEnglishWordSet = selectedWordSet;
       renderSetup();
     });
   }
@@ -395,10 +422,13 @@ export function createPlayMode(options = {}) {
     [elements.bonusGuesses, "bonusGuesses", String],
   ]) {
     element.addEventListener("change", () => {
-      selectedBotSettings = normalizePlayBotSettings({
-        ...selectedBotSettings,
-        [key]: transform(element.value),
-      });
+      selectedBotSettings = normalizePlayBotSettings(
+        {
+          ...selectedBotSettings,
+          [key]: transform(element.value),
+        },
+        selectedLanguage,
+      );
       renderSetup();
     });
   }
@@ -474,9 +504,37 @@ export function createPlayMode(options = {}) {
         renderSetup();
       }
     },
+    setLanguage(nextLanguage) {
+      if (
+        !Object.values(LANGUAGE).includes(nextLanguage) ||
+        nextLanguage === selectedLanguage
+      ) {
+        return;
+      }
+      selectedLanguage = nextLanguage;
+      selectedWordSet =
+        selectedLanguage === LANGUAGE.ITALIAN
+          ? WORD_SET.EXTENDED
+          : selectedEnglishWordSet;
+      selectedBotSettings = normalizePlayBotSettings(
+        selectedBotSettings,
+        selectedLanguage,
+      );
+      if (game && game.language !== selectedLanguage) {
+        showSetup();
+      } else {
+        renderSetup();
+      }
+    },
   };
 
   function renderSetup() {
+    elements.italianNote.hidden =
+      selectedLanguage !== LANGUAGE.ITALIAN;
+    elements.italianNote.textContent = translate(
+      selectedLanguage,
+      "italianPlayBeta",
+    );
     for (const button of elements.seatButtons) {
       button.setAttribute(
         "aria-pressed",
@@ -484,11 +542,17 @@ export function createPlayMode(options = {}) {
       );
     }
     for (const button of elements.wordSetButtons) {
+      const unavailable =
+        selectedLanguage === LANGUAGE.ITALIAN &&
+        button.dataset.playWordSet === WORD_SET.OFFICIAL;
+      button.hidden = unavailable;
+      button.disabled = unavailable;
       button.setAttribute(
         "aria-pressed",
         String(button.dataset.playWordSet === selectedWordSet),
       );
     }
+    renderModelSettings();
     elements.botModel.value = selectedBotSettings.modelId;
     elements.botCandidates.value = String(selectedBotSettings.candidateCount);
     elements.cluePolicy.value = selectedBotSettings.cluePolicy;
@@ -500,22 +564,87 @@ export function createPlayMode(options = {}) {
       selectedWordSet,
       wordReuseState.policy,
       selectedBotSettings,
+      selectedLanguage,
+    );
+    const savedLanguage = savedGame?.language ?? LANGUAGE.ENGLISH;
+    const savedLanguageDiffers =
+      Boolean(savedGame) && savedLanguage !== selectedLanguage;
+    elements.savedTitle.textContent = translate(
+      selectedLanguage,
+      savedLanguageDiffers
+        ? "savedGameOtherLanguage"
+        : "savedGameAvailable",
+      { language: savedLanguage },
+    );
+    elements.savedHelp.textContent = translate(
+      selectedLanguage,
+      savedLanguageDiffers
+        ? "savedGameOtherLanguageHelp"
+        : "savedGameHelp",
+      { language: savedLanguage, selectedLanguage },
+    );
+    elements.resumeSessionLabel.textContent = translate(
+      selectedLanguage,
+      savedLanguageDiffers ? "resumeOtherLanguageGame" : "resumeGame",
+      { language: savedLanguage },
+    );
+    elements.startGameLabel.textContent = translate(
+      selectedLanguage,
+      savedLanguageDiffers ? "startNewLanguageGame" : "startNewGame",
+      { language: selectedLanguage },
     );
     elements.savedActions.hidden = !savedGame;
     elements.startGame.classList.toggle("primary", !savedGame);
     elements.startGame.classList.toggle("secondary", Boolean(savedGame));
     elements.wordReusePolicy.value = wordReuseState.policy;
     elements.clearWordHistory.disabled = wordReuseState.boards.length === 0;
-    const reuseStatus = wordReuseStatus(wordReuseState, selectedWordSet);
+    const reuseStatus = wordReuseStatus(
+      wordReuseState,
+      selectedWordSet,
+      selectedLanguage,
+    );
     elements.wordReuseStatus.textContent = reuseStatus.text;
     elements.wordReuseStatus.dataset.tone = reuseStatus.tone;
     elements.wordReuseStatus.hidden = reuseStatus.tone !== "warning";
+  }
+
+  function renderModelSettings() {
+    const configuration = modelConfigurationForLanguage(selectedLanguage);
+    const models =
+      selectedLanguage === LANGUAGE.ITALIAN
+        ? [modelOption(configuration.modelId)]
+        : PLAY_MODEL_IDS.map(modelOption);
+    const modelOptions = models.map((model) => {
+      const option = document.createElement("option");
+      option.value = model.id;
+      option.textContent = `${model.label}, ${Math.round(model.modelBytes / 1_000_000)} MB`;
+      return option;
+    });
+    elements.botModel.replaceChildren(...modelOptions);
+    elements.botModel.disabled = selectedLanguage === LANGUAGE.ITALIAN;
+
+    const candidateOptions =
+      selectedLanguage === LANGUAGE.ITALIAN
+        ? ITALIAN_CANDIDATE_OPTIONS
+        : CANDIDATE_OPTIONS;
+    elements.botCandidates.replaceChildren(
+      ...candidateOptions.map(({ count }) => {
+        const option = document.createElement("option");
+        option.value = String(count);
+        option.textContent = `${count.toLocaleString(selectedLanguage)} ${translate(
+          selectedLanguage,
+          "clues",
+        ).toLocaleLowerCase(selectedLanguage)}`;
+        return option;
+      }),
+    );
   }
 
   function startNewGame() {
     window.clearTimeout(botTimer);
     const seed = createRandomSeed();
     const { board: generated } = createPlayBoardWithWordReuse({
+      language: selectedLanguage,
       seed,
       state: wordReuseState,
       wordSet: selectedWordSet,
@@ -530,6 +659,7 @@ export function createPlayMode(options = {}) {
       botSettings: selectedBotSettings,
       cards,
       humanSeat: selectedHumanSeat,
+      language: selectedLanguage,
       seed,
       wordSet: selectedWordSet,
       wordReusePolicy: wordReuseState.policy,
@@ -537,7 +667,11 @@ export function createPlayMode(options = {}) {
     wordReuseState = recordBoardWords(wordReuseState, game.cards);
     saveWordReuseState(wordReuseState);
     savedGame = game;
-    resetRuntimeState("");
+    resetRuntimeState(
+      selectedLanguage === LANGUAGE.ITALIAN
+        ? translate(selectedLanguage, "blueStarts")
+        : "",
+    );
     savePlaySession(game);
     showActiveGame();
     ensureAnalysis();
@@ -549,10 +683,18 @@ export function createPlayMode(options = {}) {
     }
     window.clearTimeout(botTimer);
     game = structuredClone(savedGame);
+    selectedLanguage = game.language ?? LANGUAGE.ENGLISH;
+    onLanguageChange(selectedLanguage);
     selectedHumanSeat = { ...game.humanSeat };
     selectedWordSet = game.wordSet ?? WORD_SET.OFFICIAL;
-    selectedBotSettings = normalizePlayBotSettings(game.botSettings);
-    resetRuntimeState("Saved game resumed.");
+    if (selectedLanguage === LANGUAGE.ENGLISH) {
+      selectedEnglishWordSet = selectedWordSet;
+    }
+    selectedBotSettings = normalizePlayBotSettings(
+      game.botSettings,
+      selectedLanguage,
+    );
+    resetRuntimeState(translate(selectedLanguage, "savedGameResumed"));
     showActiveGame();
     ensureAnalysis();
   }
@@ -619,6 +761,7 @@ export function createPlayMode(options = {}) {
       cards: game.cards.map((card) => ({ ...card, done: false })),
       randomLayoutOrder: game.cards.map((card) => card.layoutId),
       order: BOARD_ORDER.RANDOM,
+      language: game.language ?? LANGUAGE.ENGLISH,
       wordSet: game.wordSet,
       source:
         game.wordReusePolicy === PLAY_WORD_REUSE_POLICY.AVOID_RECENT
@@ -642,15 +785,17 @@ export function createPlayMode(options = {}) {
     elements.shareBoard.dataset.state = state;
     const label =
       state === "copied"
-        ? "Board copied"
+        ? translate(gameLanguage(), "boardCopied")
         : state === "error"
-          ? "Copy failed"
-          : "Share board";
+          ? translate(gameLanguage(), "copyFailed")
+          : translate(gameLanguage(), "shareBoard");
     const iconName =
       state === "copied" ? "check" : state === "error" ? "triangle-alert" : "share-2";
     elements.shareBoard.setAttribute("aria-label", label);
     elements.shareBoard.title =
-      state === "idle" ? "Copy board share link" : label;
+      state === "idle"
+        ? translate(gameLanguage(), "copyBoardLink")
+        : label;
     const icon = document.createElement("i");
     icon.dataset.lucide = iconName;
     icon.setAttribute("aria-hidden", "true");
@@ -679,7 +824,10 @@ export function createPlayMode(options = {}) {
       elements.clueError.textContent = "";
       commitGame();
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
+      const message = localizePlayError(
+        error instanceof Error ? error.message : String(error),
+        gameLanguage(),
+      );
       elements.clueError.textContent = message;
       statusMessage = message;
       statusMessageIsError = true;
@@ -697,7 +845,7 @@ export function createPlayMode(options = {}) {
     savedGame = game;
     botActionAfterHistoryMove = true;
     resetPostGameAnalysis();
-    resetAnalysis("Moved back through game history.");
+    resetAnalysis(translate(gameLanguage(), "movedBack"));
     savePlaySession(game);
     renderGame();
     ensureAnalysis();
@@ -713,7 +861,7 @@ export function createPlayMode(options = {}) {
     savedGame = game;
     botActionAfterHistoryMove = true;
     resetPostGameAnalysis();
-    resetAnalysis("Restored undone game history.");
+    resetAnalysis(translate(gameLanguage(), "restoredForward"));
     savePlaySession(game);
     renderGame();
     ensureAnalysis();
@@ -784,16 +932,17 @@ export function createPlayMode(options = {}) {
     }
     const runId = ++analysisRun;
     const gameAtStart = game;
-    statusMessage = "The bot is studying the board.";
+    statusMessage = translate(gameLanguage(), "botStudying");
     statusMessageIsError = false;
     renderGame();
 
     try {
       const { modelId, candidateCount } = gameAtStart.botSettings;
-      const configuration = `${modelId}:${candidateCount}`;
+      const language = gameAtStart.language ?? LANGUAGE.ENGLISH;
+      const configuration = `${language}:${modelId}:${candidateCount}`;
       if (!clueIndexPromises.has(configuration)) {
         const promise = loadShardedClueIndex(
-          indexManifestUrl(modelId),
+          indexManifestUrl(modelId, language),
           candidateCount,
         ).catch((error) => {
           clueIndexPromises.delete(configuration);
@@ -807,25 +956,35 @@ export function createPlayMode(options = {}) {
         clueIndexPromises.get(configuration),
         embedTerms(
           cards.map((card) => card.word),
-          { model: model.model },
+          {
+            model: model.model,
+            revision: model.revision,
+            inputPrefix: model.inputPrefix,
+          },
         ),
       ]);
       if (runId !== analysisRun || game !== gameAtStart) {
         return;
       }
       const centered = centerEmbeddings(vectors, loadedIndex.centering.mean);
+      if (loadedIndex.language && loadedIndex.language !== language) {
+        throw new Error(
+          `Clue index language ${loadedIndex.language} is incompatible with ${language}.`,
+        );
+      }
       boardVectors = centered;
       clueIndex = loadedIndex;
       activeModelId = modelId;
       analysis = {
         [SIDE.BLUE]: analyzeEmbeddedBoard(cards, centered, loadedIndex, {
           limit: RESULTS_PER_SIZE,
+          language,
         }),
         [SIDE.RED]: analyzeEmbeddedBoard(
           boardForSide(cards, SIDE.RED),
           centered,
           loadedIndex,
-          { limit: RESULTS_PER_SIZE },
+          { limit: RESULTS_PER_SIZE, language },
         ),
       };
       statusMessage = "";
@@ -956,6 +1115,7 @@ export function createPlayMode(options = {}) {
     botBusy = true;
     botActionAfterHistoryMove = false;
     const gameAtStart = game;
+    const actingSide = game.activeSide;
     try {
       if (botActionExecutor) {
         const result = await botActionExecutor(structuredClone(game));
@@ -984,7 +1144,9 @@ export function createPlayMode(options = {}) {
           random: decisionRandom,
         });
         if (!clue) {
-          throw new Error("The bot could not find a legal clue.");
+          throw new Error(
+            translate(gameLanguage(), "noLegalClue"),
+          );
         }
         game = giveClue(game, {
           clue: clue.clue,
@@ -992,7 +1154,11 @@ export function createPlayMode(options = {}) {
           actor: "bot",
           intendedLayoutIds: clue.targets.map((target) => target.layoutId),
         });
-        statusMessage = `The bot gave ${clue.clue.toUpperCase()} ${clue.number}.`;
+        statusMessage = translate(gameLanguage(), "botClue", {
+          side: localizedSideLabel(actingSide),
+          clue: clue.clue.toLocaleUpperCase(gameLanguage()),
+          number: clue.number,
+        });
         statusMessageIsError = false;
       } else {
         const decisionRandom = createSeededRandom(
@@ -1023,14 +1189,18 @@ export function createPlayMode(options = {}) {
               });
         if (layoutId === null) {
           game = passTurn(game, { actor: "bot" });
-          statusMessage = "The bot passed.";
-          statusMessageIsError = false;
+          statusMessage = translate(gameLanguage(), "botPassed", {
+            side: localizedSideLabel(actingSide),
+          });
         } else {
           const word = game.cards.find((card) => card.layoutId === layoutId)?.word;
           game = guessCard(game, { layoutId, actor: "bot" });
-          statusMessage = `The bot guessed ${word}.`;
-          statusMessageIsError = false;
+          statusMessage = translate(gameLanguage(), "botGuessed", {
+            side: localizedSideLabel(actingSide),
+            word,
+          });
         }
+        statusMessageIsError = false;
       }
       forwardHistory = [];
       savedGame = game;
@@ -1058,7 +1228,11 @@ export function createPlayMode(options = {}) {
       return [];
     }
     const model = modelOption(activeModelId);
-    const vectors = await embedTerms([clue], { model: model.model });
+    const vectors = await embedTerms([clue], {
+      model: model.model,
+      revision: model.revision,
+      inputPrefix: model.inputPrefix,
+    });
     const clueVector = centerEmbeddings(vectors, clueIndex.centering.mean)[0];
 
     return game.cards
@@ -1069,6 +1243,40 @@ export function createPlayMode(options = {}) {
       }))
       .filter((candidate) => !candidate.done)
       .map(({ layoutId, similarity }) => ({ layoutId, similarity }));
+  }
+
+  function gameLanguage() {
+    return game?.language ?? selectedLanguage;
+  }
+
+  function localizedSideLabel(side) {
+    return translate(
+      gameLanguage(),
+      side === SIDE.RED ? "red" : "blue",
+    );
+  }
+
+  function localizedRoleLabel(role) {
+    return translate(
+      gameLanguage(),
+      role === PLAYER_ROLE.SPYMASTER ? "spymaster" : "operative",
+    );
+  }
+
+  function localizedTeamLabel(team) {
+    if (team === "friendly") {
+      return translate(gameLanguage(), "blue");
+    }
+    if (team === "enemy") {
+      return translate(gameLanguage(), "red");
+    }
+    if (team === "neutral") {
+      return translate(gameLanguage(), "neutral");
+    }
+    if (team === "assassin") {
+      return translate(gameLanguage(), "assassinTeam");
+    }
+    return team;
   }
 
   function renderGame() {
@@ -1101,13 +1309,15 @@ export function createPlayMode(options = {}) {
     elements.humanSeat.dataset.side = game.humanSeat.side;
     const seatContext = document.createElement("span");
     seatContext.className = "play-seat-context";
-    seatContext.textContent = "Your view";
+    seatContext.textContent = translate(gameLanguage(), "yourView");
     const seatIdentity = document.createElement("strong");
     seatIdentity.className = "play-seat-identity";
-    seatIdentity.textContent = `${sideEmoji(game.humanSeat.side)} ${sideLabel(game.humanSeat.side)} ${roleEmoji(game.humanSeat.role)} ${roleLabel(game.humanSeat.role)}`;
+    seatIdentity.textContent = `${sideEmoji(game.humanSeat.side)} ${localizedSideLabel(game.humanSeat.side)} ${roleEmoji(game.humanSeat.role)} ${localizedRoleLabel(game.humanSeat.role)}`;
     elements.humanSeat.setAttribute(
       "aria-label",
-      `Your view: ${seatIdentity.textContent}`,
+      translate(gameLanguage(), "yourViewLabel", {
+        identity: seatIdentity.textContent,
+      }),
     );
     elements.humanSeat.replaceChildren(seatContext, seatIdentity);
     elements.undoAction.disabled = !canUndoPlayGame(game) || botBusy;
@@ -1131,13 +1341,16 @@ export function createPlayMode(options = {}) {
           selectedTurn?.side === side,
       );
       const label = document.createElement("span");
-      label.textContent = sideLabel(side);
+      label.textContent = localizedSideLabel(side);
       const value = document.createElement("strong");
       const remaining = remainingCardsForSide(cards, side);
       value.textContent = String(remaining);
       item.setAttribute(
         "aria-label",
-        `${sideLabel(side)}, ${remaining} remaining`,
+        translate(gameLanguage(), "remaining", {
+          side: localizedSideLabel(side),
+          count: remaining,
+        }),
       );
       item.append(label, value);
       return item;
@@ -1205,7 +1418,7 @@ export function createPlayMode(options = {}) {
         if (intended.has(card.layoutId)) {
           const target = document.createElement("span");
           target.className = "play-card-marker is-target";
-          target.textContent = "Target";
+          target.textContent = translate(gameLanguage(), "target");
           annotations.append(target);
         }
         if (guess) {
@@ -1213,7 +1426,9 @@ export function createPlayMode(options = {}) {
           outcome.className = "play-card-marker is-guess";
           outcome.dataset.outcome =
             sideForTeam(guess.team) === selectedTurn.side ? "correct" : "mistake";
-          outcome.textContent = `Guess ${guess.index}`;
+          outcome.textContent = translate(gameLanguage(), "guessOrdinal", {
+            index: guess.index,
+          });
           annotations.append(outcome);
         }
         if (Number.isFinite(score)) {
@@ -1221,29 +1436,50 @@ export function createPlayMode(options = {}) {
           const scoreLabel = document.createElement("span");
           scoreLabel.className = "play-card-operative-score";
           scoreLabel.textContent = score.toFixed(3);
-          scoreLabel.title = "Operative cosine similarity";
+          scoreLabel.title = translate(
+            gameLanguage(),
+            "operativeCosineSimilarity",
+          );
           annotations.append(scoreLabel);
         }
         button.append(annotations);
       }
-      const role = card.team ? teamLabel(card.team) : "unrevealed";
+      const role = card.team
+        ? localizedTeamLabel(card.team)
+        : translate(gameLanguage(), "unrevealed");
       const reviewDetails = selectedTurn
         ? [
-            intended.has(card.layoutId) ? "intended target" : null,
-            guess
-              ? `guess ${guess.index}, ${
-                  sideForTeam(guess.team) === selectedTurn.side
-                    ? "correct"
-                    : "mistake"
-                }`
+            intended.has(card.layoutId)
+              ? translate(gameLanguage(), "intendedTarget")
               : null,
-            Number.isFinite(score) ? `operative score ${score.toFixed(3)}` : null,
+            guess
+              ? translate(gameLanguage(), "guessReview", {
+                  index: guess.index,
+                  outcome: translate(
+                    gameLanguage(),
+                    sideForTeam(guess.team) === selectedTurn.side
+                      ? "correct"
+                      : "mistake",
+                  ),
+                })
+              : null,
+            Number.isFinite(score)
+              ? translate(gameLanguage(), "operativeScore", {
+                  score: score.toFixed(3),
+                })
+              : null,
           ].filter(Boolean)
         : [];
+      const cardLabel =
+        card.done || card.team
+          ? `${card.word}, ${role}`
+          : translate(gameLanguage(), "guessWord", { word: card.word });
       button.setAttribute(
         "aria-label",
-        `${card.done || card.team ? `${card.word}, ${role}` : `Guess ${card.word}`}${
-          card.done ? ", revealed before this clue" : ""
+        `${cardLabel}${
+          card.done
+            ? translate(gameLanguage(), "revealedBeforeClue")
+            : ""
         }${reviewDetails.length ? `, ${reviewDetails.join(", ")}` : ""}`,
       );
       if (canGuess && !card.done) {
@@ -1279,8 +1515,8 @@ export function createPlayMode(options = {}) {
     const botWaitDetail =
       currentActor === "bot"
         ? currentRole === PLAYER_ROLE.SPYMASTER
-          ? "The bot is studying the board."
-          : "The bot is choosing a card."
+          ? translate(gameLanguage(), "botStudying")
+          : translate(gameLanguage(), "botChoosingCard")
         : "";
     const waitDetailVisible = syncBotWaitDetail(
       currentActor === "bot" && !statusMessageIsError
@@ -1289,7 +1525,10 @@ export function createPlayMode(options = {}) {
     );
 
     if (selectedTurn) {
-      turnLabel.textContent = `Post-game · Turn ${selectedPostGameTurn + 1} of ${postGameTurns.length}`;
+      turnLabel.textContent = translate(gameLanguage(), "postGameTurn", {
+        current: selectedPostGameTurn + 1,
+        total: postGameTurns.length,
+      });
       turnAction.className = "play-current-clue";
       turnAction.append(
         createCluePill(selectedTurn.clue),
@@ -1297,7 +1536,9 @@ export function createPlayMode(options = {}) {
       );
       turnNote.hidden = true;
     } else if (game.currentTurn) {
-      turnLabel.textContent = `${sideLabel(game.currentTurn.side)} turn`;
+      turnLabel.textContent = translate(gameLanguage(), "turn", {
+        side: localizedSideLabel(game.currentTurn.side),
+      });
       turnAction.className = "play-current-clue";
       turnAction.append(
         createCluePill(game.currentTurn.clue),
@@ -1305,25 +1546,29 @@ export function createPlayMode(options = {}) {
       );
       turnNote.textContent =
         currentActor === "human"
-          ? "Choose a card or pass."
+          ? translate(gameLanguage(), "chooseOrPass")
           : "";
     } else if (game.phase === GAME_PHASE.COMPLETE) {
       const reason =
         game.endReason === GAME_END_REASON.ASSASSIN
-          ? "The assassin ended the game."
-          : "All agents were found.";
-      turnLabel.textContent = "Game complete";
-      turnAction.textContent = `${sideLabel(game.winner)} wins`;
+          ? translate(gameLanguage(), "assassinEnded")
+          : translate(gameLanguage(), "agentsFound");
+      turnLabel.textContent = translate(gameLanguage(), "gameComplete");
+      turnAction.textContent = translate(gameLanguage(), "wins", {
+        side: localizedSideLabel(game.winner),
+      });
       turnNote.textContent = reason;
     } else {
-      turnLabel.textContent = `${sideLabel(game.activeSide)} turn`;
+      turnLabel.textContent = translate(gameLanguage(), "turn", {
+        side: localizedSideLabel(game.activeSide),
+      });
       turnAction.textContent =
         currentActor === "human"
-          ? "Give a clue"
-          : "Turn in progress";
+          ? translate(gameLanguage(), "giveClue")
+          : translate(gameLanguage(), "turnInProgress");
       turnNote.textContent =
         currentActor === "human"
-          ? "One word and a number."
+          ? translate(gameLanguage(), "oneWordNumber")
           : "";
     }
     if (currentActor === "bot" && !statusMessageIsError) {
@@ -1348,7 +1593,11 @@ export function createPlayMode(options = {}) {
     if (humanOperative) {
       const guesses = game.currentTurn.guesses.length;
       const limit = game.currentTurn.number + 1;
-      elements.guessProgress.textContent = `${guesses} of ${limit} guesses used`;
+      elements.guessProgress.textContent = translate(
+        gameLanguage(),
+        "guessesUsed",
+        { used: guesses, limit },
+      );
     }
   }
 
@@ -1413,7 +1662,10 @@ export function createPlayMode(options = {}) {
     spinner.className = "play-turn-spinner";
     spinner.setAttribute("aria-hidden", "true");
     const progressLabel = document.createElement("span");
-    progressLabel.textContent = "Turn in progress";
+    progressLabel.textContent = translate(
+      gameLanguage(),
+      "turnInProgress",
+    );
     progress.append(spinner, progressLabel);
 
     const detailText = document.createElement("span");
@@ -1428,9 +1680,19 @@ export function createPlayMode(options = {}) {
       return;
     }
 
-    elements.postGameOutcome.textContent = `${sideEmoji(game.winner)} ${sideLabel(game.winner)} won · ${
-      game.endReason === GAME_END_REASON.ASSASSIN ? "assassin" : "all agents"
-    }`;
+    elements.postGameOutcome.textContent = `${sideEmoji(game.winner)} ${translate(
+      gameLanguage(),
+      "postGameOutcome",
+      {
+        winner: localizedSideLabel(game.winner),
+        reason: translate(
+          gameLanguage(),
+          game.endReason === GAME_END_REASON.ASSASSIN
+            ? "assassin"
+            : "allAgents",
+        ),
+      },
+    )}`;
   }
 
   function renderSuggestionVisibility(humanSpymaster) {
@@ -1444,9 +1706,10 @@ export function createPlayMode(options = {}) {
       "aria-expanded",
       String(humanSpymaster && suggestionsExpanded),
     );
-    const toggleLabel = suggestionsExpanded
-      ? "Hide clue suggestions"
-      : "Show clue suggestions";
+    const toggleLabel = translate(
+      gameLanguage(),
+      suggestionsExpanded ? "hideSuggestions" : "showSuggestions",
+    );
     elements.toggleSuggestions.setAttribute("aria-label", toggleLabel);
     elements.toggleSuggestions.title = toggleLabel;
     elements.suggestions.hidden = !humanSpymaster || !suggestionsExpanded;
@@ -1475,7 +1738,7 @@ export function createPlayMode(options = {}) {
     if (suggestions.length === 0) {
       const message = document.createElement("p");
       message.className = "muted";
-      message.textContent = "Loading suggestions...";
+      message.textContent = translate(gameLanguage(), "loadingSuggestions");
       elements.suggestionList.replaceChildren(message);
       return;
     }
@@ -1484,19 +1747,26 @@ export function createPlayMode(options = {}) {
       button.type = "button";
       button.className = "play-suggestion";
       const clue = document.createElement("strong");
-      clue.textContent = `${suggestion.clue.toUpperCase()} ${suggestion.number}`;
+      clue.textContent = `${suggestion.clue.toLocaleUpperCase(
+        gameLanguage(),
+      )} ${suggestion.number}`;
       const worth = document.createElement("span");
       worth.className = "play-suggestion-metric";
       worth.dataset.tone = worthTone(suggestion.worth);
-      worth.textContent = `Worth ${suggestion.worth}`;
+      worth.textContent = translate(gameLanguage(), "worth", {
+        value: suggestion.worth,
+      });
       const safety = document.createElement("span");
       const safetyScore = Math.min(99, Math.round(suggestion.success * 100));
       safety.className = "play-suggestion-metric";
       safety.dataset.risk = suggestion.risk;
-      safety.textContent = `${labelRisk(suggestion.risk)} ${safetyScore}`;
+      const riskLabel = translate(gameLanguage(), suggestion.risk);
+      safety.textContent = translate(gameLanguage(), "safety", {
+        label: riskLabel,
+        score: safetyScore,
+      });
       safety.title =
-        `${labelRisk(suggestion.risk)} safety: ${safetyScore} out of 99 estimated from the all-target hit chance. ` +
-        "The color also reflects safety margin and assassin danger.";
+        `${riskLabel}: ${safetyScore}/99`;
       button.append(clue, worth, safety);
       button.addEventListener("click", () => {
         selectedSuggestion = suggestion;
@@ -1530,9 +1800,13 @@ export function createPlayMode(options = {}) {
     const visible = history.filter((event) =>
       ["clue-given", "card-guessed", "turn-passed", "game-ended"].includes(event.type),
     );
-    elements.historyLabel.textContent =
-      game.phase === GAME_PHASE.COMPLETE ? "Post-game analysis" : "Game log";
-    elements.historyCount.textContent = `${visible.length} events`;
+    elements.historyLabel.textContent = translate(
+      gameLanguage(),
+      game.phase === GAME_PHASE.COMPLETE ? "postGameAnalysis" : "gameLog",
+    );
+    elements.historyCount.textContent = translate(gameLanguage(), "events", {
+      count: visible.length,
+    });
     for (const button of elements.historyViewButtons) {
       button.setAttribute(
         "aria-pressed",
@@ -1542,16 +1816,24 @@ export function createPlayMode(options = {}) {
     elements.historyList.hidden = playHistoryView !== PLAY_HISTORY_VIEW.TIMELINE;
     elements.historyTeamLists.hidden = playHistoryView !== PLAY_HISTORY_VIEW.TEAMS;
 
-    renderHistoryList(elements.historyList, visible, "No game actions yet.");
+    renderHistoryList(
+      elements.historyList,
+      visible,
+      translate(gameLanguage(), "noGameActions"),
+    );
     renderHistoryList(
       elements.historyBlueList,
       visible.filter((event) => (event.side ?? event.winner) === SIDE.BLUE),
-      "No Blue actions yet.",
+      translate(gameLanguage(), "noSideActions", {
+        side: localizedSideLabel(SIDE.BLUE),
+      }),
     );
     renderHistoryList(
       elements.historyRedList,
       visible.filter((event) => (event.side ?? event.winner) === SIDE.RED),
-      "No Red actions yet.",
+      translate(gameLanguage(), "noSideActions", {
+        side: localizedSideLabel(SIDE.RED),
+      }),
     );
   }
 
@@ -1604,11 +1886,19 @@ export function createPlayMode(options = {}) {
           "play-history-clue-label play-history-event-summary";
         appendHistoryClueSummary(clueLabel, event, intendedTargets);
         actionLabel.className = "play-history-clue-action";
-        actionLabel.textContent = selected ? "Viewing" : "Review";
+        actionLabel.textContent = translate(
+          gameLanguage(),
+          selected ? "viewing" : "review",
+        );
         actionLabel.setAttribute("aria-hidden", "true");
         button.setAttribute(
           "aria-label",
-          `Review turn ${turnIndex + 1}: ${sideLabel(event.side)} clue ${event.clue} ${event.number}`,
+          translate(gameLanguage(), "reviewTurn", {
+            turn: turnIndex + 1,
+            side: localizedSideLabel(event.side),
+            clue: event.clue,
+            number: event.number,
+          }),
         );
         button.setAttribute("aria-pressed", String(selected));
         item.classList.toggle("is-selected", selected);
@@ -1641,15 +1931,25 @@ export function createPlayMode(options = {}) {
       }
     } else if (event.type === "card-guessed") {
       item.append(
-        `${sideLabel(event.side)} guessed `,
+        translate(gameLanguage(), "historyGuessLead", {
+          side: localizedSideLabel(event.side),
+        }),
         createHistoryCardPill(event.word, event.team),
       );
     } else if (event.type === "turn-passed") {
-      item.textContent = `${sideLabel(event.side)} passed`;
+      item.textContent = translate(gameLanguage(), "historyPass", {
+        side: localizedSideLabel(event.side),
+      });
     } else {
-      item.textContent = `🏁 ${sideLabel(event.winner)} won by ${
-        event.reason === GAME_END_REASON.ASSASSIN ? "assassin" : "finding every agent"
-      }`;
+      item.textContent = `🏁 ${translate(gameLanguage(), "historyWin", {
+        side: localizedSideLabel(event.winner),
+        reason: translate(
+          gameLanguage(),
+          event.reason === GAME_END_REASON.ASSASSIN
+            ? "assassin"
+            : "everyAgent",
+        ),
+      })}`;
     }
     return item;
   }
@@ -1665,20 +1965,27 @@ export function createPlayMode(options = {}) {
     const pill = document.createElement("span");
     pill.className = "play-history-clue-number";
     pill.textContent = String(number);
-    pill.setAttribute("aria-label", `Clue number ${number}`);
-    pill.title = "Clue number";
+    pill.setAttribute(
+      "aria-label",
+      translate(gameLanguage(), "clueNumberLabel", { number }),
+    );
+    pill.title = translate(gameLanguage(), "clueNumber");
     return pill;
   }
 
   function appendHistoryClueSummary(container, event, intendedTargets) {
     container.append(
-      `${sideLabel(event.side)} clue: `,
+      translate(gameLanguage(), "historyClueLead", {
+        side: localizedSideLabel(event.side),
+      }),
       createCluePill(event.clue),
       " ",
       createClueNumberPill(event.number),
     );
     if (intendedTargets.length) {
-      container.append(", intended ");
+      container.append(
+        translate(gameLanguage(), "intendedTargets", { words: "" }),
+      );
       intendedTargets.forEach((target, index) => {
         if (index > 0) {
           container.append(" + ");
@@ -1693,8 +2000,12 @@ export function createPlayMode(options = {}) {
     pill.className = "play-history-card";
     pill.dataset.team = team;
     pill.textContent = word;
-    pill.setAttribute("aria-label", `${word}, ${teamLabel(team)} card`);
-    pill.title = `${teamLabel(team)} card`;
+    const teamLabel = localizedTeamLabel(team);
+    pill.setAttribute(
+      "aria-label",
+      translate(gameLanguage(), "teamCard", { word, team: teamLabel }),
+    );
+    pill.title = translate(gameLanguage(), "cardRole", { team: teamLabel });
     return pill;
   }
 
@@ -1707,29 +2018,12 @@ export function createPlayMode(options = {}) {
 
 }
 
-function sideLabel(side) {
-  return side === SIDE.RED ? "Red" : "Blue";
-}
-
-function roleLabel(role) {
-  return role === PLAYER_ROLE.SPYMASTER ? "Spymaster" : "Operative";
-}
-
 function sideEmoji(side) {
   return side === SIDE.RED ? "🔴" : "🔵";
 }
 
 function roleEmoji(role) {
   return role === PLAYER_ROLE.SPYMASTER ? "🕵️" : "🔎";
-}
-
-function teamLabel(team) {
-  return {
-    friendly: "Blue",
-    enemy: "Red",
-    neutral: "Neutral",
-    assassin: "Assassin",
-  }[team] ?? team;
 }
 
 function sideForTeam(team) {
@@ -1745,7 +2039,6 @@ function sideForTeam(team) {
 function labelRisk(risk) {
   return risk === "safe" ? "Safe" : risk === "risky" ? "Risky" : "Medium";
 }
-
 function worthTone(worth) {
   return worth >= 85 ? "high" : worth >= 70 ? "medium" : "low";
 }
@@ -1770,24 +2063,62 @@ function formatRelativeWork(count) {
   return relative === 1 ? "1×" : `~${Number(relative.toFixed(1))}×`;
 }
 
-function settingsLabel(wordSet, wordReusePolicy, settings) {
+function settingsLabel(
+  wordSet,
+  wordReusePolicy,
+  settings,
+  language,
+) {
   const model = modelOption(settings.modelId);
-  const style = settings.cluePolicy === "hybrid" ? "human-like" : "conservative";
-  const aggression = {
-    [PLAY_OPERATIVE_AGGRESSION.CONSERVATIVE]: "conservative operative",
-    [PLAY_OPERATIVE_AGGRESSION.AGGRESSIVE]: "aggressive operative",
-    [PLAY_OPERATIVE_AGGRESSION.DYNAMIC]: "dynamic operative",
-  }[settings.operativeAggression];
+  const style = translate(
+    language,
+    settings.cluePolicy === "hybrid"
+      ? "humanLike"
+      : "conservative",
+  ).toLocaleLowerCase(language);
+  const aggression = translate(
+    language,
+    {
+      [PLAY_OPERATIVE_AGGRESSION.CONSERVATIVE]:
+        "conservativeOperative",
+      [PLAY_OPERATIVE_AGGRESSION.AGGRESSIVE]:
+        "aggressiveOperative",
+      [PLAY_OPERATIVE_AGGRESSION.DYNAMIC]: "dynamicOperative",
+    }[settings.operativeAggression],
+  ).toLocaleLowerCase(language);
   const bonus =
     settings.bonusGuesses === PLAY_BONUS_POLICY.PASS
-      ? "stop at number"
-      : "allow +1";
-  const words = wordSet === WORD_SET.EXTENDED ? "Extended" : "Official";
+      ? translate(language, "stopAtNumber").toLocaleLowerCase(language)
+      : translate(language, "allowExtraShort").toLocaleLowerCase(language);
+  const words = translate(
+    language,
+    wordSet === WORD_SET.EXTENDED ? "extended" : "official",
+  );
   const reuse =
     wordReusePolicy === PLAY_WORD_REUSE_POLICY.AVOID_RECENT
-      ? "avoid recent"
-      : "fully random";
+      ? translate(language, "avoidRecent").toLocaleLowerCase(language)
+      : translate(language, "fullyRandom").toLocaleLowerCase(language);
   return `${words}, ${reuse}, ${model.label}, ${settings.candidateCount / 1000}k, ${style}, ${aggression}, ${bonus}`;
+}
+
+function localizePlayError(message, language) {
+  if (message === "A clue must be one word.") {
+    return translate(language, "clueOneWordError");
+  }
+  if (
+    message ===
+    "A clue cannot match the stem or inflection of an unrevealed board word."
+  ) {
+    return translate(language, "clueBoardWordError");
+  }
+  const clueNumber = message.match(
+    /^Clue number must be between 1 and (\d+)\.$/u,
+  );
+  return clueNumber
+    ? translate(language, "clueNumberError", {
+        maximum: Number(clueNumber[1]),
+      })
+    : message;
 }
 
 function dotVectors(left, right) {

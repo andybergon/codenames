@@ -266,15 +266,13 @@ test("choosing a word pool does not replace the current board", async ({ page })
   expect(page.url()).toBe(originalUrl);
 });
 
-test("Italian beta creates a versioned Train board and survives reload", async ({
+test("global language switch creates a versioned Italian Train board and survives reload", async ({
   page,
 }) => {
   await page.goto(SHARED_BOARD);
   const firstWord = page.getByRole("textbox", { name: "Word 1", exact: true });
   const originalWord = await firstWord.inputValue();
-  const originalUrl = page.url();
-
-  await page.getByRole("button", { name: /Italiano Beta/ }).click();
+  await page.getByRole("button", { name: "Use Italian", exact: true }).click();
 
   await expect(
     page.getByRole("button", {
@@ -282,15 +280,8 @@ test("Italian beta creates a versioned Train board and survives reload", async (
     }),
   ).toHaveAttribute("aria-pressed", "true");
   await expect(
-    page.getByRole("button", {
-      name: "Use Official words for the next new board",
-    }),
+    page.locator('[data-word-set-value="official"]'),
   ).toBeHidden();
-  await expect(firstWord).toHaveValue(originalWord);
-  expect(page.url()).toBe(originalUrl);
-
-  await page.getByRole("button", { name: "New", exact: true }).click();
-
   await expect(page.locator("html")).toHaveAttribute("lang", "it");
   await expect(page.getByRole("heading", { name: "Tabellone" })).toBeVisible();
   await expect(page.locator("#model-lab-model")).toHaveValue(
@@ -301,6 +292,29 @@ test("Italian beta creates a versioned Train board and survives reload", async (
   await expect(page.locator(".italian-model-summary")).toContainText(
     "insieme Esteso originale di 800 parole",
   );
+  await expect(page.locator("#board-counts")).toContainText(
+    "Blu9Rossa8Neutrale7Assassino1",
+  );
+  await expect(page.locator("#board-metrics")).toContainText(
+    "Complessità",
+  );
+  await expect(page.locator("#board-metrics")).toContainText(
+    "Blu contro Rossa",
+  );
+  for (const [column, label] of [
+    ["clue", "Indizio"],
+    ["items", "Carte"],
+    ["targets", "Obiettivi"],
+    ["worth", "Worth"],
+    ["hit", "Successo stim."],
+    ["risk", "Rischio"],
+    ["danger", "Pericolo più vicino"],
+    ["action", "Applica"],
+  ]) {
+    await expect(
+      page.locator(`.suggestion-table [data-column="${column}"]`),
+    ).toContainText(label);
+  }
   expect(new URL(page.url()).searchParams.get("b")).toMatch(
     /^4s[A-Za-z0-9_-]{11}i1xs$/,
   );
@@ -322,8 +336,7 @@ test("Italian Train controls fit phone, tablet, and desktop viewports", async ({
   page,
 }) => {
   await page.goto(SHARED_BOARD);
-  await page.getByRole("button", { name: /Italiano Beta/ }).click();
-  await page.getByRole("button", { name: "New", exact: true }).click();
+  await page.getByRole("button", { name: "Use Italian", exact: true }).click();
 
   for (const viewport of [
     { width: 390, height: 844 },
@@ -336,7 +349,7 @@ test("Italian Train controls fit phone, tablet, and desktop viewports", async ({
         document.documentElement.scrollWidth >
         document.documentElement.clientWidth,
       languageControlVisible:
-        document.querySelector(".language-switch").getBoundingClientRect().width >
+        document.querySelector(".app-language-switch").getBoundingClientRect().width >
         0,
       boardWidth: document.querySelector(".board-panel").getBoundingClientRect()
         .width,
@@ -395,8 +408,40 @@ test("Play randomly assigns a seat and keeps all four overrides available", asyn
     await expect(button).toHaveAttribute("aria-pressed", "true");
   }
 
-  await page.getByRole("button", { name: "Randomize seat", exact: true }).click();
-  await expect(page.locator("[data-play-seat][aria-pressed='true']")).toHaveCount(1);
+  const randomize = page.getByRole("button", {
+    name: "Pick a different random role",
+    exact: true,
+  });
+  await expect(randomize).toHaveAttribute(
+    "title",
+    "Pick a different random role",
+  );
+  for (let attempt = 0; attempt < 12; attempt += 1) {
+    const before = await page
+      .locator("[data-play-seat][aria-pressed='true']")
+      .getAttribute("data-play-seat");
+    await randomize.click();
+    const after = await page
+      .locator("[data-play-seat][aria-pressed='true']")
+      .getAttribute("data-play-seat");
+    expect(after).not.toBe(before);
+  }
+});
+
+test("Codenames title returns shared and Train views to Play home", async ({
+  page,
+}) => {
+  for (const source of [SHARED_BOARD, "/?mode=train"]) {
+    await page.goto(source);
+    const title = page.getByRole("link", { name: "Codenames", exact: true });
+    await expect(title).toHaveAttribute("href", "/");
+    await title.click();
+
+    await expect(page).toHaveURL("/");
+    await expect(
+      page.getByRole("button", { name: "Play", exact: true }),
+    ).toHaveAttribute("aria-pressed", "true");
+  }
 });
 
 test("select option menus follow the dark theme", async ({ page }) => {
@@ -1364,7 +1409,7 @@ test("Play keeps game creation actions prominent across responsive states", asyn
 
     const setupActions = page.locator(".play-setup-heading .play-primary-actions");
     const randomize = page.getByRole("button", {
-      name: "Randomize seat",
+      name: "Pick a different random role",
       exact: true,
     });
     const startGame = page.getByRole("button", {
@@ -1487,6 +1532,70 @@ test("Play validates human clues and resumes the saved seat", async ({ page }) =
     "🔵 Blue 🕵️ Spymaster",
   );
   await expect(page.getByRole("textbox", { name: "Clue", exact: true })).toBeVisible();
+});
+
+test("Play identifies a saved game in another language before resuming it", async ({
+  page,
+}) => {
+  await page.goto("/?mode=play");
+  await page.locator('[data-play-seat="blue:spymaster"]').click();
+  await page.getByRole("button", { name: "Start new game", exact: true }).click();
+  await page.getByRole("button", { name: "Start new game", exact: true }).click();
+  await page.locator('[data-language-value="it"]').click();
+
+  const savedActions = page.locator("#saved-play-actions");
+  await expect(savedActions).toContainText(
+    "Partita salvata in inglese disponibile",
+  );
+  await expect(savedActions).toContainText(
+    "Riprendi per passare all'inglese",
+  );
+  await expect(
+    savedActions.getByRole("button", {
+      name: "Riprendi partita in inglese",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", {
+      name: "Nuova partita in italiano",
+      exact: true,
+    }),
+  ).toBeVisible();
+
+  await savedActions
+    .getByRole("button", {
+      name: "Riprendi partita in inglese",
+      exact: true,
+    })
+    .click();
+  await expect(page.locator("html")).toHaveAttribute("lang", "en");
+  await expect(page.locator("#play-board-grid .play-card")).toHaveCount(25);
+});
+
+test("Play starts a new game in the selected language despite another saved game", async ({
+  page,
+}) => {
+  await page.goto("/?mode=play");
+  await page.locator('[data-play-seat="blue:spymaster"]').click();
+  await page.getByRole("button", { name: "Start new game", exact: true }).click();
+  await page.getByRole("button", { name: "Start new game", exact: true }).click();
+  await page.locator('[data-language-value="it"]').click();
+
+  await page
+    .getByRole("button", {
+      name: "Nuova partita in italiano",
+      exact: true,
+    })
+    .click();
+
+  await expect(page.locator("html")).toHaveAttribute("lang", "it");
+  const saved = await page.evaluate(() =>
+    JSON.parse(localStorage.getItem("codenames-play-session-v1")),
+  );
+  expect(saved.language).toBe("it");
+  expect(saved.wordSet).toBe("extended");
+  expect(saved.botSettings.modelId).toBe("multilingual-e5-small");
 });
 
 test("starting a second Play game clears the previous clue and analysis", async ({
@@ -2499,6 +2608,143 @@ test("Play sharing copies a board-only link", async ({ page }) => {
   const copied = new URL(await page.evaluate(() => window.__copiedBoardLink));
   expect(copied.searchParams.has("b")).toBe(true);
   expect(copied.searchParams.get("mode")).toBe("train");
+});
+
+test("Italian Play uses E5, persists its session, and shares a v4 board", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: {
+        writeText(value) {
+          window.__copiedItalianBoardLink = value;
+          return Promise.resolve();
+        },
+      },
+    });
+  });
+  await page.goto("/?mode=play");
+
+  const english = page.locator('[data-language-value="en"]');
+  const italian = page.locator('[data-language-value="it"]');
+  await expect(english).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator("#play-bot-model")).toHaveValue("bge-small");
+
+  await italian.click();
+  await expect(page.locator("html")).toHaveAttribute("lang", "it");
+  await expect(italian).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator("#play-title")).toHaveText("Scegli il tuo ruolo");
+  const italianPlayNote = page.locator(
+    ".play-settings-sections > #italian-play-note",
+  );
+  await expect(italianPlayNote).toContainText(
+    "Il comportamento dei bot è sperimentale",
+  );
+  await expect(italianPlayNote).toBeHidden();
+  await page.locator(".play-settings > summary").click();
+  await expect(italianPlayNote).toBeVisible();
+  await expect(page.locator('[data-play-word-set="official"]')).toBeHidden();
+  await expect(page.locator('[data-play-word-set="extended"]')).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  await expect(page.locator("#play-bot-model")).toHaveValue(
+    "multilingual-e5-small",
+  );
+  await expect(page.locator("#play-bot-model")).toBeDisabled();
+  await expect(page.locator("#play-bot-candidates")).toHaveValue("10000");
+  await expect(page.locator("#play-bot-candidates option")).toHaveCount(2);
+
+  await page.locator('[data-play-seat="blue:spymaster"]').click();
+  await page.locator("#start-play-game").click();
+
+  const saved = await page.evaluate(() =>
+    JSON.parse(localStorage.getItem("codenames-play-session-v1")),
+  );
+  expect(saved.language).toBe("it");
+  expect(saved.wordSet).toBe("extended");
+  expect(saved.botSettings.modelId).toBe("multilingual-e5-small");
+  expect(saved.cards).toHaveLength(25);
+  expect(new Set(saved.cards.map(({ word }) => word)).size).toBe(25);
+  await expect(page.locator("#play-human-seat .play-seat-context")).toHaveText(
+    "La tua vista",
+  );
+  await expect(page.locator("#play-human-seat .play-seat-identity")).toContainText(
+    "Blu 🕵️ Capo agenzia",
+  );
+
+  await page.locator("#share-play-board").click();
+  const copied = new URL(
+    await page.evaluate(() => window.__copiedItalianBoardLink),
+  );
+  expect(copied.searchParams.get("b")).toMatch(
+    /^4s[A-Za-z0-9_-]{11}i1xr$/,
+  );
+  expect(copied.searchParams.get("mode")).toBe("train");
+
+  await page.reload();
+  await expect(page.locator("html")).toHaveAttribute("lang", "it");
+  await expect(page.locator("#resume-play-session")).toHaveText(
+    "Riprendi partita",
+  );
+  await page.locator("#resume-play-session").click();
+  await expect(page.locator("#play-board-grid .play-card")).toHaveCount(25);
+  await expect(page.locator("#play-human-seat .play-seat-context")).toHaveText(
+    "La tua vista",
+  );
+  await expect(page.locator("#play-human-seat .play-seat-identity")).toContainText(
+    "Blu 🕵️ Capo agenzia",
+  );
+});
+
+test("Italian Play remains usable at phone, tablet, and desktop widths", async ({
+  page,
+}) => {
+  await page.goto("/?mode=play");
+  await page.locator('[data-language-value="it"]').click();
+  await page.locator('[data-play-seat="blue:spymaster"]').click();
+  await page.locator("#start-play-game").click();
+
+  for (const viewport of [
+    { width: 390, height: 844 },
+    { width: 768, height: 1024 },
+    { width: 1440, height: 900 },
+  ]) {
+    await page.setViewportSize(viewport);
+    const layout = await page.evaluate(() => {
+      const board = document.querySelector("#play-board-grid");
+      const topbar = document.querySelector(".topbar");
+      const cards = [...document.querySelectorAll(".play-card")];
+      const boardBounds = board.getBoundingClientRect();
+      return {
+        pageOverflows:
+          document.documentElement.scrollWidth >
+          document.documentElement.clientWidth,
+        topbarOverflows: topbar.scrollWidth > topbar.clientWidth,
+        languageVisible:
+          document.querySelector(".app-language-switch").getBoundingClientRect()
+            .width > 0,
+        columns: getComputedStyle(board).gridTemplateColumns.split(" ").length,
+        cardsFit: cards.every((card) => {
+          const bounds = card.getBoundingClientRect();
+          return (
+            bounds.left >= boardBounds.left - 1 &&
+            bounds.right <= boardBounds.right + 1
+          );
+        }),
+      };
+    });
+    expect(layout.pageOverflows, `page overflow at ${viewport.width}px`).toBe(
+      false,
+    );
+    expect(layout.topbarOverflows, `topbar overflow at ${viewport.width}px`).toBe(
+      false,
+    );
+    expect(layout.languageVisible).toBe(true);
+    expect(layout.columns).toBe(5);
+    expect(layout.cardsFit).toBe(true);
+  }
 });
 
 test("Play board remains usable at phone, tablet, and desktop widths", async ({ page }) => {

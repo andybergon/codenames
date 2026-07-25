@@ -30,39 +30,51 @@
   <body>
     <main class="app-shell">
       <header class="topbar">
-        <h1 id="app-title">Codenames</h1>
+        <h1><a id="app-title" href="/">Codenames</a></h1>
         <div class="app-mode-switch" role="group" aria-label="App mode">
           <button type="button" data-app-mode="play" data-i18n="play" aria-pressed="true">Play</button>
           <button type="button" data-app-mode="train" data-i18n="train" aria-pressed="false">Train</button>
         </div>
-        <div class="theme-switcher" role="group" aria-label="Color theme">
-          <button
-            type="button"
-            data-theme-value="system"
-            aria-label="Use system theme"
-            aria-pressed="true"
-            title="System theme"
-          >
-            <i data-lucide="monitor" aria-hidden="true"></i>
-          </button>
-          <button
-            type="button"
-            data-theme-value="light"
-            aria-label="Use light theme"
-            aria-pressed="false"
-            title="Light theme"
-          >
-            <i data-lucide="sun" aria-hidden="true"></i>
-          </button>
-          <button
-            type="button"
-            data-theme-value="dark"
-            aria-label="Use dark theme"
-            aria-pressed="false"
-            title="Dark theme"
-          >
-            <i data-lucide="moon" aria-hidden="true"></i>
-          </button>
+        <div class="topbar-controls">
+          <div class="app-language-switch" role="group" aria-label="Game language" data-i18n-label="gameLanguage">
+            <button type="button" data-language-value="en" aria-pressed="true">EN</button>
+            <button type="button" data-language-value="it" aria-pressed="false">IT</button>
+          </div>
+          <div class="theme-switcher" role="group" aria-label="Color theme" data-i18n-label="colorTheme">
+            <button
+              type="button"
+              data-theme-value="system"
+              aria-label="Use system theme"
+              data-i18n-label="useSystemTheme"
+              data-i18n-title="useSystemTheme"
+              aria-pressed="true"
+              title="System theme"
+            >
+              <i data-lucide="monitor" aria-hidden="true"></i>
+            </button>
+            <button
+              type="button"
+              data-theme-value="light"
+              aria-label="Use light theme"
+              data-i18n-label="useLightTheme"
+              data-i18n-title="useLightTheme"
+              aria-pressed="false"
+              title="Light theme"
+            >
+              <i data-lucide="sun" aria-hidden="true"></i>
+            </button>
+            <button
+              type="button"
+              data-theme-value="dark"
+              aria-label="Use dark theme"
+              data-i18n-label="useDarkTheme"
+              data-i18n-title="useDarkTheme"
+              aria-pressed="false"
+              title="Dark theme"
+            >
+              <i data-lucide="moon" aria-hidden="true"></i>
+            </button>
+          </div>
         </div>
       </header>
 
@@ -121,25 +133,6 @@
                   >
                     <span data-i18n="sampleBoard">Sample</span>
                   </button>
-                </div>
-                <div class="board-control board-language-control">
-                  <span class="board-control-label" data-i18n="nextLanguage">Next board language</span>
-                  <div class="language-switch" role="group" aria-label="Language for the next new board">
-                    <button
-                      type="button"
-                      data-language-value="en"
-                      aria-pressed="true"
-                    >
-                      English
-                    </button>
-                    <button
-                      type="button"
-                      data-language-value="it"
-                      aria-pressed="false"
-                    >
-                      Italiano <span>Beta</span>
-                    </button>
-                  </div>
                 </div>
                 <div class="board-control board-word-control">
                   <span class="board-control-label" data-i18n="words">Words</span>
@@ -240,7 +233,7 @@
             <div id="recommendation-toolbar" class="recommendation-toolbar">
               <div class="target-range-filter">
                 <div class="range-filter-heading">
-                  <span class="range-filter-label">Target words</span>
+                  <span class="range-filter-label" data-i18n="targetWords">Target words</span>
                   <output id="target-range-value" for="target-min target-max">2-4</output>
                 </div>
                 <div id="target-range-control" class="dual-range">
@@ -275,7 +268,7 @@
                 title="Minimum composite Worth score"
               >
                 <div class="range-filter-heading">
-                  <label for="minimum-worth">Min worth</label>
+                  <label for="minimum-worth" data-i18n="minWorth">Min worth</label>
                   <output id="minimum-worth-value" for="minimum-worth">50</output>
                 </div>
                 <div
@@ -298,24 +291,24 @@
                 </div>
               </div>
               <label class="mobile-sort-control" for="mobile-suggestion-sort">
-                <span>Sort</span>
+                <span data-i18n="sort">Sort</span>
                 <select id="mobile-suggestion-sort">
-                  <option value="worth:desc">Worth: high first</option>
-                  <option value="worth:asc">Worth: low first</option>
-                  <option value="number:desc">Items: most first</option>
-                  <option value="number:asc">Items: fewest first</option>
-                  <option value="success:desc">Hit: high first</option>
-                  <option value="success:asc">Hit: low first</option>
-                  <option value="risk:desc">Risk: safest first</option>
-                  <option value="risk:asc">Risk: riskiest first</option>
-                  <option value="danger:asc">Danger: low first</option>
-                  <option value="danger:desc">Danger: high first</option>
-                  <option value="clue:asc">Clue: A-Z</option>
-                  <option value="clue:desc">Clue: Z-A</option>
-                  <option value="expectedNet:desc" data-advanced>Net: high first</option>
-                  <option value="expectedNet:asc" data-advanced>Net: low first</option>
-                  <option value="margin:desc" data-advanced>Margin: high first</option>
-                  <option value="margin:asc" data-advanced>Margin: low first</option>
+                  <option value="worth:desc" data-i18n="sortWorthHigh">Worth: high first</option>
+                  <option value="worth:asc" data-i18n="sortWorthLow">Worth: low first</option>
+                  <option value="number:desc" data-i18n="sortItemsMost">Items: most first</option>
+                  <option value="number:asc" data-i18n="sortItemsFewest">Items: fewest first</option>
+                  <option value="success:desc" data-i18n="sortHitHigh">Hit: high first</option>
+                  <option value="success:asc" data-i18n="sortHitLow">Hit: low first</option>
+                  <option value="risk:desc" data-i18n="sortRiskSafe">Risk: safest first</option>
+                  <option value="risk:asc" data-i18n="sortRiskRisky">Risk: riskiest first</option>
+                  <option value="danger:asc" data-i18n="sortDangerLow">Danger: low first</option>
+                  <option value="danger:desc" data-i18n="sortDangerHigh">Danger: high first</option>
+                  <option value="clue:asc" data-i18n="sortClueAz">Clue: A-Z</option>
+                  <option value="clue:desc" data-i18n="sortClueZa">Clue: Z-A</option>
+                  <option value="expectedNet:desc" data-advanced data-i18n="sortNetHigh">Net: high first</option>
+                  <option value="expectedNet:asc" data-advanced data-i18n="sortNetLow">Net: low first</option>
+                  <option value="margin:desc" data-advanced data-i18n="sortMarginHigh">Margin: high first</option>
+                  <option value="margin:asc" data-advanced data-i18n="sortMarginLow">Margin: low first</option>
                 </select>
               </label>
             </div>
@@ -331,7 +324,7 @@
                     title="Show Blue recommendations"
                   >
                     <span class="side-dot" aria-hidden="true"></span>
-                    Blue
+                    <span data-i18n="blue">Blue</span>
                   </button>
                   <button
                     type="button"
@@ -340,7 +333,7 @@
                     title="Show Red recommendations"
                   >
                     <span class="side-dot" aria-hidden="true"></span>
-                    Red
+                    <span data-i18n="red">Red</span>
                   </button>
                 </div>
                 <span id="turn-status" class="turn-status" role="status"></span>
@@ -352,7 +345,7 @@
                   title="Show Worth, Net, estimated hit, danger, margin, and fit/cohesion columns"
                 >
                   <input id="advanced-metrics" type="checkbox" />
-                  <span>Score details</span>
+                  <span data-i18n="scoreDetails">Score details</span>
                 </label>
               </div>
             </div>
@@ -365,12 +358,14 @@
         <section id="play-setup" class="play-setup">
           <div class="play-setup-heading">
             <div class="play-setup-title">
-              <h2 id="play-title">Choose your seat</h2>
+              <h2 id="play-title" data-i18n="chooseSeat">Choose your seat</h2>
               <button
                 id="randomize-play-seat"
                 class="icon-button"
                 type="button"
                 aria-label="Randomize seat"
+                data-i18n-label="randomize"
+                data-i18n-title="randomize"
                 title="Randomize seat"
               >
                 <i data-lucide="dices" aria-hidden="true"></i>
@@ -383,70 +378,69 @@
                 type="button"
               >
                 <i data-lucide="refresh-cw" aria-hidden="true"></i>
-                Start new game
+                <span id="start-play-game-label">Start new game</span>
               </button>
             </div>
           </div>
-
           <div id="saved-play-actions" class="saved-play-actions" hidden>
             <span class="saved-play-copy">
-              <strong>Saved game available</strong>
-              <span>Continue where you left off or clear it.</span>
+              <strong id="saved-play-title">Saved game available</strong>
+              <span id="saved-play-help">Continue where you left off or clear it.</span>
             </span>
             <div class="saved-play-buttons">
               <button id="discard-play-session" class="button ghost" type="button">
-                Discard saved
+                <span data-i18n="discardSaved">Discard saved</span>
               </button>
               <button id="resume-play-session" class="button primary" type="button">
-                Resume game
+                <span id="resume-play-session-label">Resume game</span>
               </button>
             </div>
           </div>
-
           <div class="seat-grid" role="group" aria-label="Your Play seat">
             <button type="button" data-play-seat="blue:spymaster" aria-pressed="false">
-              <span class="seat-team blue">Blue</span>
-              <strong><span aria-hidden="true">🕵️</span> Spymaster</strong>
-              <span>Give clues</span>
+              <span class="seat-team blue" data-i18n="blue">Blue</span>
+              <strong><span aria-hidden="true">🕵️</span> <span data-i18n="spymaster">Spymaster</span></strong>
+              <span data-i18n="giveClues">Give clues</span>
             </button>
             <button type="button" data-play-seat="blue:operative" aria-pressed="false">
-              <span class="seat-team blue">Blue</span>
-              <strong><span aria-hidden="true">🔎</span> Operative</strong>
-              <span>Guess cards</span>
+              <span class="seat-team blue" data-i18n="blue">Blue</span>
+              <strong><span aria-hidden="true">🔎</span> <span data-i18n="operative">Operative</span></strong>
+              <span data-i18n="guessCards">Guess cards</span>
             </button>
             <button type="button" data-play-seat="red:spymaster" aria-pressed="false">
-              <span class="seat-team red">Red</span>
-              <strong><span aria-hidden="true">🕵️</span> Spymaster</strong>
-              <span>Give clues</span>
+              <span class="seat-team red" data-i18n="red">Red</span>
+              <strong><span aria-hidden="true">🕵️</span> <span data-i18n="spymaster">Spymaster</span></strong>
+              <span data-i18n="giveClues">Give clues</span>
             </button>
             <button type="button" data-play-seat="red:operative" aria-pressed="false">
-              <span class="seat-team red">Red</span>
-              <strong><span aria-hidden="true">🔎</span> Operative</strong>
-              <span>Guess cards</span>
+              <span class="seat-team red" data-i18n="red">Red</span>
+              <strong><span aria-hidden="true">🔎</span> <span data-i18n="operative">Operative</span></strong>
+              <span data-i18n="guessCards">Guess cards</span>
             </button>
           </div>
 
           <details class="play-settings">
             <summary>
               <span class="play-settings-copy">
-                <strong><span aria-hidden="true">⚙️</span> Settings</strong>
+                <strong><span aria-hidden="true">⚙️</span> <span data-i18n="settings">Settings</span></strong>
                 <span id="play-settings-summary"></span>
               </span>
               <span class="play-settings-toggle" aria-hidden="true">
-                Edit
+                <span data-i18n="edit">Edit</span>
                 <span class="play-settings-chevron">›</span>
               </span>
             </summary>
             <div class="play-settings-sections">
+              <p id="italian-play-note" class="italian-play-note" hidden></p>
               <fieldset
                 class="play-settings-section"
                 data-play-settings-section="game"
               >
-                <legend><span aria-hidden="true">🎮</span> Game</legend>
+                <legend><span aria-hidden="true">🎮</span> <span data-i18n="game">Game</span></legend>
                 <div class="play-settings-fields">
                   <div class="play-word-set">
                     <span id="play-word-set-label" class="play-setting-label">
-                      Board words
+                      <span data-i18n="boardWords">Board words</span>
                     </span>
                     <div
                       class="word-set-switch"
@@ -458,33 +452,33 @@
                         data-play-word-set="official"
                         aria-pressed="true"
                       >
-                        Official <span>400</span>
+                        <span data-i18n="official">Official</span> <span>400</span>
                       </button>
                       <button
                         type="button"
                         data-play-word-set="extended"
                         aria-pressed="false"
                       >
-                        Extended <span>800</span>
+                        <span data-i18n="extended">Extended</span> <span>800</span>
                       </button>
                     </div>
                   </div>
                   <div id="play-word-reuse-setting" class="play-word-reuse play-setting">
                     <span class="play-setting-label">
-                      <label for="play-word-reuse-policy">New board words</label>
+                      <label for="play-word-reuse-policy" data-i18n="newBoardWords">New board words</label>
                       <span id="play-word-reuse-info"></span>
                     </span>
                     <div class="play-word-reuse-controls">
                       <select id="play-word-reuse-policy">
-                        <option value="fully-random">Fully random</option>
-                        <option value="avoid-recent">Avoid recent words</option>
+                        <option value="fully-random" data-i18n="fullyRandom">Fully random</option>
+                        <option value="avoid-recent" data-i18n="avoidRecent">Avoid recent words</option>
                       </select>
                       <button
                         id="clear-play-word-history"
                         class="button secondary"
                         type="button"
                       >
-                        Clear history
+                        <span data-i18n="clearHistory">Clear history</span>
                       </button>
                     </div>
                     <span
@@ -500,11 +494,11 @@
                 class="play-settings-section"
                 data-play-settings-section="all-bots"
               >
-                <legend><span aria-hidden="true">🤖</span> All bots</legend>
+                <legend><span aria-hidden="true">🤖</span> <span data-i18n="allBots">All bots</span></legend>
                 <div class="play-settings-fields">
                   <label class="play-setting">
                     <span class="play-setting-label">
-                      Embedding model
+                      <span data-i18n="embeddingModel">Embedding model</span>
                       <span id="play-bot-model-info"></span>
                     </span>
                     <select id="play-bot-model">
@@ -520,11 +514,11 @@
                 class="play-settings-section play-settings-section-wide"
                 data-play-settings-section="spymaster"
               >
-                <legend><span aria-hidden="true">🕵️</span> Spymaster</legend>
+                <legend><span aria-hidden="true">🕵️</span> <span data-i18n="spymaster">Spymaster</span></legend>
                 <div class="play-settings-fields">
                   <label class="play-setting">
                     <span class="play-setting-label">
-                      Clue vocabulary
+                      <span data-i18n="clueVocabulary">Clue vocabulary</span>
                       <span id="play-bot-candidates-info"></span>
                     </span>
                     <select id="play-bot-candidates">
@@ -536,23 +530,23 @@
                   </label>
                   <label class="play-setting">
                     <span class="play-setting-label">
-                      Clue scoring
+                      <span data-i18n="clueScoring">Clue scoring</span>
                       <span id="play-clue-policy-info"></span>
                     </span>
                     <select id="play-clue-policy">
-                      <option value="hybrid">Human-like</option>
-                      <option value="current">Conservative</option>
+                      <option value="hybrid" data-i18n="humanLike">Human-like</option>
+                      <option value="current" data-i18n="conservative">Conservative</option>
                     </select>
                   </label>
                   <label class="play-setting">
                     <span class="play-setting-label">
-                      Prefer multi-card clues
+                      <span data-i18n="preferMulti">Prefer multi-card clues</span>
                       <span id="play-multi-tolerance-info"></span>
                     </span>
                     <select id="play-multi-tolerance">
-                      <option value="0">Off, best score only</option>
-                      <option value="5">Balanced, within 5 points</option>
-                      <option value="10">Strong, within 10 points</option>
+                      <option value="0" data-i18n="multiOffCompact">Off, best score only</option>
+                      <option value="5" data-i18n="multiBalancedCompact">Balanced, within 5 points</option>
+                      <option value="10" data-i18n="multiStrongCompact">Strong, within 10 points</option>
                     </select>
                   </label>
                 </div>
@@ -562,27 +556,27 @@
                 class="play-settings-section"
                 data-play-settings-section="operative"
               >
-                <legend><span aria-hidden="true">🔎</span> Operative</legend>
+                <legend><span aria-hidden="true">🔎</span> <span data-i18n="operative">Operative</span></legend>
                 <div class="play-settings-fields">
                   <label class="play-setting">
                     <span class="play-setting-label">
-                      Operative aggression
+                      <span data-i18n="operativeAggression">Operative aggression</span>
                       <span id="play-operative-aggression-info"></span>
                     </span>
                     <select id="play-operative-aggression">
-                      <option value="dynamic">Dynamic, adapt to public score</option>
-                      <option value="conservative">Conservative, pass on doubt</option>
-                      <option value="aggressive">Aggressive, pursue the clue number</option>
+                      <option value="dynamic" data-i18n="dynamicAggression">Dynamic, adapt to public score</option>
+                      <option value="conservative" data-i18n="conservativeAggression">Conservative, pass on doubt</option>
+                      <option value="aggressive" data-i18n="aggressiveAggression">Aggressive, pursue the clue number</option>
                     </select>
                   </label>
                   <label class="play-setting">
                     <span class="play-setting-label">
-                      Extra guess
+                      <span data-i18n="extraGuess">Extra guess</span>
                       <span id="play-bonus-guesses-info"></span>
                     </span>
                     <select id="play-bonus-guesses">
-                      <option value="pass">Stop at clue number</option>
-                      <option value="allow">Allow one extra guess</option>
+                      <option value="pass" data-i18n="stopAtNumber">Stop at number</option>
+                      <option value="allow" data-i18n="allowExtra">Allow one extra guess</option>
                     </select>
                   </label>
                 </div>
@@ -599,6 +593,7 @@
               class="play-score"
               role="group"
               aria-label="Remaining team cards"
+              data-i18n-label="remainingTeamCards"
             ></div>
             <div class="play-game-actions">
               <button
@@ -606,6 +601,8 @@
                 class="icon-button"
                 type="button"
                 aria-label="Undo"
+                data-i18n-label="undo"
+                data-i18n-title="undo"
                 title="Undo last action"
                 disabled
               >
@@ -616,6 +613,8 @@
                 class="icon-button"
                 type="button"
                 aria-label="Forward"
+                data-i18n-label="forward"
+                data-i18n-title="forward"
                 title="Restore undone action"
                 disabled
               >
@@ -626,6 +625,8 @@
                 class="icon-button"
                 type="button"
                 aria-label="Share board"
+                data-i18n-label="shareBoard"
+                data-i18n-title="copyBoardLink"
                 title="Copy board share link"
               >
                 <i data-lucide="share-2" aria-hidden="true"></i>
@@ -635,10 +636,12 @@
                 class="button primary play-new-game-button"
                 type="button"
                 aria-label="Start new game"
+                data-i18n-label="startNewGame"
+                data-i18n-title="startNewGame"
                 title="Start a new game"
               >
                 <i data-lucide="refresh-cw" aria-hidden="true"></i>
-                <span>Start new game</span>
+                <span data-i18n="startNewGame">Start new game</span>
               </button>
             </div>
           </header>
@@ -646,25 +649,25 @@
           <div class="play-workspace">
             <div class="play-board-panel">
               <div id="play-board-toolbar" class="play-board-toolbar" hidden>
-                <span>Board order</span>
-                <div class="play-board-order" role="group" aria-label="Spymaster board order">
+                <span data-i18n="boardOrder">Board order</span>
+                <div class="play-board-order" role="group" aria-label="Spymaster board order" data-i18n-label="spymasterBoardOrder">
                   <button type="button" data-play-board-order="table" aria-pressed="true">
-                    🎲 Table
+                    🎲 <span data-i18n="tableOrder">Table</span>
                   </button>
                   <button type="button" data-play-board-order="teams" aria-pressed="false">
-                    🗂️ Teams
+                    🗂️ <span data-i18n="teamOrder">Teams</span>
                   </button>
                 </div>
               </div>
-              <div id="play-board-grid" class="play-board-grid" aria-label="Codenames play board"></div>
+              <div id="play-board-grid" class="play-board-grid" aria-label="Codenames play board" data-i18n-label="playBoard"></div>
             </div>
 
-            <aside class="play-turn-panel" aria-label="Current Play turn">
+            <aside class="play-turn-panel" aria-label="Current Play turn" data-i18n-label="currentPlayTurn">
               <div id="play-clue-display" class="play-clue-display"></div>
 
               <form id="play-clue-form" class="play-clue-form" hidden>
                 <div class="play-clue-field">
-                  <label for="play-clue-input">Clue</label>
+                  <label for="play-clue-input" data-i18n="clue">Clue</label>
                   <div class="play-clue-input-wrap">
                     <input
                       id="play-clue-input"
@@ -672,6 +675,7 @@
                       autocomplete="off"
                       spellcheck="false"
                       placeholder="One word"
+                      data-i18n-placeholder="oneWord"
                       required
                     />
                     <button
@@ -679,6 +683,8 @@
                       class="play-clue-clear"
                       type="button"
                       aria-label="Clear clue"
+                      data-i18n-label="clearClue"
+                      data-i18n-title="clearClue"
                       title="Clear clue"
                       hidden
                     >
@@ -687,12 +693,12 @@
                   </div>
                 </div>
                 <label>
-                  Number
+                  <span data-i18n="number">Number</span>
                   <select id="play-clue-number"></select>
                 </label>
                 <div class="play-clue-actions">
                   <button class="button primary" type="submit">
-                    <span aria-hidden="true">🕵️</span> Give clue
+                    <span aria-hidden="true">🕵️</span> <span data-i18n="giveClueButton">Give clue</span>
                   </button>
                   <button
                     id="toggle-play-suggestions"
@@ -701,10 +707,12 @@
                     aria-controls="play-suggestions"
                     aria-expanded="false"
                     aria-label="Show clue suggestions"
+                    data-i18n-label="showSuggestions"
+                    data-i18n-title="showSuggestions"
                     title="Show clue suggestions"
                     hidden
                   >
-                    <span aria-hidden="true">💡</span> Hints
+                    <span aria-hidden="true">💡</span> <span data-i18n="hints">Hints</span>
                   </button>
                 </div>
                 <p id="play-clue-error" class="form-error" role="alert"></p>
@@ -712,7 +720,7 @@
 
               <div id="play-suggestions" class="play-suggestions" hidden>
                 <div class="play-section-heading">
-                  <strong>Suggested clues</strong>
+                  <strong data-i18n="suggestedClues">Suggested clues</strong>
                 </div>
                 <div id="play-suggestion-list" class="play-suggestion-list"></div>
               </div>
@@ -720,13 +728,13 @@
               <div id="play-operative-controls" class="play-operative-controls" hidden>
                 <p id="play-guess-progress"></p>
                 <button id="pass-play-turn" class="button secondary" type="button">
-                  <span aria-hidden="true">🔎</span> Pass turn
+                  <span aria-hidden="true">🔎</span> <span data-i18n="passTurn">Pass turn</span>
                 </button>
               </div>
 
               <section id="play-post-game-analysis" class="play-post-game-analysis" hidden>
                 <div class="play-section-heading">
-                  <strong>Turn analysis</strong>
+                  <strong data-i18n="turnAnalysis">Turn analysis</strong>
                   <span id="play-post-game-outcome"></span>
                 </div>
               </section>
@@ -734,23 +742,23 @@
               <div class="play-history">
                 <div class="play-section-heading play-history-heading">
                   <div class="play-history-title">
-                    <strong id="play-history-heading-label">Game log</strong>
+                    <strong id="play-history-heading-label" data-i18n="gameLog">Game log</strong>
                     <span id="play-history-count"></span>
                   </div>
-                  <div class="play-history-switch" role="group" aria-label="Game log view">
+                  <div class="play-history-switch" role="group" aria-label="Game log view" data-i18n-label="gameLogView">
                     <button
                       type="button"
                       data-play-history-view="timeline"
                       aria-pressed="true"
                     >
-                      🕒 Timeline
+                      🕒 <span data-i18n="timeline">Timeline</span>
                     </button>
                     <button
                       type="button"
                       data-play-history-view="teams"
                       aria-pressed="false"
                     >
-                      ↔️ By team
+                      ↔️ <span data-i18n="byTeam">By team</span>
                     </button>
                   </div>
                 </div>
@@ -758,10 +766,11 @@
                   id="play-history-list"
                   class="play-history-list"
                   aria-label="Chronological game log"
+                  data-i18n-label="chronologicalGameLog"
                 ></ol>
                 <div id="play-history-team-lists" class="play-history-team-lists" hidden>
                   <section class="play-history-team" data-side="blue">
-                    <h3 id="play-history-blue-title">🔵 Blue</h3>
+                    <h3 id="play-history-blue-title">🔵 <span data-i18n="blue">Blue</span></h3>
                     <ol
                       id="play-history-blue-list"
                       class="play-history-list"
@@ -769,7 +778,7 @@
                     ></ol>
                   </section>
                   <section class="play-history-team" data-side="red">
-                    <h3 id="play-history-red-title">🔴 Red</h3>
+                    <h3 id="play-history-red-title">🔴 <span data-i18n="red">Red</span></h3>
                     <ol
                       id="play-history-red-list"
                       class="play-history-list"

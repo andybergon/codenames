@@ -2,7 +2,11 @@ import {
   BOARD_ORDER,
   createGeneratedBoardState,
 } from "../board-share.js";
-import { getWordsForSet, WORD_SET_OPTIONS } from "../word-data.js";
+import {
+  getWordsForSet,
+  LANGUAGE,
+  WORD_SET_OPTIONS_BY_LANGUAGE,
+} from "../word-data.js";
 import { createSeededRandom } from "./bots.js";
 
 const CARD_COUNT = 25;
@@ -109,6 +113,7 @@ export function recordBoardWords(state, cards) {
 }
 
 export function createPlayBoardWithWordReuse({
+  language = LANGUAGE.ENGLISH,
   seed,
   state,
   wordSet,
@@ -118,13 +123,14 @@ export function createPlayBoardWithWordReuse({
     seed,
     BOARD_ORDER.RANDOM,
     wordSet,
+    language,
   );
 
   if (normalized.policy === PLAY_WORD_REUSE_POLICY.FULLY_RANDOM) {
     return {
       board: generated,
       repeatsRequired: 0,
-      unseenCount: countUnseenWords(normalized, wordSet),
+      unseenCount: countUnseenWords(normalized, wordSet, language),
     };
   }
 
@@ -132,6 +138,7 @@ export function createPlayBoardWithWordReuse({
     seed,
     state: normalized,
     wordSet,
+    language,
   });
   return {
     board: {
@@ -147,9 +154,14 @@ export function createPlayBoardWithWordReuse({
   };
 }
 
-export function planAvoidRecentWords({ seed, state, wordSet }) {
+export function planAvoidRecentWords({
+  language = LANGUAGE.ENGLISH,
+  seed,
+  state,
+  wordSet,
+}) {
   const normalized = normalizeWordReuseState(state);
-  const pool = getWordsForSet(wordSet);
+  const pool = getWordsForSet(wordSet, language);
   const lastSeen = lastSeenBoardByWord(normalized.boards, pool);
   const random = createSeededRandom(`${seed}:word-reuse`);
   const tieBreakers = new Map(
@@ -181,18 +193,30 @@ export function planAvoidRecentWords({ seed, state, wordSet }) {
   };
 }
 
-export function countUnseenWords(state, wordSet) {
-  const pool = getWordsForSet(wordSet);
+export function countUnseenWords(
+  state,
+  wordSet,
+  language = LANGUAGE.ENGLISH,
+) {
+  const pool = getWordsForSet(wordSet, language);
   return pool.length - lastSeenBoardByWord(
     normalizeWordReuseState(state).boards,
     pool,
   ).size;
 }
 
-export function wordReuseStatus(state, wordSet) {
+export function wordReuseStatus(
+  state,
+  wordSet,
+  language = LANGUAGE.ENGLISH,
+) {
   const normalized = normalizeWordReuseState(state);
-  const option = WORD_SET_OPTIONS[wordSet];
-  const unseenCount = countUnseenWords(normalized, wordSet);
+  const option = WORD_SET_OPTIONS_BY_LANGUAGE[language]?.[wordSet];
+  const unseenCount = countUnseenWords(
+    normalized,
+    wordSet,
+    language,
+  );
 
   if (
     normalized.policy === PLAY_WORD_REUSE_POLICY.FULLY_RANDOM
@@ -213,14 +237,20 @@ export function wordReuseStatus(state, wordSet) {
   if (unseenCount === CARD_COUNT) {
     return {
       tone: "warning",
-      text: `Last repeat-free ${option.label} board. Clear history before the following game to avoid repeats.`,
+      text:
+        language === LANGUAGE.ITALIAN
+          ? `Ultimo tabellone ${option.label} senza ripetizioni. Cancella la cronologia prima della partita successiva per evitare ripetizioni.`
+          : `Last repeat-free ${option.label} board. Clear history before the following game to avoid repeats.`,
     };
   }
 
   const repeats = CARD_COUNT - unseenCount;
   return {
     tone: "warning",
-    text: `Only ${unseenCount} unseen ${option.label} words remain. The next board must reuse at least ${repeats}.`,
+    text:
+      language === LANGUAGE.ITALIAN
+        ? `Restano solo ${unseenCount} parole ${option.label} non usate. Il prossimo tabellone deve ripeterne almeno ${repeats}.`
+        : `Only ${unseenCount} unseen ${option.label} words remain. The next board must reuse at least ${repeats}.`,
   };
 }
 

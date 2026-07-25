@@ -1,7 +1,10 @@
 import {
   CANDIDATE_OPTIONS,
+  ITALIAN_CANDIDATE_OPTIONS,
+  ITALIAN_MODEL_ID,
   PICKER_MODEL_OPTIONS,
 } from "../model-lab.js";
+import { LANGUAGE } from "../word-data.js";
 
 export const PLAY_CLUE_POLICY = Object.freeze({
   CURRENT: "current",
@@ -30,20 +33,34 @@ export const DEFAULT_PLAY_BOT_SETTINGS = Object.freeze({
 
 const MODEL_IDS = new Set(PICKER_MODEL_OPTIONS.map(({ id }) => id));
 const CANDIDATE_COUNTS = new Set(CANDIDATE_OPTIONS.map(({ count }) => count));
+const ITALIAN_CANDIDATE_COUNTS = new Set(
+  ITALIAN_CANDIDATE_OPTIONS.map(({ count }) => count),
+);
 const CLUE_POLICIES = new Set(Object.values(PLAY_CLUE_POLICY));
 const BONUS_POLICIES = new Set(Object.values(PLAY_BONUS_POLICY));
 const OPERATIVE_AGGRESSIONS = new Set(
   Object.values(PLAY_OPERATIVE_AGGRESSION),
 );
 
-export function normalizePlayBotSettings(value = {}) {
+export function normalizePlayBotSettings(
+  value = {},
+  language = LANGUAGE.ENGLISH,
+) {
+  const italian = language === LANGUAGE.ITALIAN;
+  const defaultModelId = italian
+    ? ITALIAN_MODEL_ID
+    : DEFAULT_PLAY_BOT_SETTINGS.modelId;
+  const modelIds = italian ? new Set([ITALIAN_MODEL_ID]) : MODEL_IDS;
+  const candidateCounts = italian
+    ? ITALIAN_CANDIDATE_COUNTS
+    : CANDIDATE_COUNTS;
   const candidateCount = Number(value.candidateCount);
   const multiTolerance = Number(value.multiTolerance);
   return {
-    modelId: MODEL_IDS.has(value.modelId)
+    modelId: modelIds.has(value.modelId)
       ? value.modelId
-      : DEFAULT_PLAY_BOT_SETTINGS.modelId,
-    candidateCount: CANDIDATE_COUNTS.has(candidateCount)
+      : defaultModelId,
+    candidateCount: candidateCounts.has(candidateCount)
       ? candidateCount
       : DEFAULT_PLAY_BOT_SETTINGS.candidateCount,
     cluePolicy: CLUE_POLICIES.has(value.cluePolicy)

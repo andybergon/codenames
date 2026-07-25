@@ -60,6 +60,7 @@ const TEAM_SORT_ORDER = new Map(TEAMS.map((team, index) => [team.id, index]));
 const RESULTS_PER_SIZE = 6;
 const DEFAULT_TARGET_RANGE = Object.freeze({ min: 2, max: 4 });
 const DEFAULT_MINIMUM_WORTH = 50;
+const LANGUAGE_STORAGE_KEY = "codenames-language";
 const THEME_STORAGE_KEY = "codenames-theme";
 const THEME_VALUES = new Set(["system", "light", "dark"]);
 const MAX_TARGET_WORDS = ROLE_SEQUENCE.filter((team) => team === "friendly").length;
@@ -162,6 +163,19 @@ const SUGGESTION_COLUMNS = [
   },
   { id: "action", label: "Apply" },
 ];
+const SUGGESTION_COLUMN_COPY_KEYS = Object.freeze({
+  clue: "clue",
+  items: "items",
+  targets: "targets",
+  worth: "worthLabel",
+  net: "net",
+  hit: "estimatedHit",
+  risk: "risk",
+  danger: "closestDanger",
+  margin: "margin",
+  semantics: "fitCohesion",
+  action: "apply",
+});
 const RISK_SORT_VALUE = {
   safe: 3,
   medium: 2,
@@ -203,6 +217,10 @@ let selectedCandidateCount =
   modelConfigurationForLanguage(boardLanguage).candidateCount;
 let shareFeedbackTimer = 0;
 let appMode = readAppMode();
+let appLanguage =
+  boardLanguage === LANGUAGE.ITALIAN
+    ? LANGUAGE.ITALIAN
+    : readLanguageSetting();
 let trainerInitialized = false;
 let trainerInitializationFrame = 0;
 let trainerInitializationTimer = 0;
@@ -258,9 +276,14 @@ const elements = {
   playMode: document.querySelector("#play-mode"),
 };
 
-const playMode = createPlayMode(
-  import.meta.env.DEV ? window.__codenamesPlayModeOptions : undefined,
-);
+const playMode = createPlayMode({
+  ...(import.meta.env.DEV ? window.__codenamesPlayModeOptions : undefined),
+  initialLanguage: appLanguage,
+  onLanguageChange: (language) => {
+    applyLanguageSetting(language);
+    renderAppMode();
+  },
+});
 const calibrationMode = createCalibrationMode();
 
 elements.modelLabModel.addEventListener("change", (event) => {
@@ -340,7 +363,7 @@ for (const button of elements.wordSetButtons) {
 
 for (const button of elements.languageButtons) {
   button.addEventListener("click", () => {
-    setNewBoardLanguage(button.dataset.languageValue);
+    setAppLanguage(button.dataset.languageValue);
   });
 }
 
@@ -488,6 +511,23 @@ elements.candidateFilterInfo.append(
   createInfoControl(CANDIDATE_FILTER_INFO, "recommendation-status"),
 );
 applyTheme(readThemeSetting());
+if (
+  appMode === "train" &&
+  boardLanguage !== appLanguage &&
+  !new URL(window.location.href).searchParams.has("b")
+) {
+  loadBoardState(
+    createGeneratedBoardState(
+      createRandomSeed(),
+      BOARD_ORDER.SORTED,
+      appLanguage === LANGUAGE.ITALIAN
+        ? WORD_SET.EXTENDED
+        : WORD_SET.OFFICIAL,
+      appLanguage,
+    ),
+  );
+  syncBoardUrl();
+}
 renderAppMode();
 playMode.setActive(appMode === "play");
 if (appMode === "train") {
@@ -693,6 +733,19 @@ function setAppMode(nextMode) {
     url.searchParams.delete("mode");
   }
   window.history.replaceState(null, "", url);
+  if (appMode === "train" && boardLanguage !== appLanguage) {
+    loadBoardState(
+      createGeneratedBoardState(
+        createRandomSeed(),
+        BOARD_ORDER.SORTED,
+        appLanguage === LANGUAGE.ITALIAN
+          ? WORD_SET.EXTENDED
+          : nextBoardWordSet,
+        appLanguage,
+      ),
+    );
+    syncBoardUrl();
+  }
   renderAppMode();
   playMode.setActive(appMode === "play");
   if (appMode === "train") {
@@ -713,7 +766,8 @@ function renderAppMode() {
   const isPlay = appMode === "play";
   const isTrain = appMode === "train";
   const isCalibration = appMode === "calibrate";
-  applyStaticLocale(isPlay || isCalibration ? LANGUAGE.ENGLISH : boardLanguage);
+  applyStaticLocale(isCalibration ? LANGUAGE.ENGLISH : appLanguage);
+  renderBoardLanguageControl();
   const isTrainerLoading = isTrain && !trainerInitialized;
   elements.trainModeLoading.hidden = !isTrainerLoading;
   elements.trainerWorkspace.hidden = !isTrain || isTrainerLoading;
@@ -776,6 +830,56 @@ function pauseTrainerAnalysis() {
 function readThemeSetting() {
   const setting = document.documentElement.dataset.themeSetting;
   return THEME_VALUES.has(setting) ? setting : "system";
+}
+
+function readLanguageSetting() {
+  try {
+    const language = window.localStorage.getItem(LANGUAGE_STORAGE_KEY);
+    return Object.values(LANGUAGE).includes(language)
+      ? language
+      : LANGUAGE.ENGLISH;
+  } catch {
+    return LANGUAGE.ENGLISH;
+  }
+}
+
+function setAppLanguage(nextLanguage) {
+  if (
+    !Object.values(LANGUAGE).includes(nextLanguage) ||
+    nextLanguage === appLanguage
+  ) {
+    return;
+  }
+
+  applyLanguageSetting(nextLanguage);
+  playMode.setLanguage(nextLanguage);
+  if (appMode === "train") {
+    loadBoardState(
+      createGeneratedBoardState(
+        createRandomSeed(),
+        BOARD_ORDER.SORTED,
+        nextLanguage === LANGUAGE.ITALIAN
+          ? WORD_SET.EXTENDED
+          : WORD_SET.OFFICIAL,
+        nextLanguage,
+      ),
+    );
+    syncBoardUrl();
+    render();
+  } else {
+    renderAppMode();
+  }
+}
+
+function applyLanguageSetting(language) {
+  appLanguage = language;
+  try {
+    window.localStorage.setItem(LANGUAGE_STORAGE_KEY, language);
+  } catch {
+    // The selected language still applies for this page when storage is unavailable.
+  }
+  applyStaticLocale(language);
+  renderBoardLanguageControl();
 }
 
 function setTheme(setting) {
@@ -1062,8 +1166,16 @@ function renderBoardLanguageControl() {
   for (const button of elements.languageButtons) {
     button.setAttribute(
       "aria-pressed",
-      String(button.dataset.languageValue === nextBoardLanguage),
+      String(button.dataset.languageValue === appLanguage),
     );
+    const italian = button.dataset.languageValue === LANGUAGE.ITALIAN;
+    button.setAttribute(
+      "aria-label",
+      italian
+        ? translate(appLanguage, "useItalian")
+        : translate(appLanguage, "useEnglish"),
+    );
+    button.title = button.getAttribute("aria-label");
   }
 }
 
@@ -1078,21 +1190,6 @@ function setNewBoardWordSet(nextWordSet) {
   }
 
   nextBoardWordSet = nextWordSet;
-  renderBoardWordSetControl();
-}
-
-function setNewBoardLanguage(nextLanguage) {
-  if (
-    nextLanguage === nextBoardLanguage ||
-    (nextLanguage !== LANGUAGE.ENGLISH && nextLanguage !== LANGUAGE.ITALIAN)
-  ) {
-    return;
-  }
-  nextBoardLanguage = nextLanguage;
-  if (nextLanguage === LANGUAGE.ITALIAN) {
-    nextBoardWordSet = WORD_SET.EXTENDED;
-  }
-  renderBoardLanguageControl();
   renderBoardWordSetControl();
 }
 
@@ -1400,8 +1497,14 @@ function renderMobileSortControl() {
 }
 
 function renderBoardMetrics(metrics = null) {
-  const complexityDefinition = BOARD_METRIC_DEFINITIONS.complexity;
-  const edgeDefinition = BOARD_METRIC_DEFINITIONS.edge;
+  const complexityDefinition = {
+    ...BOARD_METRIC_DEFINITIONS.complexity,
+    label: translate(boardLanguage, "boardComplexity"),
+  };
+  const edgeDefinition = {
+    ...BOARD_METRIC_DEFINITIONS.edge,
+    label: translate(boardLanguage, "blueVsRed"),
+  };
   const complexity = createBoardMetric({
     definition: complexityDefinition,
     value: metrics ? `${metrics.complexity} ${complexityLabel(metrics.complexity)}` : "--",
@@ -1478,6 +1581,7 @@ function renderSuggestions(container, suggestions, emptyMessage) {
     const isActive = column.key === suggestionSort.key;
     const content = document.createElement("div");
     content.className = "column-header-content";
+    const columnLabel = localizedSuggestionColumnLabel(column);
 
     if (column.key) {
       cell.setAttribute(
@@ -1491,15 +1595,15 @@ function renderSuggestions(container, suggestions, emptyMessage) {
       sortButton.setAttribute(
         "aria-label",
         isActive
-          ? `Sort by ${column.label}, currently ${suggestionSort.direction === "asc" ? "ascending" : "descending"}`
-          : `Sort by ${column.label}`,
+          ? `Sort by ${columnLabel}, currently ${suggestionSort.direction === "asc" ? "ascending" : "descending"}`
+          : `Sort by ${columnLabel}`,
       );
       sortButton.addEventListener("click", () => {
         setSuggestionSort(column);
       });
 
       const label = document.createElement("span");
-      label.textContent = column.label;
+      label.textContent = columnLabel;
       const icon = document.createElement("span");
       icon.className = `sort-icon${isActive ? ` ${suggestionSort.direction}` : ""}`;
       icon.setAttribute("aria-hidden", "true");
@@ -1508,12 +1612,17 @@ function renderSuggestions(container, suggestions, emptyMessage) {
     } else {
       const label = document.createElement("span");
       label.className = "column-label";
-      label.textContent = column.label;
+      label.textContent = columnLabel;
       content.append(label);
     }
 
     if (column.info) {
-      content.append(createInfoControl(column, container.id));
+      content.append(
+        createInfoControl(
+          { ...column, label: columnLabel },
+          container.id,
+        ),
+      );
     }
 
     cell.append(content);
@@ -1629,7 +1738,12 @@ function renderSuggestionRow(suggestion, columns) {
   row.dataset.targetCount = String(suggestion.number);
   const gameOver = Boolean(winningSide(board));
   row.dataset.actionable = String(!gameOver);
-  const applyLabel = `Apply ${suggestion.clue} ${suggestion.number} for ${sideLabel(activeSide)} and mark ${suggestion.targets.map((target) => target.word).join(", ")} guessed`;
+  const applyLabel = translate(boardLanguage, "applyClue", {
+    clue: suggestion.clue,
+    number: suggestion.number,
+    side: sideLabel(activeSide),
+    words: suggestion.targets.map((target) => target.word).join(", "),
+  });
   row.title = applyLabel;
   row.addEventListener("click", (event) => {
     if (!gameOver && !event.target.closest("button")) {
@@ -1637,13 +1751,19 @@ function renderSuggestionRow(suggestion, columns) {
     }
   });
 
-  const clueCell = createTableCell("Clue", "clue-cell");
+  const clueCell = createTableCell(
+    translate(boardLanguage, "clue"),
+    "clue-cell",
+  );
   const clue = document.createElement("strong");
   clue.textContent = suggestion.clue;
   clue.title = suggestion.clue;
   clueCell.append(clue);
 
-  const actionCell = createTableCell("Apply", "action-cell");
+  const actionCell = createTableCell(
+    translate(boardLanguage, "apply"),
+    "action-cell",
+  );
   const applyButton = document.createElement("button");
   applyButton.className = "apply-suggestion-button";
   applyButton.type = "button";
@@ -1657,12 +1777,18 @@ function renderSuggestionRow(suggestion, columns) {
   applyButton.append(applyIcon);
   actionCell.append(applyButton);
 
-  const itemCell = createTableCell("Items", "item-cell");
+  const itemCell = createTableCell(
+    translate(boardLanguage, "items"),
+    "item-cell",
+  );
   const itemCount = document.createElement("strong");
   itemCount.textContent = String(suggestion.number);
   itemCell.append(itemCount);
 
-  const targetsCell = createTableCell("Targets", "targets-cell");
+  const targetsCell = createTableCell(
+    translate(boardLanguage, "targets"),
+    "targets-cell",
+  );
   const targets = document.createElement("div");
   targets.className = "target-list";
   for (const target of suggestion.targets) {
@@ -1682,7 +1808,10 @@ function renderSuggestionRow(suggestion, columns) {
   }
   targetsCell.append(targets);
 
-  const explanationCell = createTableCell("Why it works", "explanation-cell");
+  const explanationCell = createTableCell(
+    translate(boardLanguage, "whyItWorks"),
+    "explanation-cell",
+  );
   const { riskSummary: riskExplanation } = explainRecommendation(suggestion);
   const riskSummary = document.createElement("span");
   riskSummary.className = "explanation-risk";
@@ -1692,21 +1821,35 @@ function renderSuggestionRow(suggestion, columns) {
     riskSummary,
   );
 
-  const worthCell = createScoreCell("Worth", String(suggestion.worth), "worth-cell");
-  const netCell = createScoreCell("Net", formatSigned(suggestion.expectedNet, 1), "net-cell");
+  const worthCell = createScoreCell(
+    translate(boardLanguage, "worthLabel"),
+    String(suggestion.worth),
+    "worth-cell",
+  );
+  const netCell = createScoreCell(
+    translate(boardLanguage, "net"),
+    formatSigned(suggestion.expectedNet, 1),
+    "net-cell",
+  );
   const hitCell = createScoreCell(
-    "Est. hit",
+    translate(boardLanguage, "estimatedHit"),
     `${Math.round(suggestion.success * 100)}%`,
     "hit-cell",
   );
 
-  const riskCell = createTableCell("Risk", "risk-cell");
+  const riskCell = createTableCell(
+    translate(boardLanguage, "risk"),
+    "risk-cell",
+  );
   const badge = document.createElement("span");
   badge.className = `badge ${suggestion.risk}`;
   badge.textContent = labelRisk(suggestion.risk);
   riskCell.append(badge);
 
-  const dangerCell = createTableCell("Closest danger", "danger-cell");
+  const dangerCell = createTableCell(
+    translate(boardLanguage, "closestDanger"),
+    "danger-cell",
+  );
   const dangerChip = document.createElement("span");
   const dangerTeam = boardTeamFromPerspective(suggestion.closestDanger.team, activeSide);
   dangerChip.className = `danger-chip ${dangerTeam}`;
@@ -1727,12 +1870,15 @@ function renderSuggestionRow(suggestion, columns) {
   dangerCell.append(dangerChip);
 
   const marginCell = createScoreCell(
-    "Margin",
+    translate(boardLanguage, "margin"),
     formatSigned(suggestion.margin, 2),
     suggestion.margin >= 0 ? "margin-cell positive" : "margin-cell negative",
   );
 
-  const semanticsCell = createTableCell("Fit / cohesion", "semantics-cell");
+  const semanticsCell = createTableCell(
+    translate(boardLanguage, "fitCohesion"),
+    "semantics-cell",
+  );
   const fit = document.createElement("span");
   fit.textContent = `Fit ${formatNumber(suggestion.centroidFit, 2)}`;
   const cohesion = document.createElement("span");
@@ -1801,6 +1947,8 @@ function loadBoardState(state) {
   randomLayoutOrder = [...state.randomLayoutOrder];
   boardOrder = state.order;
   boardLanguage = state.language ?? LANGUAGE.ENGLISH;
+  applyLanguageSetting(boardLanguage);
+  playMode.setLanguage(boardLanguage);
   nextBoardLanguage = boardLanguage;
   boardWordSet = state.wordSet;
   nextBoardWordSet = boardWordSet;
@@ -1808,9 +1956,6 @@ function loadBoardState(state) {
   const configuration = modelConfigurationForLanguage(boardLanguage);
   selectedModelId = configuration.modelId;
   selectedCandidateCount = configuration.candidateCount;
-  if (appMode === "train") {
-    applyStaticLocale(boardLanguage);
-  }
   if (trainerInitialized) {
     renderModelLab();
   }
@@ -1857,7 +2002,7 @@ function renderBoardCounts(cards) {
     indicator.dataset.team = team.id;
 
     const label = document.createElement("span");
-    label.textContent = team.label;
+    label.textContent = teamLabel(team.id);
     const value = document.createElement("strong");
     value.textContent = String(counts[team.id]);
 
@@ -1870,7 +2015,7 @@ function renderBoardCounts(cards) {
     doneIndicator.className = "board-count";
     doneIndicator.dataset.team = "done";
     const label = document.createElement("span");
-    label.textContent = "Guessed";
+    label.textContent = translate(boardLanguage, "guessed");
     const value = document.createElement("strong");
     value.textContent = String(doneCount);
     doneIndicator.append(label, value);
@@ -2041,24 +2186,24 @@ function cloneBoard(cards) {
 
 function labelRisk(risk) {
   if (risk === "safe") {
-    return "Safe";
+    return translate(boardLanguage, "safe");
   }
 
   if (risk === "medium") {
-    return "Medium";
+    return translate(boardLanguage, "medium");
   }
 
-  return "Risky";
+  return translate(boardLanguage, "risky");
 }
 
 function complexityLabel(complexity) {
   if (complexity <= 32) {
-    return "Easy";
+    return translate(boardLanguage, "easy");
   }
   if (complexity <= 65) {
-    return "Moderate";
+    return translate(boardLanguage, "moderate");
   }
-  return "Hard";
+  return translate(boardLanguage, "hard");
 }
 
 function complexityTone(complexity) {
@@ -2073,9 +2218,11 @@ function complexityTone(complexity) {
 
 function formatSideEdge(edge) {
   if (Math.abs(edge) <= 3) {
-    return "Even";
+    return translate(boardLanguage, "even");
   }
-  return edge > 0 ? `Blue +${edge}` : `Red +${Math.abs(edge)}`;
+  return edge > 0
+    ? `${translate(boardLanguage, "blue")} +${edge}`
+    : `${translate(boardLanguage, "red")} +${Math.abs(edge)}`;
 }
 
 function sideEdgeTone(edge) {
@@ -2086,11 +2233,29 @@ function sideEdgeTone(edge) {
 }
 
 function teamLabel(teamId) {
-  return TEAM_BY_ID.get(teamId)?.label ?? teamId;
+  const key = {
+    friendly: "blue",
+    enemy: "red",
+    neutral: "neutral",
+    assassin: "assassinTeam",
+  }[teamId];
+  return key
+    ? translate(boardLanguage, key)
+    : TEAM_BY_ID.get(teamId)?.label ?? teamId;
 }
 
 function sideLabel(side) {
-  return side === SIDE.RED ? "Red" : "Blue";
+  return translate(
+    boardLanguage,
+    side === SIDE.RED ? "red" : "blue",
+  );
+}
+
+function localizedSuggestionColumnLabel(column) {
+  return translate(
+    boardLanguage,
+    SUGGESTION_COLUMN_COPY_KEYS[column.id],
+  );
 }
 
 function formatSigned(value, digits) {

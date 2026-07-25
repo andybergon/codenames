@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-25T16:43:26.797Z",
+  "generatedAt": "2026-07-25T19:17:34.932Z",
   "environment": {
     "node": "v26.5.0",
     "platform": "darwin",
@@ -55,17 +55,17 @@
       "languageScope": "English",
       "dimensions": 384,
       "q8ModelBytes": 34014426,
-      "loadMs": 99.2,
+      "loadMs": 84.5,
       "warmLatency": {
         "terms": 25,
         "runs": 5,
-        "medianMs": 8.7,
+        "medianMs": 9.7,
         "samplesMs": [
-          8.3,
-          8.4,
-          8.7,
-          9,
-          9.2
+          9.2,
+          9.6,
+          9.7,
+          9.8,
+          10.2
         ]
       },
       "raw": {
@@ -299,17 +299,17 @@
       "languageScope": "94 languages",
       "dimensions": 384,
       "q8ModelBytes": 118308185,
-      "loadMs": 320.7,
+      "loadMs": 486.1,
       "warmLatency": {
         "terms": 25,
         "runs": 5,
-        "medianMs": 11,
+        "medianMs": 12.6,
         "samplesMs": [
-          10.3,
-          10.3,
-          11,
-          11.2,
-          11.4
+          11.6,
+          12.1,
+          12.6,
+          12.8,
+          13
         ]
       },
       "raw": {
@@ -543,17 +543,17 @@
       "languageScope": "50 languages",
       "dimensions": 384,
       "q8ModelBytes": 118308126,
-      "loadMs": 296,
+      "loadMs": 394.9,
       "warmLatency": {
         "terms": 25,
         "runs": 5,
-        "medianMs": 7.8,
+        "medianMs": 8.8,
         "samplesMs": [
-          7.6,
-          7.8,
-          7.8,
           8.6,
-          8.7
+          8.7,
+          8.8,
+          9.1,
+          9.1
         ]
       },
       "raw": {

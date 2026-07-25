@@ -1,6 +1,6 @@
 # Data licenses and attribution
 
-## Italian Train beta
+## Italian Train and Play beta
 
 ### Board words
 
