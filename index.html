@@ -344,10 +344,43 @@
       <section id="play-mode" class="play-mode" aria-label="Codenames Play" hidden>
         <section id="play-setup" class="play-setup">
           <div class="play-setup-heading">
-            <h2 id="play-title">Choose your seat</h2>
-            <button id="randomize-play-seat" class="button secondary" type="button">
-              Randomize
-            </button>
+            <div class="play-setup-title">
+              <h2 id="play-title">Choose your seat</h2>
+              <button
+                id="randomize-play-seat"
+                class="icon-button"
+                type="button"
+                aria-label="Randomize seat"
+                title="Randomize seat"
+              >
+                <i data-lucide="dices" aria-hidden="true"></i>
+              </button>
+            </div>
+            <div class="play-primary-actions">
+              <button
+                id="start-play-game"
+                class="button primary play-new-game-button"
+                type="button"
+              >
+                <i data-lucide="refresh-cw" aria-hidden="true"></i>
+                Start new game
+              </button>
+            </div>
+          </div>
+
+          <div id="saved-play-actions" class="saved-play-actions" hidden>
+            <span class="saved-play-copy">
+              <strong>Saved game available</strong>
+              <span>Continue where you left off or clear it.</span>
+            </span>
+            <div class="saved-play-buttons">
+              <button id="discard-play-session" class="button ghost" type="button">
+                Discard saved
+              </button>
+              <button id="resume-play-session" class="button primary" type="button">
+                Resume game
+              </button>
+            </div>
           </div>
 
           <div class="seat-grid" role="group" aria-label="Your Play seat">
@@ -392,24 +425,6 @@
                   Extended <span>800</span>
                 </button>
               </div>
-            </div>
-            <div class="play-setup-actions">
-              <div id="saved-play-actions" class="saved-play-actions" hidden>
-                <button id="discard-play-session" class="button secondary" type="button">
-                  Discard saved
-                </button>
-                <button id="resume-play-session" class="button secondary" type="button">
-                  Resume game
-                </button>
-              </div>
-              <button
-                id="start-play-game"
-                class="button primary play-new-game-button"
-                type="button"
-              >
-                <i data-lucide="refresh-cw" aria-hidden="true"></i>
-                Start new game
-              </button>
             </div>
           </div>
 
@@ -525,12 +540,13 @@
               </button>
               <button
                 id="leave-play-game"
-                class="icon-button"
+                class="button primary play-new-game-button"
                 type="button"
                 aria-label="Start new game"
                 title="Start a new game"
               >
                 <i data-lucide="refresh-cw" aria-hidden="true"></i>
+                <span>Start new game</span>
               </button>
             </div>
           </header>

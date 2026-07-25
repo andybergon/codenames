@@ -1,5 +1,6 @@
 import {
   Check,
+  Dices,
   Monitor,
   Moon,
   RefreshCw,
@@ -245,7 +246,7 @@ elements.modelLabCandidates.addEventListener("change", (event) => {
 const systemTheme = window.matchMedia("(prefers-color-scheme: dark)");
 
 createIcons({
-  icons: { Check, Monitor, Moon, RefreshCw, Share2, Sun, Undo2 },
+  icons: { Check, Dices, Monitor, Moon, RefreshCw, Share2, Sun, Undo2 },
   attrs: { width: 18, height: 18, "stroke-width": 2 },
 });
 

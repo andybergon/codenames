@@ -419,6 +419,8 @@ export function createPlayMode(options = {}) {
     elements.bonusGuesses.value = selectedBotSettings.bonusGuesses;
     elements.botSettingsSummary.textContent = botSettingsLabel(selectedBotSettings);
     elements.savedActions.hidden = !savedGame;
+    elements.startGame.classList.toggle("primary", !savedGame);
+    elements.startGame.classList.toggle("secondary", Boolean(savedGame));
   }
 
   function startNewGame() {

@@ -2008,8 +2008,10 @@ h3 {
 .play-setup-footer,
 .play-game-header,
 .play-game-actions,
-.play-setup-actions,
+.play-primary-actions,
+.play-setup-title,
 .saved-play-actions,
+.saved-play-buttons,
 .play-section-heading {
   display: flex;
   align-items: center;
@@ -2017,9 +2019,21 @@ h3 {
 
 .play-setup-heading,
 .play-setup-footer,
+.saved-play-actions,
 .play-game-header,
 .play-section-heading {
   justify-content: space-between;
+}
+
+.play-setup-title {
+  gap: 8px;
+}
+
+.play-setup-title .icon-button {
+  flex-basis: 34px;
+  width: 34px;
+  height: 34px;
+  border-radius: 7px;
 }
 
 .seat-grid {
@@ -2256,10 +2270,47 @@ h3 {
   text-transform: uppercase;
 }
 
-.play-setup-actions,
 .saved-play-actions,
-.play-game-actions {
+.saved-play-buttons,
+.play-game-actions,
+.play-primary-actions {
   gap: 7px;
+}
+
+.saved-play-actions {
+  margin-top: 14px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 10px 12px;
+  background: var(--subtle-fill-soft);
+}
+
+.saved-play-copy {
+  display: grid;
+  gap: 2px;
+}
+
+.saved-play-copy strong {
+  font-size: 0.78rem;
+}
+
+.saved-play-copy span {
+  color: var(--muted);
+  font-size: 0.7rem;
+}
+
+.play-primary-actions {
+  justify-content: flex-end;
+}
+
+.play-new-game-button {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding-inline: 18px;
+  white-space: nowrap;
 }
 
 .play-game-actions .icon-button:disabled {
@@ -2280,13 +2331,6 @@ h3 {
 .button.primary {
   background: var(--ink);
   color: var(--on-ink);
-}
-
-.play-new-game-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
 }
 
 .play-game-header {
@@ -2840,7 +2884,8 @@ button.play-card:not(:disabled):hover {
   .play-game-header {
     grid-template-areas:
       "seat seat"
-      "score actions";
+      "actions actions"
+      "score score";
     grid-template-columns: minmax(0, 1fr) auto;
     gap: 8px 12px;
   }
@@ -2856,21 +2901,25 @@ button.play-card:not(:disabled):hover {
 
   .play-game-actions {
     grid-area: actions;
+    justify-self: start;
   }
 
-  .play-setup-actions {
+  .play-primary-actions {
     width: 100%;
+  }
+
+  .play-primary-actions .button {
+    width: 100%;
+  }
+
+  .saved-play-actions {
     align-items: stretch;
     flex-direction: column;
   }
 
-  .saved-play-actions {
+  .saved-play-buttons {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .play-setup-actions > .button {
-    width: 100%;
   }
 
   .play-bot-settings summary {

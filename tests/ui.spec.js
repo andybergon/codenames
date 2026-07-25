@@ -215,7 +215,7 @@ test("Play randomly assigns a seat and keeps all four overrides available", asyn
     await expect(button).toHaveAttribute("aria-pressed", "true");
   }
 
-  await page.getByRole("button", { name: "Randomize", exact: true }).click();
+  await page.getByRole("button", { name: "Randomize seat", exact: true }).click();
   await expect(page.locator("[data-play-seat][aria-pressed='true']")).toHaveCount(1);
 });
 
@@ -658,6 +658,125 @@ test("Play reveals long bot wait detail without shifting or leaking stale timers
   await expect(waitNote).toHaveAttribute("data-wait-detail", "pending");
 });
 
+test("Play keeps game creation actions prominent across responsive states", async ({
+  page,
+}) => {
+  for (const viewport of [
+    { width: 390, height: 844 },
+    { width: 768, height: 1024 },
+    { width: 1440, height: 900 },
+  ]) {
+    await page.setViewportSize(viewport);
+    await page.goto("/?mode=play");
+    await page.evaluate(() => localStorage.removeItem("codenames-play-session-v1"));
+    await page.reload();
+
+    const setupActions = page.locator(".play-setup-heading .play-primary-actions");
+    const randomize = page.getByRole("button", {
+      name: "Randomize seat",
+      exact: true,
+    });
+    const startGame = page.getByRole("button", {
+      name: "Start new game",
+      exact: true,
+    });
+    await expect(setupActions).toBeVisible();
+    await expect(page.locator(".play-setup-title #randomize-play-seat")).toHaveCount(1);
+    await expect(page.locator("#randomize-play-seat svg.lucide-dices")).toHaveCount(1);
+    await expect(setupActions.locator("#start-play-game")).toHaveCount(1);
+    await expect(startGame).toHaveClass(/primary/);
+
+    const setupLayout = await page.evaluate(() => {
+      const randomizeBounds = document
+        .querySelector("#randomize-play-seat")
+        .getBoundingClientRect();
+      const newGameBounds = document
+        .querySelector("#start-play-game")
+        .getBoundingClientRect();
+      return {
+        pageOverflows:
+          document.documentElement.scrollWidth > document.documentElement.clientWidth,
+        newGameIsLarger:
+          newGameBounds.width > randomizeBounds.width &&
+          newGameBounds.height > randomizeBounds.height,
+        randomizeIsBesideTitle:
+          randomizeBounds.left >=
+            document.querySelector("#play-title").getBoundingClientRect().right &&
+          randomizeBounds.top <
+            document.querySelector("#play-title").getBoundingClientRect().bottom,
+      };
+    });
+    expect(setupLayout.pageOverflows, `setup overflow at ${viewport.width}px`).toBe(false);
+    expect(
+      setupLayout.newGameIsLarger,
+      `new game prominence at ${viewport.width}px`,
+    ).toBe(true);
+    expect(
+      setupLayout.randomizeIsBesideTitle,
+      `randomize placement at ${viewport.width}px`,
+    ).toBe(true);
+
+    await startGame.click();
+    const gameActions = page.locator(".play-game-header .play-game-actions");
+    const newGame = page.getByRole("button", {
+      name: "Start new game",
+      exact: true,
+    });
+    await expect(gameActions).toBeVisible();
+    await expect(gameActions.locator(".icon-button")).toHaveCount(2);
+    await expect(gameActions.locator("#leave-play-game")).toHaveCount(1);
+    await expect(newGame).toContainText("Start new game");
+    await expect(newGame).toHaveClass(/primary/);
+    await expect(newGame.locator("svg.lucide-refresh-cw")).toHaveCount(1);
+
+    const activeLayout = await page.evaluate(() => {
+      const header = document.querySelector(".play-game-header");
+      const actions = document.querySelector(".play-game-actions");
+      const newGameButton = document.querySelector("#leave-play-game");
+      return {
+        pageOverflows:
+          document.documentElement.scrollWidth > document.documentElement.clientWidth,
+        headerOverflows: header.scrollWidth > header.clientWidth,
+        actionsFit:
+          actions.getBoundingClientRect().right <= header.getBoundingClientRect().right + 1,
+        newGameIsLarger:
+          newGameButton.getBoundingClientRect().width >
+          actions.querySelector(".icon-button").getBoundingClientRect().width,
+      };
+    });
+    expect(activeLayout.pageOverflows, `active overflow at ${viewport.width}px`).toBe(false);
+    expect(activeLayout.headerOverflows, `active header overflow at ${viewport.width}px`).toBe(
+      false,
+    );
+    expect(activeLayout.actionsFit, `active actions fit at ${viewport.width}px`).toBe(true);
+    expect(
+      activeLayout.newGameIsLarger,
+      `active new game prominence at ${viewport.width}px`,
+    ).toBe(true);
+
+    await newGame.click();
+    await expect(page.locator("#play-setup")).toBeVisible();
+    await expect(page.locator("#play-game")).toBeHidden();
+    await expect(page.locator("#play-setup #start-play-game")).toBeVisible();
+    const savedActions = page.locator("#saved-play-actions");
+    await expect(savedActions).toBeVisible();
+    await expect(savedActions).toContainText("Saved game available");
+    await expect(
+      savedActions.getByRole("button", { name: "Resume game", exact: true }),
+    ).toHaveClass(/primary/);
+    await expect(
+      savedActions.getByRole("button", { name: "Discard saved", exact: true }),
+    ).toHaveClass(/ghost/);
+    await expect(startGame).toHaveClass(/secondary/);
+    expect(
+      await savedActions.evaluate((actions) =>
+        actions.previousElementSibling?.classList.contains("play-setup-heading"),
+      ),
+    ).toBe(true);
+    await randomize.click();
+  }
+});
+
 test("Play validates human clues and resumes the saved seat", async ({ page }) => {
   await page.goto("/?mode=play");
   await page.locator('[data-play-seat="blue:spymaster"]').click();
@@ -912,6 +1031,15 @@ test("completed Play sessions reveal the key and intended targets", async ({ pag
   );
   await expect(page.locator("#play-history-list")).toContainText(
     "🔵 🔎 Blue guessed WORD0, Blue",
+  );
+  const finishedNewGame = page.getByRole("button", {
+    name: "Start new game",
+    exact: true,
+  });
+  await expect(finishedNewGame).toBeVisible();
+  await expect(finishedNewGame).toHaveClass(/primary/);
+  await expect(page.locator(".play-game-header .play-game-actions #leave-play-game")).toHaveCount(
+    1,
   );
 });
 
