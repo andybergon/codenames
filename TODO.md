@@ -16,6 +16,14 @@
 
 ## 🟡 Medium
 
+- ⚖️ Obtain redistribution terms for the official Italian word list.
+  - Request the current second-edition 400-word list and written public-redistribution permission from Cranio Creations or Czech Games Edition.
+  - Do not check in a transcription or expose an Official Italian preset without that grant.
+
+- 🇮🇹 Build an independently licensed Italian Extended beta.
+  - Pin a CC BY Leipzig Italian corpus, curate and native-review an 800-word noun pool, then generate Multilingual E5 3k and 10k indexes with a 30k Italian centering mean.
+  - Keep English as the default and follow the gates in `docs/italian-language-support.md`.
+
 - 📝 Keep completed Play game action records for calibration.
   - Current session history contains clues, intended targets, guesses, passes, outcomes, and bot settings, but starting another game replaces it.
   - Store a bounded local archive with export and clear controls so benchmarks can replay real human decisions.

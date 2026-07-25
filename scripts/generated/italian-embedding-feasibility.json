@@ -1,0 +1,783 @@
+{
+  "generatedAt": "2026-07-25T15:01:55.283Z",
+  "environment": {
+    "node": "v26.5.0",
+    "platform": "darwin",
+    "release": "25.5.0",
+    "architecture": "arm64",
+    "cpu": "Apple M5 Pro",
+    "logicalCores": 18
+  },
+  "methodology": {
+    "fixture": "Original project fixture with 16 Italian clue turns, 96 board-role observations, and 15 morphology pairs. It contains no official Codenames vocabulary.",
+    "semantic": "Rank two intended targets against three neutral words and one high-risk related word. Report target recall in the top two, exact target-set accuracy, and risk-word intrusion.",
+    "morphology": "Mean cosine similarity for number, gender, verb, irregular, and accent variants.",
+    "transforms": "Raw normalized vectors and a prototype centered variant using the mean of all fixture terms. Production centering still requires a representative 30,000-clue Italian corpus.",
+    "latency": "Warm 25-term embedding latency after model load, averaged over five runs in Node. Browser timing and cold network transfer remain separate acceptance gates.",
+    "limitations": [
+      "The fixture is deliberately small and source-created, so it is directional rather than a human gameplay benchmark.",
+      "It does not test an official Italian board, a production-size clue index, or complete games.",
+      "The English baseline is a control, not a suitable Italian production candidate."
+    ]
+  },
+  "normalizationCases": [
+    {
+      "term": "città",
+      "current": "citt"
+    },
+    {
+      "term": "caffè",
+      "current": "caff"
+    },
+    {
+      "term": "perché",
+      "current": "perch"
+    },
+    {
+      "term": "università",
+      "current": "universit"
+    },
+    {
+      "term": "più",
+      "current": "pi"
+    },
+    {
+      "term": "papà",
+      "current": "pap"
+    }
+  ],
+  "results": [
+    {
+      "id": "bge-small-en",
+      "model": "Xenova/bge-small-en-v1.5",
+      "label": "BGE-small English",
+      "prefix": "",
+      "languageScope": "English",
+      "dimensions": 384,
+      "q8ModelBytes": 34014426,
+      "loadMs": 11024.7,
+      "warmLatency": {
+        "terms": 25,
+        "runs": 5,
+        "medianMs": 10.3,
+        "samplesMs": [
+          10.1,
+          10.2,
+          10.3,
+          10.6,
+          11.5
+        ]
+      },
+      "raw": {
+        "semantic": {
+          "turns": 16,
+          "targetRecallAtCount": 0.5313,
+          "exactTargetSetAccuracy": 0.1875,
+          "avoidWordRate": 0.3125
+        },
+        "morphology": {
+          "pairs": 15,
+          "meanSimilarity": 0.765,
+          "byCategory": {
+            "number": 0.6033,
+            "gender": 0.7379,
+            "irregular-number": 0.7991,
+            "verb": 0.6923,
+            "accent": 1
+          },
+          "observations": [
+            {
+              "left": "cane",
+              "right": "cani",
+              "category": "number",
+              "similarity": 0.4641
+            },
+            {
+              "left": "casa",
+              "right": "case",
+              "category": "number",
+              "similarity": 0.5147
+            },
+            {
+              "left": "fiore",
+              "right": "fiori",
+              "category": "number",
+              "similarity": 0.7384
+            },
+            {
+              "left": "libro",
+              "right": "libri",
+              "category": "number",
+              "similarity": 0.678
+            },
+            {
+              "left": "medico",
+              "right": "medici",
+              "category": "number",
+              "similarity": 0.6213
+            },
+            {
+              "left": "gatto",
+              "right": "gatta",
+              "category": "gender",
+              "similarity": 0.8171
+            },
+            {
+              "left": "attore",
+              "right": "attrice",
+              "category": "gender",
+              "similarity": 0.6586
+            },
+            {
+              "left": "uovo",
+              "right": "uova",
+              "category": "irregular-number",
+              "similarity": 0.6785
+            },
+            {
+              "left": "braccio",
+              "right": "braccia",
+              "category": "irregular-number",
+              "similarity": 0.9196
+            },
+            {
+              "left": "andare",
+              "right": "andato",
+              "category": "verb",
+              "similarity": 0.7805
+            },
+            {
+              "left": "scrivere",
+              "right": "scritto",
+              "category": "verb",
+              "similarity": 0.6041
+            },
+            {
+              "left": "città",
+              "right": "citta",
+              "category": "accent",
+              "similarity": 1
+            },
+            {
+              "left": "caffè",
+              "right": "caffe",
+              "category": "accent",
+              "similarity": 1
+            },
+            {
+              "left": "perché",
+              "right": "perche",
+              "category": "accent",
+              "similarity": 1
+            },
+            {
+              "left": "università",
+              "right": "universita",
+              "category": "accent",
+              "similarity": 1
+            }
+          ]
+        }
+      },
+      "centered": {
+        "semantic": {
+          "turns": 16,
+          "targetRecallAtCount": 0.5625,
+          "exactTargetSetAccuracy": 0.1875,
+          "avoidWordRate": 0.375
+        },
+        "morphology": {
+          "pairs": 15,
+          "meanSimilarity": 0.531,
+          "byCategory": {
+            "number": 0.2118,
+            "gender": 0.4712,
+            "irregular-number": 0.6039,
+            "verb": 0.3777,
+            "accent": 1
+          },
+          "observations": [
+            {
+              "left": "cane",
+              "right": "cani",
+              "category": "number",
+              "similarity": -0.0414
+            },
+            {
+              "left": "casa",
+              "right": "case",
+              "category": "number",
+              "similarity": 0.031
+            },
+            {
+              "left": "fiore",
+              "right": "fiori",
+              "category": "number",
+              "similarity": 0.4904
+            },
+            {
+              "left": "libro",
+              "right": "libri",
+              "category": "number",
+              "similarity": 0.3424
+            },
+            {
+              "left": "medico",
+              "right": "medici",
+              "category": "number",
+              "similarity": 0.2366
+            },
+            {
+              "left": "gatto",
+              "right": "gatta",
+              "category": "gender",
+              "similarity": 0.6442
+            },
+            {
+              "left": "attore",
+              "right": "attrice",
+              "category": "gender",
+              "similarity": 0.2982
+            },
+            {
+              "left": "uovo",
+              "right": "uova",
+              "category": "irregular-number",
+              "similarity": 0.3771
+            },
+            {
+              "left": "braccio",
+              "right": "braccia",
+              "category": "irregular-number",
+              "similarity": 0.8307
+            },
+            {
+              "left": "andare",
+              "right": "andato",
+              "category": "verb",
+              "similarity": 0.5366
+            },
+            {
+              "left": "scrivere",
+              "right": "scritto",
+              "category": "verb",
+              "similarity": 0.2187
+            },
+            {
+              "left": "città",
+              "right": "citta",
+              "category": "accent",
+              "similarity": 1
+            },
+            {
+              "left": "caffè",
+              "right": "caffe",
+              "category": "accent",
+              "similarity": 1
+            },
+            {
+              "left": "perché",
+              "right": "perche",
+              "category": "accent",
+              "similarity": 1
+            },
+            {
+              "left": "università",
+              "right": "universita",
+              "category": "accent",
+              "similarity": 1
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "multilingual-e5-small",
+      "model": "Xenova/multilingual-e5-small",
+      "label": "Multilingual E5 small",
+      "prefix": "query: ",
+      "languageScope": "94 languages",
+      "dimensions": 384,
+      "q8ModelBytes": 118308185,
+      "loadMs": 452.1,
+      "warmLatency": {
+        "terms": 25,
+        "runs": 5,
+        "medianMs": 13,
+        "samplesMs": [
+          12.2,
+          13,
+          13,
+          13.5,
+          14.6
+        ]
+      },
+      "raw": {
+        "semantic": {
+          "turns": 16,
+          "targetRecallAtCount": 0.7813,
+          "exactTargetSetAccuracy": 0.625,
+          "avoidWordRate": 0.125
+        },
+        "morphology": {
+          "pairs": 15,
+          "meanSimilarity": 0.9363,
+          "byCategory": {
+            "number": 0.9468,
+            "gender": 0.911,
+            "irregular-number": 0.9615,
+            "verb": 0.9474,
+            "accent": 0.9176
+          },
+          "observations": [
+            {
+              "left": "cane",
+              "right": "cani",
+              "category": "number",
+              "similarity": 0.9439
+            },
+            {
+              "left": "casa",
+              "right": "case",
+              "category": "number",
+              "similarity": 0.9084
+            },
+            {
+              "left": "fiore",
+              "right": "fiori",
+              "category": "number",
+              "similarity": 0.9601
+            },
+            {
+              "left": "libro",
+              "right": "libri",
+              "category": "number",
+              "similarity": 0.9575
+            },
+            {
+              "left": "medico",
+              "right": "medici",
+              "category": "number",
+              "similarity": 0.9642
+            },
+            {
+              "left": "gatto",
+              "right": "gatta",
+              "category": "gender",
+              "similarity": 0.9046
+            },
+            {
+              "left": "attore",
+              "right": "attrice",
+              "category": "gender",
+              "similarity": 0.9173
+            },
+            {
+              "left": "uovo",
+              "right": "uova",
+              "category": "irregular-number",
+              "similarity": 0.9594
+            },
+            {
+              "left": "braccio",
+              "right": "braccia",
+              "category": "irregular-number",
+              "similarity": 0.9635
+            },
+            {
+              "left": "andare",
+              "right": "andato",
+              "category": "verb",
+              "similarity": 0.9216
+            },
+            {
+              "left": "scrivere",
+              "right": "scritto",
+              "category": "verb",
+              "similarity": 0.9731
+            },
+            {
+              "left": "città",
+              "right": "citta",
+              "category": "accent",
+              "similarity": 0.9189
+            },
+            {
+              "left": "caffè",
+              "right": "caffe",
+              "category": "accent",
+              "similarity": 0.9552
+            },
+            {
+              "left": "perché",
+              "right": "perche",
+              "category": "accent",
+              "similarity": 0.8537
+            },
+            {
+              "left": "università",
+              "right": "universita",
+              "category": "accent",
+              "similarity": 0.9426
+            }
+          ]
+        }
+      },
+      "centered": {
+        "semantic": {
+          "turns": 16,
+          "targetRecallAtCount": 0.8125,
+          "exactTargetSetAccuracy": 0.6875,
+          "avoidWordRate": 0.125
+        },
+        "morphology": {
+          "pairs": 15,
+          "meanSimilarity": 0.6082,
+          "byCategory": {
+            "number": 0.6516,
+            "gender": 0.5072,
+            "irregular-number": 0.7733,
+            "verb": 0.6506,
+            "accent": 0.5007
+          },
+          "observations": [
+            {
+              "left": "cane",
+              "right": "cani",
+              "category": "number",
+              "similarity": 0.6949
+            },
+            {
+              "left": "casa",
+              "right": "case",
+              "category": "number",
+              "similarity": 0.3274
+            },
+            {
+              "left": "fiore",
+              "right": "fiori",
+              "category": "number",
+              "similarity": 0.7723
+            },
+            {
+              "left": "libro",
+              "right": "libri",
+              "category": "number",
+              "similarity": 0.7178
+            },
+            {
+              "left": "medico",
+              "right": "medici",
+              "category": "number",
+              "similarity": 0.7454
+            },
+            {
+              "left": "gatto",
+              "right": "gatta",
+              "category": "gender",
+              "similarity": 0.4553
+            },
+            {
+              "left": "attore",
+              "right": "attrice",
+              "category": "gender",
+              "similarity": 0.559
+            },
+            {
+              "left": "uovo",
+              "right": "uova",
+              "category": "irregular-number",
+              "similarity": 0.762
+            },
+            {
+              "left": "braccio",
+              "right": "braccia",
+              "category": "irregular-number",
+              "similarity": 0.7845
+            },
+            {
+              "left": "andare",
+              "right": "andato",
+              "category": "verb",
+              "similarity": 0.4847
+            },
+            {
+              "left": "scrivere",
+              "right": "scritto",
+              "category": "verb",
+              "similarity": 0.8166
+            },
+            {
+              "left": "città",
+              "right": "citta",
+              "category": "accent",
+              "similarity": 0.4298
+            },
+            {
+              "left": "caffè",
+              "right": "caffe",
+              "category": "accent",
+              "similarity": 0.7818
+            },
+            {
+              "left": "perché",
+              "right": "perche",
+              "category": "accent",
+              "similarity": 0.1652
+            },
+            {
+              "left": "università",
+              "right": "universita",
+              "category": "accent",
+              "similarity": 0.626
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "paraphrase-multilingual-minilm-l12",
+      "model": "Xenova/paraphrase-multilingual-MiniLM-L12-v2",
+      "label": "Multilingual MiniLM L12",
+      "prefix": "",
+      "languageScope": "50 languages",
+      "dimensions": 384,
+      "q8ModelBytes": 118308126,
+      "loadMs": 38810.6,
+      "warmLatency": {
+        "terms": 25,
+        "runs": 5,
+        "medianMs": 15.5,
+        "samplesMs": [
+          11.7,
+          14.9,
+          15.5,
+          16.8,
+          16.8
+        ]
+      },
+      "raw": {
+        "semantic": {
+          "turns": 16,
+          "targetRecallAtCount": 0.7188,
+          "exactTargetSetAccuracy": 0.5,
+          "avoidWordRate": 0.4375
+        },
+        "morphology": {
+          "pairs": 15,
+          "meanSimilarity": 0.8208,
+          "byCategory": {
+            "number": 0.7964,
+            "gender": 0.8713,
+            "irregular-number": 0.8713,
+            "verb": 0.7863,
+            "accent": 0.818
+          },
+          "observations": [
+            {
+              "left": "cane",
+              "right": "cani",
+              "category": "number",
+              "similarity": 0.6889
+            },
+            {
+              "left": "casa",
+              "right": "case",
+              "category": "number",
+              "similarity": 0.4304
+            },
+            {
+              "left": "fiore",
+              "right": "fiori",
+              "category": "number",
+              "similarity": 0.9491
+            },
+            {
+              "left": "libro",
+              "right": "libri",
+              "category": "number",
+              "similarity": 0.9551
+            },
+            {
+              "left": "medico",
+              "right": "medici",
+              "category": "number",
+              "similarity": 0.9587
+            },
+            {
+              "left": "gatto",
+              "right": "gatta",
+              "category": "gender",
+              "similarity": 0.9882
+            },
+            {
+              "left": "attore",
+              "right": "attrice",
+              "category": "gender",
+              "similarity": 0.7544
+            },
+            {
+              "left": "uovo",
+              "right": "uova",
+              "category": "irregular-number",
+              "similarity": 0.8004
+            },
+            {
+              "left": "braccio",
+              "right": "braccia",
+              "category": "irregular-number",
+              "similarity": 0.9422
+            },
+            {
+              "left": "andare",
+              "right": "andato",
+              "category": "verb",
+              "similarity": 0.6374
+            },
+            {
+              "left": "scrivere",
+              "right": "scritto",
+              "category": "verb",
+              "similarity": 0.9351
+            },
+            {
+              "left": "città",
+              "right": "citta",
+              "category": "accent",
+              "similarity": 0.7625
+            },
+            {
+              "left": "caffè",
+              "right": "caffe",
+              "category": "accent",
+              "similarity": 0.9233
+            },
+            {
+              "left": "perché",
+              "right": "perche",
+              "category": "accent",
+              "similarity": 0.6035
+            },
+            {
+              "left": "università",
+              "right": "universita",
+              "category": "accent",
+              "similarity": 0.9826
+            }
+          ]
+        }
+      },
+      "centered": {
+        "semantic": {
+          "turns": 16,
+          "targetRecallAtCount": 0.7813,
+          "exactTargetSetAccuracy": 0.625,
+          "avoidWordRate": 0.3125
+        },
+        "morphology": {
+          "pairs": 15,
+          "meanSimilarity": 0.6342,
+          "byCategory": {
+            "number": 0.6509,
+            "gender": 0.8014,
+            "irregular-number": 0.7379,
+            "verb": 0.5183,
+            "accent": 0.5357
+          },
+          "observations": [
+            {
+              "left": "cane",
+              "right": "cani",
+              "category": "number",
+              "similarity": 0.568
+            },
+            {
+              "left": "casa",
+              "right": "case",
+              "category": "number",
+              "similarity": -0.0714
+            },
+            {
+              "left": "fiore",
+              "right": "fiori",
+              "category": "number",
+              "similarity": 0.9227
+            },
+            {
+              "left": "libro",
+              "right": "libri",
+              "category": "number",
+              "similarity": 0.9039
+            },
+            {
+              "left": "medico",
+              "right": "medici",
+              "category": "number",
+              "similarity": 0.9314
+            },
+            {
+              "left": "gatto",
+              "right": "gatta",
+              "category": "gender",
+              "similarity": 0.9853
+            },
+            {
+              "left": "attore",
+              "right": "attrice",
+              "category": "gender",
+              "similarity": 0.6175
+            },
+            {
+              "left": "uovo",
+              "right": "uova",
+              "category": "irregular-number",
+              "similarity": 0.5683
+            },
+            {
+              "left": "braccio",
+              "right": "braccia",
+              "category": "irregular-number",
+              "similarity": 0.9075
+            },
+            {
+              "left": "andare",
+              "right": "andato",
+              "category": "verb",
+              "similarity": 0.1985
+            },
+            {
+              "left": "scrivere",
+              "right": "scritto",
+              "category": "verb",
+              "similarity": 0.8381
+            },
+            {
+              "left": "città",
+              "right": "citta",
+              "category": "accent",
+              "similarity": 0.2319
+            },
+            {
+              "left": "caffè",
+              "right": "caffe",
+              "category": "accent",
+              "similarity": 0.9007
+            },
+            {
+              "left": "perché",
+              "right": "perche",
+              "category": "accent",
+              "similarity": 0.0405
+            },
+            {
+              "left": "università",
+              "right": "universita",
+              "category": "accent",
+              "similarity": 0.9696
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

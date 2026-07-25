@@ -1,0 +1,322 @@
+# Italian language support
+
+## Recommendation
+
+Italian support is technically feasible, but it should launch first with an independently curated Extended vocabulary. The official Italian 400-word set must not be copied into this public repository without a written redistribution grant from Cranio Creations or Czech Games Edition.
+
+| 🧭 Path | 🎯 Rating | ⚖️ Rights | 🧠 Model | 🚦 Readiness |
+| --- | --- | --- | --- | --- |
+| 🇮🇹 Open Extended beta | 🟢 4.5 | CC BY source | Multilingual E5 small | Buildable |
+| 🔒 User-supplied local deck | 🟡 3.5 | Private input | Multilingual E5 small | Feasible |
+| 🃏 Official Italian preset | 🟠 3 | Permission needed | Multilingual E5 small | Legally blocked |
+| 🌐 Translated English set | 🔴 1 | Not official | Any | Reject |
+
+Keep English as the production default throughout the work. Add Italian behind an explicit language choice only after Unicode, generated assets, share compatibility, and evaluation gates are complete.
+
+## Evidence boundary
+
+This analysis uses three distinct evidence classes:
+
+- **Publisher facts:** Cranio Creations identifies *Nome in Codice, Seconda Edizione* as the current Italian product, says it has an updated word list, and lists 200 cards with 400 codenames. Its product page and the CGE Italian rulebook do not publish or license the complete word list.
+- **Published model evidence:** model cards and MMTEB indicate multilingual scope and general semantic quality. These benchmarks are not Codenames gameplay evidence.
+- **Repo prototype:** [`italian-embedding-feasibility.json`](../scripts/generated/italian-embedding-feasibility.json) measures three q8 browser models on an original 16-turn Italian fixture. It contains no official Codenames vocabulary.
+
+The legal section is a conservative engineering recommendation, not legal advice.
+
+## Vocabulary and licensing
+
+### Official Italian vocabulary
+
+The current official source of truth is the physical Italian second edition or a machine-readable list supplied by its publisher. The [Cranio product page](https://www.craniocreations.it/prodotto/nome-in-codice-seconda-edizione) confirms that the revised edition has an updated 400-word list. The [official Italian rulebook](https://czechgames.com/files/rules/codenames-rules-it.pdf) supplies rules and examples, not the complete deck.
+
+| 📚 Source | 🎯 Rating | ✅ Accurate | ✅ Redistributable | 📌 Use |
+| --- | --- | --- | --- | --- |
+| ✉️ Publisher grant and list | 🟢 5 | ✅ | ✅ If granted | Official preset |
+| 🃏 Purchased Italian deck | 🟡 3.5 | ✅ | ❌ | Private local import |
+| 📄 Product page and rules | 🟠 3 | Partial | ❌ | Provenance only |
+| 🌐 Unlicensed transcription | 🔴 1 | Unverified | ❌ | Exclude |
+
+A list of ordinary words can still be protected through the creative selection or arrangement of the compilation and, in the EU, potentially through database rights. The [European Commission database guidance](https://digital-strategy.ec.europa.eu/en/policies/protection-databases) says original selection or arrangement can receive copyright protection, while substantial investment can support a separate database right. Copyright protection is automatic in the EU according to the [European IP Helpdesk](https://intellectual-property-helpdesk.ec.europa.eu/ip-management-and-resources/copyright_en).
+
+Safe implementation choices:
+
+1. Ask Cranio Creations and CGE for the current second-edition list plus written permission to redistribute it in this open web app and generated indexes.
+2. If permission is not granted, support a user-supplied local list. Store it only in the browser, do not upload it, do not include it in seeded share links, and label it as a custom deck rather than an Official preset.
+3. Do not translate the English deck and call it Official. Translation changes ambiguity, cultural associations, morphology, and the publisher's curated selection.
+4. Do not extract assets from the official digital app. App availability in Italian is evidence of publisher support, not a redistribution license.
+
+### Independent Extended vocabulary
+
+The best base is an independently selected Italian noun pool derived from a clearly licensed frequency corpus:
+
+| 📚 Source | 🎯 Rating | ⚖️ License | 💼 Commercial-safe | 📌 Use |
+| --- | --- | --- | --- | --- |
+| 📰 Leipzig downloads | 🟢 5 | CC BY | ✅ | Frequency base |
+| 📖 Italian Wiktionary | 🟡 4 | CC BY-SA and GFDL | ✅ With duties | Lemma review |
+| 🌍 PAISÀ | 🟠 2.5 | Mixed CC BY-SA and BY-NC-SA | ❌ Mixed | Exclude |
+
+The [Leipzig Corpora Collection terms](https://www.wortschatz.uni-leipzig.de/en/usage) license downloadable text corpora under CC BY. This is the recommended frequency source because commercial reuse is permitted with attribution. Pin one named Italian corpus archive, its checksum, download date, and the transformation script.
+
+[Italian Wiktionary](https://it.wiktionary.org/wiki/Aiuto:Copyright) permits copying and adaptation under CC BY-SA 4.0 and GFDL conditions. It is legally usable only if the project preserves attribution and share-alike obligations for derived data. Keep any Wiktionary-derived asset separately identified and licensed rather than implying the whole application inherits the same terms.
+
+[PAISÀ](https://www.corpusitaliano.it/en/index.html) combines CC BY-SA and CC BY-NC-SA texts. That mixed noncommercial restriction makes it a poor production source for an unrestricted public app.
+
+Create the Italian Extended set as an original 800-word pool, not as a translation:
+
+1. Extract common single-word Italian terms from the pinned Leipzig corpus.
+2. Keep concrete and evocative nouns. Remove function words, most verbs and adjectives, unmarked proper names, inflection duplicates, slurs, and terms that are primarily abbreviations.
+3. Normalize with Unicode NFKC while preserving accents in display and identity.
+4. Group inflections by lemma before selection so singular and plural variants cannot occupy separate slots.
+5. Score familiarity, association breadth, semantic-domain balance, polysemy, taboo risk, and redundancy.
+6. Have at least two native Italian speakers independently review every finalist for familiarity, regional bias, clue potential, and accidental offensiveness.
+7. Publish the selected list with corpus attribution, generation parameters, reviewer rubric, source checksum, and its own version.
+
+The English Extended pool's 14-domain balance is a useful shape, but the Italian categories and final words must be reviewed independently. A translated selection would preserve English assumptions instead of Italian playfulness.
+
+## Embedding candidates
+
+### Compact comparison
+
+The prototype uses centered semantic metrics because centering improved target recall for both multilingual candidates. Morphology is reported on raw vectors because the tiny fixture mean is not a representative production centering corpus.
+
+| 🧠 Model | 🎯 Rating | 📦 q8 | 📐 Dim | 📚 Published Italian evidence | 🎯 Target recall | 🛡️ Risk hit | 🔤 Morphology | ⏱️ 25 words | ⚖️ License |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 🌍 Multilingual E5 small | 🟢 4.5 | 118.3 MB | 384 | STS17 77.3 · Tatoeba 87.6 | 81.3% | 12.5% | 0.936 | 13.0 ms | MIT |
+| 🌐 Multilingual MiniLM L12 | 🟡 3.5 | 118.3 MB | 384 | 50 languages | 78.1% | 31.3% | 0.821 | 15.5 ms | Apache 2.0 |
+| 🧬 GTE multilingual base | 🟠 3 | ~305 MB | 768 | Tatoeba 91.4 | Not run | Not run | Not run | Not run | Apache 2.0 |
+| 🧠 BGE-M3 | 🟠 2.5 | ~568 MB | 1,024 | 100+ languages | Not run | Not run | Not run | Not run | MIT |
+| 🇬🇧 BGE-small English | 🔴 1.5 | 34.0 MB | 384 | English only | 56.3% | 37.5% | 0.765 | 10.3 ms | MIT |
+
+Published figures come from the model cards for [Multilingual E5 small](https://huggingface.co/intfloat/multilingual-e5-small), [Multilingual MiniLM L12](https://huggingface.co/sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2), [GTE multilingual base](https://huggingface.co/Alibaba-NLP/gte-multilingual-base), and [BGE-M3](https://huggingface.co/BAAI/bge-m3). GTE reports 305 million parameters, while BGE-M3 is based on a much larger multilingual encoder. Their q8 sizes are planning estimates, not repo measurements.
+
+The [MMTEB paper](https://arxiv.org/abs/2502.13595) evaluates more than 500 tasks across more than 250 languages and reports a 55.5 multilingual aggregate for Multilingual E5 small. Its language inventory includes 27 Italian tasks, but the aggregate is not an Italian-only score.
+
+### Repo prototype
+
+Run the free local probe with:
+
+```sh
+npm run evaluate:italian
+```
+
+The checked report records:
+
+- 16 original Italian clue turns, each with two intended targets, three neutral words, and one related risk word.
+- 15 number, gender, irregular, verb, and accent pairs.
+- q8 model bytes from the exact Transformers.js cache.
+- warm Node inference for 25 terms over five runs.
+- raw and fixture-centered target recall, exact target-set accuracy, risk-word intrusion, and morphology similarity.
+
+Multilingual E5 small is the clear browser candidate. Against the English BGE control, centered target recall rises from 56.3% to 81.3%, risk intrusion falls from 37.5% to 12.5%, and raw morphology similarity rises from 0.765 to 0.936. Multilingual MiniLM improves semantic recall but has a 31.3% centered risk rate, so equal bundle size does not justify choosing it.
+
+The 13.0 ms versus 10.3 ms warm Node result is close enough for active-board inference. Network transfer is the dominant regression: Multilingual E5 adds 84.3 MB over BGE-small and 95.3 MB over the current Train MiniLM-L6 model.
+
+These results are directional. They do not establish native-speaker quality, legality, cultural fit, or complete-game fun.
+
+### Full-game behavior
+
+No responsible Italian full-game score is available yet. Complete games need all of the following:
+
+- A legally distributable 400 or 800-word Italian board pool.
+- A reviewed 3,000 or 10,000-clue Italian candidate index.
+- A representative Italian centering mean.
+- Italian legality filtering.
+- Same-model and cross-model operative runs.
+
+The existing English Fun Index cannot be transferred to Italian because clue ambition, ambiguity, inflection, and danger associations change with the language. Once assets exist, run at least 100 paired deterministic games per policy and preserve:
+
+- Fun Index and its ambition, momentum, suspense, and flow components.
+- First-half mean clue number and clue-number distribution.
+- Correct cards per turn, wrong-team hits, neutral hits, and assassin rate.
+- Fallback rate, turns per game, bounded completion, and team win balance.
+- A cross-model operative run to expose same-model geometry optimism.
+
+Promotion requires the Italian candidate to match or improve the English production guardrails after native-speaker review. A higher self-play Fun score alone is insufficient.
+
+## Italian morphology and clue legality
+
+Italian support cannot reuse the current ASCII normalization. Today `normalizeTerm` changes `città` to `citt`, `caffè` to `caff`, `perché` to `perch`, and `più` to `pi`. This can create false equality, miss real words, and let display text disagree with the embedded term.
+
+Use two explicit forms:
+
+- **Display form:** Unicode NFKC, original accents, approved capitalization.
+- **Comparison form:** Unicode NFKC, Italian locale lowercase, letters and combining marks preserved, whitespace collapsed.
+
+An accent-folded form may be used only as an additional safety key. It must not replace the display or embedding text. For example, an invalid unaccented spelling should not become the canonical clue, but it should not bypass a board-word restriction either.
+
+The official Italian rules require one-word clues and forbid a visible codename. They also describe group discretion around compounds and inflected forms. Bot clues need a deterministic conservative policy:
+
+1. Reject exact board words after Unicode comparison.
+2. Reject all forms sharing a reviewed lemma with a board word, including number, gender, and irregular forms.
+3. Reject transparent derivations and compounds containing a board lemma when that relationship would reveal the word.
+4. Reject punctuation-based attempts to turn a multi-word expression into one token.
+5. Reject rhyme-only and spelling-only associations unless the clue also has a semantic relationship.
+6. Keep a versioned exceptions file for accepted lexicalized compounds and distinct homographs.
+
+Do not rely on embedding similarity to enforce legality. High morphological similarity is useful for finding possible family members, but a generated lemma-family map plus reviewed exceptions must own the rule.
+
+## Product and data architecture
+
+### Language selection
+
+Language is independent from mode, word set, model, and UI appearance. Add it as a first-class value to:
+
+- Train state and Play setup.
+- Saved Play sessions.
+- Generated-board seeds and explicit shares.
+- Word-set and model compatibility metadata.
+- Every generated manifest, cache key, and evaluation report.
+
+Use namespaced asset IDs such as `en:official-v1`, `en:extended-v3`, `it:extended-v1`, and eventually `it:official-v1`. Do not reuse `official` or `extended` without language and version context.
+
+The bare app URL continues to open English Play. A language choice changes only new boards and localized UI. Existing boards, active sessions, and shared links retain their encoded language.
+
+### UI copy
+
+Move user-facing strings into locale dictionaries before adding Italian. Include:
+
+- Mode, setup, board, role, team, action, status, and settings labels.
+- Tooltips, accessible names, validation errors, empty states, and loading progress.
+- Play event history, bot narration, win states, resume prompts, and share errors.
+- Model and word-set explanations.
+
+Keep generated clues and board words separate from UI localization. Do not translate game data at render time. Italian copy needs native review, especially for `spymaster`, `operative`, `bystander`, `assassin`, and the distinction between a clue number and a word-set size.
+
+### Generated assets and centering
+
+Create a language namespace rather than mixing English and Italian shards:
+
+```text
+public/data/model-lab/
+  en/<model-id>/
+  it/<model-id>/
+```
+
+Each manifest must pin:
+
+- Language and word-set version.
+- Model repository, revision, dtype, dimensions, and task prefix.
+- Vocabulary source, source checksum, license, filters, and reviewer version.
+- Centering corpus hash and count.
+- Shard boundaries, byte sizes, and vector quantization.
+
+Rebuild the Italian 3k, 10k, 30k, and 100k tiers from one stable prefix. All tiers for a model must use the same mean over the first 30,000 reviewed Italian clue candidates, matching the English asset contract. The small fixture mean improved semantic recall, but it is not suitable for production.
+
+### Share-link compatibility
+
+Versions 1 through 3 remain English and decode exactly as they do now. Add v4 only when language assets exist:
+
+- Seed links encode language, word-set ID, and word-set version before interpreting indexes.
+- Explicit links preserve UTF-8 literals. The new smoke coverage confirms that v3 literal encoding already round-trips `CITTÀ`.
+- Unknown language or word-set versions fail clearly instead of falling back to English.
+- Custom local decks use explicit literals only. Do not make a seed depend on a private list that another browser cannot reconstruct.
+
+### Caching and deployment cost
+
+The 384-dimensional 10,000-clue index remains approximately 5.27 MB, regardless of language. The measured Multilingual E5 q8 model is 118.3 MB, so a default Italian first load is approximately 123.6 MB before normal application assets. The current BGE-small Play model plus 10k index is approximately 39.3 MB.
+
+| 📦 Asset | 🎯 Rating | 📏 Transfer | 🗄️ Cache | 💰 Cost owner |
+| --- | --- | --- | --- | --- |
+| 📚 10k Italian index | 🟢 4.5 | 5.27 MB | Browser and Vercel CDN | Vercel transfer |
+| 📚 30k Italian index | 🟡 3.5 | 15.82 MB | Browser and Vercel CDN | Vercel transfer |
+| 🧠 E5 q8 model | 🟠 3 | 118.3 MB | Browser Cache API | Model host |
+| 📚 100k Italian index | 🔴 2 | 52.79 MB | Browser and Vercel CDN | Vercel transfer |
+
+Transformers.js exposes browser model caching through its Cache API according to the [official environment documentation](https://huggingface.co/docs/transformers.js/en/api/env). Pin the model revision and checksum so a mutable upstream model cannot silently invalidate generated vectors.
+
+[Vercel automatically caches static files](https://vercel.com/docs/caching/cdn-cache), but static transfer still counts as Fast Data Transfer according to [Vercel CDN usage documentation](https://vercel.com/docs/manage-cdn-usage). Content-hash immutable Italian shards to improve repeat visits. Do not preload Italian assets for English users.
+
+Two hosting choices remain:
+
+- Keep model weights on Hugging Face, as today. This avoids adding 118.3 MB per cold Italian visitor to Vercel transfer, but adds a third-party availability and privacy dependency.
+- Self-host a pinned model artifact. This improves supply-chain control and same-origin caching, but transfers about 118.3 MB per cold visitor from the chosen host.
+
+No server compute, database, paid API, or secret is required. The main costs are build time, repository or release storage, CDN transfer, and browser download time.
+
+## Evaluation plan
+
+Published STS and bitext scores are useful only for shortlisting. Italian promotion needs game-shaped evidence:
+
+| 🧪 Gate | 🎯 Rating | 📊 Minimum evidence | ✅ Pass condition |
+| --- | --- | --- | --- |
+| 🔤 Unicode and morphology | 🟢 5 | Reviewed lemma suite | No bypasses |
+| 👥 Native review | 🟢 5 | 2+ reviewers | Familiar and fun |
+| 🔗 Compatibility | 🟢 5 | v1-v4 fixtures | Exact decoding |
+| 🧠 Semantic fixture | 🟢 4.5 | 100+ native turns | Beats English control |
+| 🛡️ Safety | 🟢 4.5 | Target, neutral, enemy, assassin | Within production guardrails |
+| 🎮 Full-game policy | 🟢 4.5 | 100 paired boards | Fun plus safety |
+| 📱 Browser performance | 🟢 4.5 | Phone, tablet, desktop | Responsive |
+
+Build the evaluation data in this order:
+
+1. Expand the source-created fixture to at least 100 clue turns reviewed by native Italian speakers.
+2. Record intended targets, plausible first guesses, neutral words, enemy words, assassin words, clue number, and legality judgment.
+3. Add morphology families covering regular plurals, gender, irregular plurals, derivation, elision, accents, apostrophes, and lexicalized compounds.
+4. Collect opt-in exported Play sessions. Keep raw game history local unless a contributor explicitly submits it under a stated data license.
+5. Run same-model and cross-model complete games on identical boards.
+6. Ask reviewers to rate generated clues for legality, familiarity, target fit, danger, cleverness, and whether they would actually say the clue.
+
+Do not translate or redistribute the current unlicensed Cultural Codes and Connector datasets. A translated benchmark would also change the human association task, so it would not be equivalent evidence.
+
+## Staged implementation plan
+
+### Stage 0: rights and source pinning
+
+- Request the official second-edition Italian list and redistribution terms from Cranio Creations and CGE.
+- Pin the Leipzig Italian corpus archive, checksum, attribution, and transformation rules.
+- Decide whether Wiktionary-derived morphology data is worth the share-alike obligations.
+
+Exit: every proposed checked-in word asset has documented provenance and redistribution terms.
+
+### Stage 1: language-safe substrate
+
+- Add Unicode-preserving normalization and lemma-family legality tests.
+- Introduce locale dictionaries without exposing an Italian production choice.
+- Namespace word sets, manifests, caches, and settings by language.
+- Add v4 share encoding while preserving v1 through v3.
+
+Exit: all English tests and share fixtures pass unchanged, plus Italian Unicode fixtures pass.
+
+### Stage 2: Extended Train beta
+
+- Generate and review `it:extended-v1`.
+- Build the Multilingual E5 3k and 10k indexes with a 30k Italian mean.
+- Add Italian as an explicit Train beta choice.
+- Measure actual first-load time, memory, scoring latency, and responsive UI at 390x844, 768x1024, and 1440x900.
+
+Exit: native reviewers accept the pool and generated clues, and browser performance is usable.
+
+### Stage 3: Play validation
+
+- Run the complete 100-board paired benchmark.
+- Run a cross-model operative stress test.
+- Collect native-player games and compare bot outcomes with human guesses.
+- Tune clue policy only if the language-specific evidence requires it.
+
+Exit: Fun, safety, legality, completion, and human-review gates all pass.
+
+### Stage 4: official preset
+
+- Add `it:official-v1` only after written redistribution permission.
+- Pin the exact edition and list version.
+- Regenerate all board, share, evaluation, and model assets for that official pool.
+
+Exit: official provenance is auditable and the public repository contains only authorized data.
+
+## Primary sources
+
+- [Cranio Creations, Nome in Codice Seconda Edizione](https://www.craniocreations.it/prodotto/nome-in-codice-seconda-edizione)
+- [Czech Games Edition, Italian Codenames rules](https://czechgames.com/files/rules/codenames-rules-it.pdf)
+- [European Commission, database protection](https://digital-strategy.ec.europa.eu/en/policies/protection-databases)
+- [European IP Helpdesk, copyright](https://intellectual-property-helpdesk.ec.europa.eu/ip-management-and-resources/copyright_en)
+- [Leipzig Corpora Collection, terms of usage](https://www.wortschatz.uni-leipzig.de/en/usage)
+- [Italian Wiktionary, copyright and reuse](https://it.wiktionary.org/wiki/Aiuto:Copyright)
+- [PAISÀ Italian corpus](https://www.corpusitaliano.it/en/index.html)
+- [MMTEB paper](https://arxiv.org/abs/2502.13595)
+- [Multilingual E5 small model card](https://huggingface.co/intfloat/multilingual-e5-small)
+- [Multilingual MiniLM L12 model card](https://huggingface.co/sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2)
+- [GTE multilingual base model card](https://huggingface.co/Alibaba-NLP/gte-multilingual-base)
+- [BGE-M3 model card](https://huggingface.co/BAAI/bge-m3)
+- [Transformers.js cache environment](https://huggingface.co/docs/transformers.js/en/api/env)
+- [Vercel CDN cache](https://vercel.com/docs/caching/cdn-cache)
+- [Vercel CDN usage](https://vercel.com/docs/manage-cdn-usage)

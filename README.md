@@ -25,6 +25,7 @@ The first model load is cached by the browser. Training progress is session-loca
 - [Clue engine](docs/clue-engine.md) explains the embedding pipeline, legality filter, scoring contract, model assets, and evaluation commands.
 - [Play clue number analysis](docs/play-clue-number-analysis.md) records the controlled Play-policy evidence.
 - [Play fun optimization](docs/play-fun-optimization.md) defines the Fun Index and hosted-model promotion gates.
+- [Italian language support](docs/italian-language-support.md) evaluates vocabulary rights, multilingual models, compatibility, cost, and staged implementation.
 - [TODO.md](TODO.md) tracks unfinished gameplay, calibration, vocabulary, and model work.
 
 ## Run
