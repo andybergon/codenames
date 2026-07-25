@@ -195,6 +195,26 @@ test("Play randomly assigns a seat and keeps all four overrides available", asyn
   await expect(page.locator("[data-play-seat][aria-pressed='true']")).toHaveCount(1);
 });
 
+test("select option menus follow the dark theme", async ({ page }) => {
+  await page.goto("/?mode=play");
+  await page.getByRole("button", { name: "Use dark theme", exact: true }).click();
+
+  const optionColors = await page.locator("#play-bot-model option").first().evaluate(
+    (option) => {
+      const style = getComputedStyle(option);
+      return {
+        background: style.backgroundColor,
+        color: style.color,
+      };
+    },
+  );
+
+  expect(optionColors).toEqual({
+    background: "rgb(32, 34, 36)",
+    color: "rgb(243, 241, 236)",
+  });
+});
+
 test("switching modes keeps shared layout positions stable", async ({ page }) => {
   await page.setViewportSize({ width: 857, height: 998 });
   await page.goto("/?mode=play");

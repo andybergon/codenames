@@ -157,6 +157,11 @@ select {
   font: inherit;
 }
 
+select option {
+  background: var(--panel);
+  color: var(--ink);
+}
+
 button {
   cursor: pointer;
 }
