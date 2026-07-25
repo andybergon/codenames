@@ -516,17 +516,29 @@
               <div id="play-clue-display" class="play-clue-display"></div>
 
               <form id="play-clue-form" class="play-clue-form" hidden>
-                <label>
-                  Clue
-                  <input
-                    id="play-clue-input"
-                    type="text"
-                    autocomplete="off"
-                    spellcheck="false"
-                    placeholder="One word"
-                    required
-                  />
-                </label>
+                <div class="play-clue-field">
+                  <label for="play-clue-input">Clue</label>
+                  <div class="play-clue-input-wrap">
+                    <input
+                      id="play-clue-input"
+                      type="text"
+                      autocomplete="off"
+                      spellcheck="false"
+                      placeholder="One word"
+                      required
+                    />
+                    <button
+                      id="clear-play-clue"
+                      class="play-clue-clear"
+                      type="button"
+                      aria-label="Clear clue"
+                      title="Clear clue"
+                      hidden
+                    >
+                      ×
+                    </button>
+                  </div>
+                </div>
                 <label>
                   Number
                   <select id="play-clue-number"></select>
@@ -551,7 +563,6 @@
               <div id="play-suggestions" class="play-suggestions" hidden>
                 <div class="play-section-heading">
                   <strong>Suggested clues</strong>
-                  <span>Optional assistant</span>
                 </div>
                 <div id="play-suggestion-list" class="play-suggestion-list"></div>
               </div>

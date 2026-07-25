@@ -2499,7 +2499,8 @@ button.play-card:not(:disabled):hover {
   gap: 8px;
 }
 
-.play-clue-form label {
+.play-clue-form > label,
+.play-clue-field {
   display: grid;
   min-width: 0;
   gap: 5px;
@@ -2507,6 +2508,10 @@ button.play-card:not(:disabled):hover {
   font-size: 0.66rem;
   font-weight: 900;
   text-transform: uppercase;
+}
+
+.play-clue-input-wrap {
+  position: relative;
 }
 
 .play-clue-form input,
@@ -2520,6 +2525,39 @@ button.play-card:not(:disabled):hover {
   color: var(--ink);
   font-weight: 800;
   text-transform: none;
+}
+
+.play-clue-input-wrap input {
+  padding-right: 38px;
+}
+
+.play-clue-clear {
+  position: absolute;
+  top: 50%;
+  right: 7px;
+  display: grid;
+  width: 27px;
+  height: 27px;
+  translate: 0 -50%;
+  place-items: center;
+  border: 0;
+  border-radius: 999px;
+  padding: 0;
+  background: var(--subtle-fill);
+  color: var(--muted);
+  font-size: 1.15rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.play-clue-clear[hidden] {
+  display: none;
+}
+
+.play-clue-clear:hover,
+.play-clue-clear:focus-visible {
+  background: var(--mark-fill);
+  color: var(--ink);
 }
 
 .form-error {
@@ -2565,9 +2603,31 @@ button.play-card:not(:disabled):hover {
   border-color: var(--blue);
 }
 
-.play-suggestion span {
-  color: var(--muted);
+.play-suggestion-metric {
+  border-radius: 999px;
+  padding: 3px 7px;
   font-size: 0.68rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+.play-suggestion-metric[data-tone="high"],
+.play-suggestion-metric[data-risk="safe"] {
+  background: var(--green-soft);
+  color: var(--green);
+}
+
+.play-suggestion-metric[data-tone="medium"],
+.play-suggestion-metric[data-risk="medium"] {
+  background: var(--tan-soft);
+  color: var(--moderate-text);
+}
+
+.play-suggestion-metric[data-tone="low"],
+.play-suggestion-metric[data-risk="risky"] {
+  background: var(--orange-soft);
+  color: var(--orange);
 }
 
 .play-operative-controls {

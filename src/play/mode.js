@@ -211,6 +211,7 @@ export function createPlayMode() {
     clueDisplay: document.querySelector("#play-clue-display"),
     clueForm: document.querySelector("#play-clue-form"),
     clueInput: document.querySelector("#play-clue-input"),
+    clearClue: document.querySelector("#clear-play-clue"),
     clueNumber: document.querySelector("#play-clue-number"),
     clueError: document.querySelector("#play-clue-error"),
     toggleSuggestions: document.querySelector("#toggle-play-suggestions"),
@@ -307,6 +308,18 @@ export function createPlayMode() {
   elements.toggleSuggestions.addEventListener("click", () => {
     suggestionsExpanded = !suggestionsExpanded;
     renderSuggestionVisibility(true);
+  });
+  elements.clueInput.addEventListener("input", () => {
+    selectedSuggestion = null;
+    elements.clueError.textContent = "";
+    renderClearClueButton();
+  });
+  elements.clearClue.addEventListener("click", () => {
+    elements.clueInput.value = "";
+    selectedSuggestion = null;
+    elements.clueError.textContent = "";
+    renderClearClueButton();
+    elements.clueInput.focus();
   });
   elements.passTurn.addEventListener("click", () =>
     runHumanAction((current) => passTurn(current, { actor: "human" })),
@@ -853,6 +866,7 @@ export function createPlayMode() {
 
     elements.clueForm.hidden = !humanSpymaster;
     elements.operativeControls.hidden = !humanOperative;
+    renderClearClueButton();
     renderSuggestionVisibility(humanSpymaster);
 
     if (humanSpymaster) {
@@ -916,19 +930,32 @@ export function createPlayMode() {
       const clue = document.createElement("strong");
       clue.textContent = `${suggestion.clue.toUpperCase()} ${suggestion.number}`;
       const worth = document.createElement("span");
+      worth.className = "play-suggestion-metric";
+      worth.dataset.tone = worthTone(suggestion.worth);
       worth.textContent = `Worth ${suggestion.worth}`;
-      const risk = document.createElement("span");
-      risk.textContent = labelRisk(suggestion.risk);
-      button.append(clue, worth, risk);
+      const safety = document.createElement("span");
+      const safetyScore = Math.min(99, Math.round(suggestion.success * 100));
+      safety.className = "play-suggestion-metric";
+      safety.dataset.risk = suggestion.risk;
+      safety.textContent = `${labelRisk(suggestion.risk)} ${safetyScore}`;
+      safety.title =
+        `${labelRisk(suggestion.risk)} safety: ${safetyScore} out of 99 estimated from the all-target hit chance. ` +
+        "The color also reflects safety margin and assassin danger.";
+      button.append(clue, worth, safety);
       button.addEventListener("click", () => {
         selectedSuggestion = suggestion;
         elements.clueInput.value = suggestion.clue;
         elements.clueNumber.value = String(suggestion.number);
+        renderClearClueButton();
         elements.clueInput.focus();
       });
       return button;
     });
     elements.suggestionList.replaceChildren(...buttons);
+  }
+
+  function renderClearClueButton() {
+    elements.clearClue.hidden = elements.clueInput.value.length === 0;
   }
 
   function selectedSuggestionTargets() {
@@ -1005,6 +1032,10 @@ function teamLabel(team) {
 
 function labelRisk(risk) {
   return risk === "safe" ? "Safe" : risk === "risky" ? "Risky" : "Medium";
+}
+
+function worthTone(worth) {
+  return worth >= 85 ? "high" : worth >= 70 ? "medium" : "low";
 }
 
 function formatPercent(value) {

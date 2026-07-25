@@ -465,12 +465,29 @@ test("Play enforces operative and spymaster information views", async ({ page })
   await page.getByRole("button", { name: "Start new game", exact: true }).click();
 
   await expect(page.locator("#play-clue-form")).toBeVisible();
+  const clueInput = page.getByRole("textbox", { name: "Clue", exact: true });
+  const clearClue = page.getByRole("button", { name: "Clear clue", exact: true });
+  await expect(clearClue).toBeHidden();
+  await clueInput.fill("garden");
+  await expect(clearClue).toBeVisible();
+  await clearClue.click();
+  await expect(clueInput).toHaveValue("");
+  await expect(clearClue).toBeHidden();
   await expect(page.locator("#play-suggestions")).toBeHidden();
   await expect(
     page.getByRole("button", { name: "💡 Show clue suggestions", exact: true }),
   ).toBeVisible();
   await page.getByRole("button", { name: "💡 Show clue suggestions", exact: true }).click();
   await expect(page.locator("#play-suggestions")).toBeVisible();
+  await expect(page.getByText("Optional assistant", { exact: true })).toHaveCount(0);
+  const firstPlaySuggestion = page.locator(".play-suggestion").first();
+  await expect(firstPlaySuggestion).toBeVisible({ timeout: 15_000 });
+  await expect(
+    firstPlaySuggestion.locator('.play-suggestion-metric[data-tone]'),
+  ).toContainText(/Worth \d+/);
+  await expect(
+    firstPlaySuggestion.locator('.play-suggestion-metric[data-risk]'),
+  ).toContainText(/(Safe|Medium|Risky) \d+/);
   await expect(
     page.getByRole("button", { name: "💡 Hide clue suggestions", exact: true }),
   ).toHaveAttribute("aria-expanded", "true");
