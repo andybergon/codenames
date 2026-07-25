@@ -52,6 +52,7 @@ import {
 } from "./settings.js";
 
 const RESULTS_PER_SIZE = 6;
+const BOT_WAIT_DETAIL_DELAY = 1800;
 const PLAY_BOARD_ORDER = Object.freeze({
   TABLE: "table",
   TEAMS: "teams",
@@ -196,7 +197,15 @@ const BOT_SETTING_INFO = Object.freeze({
   },
 });
 
-export function createPlayMode() {
+export function createPlayMode(options = {}) {
+  const botActionDelay =
+    import.meta.env.DEV && Number.isFinite(options.botActionDelay)
+      ? Math.max(0, options.botActionDelay)
+      : null;
+  const botActionExecutor =
+    import.meta.env.DEV && typeof options.botActionExecutor === "function"
+      ? options.botActionExecutor
+      : null;
   const elements = {
     setup: document.querySelector("#play-setup"),
     game: document.querySelector("#play-game"),
@@ -272,8 +281,12 @@ export function createPlayMode() {
   let analysisRun = 0;
   let botTimer = 0;
   let botBusy = false;
+  let botWaitDetailTimer = 0;
+  let botWaitKey = "";
+  let botWaitDetailVisible = false;
   let undoSnapshot = null;
   let statusMessage = "";
+  let statusMessageIsError = false;
   let selectedSuggestion = null;
   let suggestionsExpanded = false;
   let suggestionTurnKey = "";
@@ -370,6 +383,7 @@ export function createPlayMode() {
       active = nextActive;
       if (!active) {
         window.clearTimeout(botTimer);
+        clearBotWaitDetail();
         return;
       }
       if (game) {
@@ -447,11 +461,13 @@ export function createPlayMode() {
 
   function resetRuntimeState(message) {
     analysisRun += 1;
+    clearBotWaitDetail();
     analysis = { [SIDE.BLUE]: null, [SIDE.RED]: null };
     boardVectors = null;
     clueIndex = null;
     activeModelId = null;
     statusMessage = message;
+    statusMessageIsError = false;
     undoSnapshot = null;
     selectedSuggestion = null;
     suggestionsExpanded = false;
@@ -464,6 +480,7 @@ export function createPlayMode() {
   }
 
   function discardSavedGame() {
+    clearBotWaitDetail();
     clearPlaySession();
     savedGame = null;
     game = null;
@@ -473,6 +490,7 @@ export function createPlayMode() {
 
   function showSetup() {
     window.clearTimeout(botTimer);
+    clearBotWaitDetail();
     botBusy = false;
     game = null;
     undoSnapshot = null;
@@ -548,12 +566,15 @@ export function createPlayMode() {
       game = action(game);
       undoSnapshot = snapshot;
       selectedSuggestion = null;
+      statusMessage = "";
+      statusMessageIsError = false;
       elements.clueError.textContent = "";
       commitGame();
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       elements.clueError.textContent = message;
       statusMessage = message;
+      statusMessageIsError = true;
       renderGame();
     }
   }
@@ -577,6 +598,7 @@ export function createPlayMode() {
     clueIndex = null;
     selectedSuggestion = null;
     statusMessage = message;
+    statusMessageIsError = false;
   }
 
   function commitGame() {
@@ -596,6 +618,17 @@ export function createPlayMode() {
       queueBotAction();
       return;
     }
+    const role =
+      game.phase === GAME_PHASE.AWAITING_CLUE
+        ? PLAYER_ROLE.SPYMASTER
+        : PLAYER_ROLE.OPERATIVE;
+    if (
+      botActionExecutor &&
+      actorForSeat(game, game.activeSide, role) === "bot"
+    ) {
+      queueBotAction();
+      return;
+    }
     void runAnalysis();
   }
 
@@ -606,6 +639,7 @@ export function createPlayMode() {
     const runId = ++analysisRun;
     const gameAtStart = game;
     statusMessage = `${sideEmoji(game.activeSide)} ${roleEmoji(PLAYER_ROLE.SPYMASTER)} ${sideLabel(game.activeSide)} spymaster is studying the board.`;
+    statusMessageIsError = false;
     renderGame();
 
     try {
@@ -649,6 +683,7 @@ export function createPlayMode() {
         ),
       };
       statusMessage = "";
+      statusMessageIsError = false;
       renderGame();
       queueBotAction();
     } catch (error) {
@@ -656,6 +691,7 @@ export function createPlayMode() {
         return;
       }
       statusMessage = error instanceof Error ? error.message : String(error);
+      statusMessageIsError = true;
       renderGame();
     }
   }
@@ -672,11 +708,18 @@ export function createPlayMode() {
     if (actorForSeat(game, game.activeSide, role) !== "bot") {
       return;
     }
-    if (game.phase === GAME_PHASE.AWAITING_CLUE && !analysis[game.activeSide]) {
+    if (
+      !botActionExecutor &&
+      game.phase === GAME_PHASE.AWAITING_CLUE &&
+      !analysis[game.activeSide]
+    ) {
       ensureAnalysis();
       return;
     }
-    botTimer = window.setTimeout(() => void performBotAction(), delay);
+    botTimer = window.setTimeout(
+      () => void performBotAction(),
+      botActionDelay ?? delay,
+    );
   }
 
   async function performBotAction() {
@@ -685,13 +728,25 @@ export function createPlayMode() {
     }
     botBusy = true;
     undoSnapshot = null;
-    const decisionRandom = createSeededRandom(
-      `${game.seed}:${game.turnNumber}:${game.history.length}`,
-    );
+    const gameAtStart = game;
     const actingSide = game.activeSide;
 
     try {
-      if (game.phase === GAME_PHASE.AWAITING_CLUE) {
+      if (botActionExecutor) {
+        const result = await botActionExecutor(structuredClone(game));
+        if (game !== gameAtStart) {
+          return;
+        }
+        if (!result?.game) {
+          throw new Error("The bot action executor did not return a game.");
+        }
+        game = result.game;
+        statusMessage = result.statusMessage ?? "";
+        statusMessageIsError = false;
+      } else if (game.phase === GAME_PHASE.AWAITING_CLUE) {
+        const decisionRandom = createSeededRandom(
+          `${game.seed}:${game.turnNumber}:${game.history.length}`,
+        );
         const clue = chooseBotClue({
           analysis: analysis[game.activeSide],
           ownRemaining: remainingCardsForSide(game.cards, game.activeSide),
@@ -715,7 +770,11 @@ export function createPlayMode() {
           intendedLayoutIds: clue.targets.map((target) => target.layoutId),
         });
         statusMessage = `${sideEmoji(actingSide)} 🤖 ${roleEmoji(PLAYER_ROLE.SPYMASTER)} ${sideLabel(actingSide)} bot spymaster gave ${clue.clue.toUpperCase()} ${clue.number}.`;
+        statusMessageIsError = false;
       } else {
+        const decisionRandom = createSeededRandom(
+          `${game.seed}:${game.turnNumber}:${game.history.length}`,
+        );
         const candidates = await buildBotGuessCandidates(game.currentTurn.clue);
         const layoutId =
           !shouldBotTakeAnotherGuess({
@@ -742,16 +801,19 @@ export function createPlayMode() {
         if (layoutId === null) {
           game = passTurn(game, { actor: "bot" });
           statusMessage = `${sideEmoji(actingSide)} 🤖 ${roleEmoji(PLAYER_ROLE.OPERATIVE)} ${sideLabel(actingSide)} bot operative passed.`;
+          statusMessageIsError = false;
         } else {
           const word = game.cards.find((card) => card.layoutId === layoutId)?.word;
           game = guessCard(game, { layoutId, actor: "bot" });
           statusMessage = `${sideEmoji(actingSide)} 🤖 ${roleEmoji(PLAYER_ROLE.OPERATIVE)} ${sideLabel(actingSide)} bot operative guessed ${word}.`;
+          statusMessageIsError = false;
         }
       }
       savedGame = game;
       savePlaySession(game);
     } catch (error) {
       statusMessage = error instanceof Error ? error.message : String(error);
+      statusMessageIsError = true;
     } finally {
       botBusy = false;
       renderGame();
@@ -902,6 +964,17 @@ export function createPlayMode() {
     const turnAction = document.createElement("strong");
     const turnNote = document.createElement("span");
     turnNote.className = "play-turn-note";
+    const botWaitDetail =
+      currentActor === "bot"
+        ? currentRole === PLAYER_ROLE.SPYMASTER
+          ? `${roleEmoji(PLAYER_ROLE.SPYMASTER)} The bot spymaster is studying the board.`
+          : `🤖 ${roleEmoji(PLAYER_ROLE.OPERATIVE)} The bot operative is choosing a card.`
+        : "";
+    const waitDetailVisible = syncBotWaitDetail(
+      currentActor === "bot" && !statusMessageIsError
+        ? currentBotWaitKey()
+        : "",
+    );
 
     if (game.currentTurn) {
       turnLabel.textContent = `${sideEmoji(game.currentTurn.side)} ${sideLabel(game.currentTurn.side)} turn`;
@@ -909,7 +982,7 @@ export function createPlayMode() {
       turnNote.textContent =
         currentActor === "human"
           ? `${roleEmoji(PLAYER_ROLE.OPERATIVE)} Choose a card or pass.`
-          : `🤖 ${roleEmoji(PLAYER_ROLE.OPERATIVE)} Bot operative is choosing.`;
+          : "";
     } else if (game.phase === GAME_PHASE.COMPLETE) {
       const reason =
         game.endReason === GAME_END_REASON.ASSASSIN
@@ -923,13 +996,15 @@ export function createPlayMode() {
       turnAction.textContent =
         currentActor === "human"
           ? `${roleEmoji(PLAYER_ROLE.SPYMASTER)} Give a clue`
-          : `🤖 ${roleEmoji(PLAYER_ROLE.SPYMASTER)} Choosing a clue`;
+          : "Turn in progress";
       turnNote.textContent =
         currentActor === "human"
           ? "One word and a number."
-          : `${roleEmoji(PLAYER_ROLE.SPYMASTER)} The bot spymaster is studying the board.`;
+          : "";
     }
-    if (statusMessage && !turnNote.textContent.includes(statusMessage)) {
+    if (currentActor === "bot" && !statusMessageIsError) {
+      renderBotWaitNote(turnNote, botWaitDetail, waitDetailVisible);
+    } else if (statusMessage && !turnNote.textContent.includes(statusMessage)) {
       turnNote.textContent = statusMessage;
     }
     elements.clueDisplay.replaceChildren(turnLabel, turnAction, turnNote);
@@ -947,6 +1022,76 @@ export function createPlayMode() {
       const limit = game.currentTurn.number + 1;
       elements.guessProgress.textContent = `${guesses} of ${limit} guesses used`;
     }
+  }
+
+  function currentBotWaitKey() {
+    if (!game || game.phase === GAME_PHASE.COMPLETE) {
+      return "";
+    }
+    const role =
+      game.phase === GAME_PHASE.AWAITING_CLUE
+        ? PLAYER_ROLE.SPYMASTER
+        : PLAYER_ROLE.OPERATIVE;
+    if (actorForSeat(game, game.activeSide, role) !== "bot") {
+      return "";
+    }
+    return [
+      game.turnNumber,
+      game.activeSide,
+      game.phase,
+      role,
+      game.history.length,
+    ].join(":");
+  }
+
+  function syncBotWaitDetail(nextKey) {
+    if (!nextKey) {
+      clearBotWaitDetail();
+      return false;
+    }
+    if (nextKey === botWaitKey) {
+      return botWaitDetailVisible;
+    }
+    clearBotWaitDetail();
+    botWaitKey = nextKey;
+    botWaitDetailTimer = window.setTimeout(() => {
+      botWaitDetailTimer = 0;
+      if (!active || botWaitKey !== nextKey || currentBotWaitKey() !== nextKey) {
+        return;
+      }
+      botWaitDetailVisible = true;
+      renderGame();
+    }, BOT_WAIT_DETAIL_DELAY);
+    return false;
+  }
+
+  function clearBotWaitDetail() {
+    window.clearTimeout(botWaitDetailTimer);
+    botWaitDetailTimer = 0;
+    botWaitKey = "";
+    botWaitDetailVisible = false;
+  }
+
+  function renderBotWaitNote(note, detail, detailVisible) {
+    note.classList.add("is-bot-wait");
+    note.classList.toggle("is-detailed", detailVisible);
+    note.dataset.waitDetail = detailVisible ? "visible" : "pending";
+    note.setAttribute("role", "status");
+    note.setAttribute("aria-live", "polite");
+
+    const progress = document.createElement("span");
+    progress.className = "play-turn-progress";
+    const spinner = document.createElement("span");
+    spinner.className = "play-turn-spinner";
+    spinner.setAttribute("aria-hidden", "true");
+    const progressLabel = document.createElement("span");
+    progressLabel.textContent = "Turn in progress";
+    progress.append(spinner, progressLabel);
+
+    const detailText = document.createElement("span");
+    detailText.className = "play-turn-wait-detail";
+    detailText.textContent = detail;
+    note.replaceChildren(progress, detailText);
   }
 
   function renderSuggestionVisibility(humanSpymaster) {

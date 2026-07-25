@@ -3,6 +3,25 @@ import pickerBenchmark from "../scripts/generated/model-picker-benchmark.json" w
 
 const SHARED_BOARD = "/?mode=train&b=2sw7fIwN9dL7Yos";
 
+async function useTestBotAction(page, delay) {
+  await page.addInitScript((botActionDelay) => {
+    window.__codenamesPlayModeOptions = {
+      botActionDelay,
+      botActionExecutor(game) {
+        return {
+          game: {
+            ...game,
+            phase: "complete",
+            currentTurn: null,
+            winner: game.activeSide,
+            endReason: "agents",
+          },
+        };
+      },
+    };
+  }, delay);
+}
+
 test("mobile board and metric help remain fully usable", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 844 });
   await page.goto(SHARED_BOARD);
@@ -509,6 +528,89 @@ test("Play enforces operative and spymaster information views", async ({ page })
   await expect(page.locator('.play-card[data-team="enemy"]')).toHaveCount(8);
   await expect(page.locator('.play-card[data-team="neutral"]')).toHaveCount(7);
   await expect(page.locator('.play-card[data-team="assassin"]')).toHaveCount(1);
+});
+
+test("Play keeps brief bot turns neutral and delays readable wait detail", async ({
+  page,
+}) => {
+  await useTestBotAction(page, 700);
+  await page.goto("/?mode=play");
+  await page.evaluate(() => {
+    window.__visibleBotWaitDetails = [];
+    window.__botWaitObserver = new MutationObserver(() => {
+      const note = document.querySelector(".play-turn-note");
+      if (
+        note?.dataset.waitDetail === "visible" &&
+        !window.__visibleBotWaitDetails.includes(note.textContent)
+      ) {
+        window.__visibleBotWaitDetails.push(note.textContent);
+      }
+    });
+    window.__botWaitObserver.observe(document.querySelector("#play-clue-display"), {
+      attributes: true,
+      childList: true,
+      subtree: true,
+    });
+  });
+
+  await page.locator('[data-play-seat="blue:operative"]').click();
+  await page.getByRole("button", { name: "Start new game", exact: true }).click();
+  const waitNote = page.locator(".play-turn-note");
+  await expect(waitNote).toHaveAttribute("data-wait-detail", "pending");
+  await expect(waitNote.locator(".play-turn-spinner")).toBeVisible();
+  await expect(waitNote.locator(".play-turn-wait-detail")).toBeHidden();
+
+  await expect(page.locator("#play-clue-display")).toContainText("🏁 Game complete", {
+    timeout: 2_000,
+  });
+  expect(
+    await page.evaluate(() => {
+      window.__botWaitObserver.disconnect();
+      return window.__visibleBotWaitDetails;
+    }),
+  ).toEqual([]);
+});
+
+test("Play reveals long bot wait detail without shifting or leaking stale timers", async ({
+  page,
+}) => {
+  await useTestBotAction(page, 3200);
+  await page.goto("/?mode=play");
+  await page.locator('[data-play-seat="blue:operative"]').click();
+
+  const startedAt = Date.now();
+  await page.getByRole("button", { name: "Start new game", exact: true }).click();
+  const waitNote = page.locator(".play-turn-note");
+  const clueDisplay = page.locator("#play-clue-display");
+  await expect(waitNote).toHaveAttribute("data-wait-detail", "pending");
+  const pendingHeight = await clueDisplay.evaluate(
+    (element) => element.getBoundingClientRect().height,
+  );
+
+  await page.waitForTimeout(1000);
+  await expect(waitNote).toHaveAttribute("data-wait-detail", "pending");
+  await expect(waitNote.locator(".play-turn-wait-detail")).toBeHidden();
+
+  await expect(waitNote).toHaveAttribute("data-wait-detail", "visible", {
+    timeout: 2_000,
+  });
+  expect(Date.now() - startedAt).toBeGreaterThanOrEqual(1700);
+  await expect(waitNote).toContainText("The bot spymaster is studying the board.");
+  await expect(waitNote.locator(".play-turn-spinner")).toBeHidden();
+  expect(
+    await clueDisplay.evaluate((element) => element.getBoundingClientRect().height),
+  ).toBe(pendingHeight);
+
+  await page.getByRole("button", { name: "New game", exact: true }).click();
+  await expect(page.locator("#play-setup")).toBeVisible();
+
+  await page.locator('[data-play-seat="blue:operative"]').click();
+  await page.getByRole("button", { name: "Start new game", exact: true }).click();
+  await expect(waitNote).toHaveAttribute("data-wait-detail", "pending");
+  await page.getByRole("button", { name: "New game", exact: true }).click();
+  await page.waitForTimeout(2000);
+  await expect(page.locator("#play-setup")).toBeVisible();
+  await expect(waitNote).toHaveAttribute("data-wait-detail", "pending");
 });
 
 test("Play validates human clues and resumes the saved seat", async ({ page }) => {

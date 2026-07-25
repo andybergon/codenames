@@ -229,7 +229,9 @@ const elements = {
   playMode: document.querySelector("#play-mode"),
 };
 
-const playMode = createPlayMode();
+const playMode = createPlayMode(
+  import.meta.env.DEV ? window.__codenamesPlayModeOptions : undefined,
+);
 
 elements.modelLabModel.addEventListener("change", (event) => {
   selectedModelId = event.target.value;

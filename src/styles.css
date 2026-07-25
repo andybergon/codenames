@@ -2519,6 +2519,57 @@ button.play-card:not(:disabled):hover {
   text-transform: none;
 }
 
+.play-clue-display .play-turn-note.is-bot-wait {
+  display: grid;
+}
+
+.play-turn-progress,
+.play-turn-wait-detail {
+  grid-area: 1 / 1;
+}
+
+.play-turn-progress {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.play-turn-spinner {
+  width: 12px;
+  height: 12px;
+  flex: 0 0 auto;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: play-turn-spin 700ms linear infinite;
+}
+
+.play-turn-wait-detail {
+  visibility: hidden;
+}
+
+.play-turn-note.is-detailed .play-turn-progress {
+  visibility: hidden;
+}
+
+.play-turn-note.is-detailed .play-turn-wait-detail {
+  visibility: visible;
+}
+
+@keyframes play-turn-spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .play-turn-spinner {
+    animation: none;
+    border-right-color: currentColor;
+    opacity: 0.6;
+  }
+}
+
 .play-clue-form {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 80px auto;
