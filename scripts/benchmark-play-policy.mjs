@@ -35,6 +35,7 @@ import {
   passTurn,
 } from "../src/play/game-state.js";
 import { WORD_SET, getWordsForSet } from "../src/word-data.js";
+import { PLAY_FUN_OBJECTIVE, scorePlayFun } from "./play-fun-score.mjs";
 import { writePlayPolicySummary } from "./play-policy-summary.mjs";
 
 const ROOT = resolve(fileURLToPath(new URL("..", import.meta.url)));
@@ -51,7 +52,9 @@ const summaryOutput = options.summaryOutput ?? summaryPathFor(options.output);
 const summaryOutputPath = isAbsolute(summaryOutput)
   ? summaryOutput
   : resolve(ROOT, summaryOutput);
-const manifestDirectory = resolve(ROOT, `public/data/model-lab/${options.modelId}`);
+const manifestDirectory = options.indexDir
+  ? resolve(ROOT, options.indexDir)
+  : resolve(ROOT, `public/data/model-lab/${options.modelId}`);
 const manifest = JSON.parse(
   await readFile(resolve(manifestDirectory, "manifest.json"), "utf8"),
 );
@@ -67,16 +70,29 @@ const shards = await Promise.all(
 const clueIndex = hydrateClueShards(manifest, shards, options.candidates);
 
 const boardWords = getWordsForSet(options.wordSet);
-console.log(`Embedding ${boardWords.length} ${options.wordSet} board words with ${manifest.model}...`);
-const embeddedBoardWords = await embedTerms(boardWords, { model: manifest.model });
-const centeredBoardWords = centerEmbeddings(
-  embeddedBoardWords,
-  clueIndex.centering.mean,
-);
+const centeredBoardWords =
+  manifest.embeddingRuntime === "precomputed"
+    ? await loadPrecomputedBoardVectors(
+        manifestDirectory,
+        manifest,
+        boardWords,
+      )
+    : await embedLocalBoardWords(boardWords, manifest, clueIndex);
 const vectorByWord = new Map(
   boardWords.map((word, index) => [word, centeredBoardWords[index]]),
 );
-const centeredClueVectors = new Map();
+const centeredClueVectors =
+  manifest.embeddingRuntime === "precomputed"
+    ? buildPrecomputedClueVectorCache(clueIndex)
+    : new Map();
+const operativeContext = await loadOperativeContext({
+  boardWords,
+  clueIndex,
+  centeredBoardWords,
+  centeredClueVectors,
+  manifest,
+  modelId: options.operativeModel,
+});
 const resultsByPolicy = new Map(POLICIES.map((policy) => [policy, []]));
 const startedAt = performance.now();
 
@@ -100,11 +116,24 @@ for (let boardIndex = 0; boardIndex < options.boards; boardIndex += 1) {
     }
     return vector;
   });
+  const operativeGameContext = {
+    ...operativeContext,
+    boardVectors: cards.map((card) => {
+      const vector = operativeContext.vectorByWord.get(card.word);
+      if (!vector) {
+        throw new Error(
+          `No operative embedding found for board word ${card.word}.`,
+        );
+      }
+      return vector;
+    }),
+  };
 
   for (const policy of POLICIES) {
     const result = await simulateGame({
       boardIndex,
       boardVectors,
+      operativeContext: operativeGameContext,
       cards,
       clueIndex,
       centeredClueVectors,
@@ -144,6 +173,9 @@ const report = {
     wordSet: options.wordSet,
     modelId: options.modelId,
     model: manifest.model,
+    provider: manifest.provider ?? "local",
+    dimensions: manifest.dimensions,
+    indexDirectory: options.indexDir ?? `public/data/model-lab/${options.modelId}`,
     candidateCount: options.candidates,
     resultsPerTargetSize: RESULTS_PER_SIZE,
     boardSeed:
@@ -162,13 +194,22 @@ const report = {
         ? "Pass after reaching the declared clue number."
         : "Match Play runtime by allowing a number-plus-one guess.",
     operative:
-      "The production bot guesser sees only centered clue-to-unrevealed-word similarities.",
+      `The bot guesser sees only centered clue-to-unrevealed-word similarities from ${operativeContext.model}.`,
+    operativeModelId: options.operativeModel,
+    operativeModel: operativeContext.model,
     rules:
       "Every simulation uses the production Play state machine and stops only at an agent or assassin win.",
     fallback:
       "If the production analyzer has no ranked suggestion, use the legal indexed clue closest to one remaining agent, number 1, and count the turn.",
     firstHalf:
       "For each completed game, take the first ceiling(total clue turns / 2) clue turns, then aggregate their clue numbers.",
+    funObjective: {
+      definition:
+        "A 0-100 proxy balancing ambitious clues, productive guesses, close finishes, and a playable game length.",
+      caution:
+        "The Fun Index ranks deterministic self-play experiments. Human embedding agreement remains a separate validity guardrail.",
+      ...PLAY_FUN_OBJECTIVE,
+    },
     policies: {
       current:
         "Worth + current risk adjustment + state-dependent clue-number bonus + 18 x margin.",
@@ -189,6 +230,7 @@ printSummary(policies);
 async function simulateGame({
   boardIndex,
   boardVectors,
+  operativeContext,
   cards,
   clueIndex: activeClueIndex,
   centeredClueVectors: clueVectorCache,
@@ -308,14 +350,16 @@ async function simulateGame({
 
     const clueVector = await centeredClueVector(
       game.currentTurn.clue,
-      activeClueIndex,
-      clueVectorCache,
+      operativeContext,
     );
     const candidates = game.cards
       .map((card, index) => ({
         layoutId: card.layoutId,
         done: card.done,
-        similarity: dotVectors(clueVector, boardVectors[index]),
+        similarity: dotVectors(
+          clueVector,
+          operativeContext.boardVectors[index],
+        ),
       }))
       .filter((candidate) => !candidate.done)
       .map(({ layoutId, similarity }) => ({ layoutId, similarity }));
@@ -357,13 +401,14 @@ async function simulateGame({
   });
 }
 
-async function centeredClueVector(clue, activeClueIndex, cache) {
+async function centeredClueVector(clue, context) {
+  const { cache, centeringMean, model } = context;
   const normalized = clue.toLowerCase();
   if (!cache.has(normalized)) {
-    const vectors = await embedTerms([normalized], { model: manifest.model });
+    const vectors = await embedTerms([normalized], { model });
     cache.set(
       normalized,
-      centerEmbeddings(vectors, activeClueIndex.centering.mean)[0],
+      centerEmbeddings(vectors, centeringMean)[0],
     );
   }
   return cache.get(normalized);
@@ -437,6 +482,8 @@ function summarizeGame(
   ).length;
   const neutralHits = guesses.filter((event) => event.team === "neutral").length;
   const assassinHits = guesses.filter((event) => event.team === "assassin").length;
+  const losingSide = game.winner === SIDE.BLUE ? SIDE.RED : SIDE.BLUE;
+  const losingAgentsRemaining = remainingCardsForSide(game.cards, losingSide);
 
   return {
     board: boardIndex + 1,
@@ -458,6 +505,7 @@ function summarizeGame(
     wrongTeamHits,
     neutralHits,
     assassinHits,
+    losingAgentsRemaining,
     passes: passes.length,
   };
 }
@@ -471,6 +519,8 @@ function summarizePolicy(gameResults) {
       summary.wrongTeamHits += game.wrongTeamHits;
       summary.neutralHits += game.neutralHits;
       summary.assassinHits += game.assassinHits;
+      summary.closeFinishes += Number(game.losingAgentsRemaining <= 2);
+      summary.losingAgentsRemaining += game.losingAgentsRemaining;
       summary.passes += game.passes;
       summary.fallbackClues += game.fallbackClues;
       summary.bonusGuesses += game.bonusGuesses;
@@ -491,6 +541,8 @@ function summarizePolicy(gameResults) {
       wrongTeamHits: 0,
       neutralHits: 0,
       assassinHits: 0,
+      closeFinishes: 0,
+      losingAgentsRemaining: 0,
       passes: 0,
       fallbackClues: 0,
       bonusGuesses: 0,
@@ -512,7 +564,7 @@ function summarizePolicy(gameResults) {
   );
   const gameCount = gameResults.length;
 
-  return {
+  const policy = {
     gameCount,
     completedGames: gameCount,
     clueCount: totals.turns,
@@ -528,6 +580,11 @@ function summarizePolicy(gameResults) {
     neutralHitsPerGame: ratio(totals.neutralHits, gameCount),
     assassinHits: totals.assassinHits,
     assassinRate: ratio(totals.assassinHits, gameCount),
+    closeFinishRate: ratio(totals.closeFinishes, gameCount),
+    meanLosingAgentsRemaining: ratio(
+      totals.losingAgentsRemaining,
+      gameCount,
+    ),
     meanTurnsPerGame: ratio(totals.turns, gameCount),
     meanGuessesPerTurn: ratio(totals.guesses, totals.turns),
     passesPerGame: ratio(totals.passes, gameCount),
@@ -545,6 +602,10 @@ function summarizePolicy(gameResults) {
       red: totals.redWins,
     },
     gameResults: gameResults.map(({ clueDecisions, ...result }) => result),
+  };
+  return {
+    ...policy,
+    fun: scorePlayFun(policy),
   };
 }
 
@@ -566,6 +627,8 @@ function metricDeltas(current, hybrid) {
       "wrongTeamGuessRate",
       "neutralHitsPerGame",
       "assassinRate",
+      "closeFinishRate",
+      "meanLosingAgentsRemaining",
       "meanTurnsPerGame",
       "meanGuessesPerTurn",
       "passesPerGame",
@@ -594,6 +657,8 @@ function parseOptions(args) {
     bonusGuesses: PLAY_BONUS_POLICY.PASS,
     output: DEFAULT_OUTPUT,
     summaryOutput: null,
+    indexDir: null,
+    operativeModel: "same",
   };
   for (let index = 0; index < args.length; index += 1) {
     const option = args[index];
@@ -605,6 +670,12 @@ function parseOptions(args) {
     } else if (option === "--model") {
       if (!value) throw new Error(`${option} requires a model ID.`);
       values.modelId = value;
+    } else if (option === "--index-dir") {
+      if (!value) throw new Error(`${option} requires a directory.`);
+      values.indexDir = value;
+    } else if (option === "--operative-model") {
+      if (!value) throw new Error(`${option} requires a model ID or same.`);
+      values.operativeModel = value;
     } else if (option === "--word-set") {
       if (!Object.values(WORD_SET).includes(value)) {
         throw new Error(`${option} must be official or extended.`);
@@ -711,6 +782,104 @@ function dotVectors(left, right) {
   return total;
 }
 
+async function embedLocalBoardWords(words, activeManifest, activeClueIndex) {
+  console.log(
+    `Embedding ${words.length} ${options.wordSet} board words with ${activeManifest.model}...`,
+  );
+  const vectors = await embedTerms(words, { model: activeManifest.model });
+  return centerEmbeddings(vectors, activeClueIndex.centering.mean);
+}
+
+async function loadOperativeContext({
+  boardWords: words,
+  clueIndex: activeClueIndex,
+  centeredBoardWords: spymasterBoardVectors,
+  centeredClueVectors: spymasterClueVectors,
+  manifest: activeManifest,
+  modelId,
+}) {
+  if (modelId === "same") {
+    return {
+      vectorByWord: new Map(
+        words.map((word, index) => [word, spymasterBoardVectors[index]]),
+      ),
+      cache: spymasterClueVectors,
+      centeringMean: activeClueIndex.centering.mean,
+      model: activeManifest.model,
+    };
+  }
+  const operativeManifest = JSON.parse(
+    await readFile(
+      resolve(ROOT, `public/data/model-lab/${modelId}/manifest.json`),
+      "utf8",
+    ),
+  );
+  const raw = await embedTerms(words, { model: operativeManifest.model });
+  const centered = centerEmbeddings(raw, operativeManifest.centering.mean);
+  return {
+    vectorByWord: new Map(
+      words.map((word, index) => [word, centered[index]]),
+    ),
+    cache: new Map(),
+    centeringMean: operativeManifest.centering.mean,
+    model: operativeManifest.model,
+  };
+}
+
+async function loadPrecomputedBoardVectors(directory, activeManifest, words) {
+  const definition = activeManifest.boardVectors;
+  if (!definition?.file) {
+    throw new Error("Precomputed embedding index is missing boardVectors.file.");
+  }
+  const payload = JSON.parse(
+    await readFile(resolve(directory, definition.file), "utf8"),
+  );
+  if (
+    payload.dimensions !== activeManifest.dimensions ||
+    payload.quantization?.scale !== activeManifest.quantization.scale
+  ) {
+    throw new Error("Precomputed board vectors do not match the clue index.");
+  }
+  const available = new Map();
+  const bytes = Buffer.from(payload.vectors, "base64");
+  const quantized = new Int8Array(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  payload.words.forEach((word, row) => {
+    const start = row * payload.dimensions;
+    available.set(
+      word,
+      Float32Array.from(
+        quantized.subarray(start, start + payload.dimensions),
+        (value) => value / payload.quantization.scale,
+      ),
+    );
+  });
+  return words.map((word) => {
+    const vector = available.get(word);
+    if (!vector) {
+      throw new Error(`Precomputed index has no board embedding for ${word}.`);
+    }
+    return vector;
+  });
+}
+
+function buildPrecomputedClueVectorCache(activeClueIndex) {
+  const cache = new Map();
+  activeClueIndex.clues.forEach((clue, row) => {
+    const start = row * activeClueIndex.dimensions;
+    cache.set(
+      clue.toLowerCase(),
+      Float32Array.from(
+        activeClueIndex.vectors.subarray(
+          start,
+          start + activeClueIndex.dimensions,
+        ),
+        (value) => value / activeClueIndex.quantization.scale,
+      ),
+    );
+  });
+  return cache;
+}
+
 function ratio(numerator, denominator) {
   return denominator ? rounded(numerator / denominator) : 0;
 }
@@ -737,6 +906,8 @@ function printSummary(policyResults) {
       "wrong/game": policyResults[policy].wrongTeamHitsPerGame,
       "assassin rate": policyResults[policy].assassinRate,
       "turns/game": policyResults[policy].meanTurnsPerGame,
+      "close finishes": policyResults[policy].closeFinishRate,
+      "fun index": policyResults[policy].fun.score,
     })),
   );
 }

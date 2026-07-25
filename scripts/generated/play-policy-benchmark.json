@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-25T00:20:27.590Z",
+  "generatedAt": "2026-07-25T03:08:06.797Z",
   "environment": {
     "node": "v26.5.0",
     "platform": "darwin",
@@ -15,16 +15,64 @@
     "wordSet": "official",
     "modelId": "bge-small",
     "model": "Xenova/bge-small-en-v1.5",
+    "provider": "local",
+    "dimensions": 384,
+    "indexDirectory": "public/data/model-lab/bge-small",
     "candidateCount": 10000,
     "resultsPerTargetSize": 6,
     "boardSeed": "Eight deterministic bytes: ASCII CODE followed by a big-endian 1-based board index.",
     "decisionSeed": "Matches Play runtime: board seed, turn number, and history length for each action.",
     "clueSelection": "Prefer the highest-scoring multi clue when it is within 5 points of the best clue; otherwise choose the best clue.",
     "bonusGuesses": "Pass after reaching the declared clue number.",
-    "operative": "The production bot guesser sees only centered clue-to-unrevealed-word similarities.",
+    "operative": "The bot guesser sees only centered clue-to-unrevealed-word similarities from Xenova/bge-small-en-v1.5.",
+    "operativeModelId": "same",
+    "operativeModel": "Xenova/bge-small-en-v1.5",
     "rules": "Every simulation uses the production Play state machine and stops only at an agent or assassin win.",
     "fallback": "If the production analyzer has no ranked suggestion, use the legal indexed clue closest to one remaining agent, number 1, and count the turn.",
     "firstHalf": "For each completed game, take the first ceiling(total clue turns / 2) clue turns, then aggregate their clue numbers.",
+    "funObjective": {
+      "definition": "A 0-100 proxy balancing ambitious clues, productive guesses, close finishes, and a playable game length.",
+      "caution": "The Fun Index ranks deterministic self-play experiments. Human embedding agreement remains a separate validity guardrail.",
+      "version": 1,
+      "weights": {
+        "ambition": 0.3,
+        "momentum": 0.3,
+        "suspense": 0.25,
+        "flow": 0.15
+      },
+      "targets": {
+        "multiClueRate": [
+          0.2,
+          0.6
+        ],
+        "firstHalfMeanClueNumber": [
+          1.2,
+          2.2
+        ],
+        "correctCardsPerTurn": [
+          1,
+          1.65
+        ],
+        "closeFinishRate": [
+          0.35,
+          0.75
+        ],
+        "idealTurnsPerGame": [
+          8,
+          12
+        ],
+        "playableTurnsPerGame": [
+          6,
+          16
+        ]
+      },
+      "guardrails": {
+        "assassinRate": 0.02,
+        "wrongTeamHitsPerGame": 0.15,
+        "neutralHitsPerGame": 0.35,
+        "fallbackClueRate": 0.01
+      }
+    },
     "policies": {
       "current": "Worth + current risk adjustment + state-dependent clue-number bonus + 18 x margin.",
       "hybrid": "0.35 x Worth + 25 x expected net + 10 x success + 6 x margin + risk adjustment."
@@ -51,6 +99,8 @@
       "neutralHitsPerGame": 0,
       "assassinHits": 0,
       "assassinRate": 0,
+      "closeFinishRate": 0.92,
+      "meanLosingAgentsRemaining": 1.42,
       "meanTurnsPerGame": 13.34,
       "meanGuessesPerTurn": 1.167916,
       "passesPerGame": 12.34,
@@ -157,6 +207,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 12
         },
         {
@@ -186,6 +237,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 2,
           "passes": 10
         },
         {
@@ -216,6 +268,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 3,
           "passes": 10
         },
         {
@@ -245,6 +298,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 3,
           "passes": 11
         },
         {
@@ -275,6 +329,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 12
         },
         {
@@ -305,6 +360,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 13
         },
         {
@@ -336,6 +392,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 14
         },
         {
@@ -367,6 +424,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 14
         },
         {
@@ -396,6 +454,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 2,
           "passes": 11
         },
         {
@@ -426,6 +485,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 2,
           "passes": 12
         },
         {
@@ -457,6 +517,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 14
         },
         {
@@ -488,6 +549,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 14
         },
         {
@@ -518,6 +580,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 13
         },
         {
@@ -548,6 +611,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 13
         },
         {
@@ -577,6 +641,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 11
         },
         {
@@ -608,6 +673,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 12
         },
         {
@@ -639,6 +705,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 14
         },
         {
@@ -670,6 +737,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 14
         },
         {
@@ -700,6 +768,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 12
         },
         {
@@ -730,6 +799,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 13
         },
         {
@@ -760,6 +830,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 2,
           "passes": 12
         },
         {
@@ -790,6 +861,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 13
         },
         {
@@ -819,6 +891,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 11
         },
         {
@@ -850,6 +923,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 14
         },
         {
@@ -879,6 +953,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 2,
           "passes": 11
         },
         {
@@ -908,6 +983,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 4,
           "passes": 9
         },
         {
@@ -938,6 +1014,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 13
         },
         {
@@ -968,6 +1045,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 12
         },
         {
@@ -998,6 +1076,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 12
         },
         {
@@ -1029,6 +1108,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 14
         },
         {
@@ -1059,6 +1139,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 2,
           "passes": 13
         },
         {
@@ -1088,6 +1169,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 11
         },
         {
@@ -1118,6 +1200,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 12
         },
         {
@@ -1147,6 +1230,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 3,
           "passes": 10
         },
         {
@@ -1177,6 +1261,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 15
         },
         {
@@ -1207,6 +1292,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 2,
           "passes": 12
         },
         {
@@ -1237,6 +1323,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 2,
           "passes": 13
         },
         {
@@ -1268,6 +1355,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 14
         },
         {
@@ -1297,6 +1385,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 11
         },
         {
@@ -1328,6 +1417,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 14
         },
         {
@@ -1358,6 +1448,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 13
         },
         {
@@ -1388,6 +1479,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 2,
           "passes": 12
         },
         {
@@ -1419,6 +1511,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 14
         },
         {
@@ -1450,6 +1543,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 14
         },
         {
@@ -1480,6 +1574,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 3,
           "passes": 10
         },
         {
@@ -1510,6 +1605,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 2,
           "passes": 13
         },
         {
@@ -1540,6 +1636,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 12
         },
         {
@@ -1569,6 +1666,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 2,
           "passes": 11
         },
         {
@@ -1600,6 +1698,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 14
         },
         {
@@ -1631,6 +1730,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 14
         },
         {
@@ -1662,6 +1762,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 14
         },
         {
@@ -1691,6 +1792,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 2,
           "passes": 11
         },
         {
@@ -1721,6 +1823,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 15
         },
         {
@@ -1751,6 +1854,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 13
         },
         {
@@ -1781,6 +1885,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 2,
           "passes": 13
         },
         {
@@ -1810,6 +1915,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 11
         },
         {
@@ -1841,6 +1947,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 14
         },
         {
@@ -1870,6 +1977,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 3,
           "passes": 11
         },
         {
@@ -1899,6 +2007,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 2,
           "passes": 11
         },
         {
@@ -1929,6 +2038,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 13
         },
         {
@@ -1959,6 +2069,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 12
         },
         {
@@ -1989,6 +2100,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 12
         },
         {
@@ -2017,6 +2129,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 4,
           "passes": 7
         },
         {
@@ -2047,6 +2160,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 12
         },
         {
@@ -2077,6 +2191,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 13
         },
         {
@@ -2107,6 +2222,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 2,
           "passes": 13
         },
         {
@@ -2137,6 +2253,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 13
         },
         {
@@ -2167,6 +2284,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 12
         },
         {
@@ -2196,6 +2314,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 11
         },
         {
@@ -2226,6 +2345,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 12
         },
         {
@@ -2256,6 +2376,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 2,
           "passes": 13
         },
         {
@@ -2285,6 +2406,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 11
         },
         {
@@ -2316,6 +2438,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 14
         },
         {
@@ -2346,6 +2469,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 13
         },
         {
@@ -2376,6 +2500,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 15
         },
         {
@@ -2406,6 +2531,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 13
         },
         {
@@ -2436,6 +2562,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 13
         },
         {
@@ -2467,6 +2594,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 12
         },
         {
@@ -2498,6 +2626,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 14
         },
         {
@@ -2527,6 +2656,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 11
         },
         {
@@ -2557,6 +2687,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 12
         },
         {
@@ -2587,6 +2718,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 13
         },
         {
@@ -2617,6 +2749,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 2,
           "passes": 12
         },
         {
@@ -2647,6 +2780,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 12
         },
         {
@@ -2677,6 +2811,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 12
         },
         {
@@ -2708,6 +2843,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 12
         },
         {
@@ -2737,6 +2873,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 2,
           "passes": 11
         },
         {
@@ -2767,6 +2904,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 2,
           "passes": 13
         },
         {
@@ -2797,6 +2935,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 11
         },
         {
@@ -2827,6 +2966,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 2,
           "passes": 12
         },
         {
@@ -2857,6 +2997,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 15
         },
         {
@@ -2887,6 +3028,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 10
         },
         {
@@ -2917,6 +3059,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 2,
           "passes": 12
         },
         {
@@ -2947,6 +3090,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 2,
           "passes": 13
         },
         {
@@ -2976,6 +3120,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 4,
           "passes": 8
         },
         {
@@ -3006,6 +3151,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 12
         },
         {
@@ -3036,6 +3182,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 12
         },
         {
@@ -3066,6 +3213,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 13
         },
         {
@@ -3096,6 +3244,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 2,
           "passes": 11
         },
         {
@@ -3127,9 +3276,23 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 14
         }
-      ]
+      ],
+      "fun": {
+        "objectiveVersion": 1,
+        "score": 42.225,
+        "selectionScore": 42.225,
+        "components": {
+          "ambition": 0,
+          "momentum": 25.8332,
+          "suspense": 98,
+          "flow": 66.5
+        },
+        "guardrailsPassed": true,
+        "violations": []
+      }
     },
     "hybrid": {
       "gameCount": 100,
@@ -3152,6 +3315,8 @@
       "neutralHitsPerGame": 0.01,
       "assassinHits": 0,
       "assassinRate": 0,
+      "closeFinishRate": 0.9,
+      "meanLosingAgentsRemaining": 1.48,
       "meanTurnsPerGame": 9.85,
       "meanGuessesPerTurn": 1.57665,
       "passesPerGame": 8.84,
@@ -3258,6 +3423,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 10
         },
         {
@@ -3287,6 +3453,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 8
         },
         {
@@ -3316,6 +3483,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 8
         },
         {
@@ -3345,6 +3513,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 8
         },
         {
@@ -3374,6 +3543,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 10
         },
         {
@@ -3402,6 +3572,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 9
         },
         {
@@ -3431,6 +3602,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 8
         },
         {
@@ -3459,6 +3631,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 9
         },
         {
@@ -3488,6 +3661,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 8
         },
         {
@@ -3517,6 +3691,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 8
         },
         {
@@ -3546,6 +3721,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 9
         },
         {
@@ -3575,6 +3751,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 10
         },
         {
@@ -3601,6 +3778,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 7
         },
         {
@@ -3630,6 +3808,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 10
         },
         {
@@ -3659,6 +3838,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 9
         },
         {
@@ -3688,6 +3868,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 10
         },
         {
@@ -3717,6 +3898,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 9
         },
         {
@@ -3746,6 +3928,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 3,
           "passes": 10
         },
         {
@@ -3775,6 +3958,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 2,
           "passes": 10
         },
         {
@@ -3804,6 +3988,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 8
         },
         {
@@ -3833,6 +4018,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 3,
           "passes": 8
         },
         {
@@ -3861,6 +4047,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 2,
           "passes": 9
         },
         {
@@ -3889,6 +4076,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 2,
           "passes": 9
         },
         {
@@ -3917,6 +4105,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 8
         },
         {
@@ -3946,6 +4135,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 8
         },
         {
@@ -3974,6 +4164,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 3,
           "passes": 9
         },
         {
@@ -4003,6 +4194,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 10
         },
         {
@@ -4032,6 +4224,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 8
         },
         {
@@ -4060,6 +4253,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 8
         },
         {
@@ -4089,6 +4283,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 2,
           "passes": 10
         },
         {
@@ -4118,6 +4313,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 9
         },
         {
@@ -4146,6 +4342,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 2,
           "passes": 7
         },
         {
@@ -4174,6 +4371,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 7
         },
         {
@@ -4203,6 +4401,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 9
         },
         {
@@ -4232,6 +4431,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 9
         },
         {
@@ -4261,6 +4461,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 9
         },
         {
@@ -4290,6 +4491,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 3,
           "passes": 8
         },
         {
@@ -4318,6 +4520,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 3,
           "passes": 9
         },
         {
@@ -4346,6 +4549,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 7
         },
         {
@@ -4375,6 +4579,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 3,
           "passes": 8
         },
         {
@@ -4405,6 +4610,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 10
         },
         {
@@ -4434,6 +4640,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 9
         },
         {
@@ -4463,6 +4670,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 2,
           "passes": 9
         },
         {
@@ -4491,6 +4699,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 7
         },
         {
@@ -4520,6 +4729,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 2,
           "passes": 8
         },
         {
@@ -4550,6 +4760,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 2,
           "passes": 10
         },
         {
@@ -4579,6 +4790,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 10
         },
         {
@@ -4607,6 +4819,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 3,
           "passes": 9
         },
         {
@@ -4636,6 +4849,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 9
         },
         {
@@ -4666,6 +4880,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 2,
           "passes": 12
         },
         {
@@ -4695,6 +4910,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 11
         },
         {
@@ -4724,6 +4940,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 3,
           "passes": 9
         },
         {
@@ -4753,6 +4970,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 11
         },
         {
@@ -4782,6 +5000,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 10
         },
         {
@@ -4812,6 +5031,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 2,
           "passes": 11
         },
         {
@@ -4841,6 +5061,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 2,
           "passes": 9
         },
         {
@@ -4870,6 +5091,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 10
         },
         {
@@ -4899,6 +5121,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 8
         },
         {
@@ -4927,6 +5150,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 7
         },
         {
@@ -4955,6 +5179,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 2,
           "passes": 7
         },
         {
@@ -4984,6 +5209,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 3,
           "passes": 8
         },
         {
@@ -5013,6 +5239,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 9
         },
         {
@@ -5040,6 +5267,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 2,
           "passes": 7
         },
         {
@@ -5068,6 +5296,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 9
         },
         {
@@ -5097,6 +5326,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 9
         },
         {
@@ -5125,6 +5355,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 2,
           "passes": 9
         },
         {
@@ -5154,6 +5385,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 2,
           "passes": 9
         },
         {
@@ -5183,6 +5415,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 8
         },
         {
@@ -5211,6 +5444,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 2,
           "passes": 7
         },
         {
@@ -5240,6 +5474,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 9
         },
         {
@@ -5268,6 +5503,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 9
         },
         {
@@ -5296,6 +5532,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 8
         },
         {
@@ -5325,6 +5562,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 2,
           "passes": 10
         },
         {
@@ -5354,6 +5592,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 2,
           "passes": 9
         },
         {
@@ -5383,6 +5622,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 10
         },
         {
@@ -5412,6 +5652,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 10
         },
         {
@@ -5442,6 +5683,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 1,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 9
         },
         {
@@ -5471,6 +5713,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 8
         },
         {
@@ -5499,6 +5742,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 2,
           "passes": 9
         },
         {
@@ -5527,6 +5771,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 2,
           "passes": 7
         },
         {
@@ -5556,6 +5801,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 2,
           "passes": 9
         },
         {
@@ -5584,6 +5830,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 9
         },
         {
@@ -5612,6 +5859,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 2,
           "passes": 8
         },
         {
@@ -5640,6 +5888,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 2,
           "passes": 8
         },
         {
@@ -5668,6 +5917,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 2,
           "passes": 7
         },
         {
@@ -5697,6 +5947,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 2,
           "passes": 8
         },
         {
@@ -5726,6 +5977,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 8
         },
         {
@@ -5756,6 +6008,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 12
         },
         {
@@ -5784,6 +6037,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 3,
           "passes": 7
         },
         {
@@ -5812,6 +6066,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 8
         },
         {
@@ -5842,6 +6097,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 10
         },
         {
@@ -5872,6 +6128,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 11
         },
         {
@@ -5901,6 +6158,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 8
         },
         {
@@ -5930,6 +6188,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 2,
           "passes": 9
         },
         {
@@ -5959,6 +6218,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 2,
           "passes": 8
         },
         {
@@ -5987,6 +6247,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 9
         },
         {
@@ -6016,6 +6277,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 10
         },
         {
@@ -6045,6 +6307,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 10
         },
         {
@@ -6073,6 +6336,7 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 2,
           "passes": 7
         },
         {
@@ -6103,9 +6367,23 @@
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 0,
+          "losingAgentsRemaining": 1,
           "passes": 12
         }
-      ]
+      ],
+      "fun": {
+        "objectiveVersion": 1,
+        "score": 88.4269,
+        "selectionScore": 88.4269,
+        "components": {
+          "ambition": 73.697,
+          "momentum": 88.5592,
+          "suspense": 99,
+          "flow": 100
+        },
+        "guardrailsPassed": true,
+        "violations": []
+      }
     }
   },
   "hybridMinusCurrent": {
@@ -6117,6 +6395,8 @@
     "wrongTeamGuessRate": 0,
     "neutralHitsPerGame": 0.01,
     "assassinRate": 0,
+    "closeFinishRate": -0.02,
+    "meanLosingAgentsRemaining": 0.06,
     "meanTurnsPerGame": -3.49,
     "meanGuessesPerTurn": 0.408734,
     "passesPerGame": -3.5,

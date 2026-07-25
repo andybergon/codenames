@@ -22,6 +22,7 @@ The first model load is cached by the browser. Training progress is session-loca
 
 - [Clue engine](docs/clue-engine.md) explains the embedding pipeline, legality filter, scoring contract, model assets, and evaluation commands.
 - [Play clue number analysis](docs/play-clue-number-analysis.md) records the controlled Play-policy evidence.
+- [Play fun optimization](docs/play-fun-optimization.md) defines the Fun Index and hosted-model promotion gates.
 - [TODO.md](TODO.md) tracks unfinished gameplay, calibration, vocabulary, and model work.
 
 ## Run
@@ -67,6 +68,8 @@ The Play implementation keeps rules, bot choices, persistence, and rendering sep
 - `scripts/play-smoke.mjs` covers seat ownership, information boundaries, reveal outcomes, deterministic bots, and bounded self-play.
 
 Run `npm run benchmark:play` for paired full-game comparisons and `npm run analyze:play-clues` for controlled opening-board analysis. The latest [benchmark summary](scripts/generated/play-policy-benchmark.md) and [clue-number analysis](docs/play-clue-number-analysis.md) preserve the checked evidence.
+
+The benchmark also reports a 0-100 Fun Index that balances ambitious multi-card clues, productive guesses, close finishes, and games in the 8 to 12 turn range. Wrong-team hits, assassin losses, neutral hits, and fallbacks remain promotion guardrails rather than sources of points. Use `--operative-model <model-id>` to stress-test whether clues transfer to a different embedding geometry instead of relying only on optimistic same-model self-play.
 
 ## Board word sets
 

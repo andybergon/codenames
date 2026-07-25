@@ -1,0 +1,146 @@
+{
+  "generatedAt": "2026-07-25T02:52:20.023Z",
+  "provider": "openai",
+  "model": "text-embedding-3-large",
+  "dimensions": 1024,
+  "dataset": {
+    "culturalCodes": {
+      "name": "Cultural Codes",
+      "repository": "https://github.com/SALT-NLP/codenames",
+      "commit": "9bf4550e681f7a42ac406439b00b0c717f59f13c",
+      "turns": 7703
+    },
+    "connector": {
+      "name": "Lexical Search and Pragmatics in Connector, Experiment 1",
+      "repository": "https://github.com/hawkrobe/lexical-search-and-pragmatics",
+      "commit": "8d824794d623adf4dd19cbff13d987d539b19c5e",
+      "turns": 2250
+    },
+    "licenseNote": "Neither upstream repository has an explicit license file. Data is fetched into the gitignored cache and is not redistributed."
+  },
+  "costControl": {
+    "pricePerMillionTokens": 0.13,
+    "maxCostUsd": 0.01,
+    "cachedBaseTerms": 30800,
+    "humanTerms": 2972,
+    "uncachedTerms": 453,
+    "estimatedTokens": 1693,
+    "billedTokens": 1038,
+    "billedCostUsd": 0.000135
+  },
+  "transforms": {
+    "raw": {
+      "culturalCodes": {
+        "scoredGuessTurns": 7625,
+        "scoredTargetTurns": 7703,
+        "firstGuessAccuracy": 0.5368,
+        "guessRecallAtHumanCount": 0.5354,
+        "targetRecallAtCount": 0.6105,
+        "exactTargetSetAccuracy": 0.5493,
+        "avoidWordRate": 0.0906,
+        "pairwiseTargetAccuracy": 0.8804
+      },
+      "connector": {
+        "scoredGuessTurns": 0,
+        "scoredTargetTurns": 2250,
+        "firstGuessAccuracy": null,
+        "guessRecallAtHumanCount": null,
+        "targetRecallAtCount": 0.5171,
+        "exactTargetSetAccuracy": 0.2396,
+        "avoidWordRate": 0,
+        "pairwiseTargetAccuracy": 0.8227
+      }
+    },
+    "centered": {
+      "culturalCodes": {
+        "scoredGuessTurns": 7625,
+        "scoredTargetTurns": 7703,
+        "firstGuessAccuracy": 0.5496,
+        "guessRecallAtHumanCount": 0.547,
+        "targetRecallAtCount": 0.6246,
+        "exactTargetSetAccuracy": 0.5626,
+        "avoidWordRate": 0.09,
+        "pairwiseTargetAccuracy": 0.8845
+      },
+      "connector": {
+        "scoredGuessTurns": 0,
+        "scoredTargetTurns": 2250,
+        "firstGuessAccuracy": null,
+        "guessRecallAtHumanCount": null,
+        "targetRecallAtCount": 0.5227,
+        "exactTargetSetAccuracy": 0.2316,
+        "avoidWordRate": 0,
+        "pairwiseTargetAccuracy": 0.8353
+      }
+    }
+  },
+  "baseline": {
+    "model": "Xenova/bge-small-en-v1.5",
+    "transform": "centered",
+    "datasets": {
+      "culturalCodes": {
+        "scoredGuessTurns": 7625,
+        "scoredTargetTurns": 7703,
+        "firstGuessAccuracy": 0.5204,
+        "guessRecallAtHumanCount": 0.5173,
+        "targetRecallAtCount": 0.5857,
+        "exactTargetSetAccuracy": 0.5254,
+        "avoidWordRate": 0.0946,
+        "pairwiseTargetAccuracy": 0.8537
+      },
+      "connector": {
+        "scoredGuessTurns": 0,
+        "scoredTargetTurns": 2250,
+        "firstGuessAccuracy": null,
+        "guessRecallAtHumanCount": null,
+        "targetRecallAtCount": 0.5249,
+        "exactTargetSetAccuracy": 0.2364,
+        "avoidWordRate": 0,
+        "pairwiseTargetAccuracy": 0.8204
+      }
+    }
+  },
+  "centeredDeltaVsBgeSmall": {
+    "culturalCodes": {
+      "scoredGuessTurns": 0,
+      "scoredTargetTurns": 0,
+      "firstGuessAccuracy": 0.0292,
+      "guessRecallAtHumanCount": 0.0297,
+      "targetRecallAtCount": 0.0389,
+      "exactTargetSetAccuracy": 0.0372,
+      "avoidWordRate": -0.0046,
+      "pairwiseTargetAccuracy": 0.0308
+    },
+    "connector": {
+      "scoredGuessTurns": 0,
+      "scoredTargetTurns": 0,
+      "targetRecallAtCount": -0.0022,
+      "exactTargetSetAccuracy": -0.0048,
+      "avoidWordRate": 0,
+      "pairwiseTargetAccuracy": 0.0149
+    }
+  },
+  "humanValidityGuardrails": {
+    "passed": true,
+    "checks": [
+      {
+        "metric": "Cultural Codes target recall",
+        "passed": true,
+        "delta": 0.0389,
+        "minimumDelta": -0.005
+      },
+      {
+        "metric": "Cultural Codes avoid rate",
+        "passed": true,
+        "delta": -0.0046,
+        "maximumDelta": 0.005
+      },
+      {
+        "metric": "Connector exact pair",
+        "passed": true,
+        "delta": -0.0048,
+        "minimumDelta": -0.005
+      }
+    ]
+  }
+}

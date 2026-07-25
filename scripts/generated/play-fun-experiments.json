@@ -1,0 +1,327 @@
+{
+  "generatedAt": "2026-07-25T03:04:42.155Z",
+  "sample": {
+    "boards": 20,
+    "policy": "hybrid",
+    "clueSelection": "tempo",
+    "defaultMultiTolerance": 5,
+    "tunedCandidateMultiTolerance": 20
+  },
+  "objective": {
+    "definition": "A 0-100 proxy balancing ambitious clues, productive guesses, close finishes, and a playable game length.",
+    "caution": "The Fun Index ranks deterministic self-play experiments. Human embedding agreement remains a separate validity guardrail.",
+    "version": 1,
+    "weights": {
+      "ambition": 0.3,
+      "momentum": 0.3,
+      "suspense": 0.25,
+      "flow": 0.15
+    },
+    "targets": {
+      "multiClueRate": [
+        0.2,
+        0.6
+      ],
+      "firstHalfMeanClueNumber": [
+        1.2,
+        2.2
+      ],
+      "correctCardsPerTurn": [
+        1,
+        1.65
+      ],
+      "closeFinishRate": [
+        0.35,
+        0.75
+      ],
+      "idealTurnsPerGame": [
+        8,
+        12
+      ],
+      "playableTurnsPerGame": [
+        6,
+        16
+      ]
+    },
+    "guardrails": {
+      "assassinRate": 0.02,
+      "wrongTeamHitsPerGame": 0.15,
+      "neutralHitsPerGame": 0.35,
+      "fallbackClueRate": 0.01
+    }
+  },
+  "cost": {
+    "knownBilledTokens": 65649,
+    "knownBilledCostUsd": 0.008534,
+    "maximumPossibleTimedOutRequestCostUsd": 0.0002,
+    "upperBoundCostUsd": 0.008734
+  },
+  "humanAlignment": {
+    "baseline": {
+      "culturalCodes": {
+        "scoredGuessTurns": 7625,
+        "scoredTargetTurns": 7703,
+        "firstGuessAccuracy": 0.5204,
+        "guessRecallAtHumanCount": 0.5173,
+        "targetRecallAtCount": 0.5857,
+        "exactTargetSetAccuracy": 0.5254,
+        "avoidWordRate": 0.0946,
+        "pairwiseTargetAccuracy": 0.8537
+      },
+      "connector": {
+        "scoredGuessTurns": 0,
+        "scoredTargetTurns": 2250,
+        "firstGuessAccuracy": null,
+        "guessRecallAtHumanCount": null,
+        "targetRecallAtCount": 0.5249,
+        "exactTargetSetAccuracy": 0.2364,
+        "avoidWordRate": 0,
+        "pairwiseTargetAccuracy": 0.8204
+      }
+    },
+    "candidate": {
+      "culturalCodes": {
+        "scoredGuessTurns": 7625,
+        "scoredTargetTurns": 7703,
+        "firstGuessAccuracy": 0.5496,
+        "guessRecallAtHumanCount": 0.547,
+        "targetRecallAtCount": 0.6246,
+        "exactTargetSetAccuracy": 0.5626,
+        "avoidWordRate": 0.09,
+        "pairwiseTargetAccuracy": 0.8845
+      },
+      "connector": {
+        "scoredGuessTurns": 0,
+        "scoredTargetTurns": 2250,
+        "firstGuessAccuracy": null,
+        "guessRecallAtHumanCount": null,
+        "targetRecallAtCount": 0.5227,
+        "exactTargetSetAccuracy": 0.2316,
+        "avoidWordRate": 0,
+        "pairwiseTargetAccuracy": 0.8353
+      }
+    },
+    "deltaVsBaseline": {
+      "culturalCodes": {
+        "scoredGuessTurns": 0,
+        "scoredTargetTurns": 0,
+        "firstGuessAccuracy": 0.0292,
+        "guessRecallAtHumanCount": 0.0297,
+        "targetRecallAtCount": 0.0389,
+        "exactTargetSetAccuracy": 0.0372,
+        "avoidWordRate": -0.0046,
+        "pairwiseTargetAccuracy": 0.0308
+      },
+      "connector": {
+        "scoredGuessTurns": 0,
+        "scoredTargetTurns": 0,
+        "targetRecallAtCount": -0.0022,
+        "exactTargetSetAccuracy": -0.0048,
+        "avoidWordRate": 0,
+        "pairwiseTargetAccuracy": 0.0149
+      }
+    },
+    "guardrails": {
+      "passed": true,
+      "checks": [
+        {
+          "metric": "Cultural Codes target recall",
+          "passed": true,
+          "delta": 0.0389,
+          "minimumDelta": -0.005
+        },
+        {
+          "metric": "Cultural Codes avoid rate",
+          "passed": true,
+          "delta": -0.0046,
+          "maximumDelta": 0.005
+        },
+        {
+          "metric": "Connector exact pair",
+          "passed": true,
+          "delta": -0.0048,
+          "minimumDelta": -0.005
+        }
+      ]
+    }
+  },
+  "candidates": {
+    "baseline": {
+      "model": "Xenova/bge-small-en-v1.5",
+      "dimensions": 384,
+      "selfPlay": {
+        "fun": {
+          "objectiveVersion": 1,
+          "score": 86.3699,
+          "selectionScore": 86.3699,
+          "components": {
+            "ambition": 78.7698,
+            "momentum": 92.4631,
+            "suspense": 80,
+            "flow": 100
+          },
+          "guardrailsPassed": true,
+          "violations": []
+        },
+        "multiClueRate": 0.525253,
+        "firstHalfMeanClueNumber": 1.962264,
+        "correctCardsPerTurn": 1.60101,
+        "closeFinishRate": 0.95,
+        "meanTurnsPerGame": 9.9,
+        "wrongTeamHitsPerGame": 0,
+        "assassinRate": 0
+      },
+      "crossModel": {
+        "operativeModel": "Xenova/all-MiniLM-L6-v2",
+        "fun": {
+          "objectiveVersion": 1,
+          "score": 75.8531,
+          "selectionScore": null,
+          "components": {
+            "ambition": 78.0383,
+            "momentum": 45.6386,
+            "suspense": 95,
+            "flow": 100
+          },
+          "guardrailsPassed": false,
+          "violations": [
+            {
+              "metric": "assassinRate",
+              "actual": 0.2,
+              "limit": 0.02
+            },
+            {
+              "metric": "wrongTeamHitsPerGame",
+              "actual": 0.55,
+              "limit": 0.15
+            },
+            {
+              "metric": "neutralHitsPerGame",
+              "actual": 1.4,
+              "limit": 0.35
+            }
+          ]
+        },
+        "correctCardsPerTurn": 1.296651,
+        "wrongTeamHitsPerGame": 0.55,
+        "assassinRate": 0.2
+      }
+    },
+    "api": {
+      "model": "text-embedding-3-large",
+      "dimensions": 1024,
+      "selfPlay": {
+        "fun": {
+          "objectiveVersion": 1,
+          "score": 61.7864,
+          "selectionScore": 61.7864,
+          "components": {
+            "ambition": 27.9269,
+            "momentum": 48.8611,
+            "suspense": 95,
+            "flow": 100
+          },
+          "guardrailsPassed": true,
+          "violations": []
+        },
+        "multiClueRate": 0.291845,
+        "firstHalfMeanClueNumber": 1.528926,
+        "correctCardsPerTurn": 1.317597,
+        "closeFinishRate": 0.9,
+        "meanTurnsPerGame": 11.65,
+        "wrongTeamHitsPerGame": 0,
+        "assassinRate": 0
+      },
+      "crossModel": {
+        "operativeModel": "Xenova/bge-small-en-v1.5",
+        "fun": {
+          "objectiveVersion": 1,
+          "score": 36.5029,
+          "selectionScore": null,
+          "components": {
+            "ambition": 39.4481,
+            "momentum": 3.0615,
+            "suspense": 35,
+            "flow": 100
+          },
+          "guardrailsPassed": false,
+          "violations": [
+            {
+              "metric": "assassinRate",
+              "actual": 0.45,
+              "limit": 0.02
+            },
+            {
+              "metric": "wrongTeamHitsPerGame",
+              "actual": 1.05,
+              "limit": 0.15
+            },
+            {
+              "metric": "neutralHitsPerGame",
+              "actual": 1.15,
+              "limit": 0.35
+            }
+          ]
+        },
+        "correctCardsPerTurn": 1.0199,
+        "wrongTeamHitsPerGame": 1.05,
+        "assassinRate": 0.45
+      }
+    },
+    "apiTunedSelfPlay": {
+      "model": "text-embedding-3-large",
+      "multiTolerance": 20,
+      "fun": {
+        "objectiveVersion": 1,
+        "score": 88.7392,
+        "components": {
+          "ambition": 84.7612,
+          "momentum": 94.3695,
+          "suspense": 80,
+          "flow": 100
+        },
+        "guardrailsPassed": true,
+        "violations": []
+      },
+      "multiClueRate": 0.57732,
+      "correctCardsPerTurn": 1.613402,
+      "meanTurnsPerGame": 9.7
+    }
+  },
+  "promotionGates": [
+    {
+      "gate": "Human validity",
+      "passed": true,
+      "candidate": "Pass",
+      "requirement": "Pass"
+    },
+    {
+      "gate": "Default Fun Index",
+      "passed": false,
+      "candidate": 61.7864,
+      "requirement": ">= 86.3699"
+    },
+    {
+      "gate": "Cross-model correct per turn",
+      "passed": false,
+      "candidate": 1.0199,
+      "requirement": ">= 1.2467"
+    },
+    {
+      "gate": "Cross-model wrong per game",
+      "passed": false,
+      "candidate": 1.05,
+      "requirement": "<= 0.65"
+    },
+    {
+      "gate": "Cross-model assassin rate",
+      "passed": false,
+      "candidate": 0.45,
+      "requirement": "<= 25.0%"
+    }
+  ],
+  "verdict": {
+    "promote": false,
+    "recommendation": "Keep BGE-small in production. Retain OpenAI large as a human-alignment challenger, but do not ship it until generated clues pass cross-model or collected human-game safety gates."
+  }
+}

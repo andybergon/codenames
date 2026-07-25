@@ -37,15 +37,25 @@ const playPolicySummary = await readFile(
   "scripts/generated/play-policy-benchmark.md",
   "utf8",
 );
+const apiEmbeddingComparison = JSON.parse(
+  await readFile(
+    "scripts/generated/api-embedding-comparison.json",
+    "utf8",
+  ),
+);
+const playFunExperiments = JSON.parse(
+  await readFile("scripts/generated/play-fun-experiments.json", "utf8"),
+);
 
 assert.equal(playPolicyBenchmark.methodology.boardCount, 100);
 assert.equal(playPolicyBenchmark.methodology.pairedBoards, true);
 assert.equal(playPolicyBenchmark.methodology.candidateCount, 10_000);
+assert.equal(playPolicyBenchmark.methodology.funObjective.version, 1);
 assert.match(playPolicySummary, /^\# Play policy benchmark/m);
 assert.ok(playPolicySummary.includes(playPolicyBenchmark.generatedAt));
 assert.match(
   playPolicySummary,
-  /\| 🎯 Policy \| 🔢 Multi clues \| ⏩ First-half mean \| ✅ Correct per turn \| 🔴 Wrong-team per game \| ☠️ Assassin rate \| ⏱️ Turns per game \|/,
+  /\| 🎯 Policy \| 🎉 Fun \| 🔢 Multi clues \| ⏩ First-half mean \| ✅ Correct per turn \| 🤝 Close finishes \| ☠️ Assassin rate \| ⏱️ Turns per game \|/,
 );
 for (const policy of Object.values(PLAY_CLUE_POLICY)) {
   const result = playPolicyBenchmark.policies[policy];
@@ -77,6 +87,12 @@ for (const policy of Object.values(PLAY_CLUE_POLICY)) {
     ),
     result.assassinHits,
   );
+  assert.equal(
+    result.gameResults.filter(
+      (gameResult) => gameResult.losingAgentsRemaining <= 2,
+    ).length / result.gameCount,
+    result.closeFinishRate,
+  );
   assert.ok(
     result.gameResults.every(
       (gameResult) =>
@@ -84,6 +100,8 @@ for (const policy of Object.values(PLAY_CLUE_POLICY)) {
         gameResult.turns > 0 &&
         gameResult.firstHalfClueNumbers.length ===
           Math.ceil(gameResult.turns / 2) &&
+        Number.isInteger(gameResult.losingAgentsRemaining) &&
+        gameResult.losingAgentsRemaining >= 0 &&
         ["agents", "assassin"].includes(gameResult.endReason),
     ),
   );
@@ -93,15 +111,33 @@ for (const policy of Object.values(PLAY_CLUE_POLICY)) {
     "correctCardsPerTurn",
     "wrongTeamHitsPerGame",
     "assassinRate",
+    "closeFinishRate",
+    "meanLosingAgentsRemaining",
     "meanTurnsPerGame",
   ]) {
     assert.equal(Number.isFinite(result[metric]), true, `${policy} ${metric} is not finite`);
+  }
+  assert.equal(result.fun.objectiveVersion, 1);
+  assert.equal(Number.isFinite(result.fun.score), true);
+  assert.equal(typeof result.fun.guardrailsPassed, "boolean");
+  for (const component of ["ambition", "momentum", "suspense", "flow"]) {
+    assert.equal(Number.isFinite(result.fun.components[component]), true);
   }
   assert.ok(
     playPolicySummary.includes(`${(result.multiClueRate * 100).toFixed(1)}%`),
     `${policy} summary is stale`,
   );
 }
+
+assert.equal(apiEmbeddingComparison.model, "text-embedding-3-large");
+assert.equal(apiEmbeddingComparison.dimensions, 1024);
+assert.equal(apiEmbeddingComparison.humanValidityGuardrails.passed, true);
+assert.equal(playFunExperiments.verdict.promote, false);
+assert.ok(
+  playFunExperiments.promotionGates.some(
+    ({ passed }) => passed === false,
+  ),
+);
 
 const randomValues = [0.2, 0.8];
 const randomSeat = randomHumanSeat(() => randomValues.shift());
