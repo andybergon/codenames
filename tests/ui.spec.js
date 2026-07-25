@@ -1284,6 +1284,11 @@ test("Play moves through history and groups fully automated turns", async ({ pag
   const redScore = page.locator('.play-score-team[data-side="red"] strong');
 
   await expect(turn).toContainText("THIRD 1");
+  await expect(turn.locator(".play-clue-pill")).toHaveText("THIRD");
+  await expect(turn.locator(".play-clue-pill")).toHaveCSS(
+    "background-color",
+    "rgb(255, 255, 255)",
+  );
   await expect(blueScore).toHaveText("8");
   await expect(redScore).toHaveText("7");
   await expect(undo).toBeEnabled();
@@ -1458,6 +1463,38 @@ test("Play game log shows clear empty states in both views", async ({ page }) =>
   await expect(page.locator("#play-history-red-list")).toHaveText("No Red actions yet.");
 });
 
+test("Play game log color-codes each guessed card as a word pill", async ({ page }) => {
+  const teams = ["friendly", "enemy", "neutral", "assassin"];
+  await resumePlaySession(
+    page,
+    teams.map((team, layoutId) => ({
+      type: "card-guessed",
+      turn: 1,
+      side: "blue",
+      layoutId,
+      word: `WORD${layoutId}`,
+      team,
+      actor: "bot",
+    })),
+  );
+
+  const pills = page.locator("#play-history-list .play-history-card");
+  await expect(pills).toHaveCount(4);
+  expect(await pills.evaluateAll((items) => items.map((item) => item.dataset.team))).toEqual(
+    teams,
+  );
+  await expect(pills.nth(0)).toHaveAttribute("aria-label", "WORD0, Blue card");
+  await expect(pills.nth(1)).toHaveAttribute("aria-label", "WORD1, Red card");
+  await expect(pills.nth(2)).toHaveAttribute("aria-label", "WORD2, Neutral card");
+  await expect(pills.nth(3)).toHaveAttribute("aria-label", "WORD3, Assassin card");
+  expect(await page.locator("#play-history-list li").allTextContents()).toEqual([
+    "Blue guessed WORD0",
+    "Blue guessed WORD1",
+    "Blue guessed WORD2",
+    "Blue guessed WORD3",
+  ]);
+});
+
 test("Play game log switches between chronological and separated team views", async ({
   page,
 }) => {
@@ -1506,10 +1543,17 @@ test("Play game log switches between chronological and separated team views", as
   await expect(timeline.locator("li")).toHaveCount(4);
   expect(await timeline.locator("li").allTextContents()).toEqual([
     "Blue clue: OCEAN 2",
-    "Blue guessed WORD0, Blue",
+    "Blue guessed WORD0",
     "Red clue: FIRE 1",
     "Red passed",
   ]);
+  const timelineClues = timeline.locator(".play-clue-pill");
+  await expect(timelineClues).toHaveCount(2);
+  expect(await timelineClues.allTextContents()).toEqual(["OCEAN", "FIRE"]);
+  await expect(timelineClues.nth(0)).toHaveCSS(
+    "background-color",
+    "rgb(255, 255, 255)",
+  );
 
   await teamsView.click();
 
@@ -1517,8 +1561,14 @@ test("Play game log switches between chronological and separated team views", as
   await expect(timeline).toBeHidden();
   expect(await page.locator("#play-history-blue-list li").allTextContents()).toEqual([
     "Blue clue: OCEAN 2",
-    "Blue guessed WORD0, Blue",
+    "Blue guessed WORD0",
   ]);
+  await expect(
+    page.locator("#play-history-blue-list .play-clue-pill"),
+  ).toHaveText("OCEAN");
+  await expect(
+    page.locator("#play-history-blue-list .play-history-card"),
+  ).toHaveAttribute("data-team", "friendly");
   expect(await page.locator("#play-history-red-list li").allTextContents()).toEqual([
     "Red clue: FIRE 1",
     "Red passed",
@@ -1676,7 +1726,7 @@ test("completed Play sessions reveal the key and intended targets", async ({ pag
     "Blue clue: FIRST 1, intended WORD0",
   );
   await expect(page.locator("#play-history-list")).toContainText(
-    "Blue guessed WORD0, Blue",
+    "Blue guessed WORD0",
   );
   const finishedNewGame = page.getByRole("button", {
     name: "Start new game",

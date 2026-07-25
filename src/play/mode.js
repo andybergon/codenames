@@ -1098,7 +1098,11 @@ export function createPlayMode(options = {}) {
 
     if (game.currentTurn) {
       turnLabel.textContent = `${sideLabel(game.currentTurn.side)} turn`;
-      turnAction.textContent = `💬 ${game.currentTurn.clue} ${game.currentTurn.number}`;
+      turnAction.className = "play-current-clue";
+      turnAction.append(
+        createCluePill(game.currentTurn.clue),
+        ` ${game.currentTurn.number}`,
+      );
       turnNote.textContent =
         currentActor === "human"
           ? "Choose a card or pass."
@@ -1352,11 +1356,24 @@ export function createPlayMode(options = {}) {
               .map((layoutId) => game.cards.find((card) => card.layoutId === layoutId)?.word)
               .filter(Boolean)
           : [];
-      item.textContent = `${sideLabel(event.side)} clue: ${event.clue} ${event.number}${
-        intendedWords.length ? `, intended ${intendedWords.join(" + ")}` : ""
-      }`;
+      item.append(
+        `${sideLabel(event.side)} clue: `,
+        createCluePill(event.clue),
+        ` ${event.number}${
+          intendedWords.length ? `, intended ${intendedWords.join(" + ")}` : ""
+        }`,
+      );
     } else if (event.type === "card-guessed") {
-      item.textContent = `${sideLabel(event.side)} guessed ${event.word}, ${teamLabel(event.team)}`;
+      const card = document.createElement("span");
+      card.className = "play-history-card";
+      card.dataset.team = event.team;
+      card.textContent = event.word;
+      card.setAttribute("aria-label", `${event.word}, ${teamLabel(event.team)} card`);
+      card.title = `${teamLabel(event.team)} card`;
+      item.append(
+        `${sideLabel(event.side)} guessed `,
+        card,
+      );
     } else if (event.type === "turn-passed") {
       item.textContent = `${sideLabel(event.side)} passed`;
     } else {
@@ -1365,6 +1382,13 @@ export function createPlayMode(options = {}) {
       }`;
     }
     return item;
+  }
+
+  function createCluePill(clue) {
+    const pill = document.createElement("span");
+    pill.className = "play-clue-pill";
+    pill.textContent = clue;
+    return pill;
   }
 
   function createEmptyHistoryItem(message) {
