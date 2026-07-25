@@ -2282,6 +2282,13 @@ h3 {
   color: var(--on-ink);
 }
 
+.play-new-game-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+}
+
 .play-game-header {
   display: grid;
   grid-template-columns: auto minmax(max-content, 1fr) auto;

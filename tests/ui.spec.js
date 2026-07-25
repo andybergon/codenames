@@ -469,6 +469,51 @@ test("Play bot setting help explains measured tradeoffs and stays on-screen", as
   await expect(vocabularyPopover).toBeVisible();
 });
 
+test("Play uses one fresh-game icon and accessible label at every viewport", async ({
+  page,
+}) => {
+  await page.goto("/?mode=play");
+  await page.locator('[data-play-seat="blue:spymaster"]').click();
+
+  for (const viewport of [
+    { width: 390, height: 844 },
+    { width: 768, height: 1024 },
+    { width: 1440, height: 900 },
+  ]) {
+    await page.setViewportSize(viewport);
+
+    const setupAction = page.getByRole("button", {
+      name: "Start new game",
+      exact: true,
+    });
+    await expect(setupAction).toBeVisible();
+    await expect(setupAction.locator("svg.lucide-refresh-cw")).toHaveCount(1);
+    await setupAction.click();
+
+    const gameAction = page.getByRole("button", {
+      name: "Start new game",
+      exact: true,
+    });
+    await expect(gameAction).toBeVisible();
+    await expect(gameAction.locator("svg.lucide-refresh-cw")).toHaveCount(1);
+    await expect(page.locator("#leave-play-game svg.lucide-plus")).toHaveCount(0);
+
+    const iconFits = await gameAction.evaluate((button) => {
+      const iconBounds = button.querySelector("svg").getBoundingClientRect();
+      const buttonBounds = button.getBoundingClientRect();
+      return (
+        iconBounds.left >= buttonBounds.left &&
+        iconBounds.right <= buttonBounds.right &&
+        iconBounds.top >= buttonBounds.top &&
+        iconBounds.bottom <= buttonBounds.bottom
+      );
+    });
+    expect(iconFits, `new game icon fits at ${viewport.width}px`).toBe(true);
+
+    await gameAction.click();
+  }
+});
+
 test("Play enforces operative and spymaster information views", async ({ page }) => {
   await page.goto("/?mode=play");
 
@@ -490,14 +535,14 @@ test("Play enforces operative and spymaster information views", async ({ page })
   await expect(page.locator("#play-clue-form")).toBeHidden();
   await expect(page.getByRole("textbox", { name: "Clue", exact: true })).toBeHidden();
 
-  await page.getByRole("button", { name: "New game", exact: true }).click();
+  await page.getByRole("button", { name: "Start new game", exact: true }).click();
   await page.locator('[data-play-seat="blue:spymaster"]').click();
   await page.getByRole("button", { name: "Start new game", exact: true }).click();
 
   await expect(page.locator("#play-clue-form")).toBeVisible();
   await expect(page.locator("#undo-play-action svg.lucide-undo-2")).toHaveCount(1);
   await expect(page.locator("#share-play-board svg.lucide-share-2")).toHaveCount(1);
-  await expect(page.locator("#leave-play-game svg.lucide-plus")).toHaveCount(1);
+  await expect(page.locator("#leave-play-game svg.lucide-refresh-cw")).toHaveCount(1);
   const clueInput = page.getByRole("textbox", { name: "Clue", exact: true });
   const clearClue = page.getByRole("button", { name: "Clear clue", exact: true });
   await expect(clearClue).toBeHidden();
@@ -601,13 +646,13 @@ test("Play reveals long bot wait detail without shifting or leaking stale timers
     await clueDisplay.evaluate((element) => element.getBoundingClientRect().height),
   ).toBe(pendingHeight);
 
-  await page.getByRole("button", { name: "New game", exact: true }).click();
+  await page.getByRole("button", { name: "Start new game", exact: true }).click();
   await expect(page.locator("#play-setup")).toBeVisible();
 
   await page.locator('[data-play-seat="blue:operative"]').click();
   await page.getByRole("button", { name: "Start new game", exact: true }).click();
   await expect(waitNote).toHaveAttribute("data-wait-detail", "pending");
-  await page.getByRole("button", { name: "New game", exact: true }).click();
+  await page.getByRole("button", { name: "Start new game", exact: true }).click();
   await page.waitForTimeout(2000);
   await expect(page.locator("#play-setup")).toBeVisible();
   await expect(waitNote).toHaveAttribute("data-wait-detail", "pending");
@@ -622,7 +667,7 @@ test("Play validates human clues and resumes the saved seat", async ({ page }) =
   await page.getByRole("button", { name: "Give clue", exact: true }).click();
   await expect(page.locator("#play-clue-error")).toHaveText("A clue must be one word.");
 
-  await page.getByRole("button", { name: "New game", exact: true }).click();
+  await page.getByRole("button", { name: "Start new game", exact: true }).click();
   await expect(page.getByRole("button", { name: "Resume game", exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Resume game", exact: true }).click();
   await expect(page.locator("#play-human-seat")).toHaveText(
@@ -657,7 +702,7 @@ test("starting a second Play game clears the previous clue and analysis", async 
     timeout: 15_000,
   });
 
-  await page.getByRole("button", { name: "New game", exact: true }).click();
+  await page.getByRole("button", { name: "Start new game", exact: true }).click();
   await page.locator('[data-play-seat="blue:spymaster"]').click();
   await page.getByRole("button", { name: "Start new game", exact: true }).click();
 
