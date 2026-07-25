@@ -1,4 +1,13 @@
-import { Check, Monitor, Moon, Share2, Sun, createIcons } from "lucide";
+import {
+  Check,
+  Monitor,
+  Moon,
+  Plus,
+  Share2,
+  Sun,
+  Undo2,
+  createIcons,
+} from "lucide";
 import MODEL_PICKER_BENCHMARK from "../scripts/generated/model-picker-benchmark.json" with { type: "json" };
 import {
   BOARD_ORDER,
@@ -234,7 +243,7 @@ elements.modelLabCandidates.addEventListener("change", (event) => {
 const systemTheme = window.matchMedia("(prefers-color-scheme: dark)");
 
 createIcons({
-  icons: { Check, Monitor, Moon, Share2, Sun },
+  icons: { Check, Monitor, Moon, Plus, Share2, Sun, Undo2 },
   attrs: { width: 18, height: 18, "stroke-width": 2 },
 });
 

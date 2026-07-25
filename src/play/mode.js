@@ -1,3 +1,4 @@
+import { Check, Share2, TriangleAlert, createIcons } from "lucide";
 import {
   BOARD_ORDER,
   createGeneratedBoardState,
@@ -469,18 +470,38 @@ export function createPlayMode() {
     url.searchParams.set("b", code);
     try {
       await writeClipboardText(url.href);
-      setShareFeedback("Board copied");
+      setShareFeedback("copied");
     } catch {
-      setShareFeedback("Copy failed");
+      setShareFeedback("error");
     }
   }
 
-  function setShareFeedback(label) {
+  function setShareFeedback(state) {
     window.clearTimeout(shareFeedbackTimer);
-    elements.shareBoard.textContent = label;
-    shareFeedbackTimer = window.setTimeout(() => {
-      elements.shareBoard.textContent = "Share board";
-    }, 3000);
+    elements.shareBoard.dataset.state = state;
+    const label =
+      state === "copied"
+        ? "Board copied"
+        : state === "error"
+          ? "Copy failed"
+          : "Share board";
+    const iconName =
+      state === "copied" ? "check" : state === "error" ? "triangle-alert" : "share-2";
+    elements.shareBoard.setAttribute("aria-label", label);
+    elements.shareBoard.title =
+      state === "idle" ? "Copy board share link" : label;
+    const icon = document.createElement("i");
+    icon.dataset.lucide = iconName;
+    icon.setAttribute("aria-hidden", "true");
+    elements.shareBoard.replaceChildren(icon);
+    createIcons({
+      icons: { Check, Share2, TriangleAlert },
+      attrs: { width: 18, height: 18, "stroke-width": 2 },
+      root: elements.shareBoard,
+    });
+    if (state !== "idle") {
+      shareFeedbackTimer = window.setTimeout(() => setShareFeedback("idle"), 3000);
+    }
   }
 
   function runHumanAction(action) {
@@ -754,7 +775,12 @@ export function createPlayMode() {
       const label = document.createElement("span");
       label.textContent = sideLabel(side);
       const value = document.createElement("strong");
-      value.textContent = String(remainingCardsForSide(game.cards, side));
+      const remaining = remainingCardsForSide(game.cards, side);
+      value.textContent = String(remaining);
+      item.setAttribute(
+        "aria-label",
+        `${sideLabel(side)}, ${remaining} remaining`,
+      );
       item.append(label, value);
       return item;
     });

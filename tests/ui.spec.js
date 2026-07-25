@@ -465,6 +465,9 @@ test("Play enforces operative and spymaster information views", async ({ page })
   await page.getByRole("button", { name: "Start new game", exact: true }).click();
 
   await expect(page.locator("#play-clue-form")).toBeVisible();
+  await expect(page.locator("#undo-play-action svg.lucide-undo-2")).toHaveCount(1);
+  await expect(page.locator("#share-play-board svg.lucide-share-2")).toHaveCount(1);
+  await expect(page.locator("#leave-play-game svg.lucide-plus")).toHaveCount(1);
   const clueInput = page.getByRole("textbox", { name: "Clue", exact: true });
   const clearClue = page.getByRole("button", { name: "Clear clue", exact: true });
   await expect(clearClue).toBeHidden();
@@ -685,6 +688,7 @@ test("Play sharing copies a board-only link", async ({ page }) => {
   await page.getByRole("button", { name: "Share board", exact: true }).click();
 
   await expect(page.getByRole("button", { name: "Board copied", exact: true })).toBeVisible();
+  await expect(page.locator("#share-play-board svg.lucide-check")).toHaveCount(1);
   const copied = new URL(await page.evaluate(() => window.__copiedBoardLink));
   expect(copied.searchParams.has("b")).toBe(true);
   expect(copied.searchParams.has("mode")).toBe(false);
@@ -703,10 +707,14 @@ test("Play board remains usable at phone, tablet, and desktop widths", async ({ 
     await page.setViewportSize(viewport);
     const layout = await page.evaluate(() => {
       const board = document.querySelector("#play-board-grid");
+      const header = document.querySelector(".play-game-header");
+      const score = document.querySelector("#play-score");
       const cards = [...document.querySelectorAll(".play-card")];
       return {
         pageOverflows:
           document.documentElement.scrollWidth > document.documentElement.clientWidth,
+        headerOverflows: header.scrollWidth > header.clientWidth,
+        scoreWidth: Math.round(score.getBoundingClientRect().width),
         columns: getComputedStyle(board).gridTemplateColumns.split(" ").length,
         cardsFit: cards.every((card) => {
           const cardBounds = card.getBoundingClientRect();
@@ -720,6 +728,8 @@ test("Play board remains usable at phone, tablet, and desktop widths", async ({ 
     });
 
     expect(layout.pageOverflows, `page overflow at ${viewport.width}px`).toBe(false);
+    expect(layout.headerOverflows, `header overflow at ${viewport.width}px`).toBe(false);
+    expect(layout.scoreWidth, `score width at ${viewport.width}px`).toBeLessThan(190);
     expect(layout.columns, `board columns at ${viewport.width}px`).toBe(5);
     expect(layout.cardsFit, `card clipping at ${viewport.width}px`).toBe(true);
   }

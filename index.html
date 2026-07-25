@@ -481,20 +481,43 @@
         <section id="play-game" class="play-game" hidden>
           <header class="play-game-header">
             <p id="play-human-seat" class="play-human-seat"></p>
+            <div
+              id="play-score"
+              class="play-score"
+              role="group"
+              aria-label="Remaining team cards"
+            ></div>
             <div class="play-game-actions">
-              <button id="undo-play-action" class="button secondary" type="button" disabled>
-                Undo
+              <button
+                id="undo-play-action"
+                class="icon-button"
+                type="button"
+                aria-label="Undo"
+                title="Undo last action"
+                disabled
+              >
+                <i data-lucide="undo-2" aria-hidden="true"></i>
               </button>
-              <button id="share-play-board" class="button secondary" type="button">
-                Share board
+              <button
+                id="share-play-board"
+                class="icon-button"
+                type="button"
+                aria-label="Share board"
+                title="Copy board share link"
+              >
+                <i data-lucide="share-2" aria-hidden="true"></i>
               </button>
-              <button id="leave-play-game" class="button secondary" type="button">
-                New game
+              <button
+                id="leave-play-game"
+                class="icon-button"
+                type="button"
+                aria-label="New game"
+                title="Start a new game"
+              >
+                <i data-lucide="plus" aria-hidden="true"></i>
               </button>
             </div>
           </header>
-
-          <div id="play-score" class="play-score" aria-label="Remaining team cards"></div>
 
           <div class="play-workspace">
             <div class="play-board-panel">
