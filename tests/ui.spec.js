@@ -523,6 +523,45 @@ test("Play validates human clues and resumes the saved seat", async ({ page }) =
   await expect(page.getByRole("textbox", { name: "Clue", exact: true })).toBeVisible();
 });
 
+test("starting a second Play game clears the previous clue and analysis", async ({
+  page,
+}) => {
+  await page.goto("/?mode=play");
+  await page.locator('[data-play-seat="blue:spymaster"]').click();
+  await page.locator(".play-bot-settings summary").click();
+  await page.locator("#play-bot-model").selectOption("minilm-l3");
+  await page.locator("#play-bot-candidates").selectOption("3000");
+  await page.getByRole("button", { name: "Start new game", exact: true }).click();
+
+  await page.getByRole("button", {
+    name: "💡 Show clue suggestions",
+    exact: true,
+  }).click();
+  await expect(page.locator(".play-suggestion").first()).toBeVisible({
+    timeout: 15_000,
+  });
+  await page.getByRole("textbox", { name: "Clue", exact: true }).fill("hibernation");
+  await page.getByRole("button", { name: "Give clue", exact: true }).click();
+  await expect(page.locator("#play-history-list")).toContainText(
+    "Blue clue: HIBERNATION 2",
+  );
+  await expect(page.locator("#play-history-list")).toContainText("Blue guessed", {
+    timeout: 15_000,
+  });
+
+  await page.getByRole("button", { name: "New game", exact: true }).click();
+  await page.locator('[data-play-seat="blue:spymaster"]').click();
+  await page.getByRole("button", { name: "Start new game", exact: true }).click();
+
+  await expect(page.getByRole("textbox", { name: "Clue", exact: true })).toHaveValue("");
+  await expect(page.getByRole("button", { name: "Clear clue", exact: true })).toBeHidden();
+  await expect(page.locator("#play-clue-error")).toBeEmpty();
+  await expect(page.locator("#play-clue-display")).not.toContainText("HIBERNATION 2");
+  await expect(page.locator("#play-history-count")).toHaveText("0 events");
+  await expect(page.locator("#play-history-list")).toBeEmpty();
+  await expect(page.locator("#play-suggestion-list")).toBeEmpty();
+});
+
 test("Play color-codes turns and lets spymasters switch board order", async ({ page }) => {
   await page.goto("/?mode=play");
   await page.locator('[data-play-seat="blue:spymaster"]').click();

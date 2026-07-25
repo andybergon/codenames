@@ -418,15 +418,21 @@ export function createPlayMode() {
   }
 
   function resetRuntimeState(message) {
+    analysisRun += 1;
     analysis = { [SIDE.BLUE]: null, [SIDE.RED]: null };
     boardVectors = null;
     clueIndex = null;
+    activeModelId = null;
     statusMessage = message;
     undoSnapshot = null;
     selectedSuggestion = null;
     suggestionsExpanded = false;
     suggestionTurnKey = "";
     playBoardOrder = PLAY_BOARD_ORDER.TABLE;
+    elements.clueInput.value = "";
+    elements.clueNumber.replaceChildren();
+    elements.clueError.textContent = "";
+    elements.suggestionList.replaceChildren();
   }
 
   function discardSavedGame() {
