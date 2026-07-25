@@ -2341,17 +2341,33 @@ h3 {
 }
 
 .play-human-seat {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
   border: 1px solid var(--line);
   border-left: 5px solid var(--blue);
   border-radius: 8px;
   padding: 9px 12px;
   background: var(--surface);
-  font-size: 0.8rem;
-  font-weight: 900;
 }
 
 .play-human-seat[data-side="red"] {
   border-left-color: var(--red);
+}
+
+.play-seat-context {
+  color: var(--muted);
+  font-size: 0.6rem;
+  font-weight: 850;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.play-seat-identity {
+  font-size: 0.8rem;
+  font-weight: 900;
+  white-space: nowrap;
 }
 
 .play-score {
@@ -2867,6 +2883,28 @@ button.play-card:not(:disabled):hover {
 }
 
 @media (max-width: 820px) {
+  .play-game-header {
+    grid-template-areas:
+      "seat score"
+      "actions actions";
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+  }
+
+  .play-human-seat {
+    grid-area: seat;
+  }
+
+  .play-score {
+    grid-area: score;
+    justify-self: end;
+  }
+
+  .play-game-actions {
+    grid-area: actions;
+    justify-self: end;
+  }
+
   .board-primary-row {
     align-items: flex-start;
     flex-wrap: wrap;

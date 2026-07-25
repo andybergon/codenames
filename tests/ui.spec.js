@@ -572,8 +572,11 @@ test("Play enforces operative and spymaster information views", async ({ page })
   await page.locator('[data-play-seat="blue:operative"]').click();
   await page.getByRole("button", { name: "Start new game", exact: true }).click();
 
-  await expect(page.locator("#play-human-seat")).toHaveText(
-    "🔵 🔎 You are Blue Operative",
+  await expect(page.locator("#play-human-seat .play-seat-context")).toHaveText(
+    "Your view",
+  );
+  await expect(page.locator("#play-human-seat .play-seat-identity")).toHaveText(
+    "🔵 Blue 🔎 Operative",
   );
   await expect(page.locator(".play-card")).toHaveCount(25);
   await expect(page.locator('.play-card[data-team="hidden"]')).toHaveCount(25);
@@ -651,7 +654,7 @@ test("Play keeps brief bot turns neutral and delays readable wait detail", async
   await expect(waitNote.locator(".play-turn-spinner")).toBeVisible();
   await expect(waitNote.locator(".play-turn-wait-detail")).toBeHidden();
 
-  await expect(page.locator("#play-clue-display")).toContainText("🏁 Game complete", {
+  await expect(page.locator("#play-clue-display")).toContainText("Game complete", {
     timeout: 2_000,
   });
   expect(
@@ -686,7 +689,7 @@ test("Play reveals long bot wait detail without shifting or leaking stale timers
     timeout: 2_000,
   });
   expect(Date.now() - startedAt).toBeGreaterThanOrEqual(1700);
-  await expect(waitNote).toContainText("The bot spymaster is studying the board.");
+  await expect(waitNote).toContainText("The bot is studying the board.");
   await expect(waitNote.locator(".play-turn-spinner")).toBeHidden();
   expect(
     await clueDisplay.evaluate((element) => element.getBoundingClientRect().height),
@@ -835,8 +838,11 @@ test("Play validates human clues and resumes the saved seat", async ({ page }) =
   await page.getByRole("button", { name: "Start new game", exact: true }).click();
   await expect(page.getByRole("button", { name: "Resume game", exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Resume game", exact: true }).click();
-  await expect(page.locator("#play-human-seat")).toHaveText(
-    "🔵 🕵️ You are Blue Spymaster",
+  await expect(page.locator("#play-human-seat .play-seat-context")).toHaveText(
+    "Your view",
+  );
+  await expect(page.locator("#play-human-seat .play-seat-identity")).toHaveText(
+    "🔵 Blue 🕵️ Spymaster",
   );
   await expect(page.getByRole("textbox", { name: "Clue", exact: true })).toBeVisible();
 });
@@ -1096,6 +1102,25 @@ test("Play moves through history and groups fully automated turns", async ({ pag
   await expect(forward).toBeDisabled();
 });
 
+test("Play keeps player perspective separate from the current turn", async ({ page }) => {
+  await page.goto("/?mode=play");
+  await page.locator('[data-play-seat="blue:spymaster"]').click();
+  await page.getByRole("button", { name: "Start new game", exact: true }).click();
+
+  const perspective = page.locator("#play-human-seat");
+  const turn = page.locator("#play-clue-display");
+
+  await expect(perspective.locator(".play-seat-context")).toHaveText("Your view");
+  await expect(perspective.locator(".play-seat-identity")).toHaveText(
+    "🔵 Blue 🕵️ Spymaster",
+  );
+  await expect(turn.locator(".play-turn-team")).toHaveText("Blue turn");
+  await expect(turn.locator("strong")).toHaveText("Give a clue");
+  await expect(turn).not.toContainText("Blue Spymaster");
+  await expect(turn).not.toContainText("Spymaster");
+  await expect(turn).not.toContainText("🕵️");
+});
+
 test("Play color-codes turns and lets spymasters switch board order", async ({ page }) => {
   await page.goto("/?mode=play");
   await page.locator('[data-play-seat="blue:spymaster"]').click();
@@ -1103,8 +1128,8 @@ test("Play color-codes turns and lets spymasters switch board order", async ({ p
 
   const turn = page.locator("#play-clue-display");
   await expect(turn).toHaveAttribute("data-side", "blue");
-  await expect(turn).toContainText("🔵 Blue turn");
-  await expect(turn).toContainText("🕵️ Give a clue");
+  await expect(turn.locator(".play-turn-team")).toHaveText("Blue turn");
+  await expect(turn.locator("strong")).toHaveText("Give a clue");
 
   const cards = page.locator(".play-card");
   const tableLayout = await cards.evaluateAll((items) =>
@@ -1172,9 +1197,14 @@ test("Play uses the Red turn treatment for an active Red spymaster", async ({ pa
   await page.getByRole("button", { name: "Resume game", exact: true }).click();
 
   await expect(page.locator("#play-human-seat")).toHaveAttribute("data-side", "red");
+  await expect(page.locator("#play-human-seat .play-seat-identity")).toHaveText(
+    "🔴 Red 🕵️ Spymaster",
+  );
   await expect(page.locator("#play-clue-display")).toHaveAttribute("data-side", "red");
-  await expect(page.locator("#play-clue-display")).toContainText("🔴 Red turn");
-  await expect(page.locator("#play-clue-display")).toContainText("🕵️ Give a clue");
+  await expect(page.locator("#play-clue-display .play-turn-team")).toHaveText(
+    "Red turn",
+  );
+  await expect(page.locator("#play-clue-display strong")).toHaveText("Give a clue");
   await expect(page.locator("#play-suggestions")).toBeHidden();
 });
 
@@ -1240,10 +1270,10 @@ test("Play game log switches between chronological and separated team views", as
   await expect(page.locator("#play-history-count")).toHaveText("4 events");
   await expect(timeline.locator("li")).toHaveCount(4);
   expect(await timeline.locator("li").allTextContents()).toEqual([
-    "🔵 🕵️ Blue clue: OCEAN 2",
-    "🔵 🔎 Blue guessed WORD0, Blue",
-    "🔴 🕵️ Red clue: FIRE 1",
-    "🔴 🔎 Red passed",
+    "Blue clue: OCEAN 2",
+    "Blue guessed WORD0, Blue",
+    "Red clue: FIRE 1",
+    "Red passed",
   ]);
 
   await teamsView.click();
@@ -1251,12 +1281,12 @@ test("Play game log switches between chronological and separated team views", as
   await expect(teamsView).toHaveAttribute("aria-pressed", "true");
   await expect(timeline).toBeHidden();
   expect(await page.locator("#play-history-blue-list li").allTextContents()).toEqual([
-    "🔵 🕵️ Blue clue: OCEAN 2",
-    "🔵 🔎 Blue guessed WORD0, Blue",
+    "Blue clue: OCEAN 2",
+    "Blue guessed WORD0, Blue",
   ]);
   expect(await page.locator("#play-history-red-list li").allTextContents()).toEqual([
-    "🔴 🕵️ Red clue: FIRE 1",
-    "🔴 🔎 Red passed",
+    "Red clue: FIRE 1",
+    "Red passed",
   ]);
 
   await timelineView.click();
@@ -1404,14 +1434,14 @@ test("completed Play sessions reveal the key and intended targets", async ({ pag
   await page.goto("/?mode=play");
   await page.getByRole("button", { name: "Resume game", exact: true }).click();
 
-  await expect(page.locator("#play-clue-display")).toContainText("🔵 Blue wins");
+  await expect(page.locator("#play-clue-display")).toContainText("Blue wins");
   await expect(page.locator('.play-card[data-team="friendly"]')).toHaveCount(9);
   await expect(page.locator('.play-card[data-team="enemy"]')).toHaveCount(8);
   await expect(page.locator("#play-history-list")).toContainText(
-    "🔵 🕵️ Blue clue: FIRST 1, intended WORD0",
+    "Blue clue: FIRST 1, intended WORD0",
   );
   await expect(page.locator("#play-history-list")).toContainText(
-    "🔵 🔎 Blue guessed WORD0, Blue",
+    "Blue guessed WORD0, Blue",
   );
   const finishedNewGame = page.getByRole("button", {
     name: "Start new game",
@@ -1422,6 +1452,10 @@ test("completed Play sessions reveal the key and intended targets", async ({ pag
   await expect(page.locator(".play-game-header .play-game-actions #leave-play-game")).toHaveCount(
     1,
   );
+  await expect(page.locator("#play-history-list")).not.toContainText("Spymaster");
+  await expect(page.locator("#play-history-list")).not.toContainText("Operative");
+  await expect(page.locator("#play-history-list")).not.toContainText("🕵️");
+  await expect(page.locator("#play-history-list")).not.toContainText("🔎");
 });
 
 test("Play sharing copies a board-only link", async ({ page }) => {
