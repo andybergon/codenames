@@ -715,6 +715,54 @@ test("starting a second Play game clears the previous clue and analysis", async 
   await expect(page.locator("#play-suggestion-list")).toBeEmpty();
 });
 
+test("Play rejects a clue inflection of an unrevealed board word", async ({ page }) => {
+  const teams = [
+    ...Array(9).fill("friendly"),
+    ...Array(8).fill("enemy"),
+    ...Array(7).fill("neutral"),
+    "assassin",
+  ];
+  const savedGame = {
+    schemaVersion: 1,
+    seed: "clue-inflection-ui",
+    wordSet: "official",
+    humanSeat: { side: "blue", role: "spymaster" },
+    cards: teams.map((team, layoutId) => ({
+      word: layoutId === 0 ? "LIFE" : `WORD${layoutId}`,
+      team,
+      layoutId,
+      done: false,
+      revealedBy: null,
+      revealedTurn: null,
+    })),
+    activeSide: "blue",
+    phase: "awaiting-clue",
+    turnNumber: 1,
+    currentTurn: null,
+    winner: null,
+    endReason: null,
+    history: [
+      {
+        type: "game-started",
+        humanSeat: { side: "blue", role: "spymaster" },
+        activeSide: "blue",
+      },
+    ],
+  };
+  await page.addInitScript((session) => {
+    localStorage.setItem("codenames-play-session-v1", JSON.stringify(session));
+  }, savedGame);
+  await page.goto("/?mode=play");
+  await page.getByRole("button", { name: "Resume game", exact: true }).click();
+
+  await page.getByRole("textbox", { name: "Clue", exact: true }).fill("lives");
+  await page.getByRole("button", { name: "Give clue", exact: true }).click();
+  await expect(page.locator("#play-clue-error")).toHaveText(
+    "A clue cannot match the stem or inflection of an unrevealed board word.",
+  );
+  await expect(page.locator(".play-card", { hasText: "LIFE" })).not.toHaveClass(/is-done/);
+});
+
 test("Play color-codes turns and lets spymasters switch board order", async ({ page }) => {
   await page.goto("/?mode=play");
   await page.locator('[data-play-seat="blue:spymaster"]').click();

@@ -204,6 +204,24 @@ for (const side of [SIDE.BLUE, SIDE.RED]) {
   }
 }
 
+const morphologyGame = createPlayGame({
+  cards: sample.cards.map((card, index) =>
+    index === 0 ? { ...card, word: "LIFE" } : card,
+  ),
+  humanSeat: { side: SIDE.BLUE, role: PLAYER_ROLE.SPYMASTER },
+  seed: "morphology",
+  wordSet: sample.wordSet,
+});
+assert.throws(
+  () =>
+    giveClue(morphologyGame, {
+      clue: "lives",
+      number: 1,
+      actor: "human",
+    }),
+  /stem or inflection/,
+);
+
 game = giveClue(game, {
   clue: "space",
   number: 2,

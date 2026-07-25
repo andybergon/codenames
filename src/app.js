@@ -75,7 +75,7 @@ const MODEL_PICKER_INFO = {
 const CANDIDATE_FILTER_INFO = {
   id: "candidate-filter",
   label: "available clue candidates",
-  info: "This count starts from the selected vocabulary and dynamically removes clues that conflict with the remaining board words: exact matches, simple stem variants, and words that contain or are contained by a board word. There is no additional fixed removal at runtime, so the count changes with the board and guessed cards.",
+  info: "This count starts from the selected vocabulary and dynamically removes clues that conflict with the remaining board words: exact matches, simple stems and inflections, and recognized compounds. There is no additional fixed removal at runtime, so the count changes with the board and guessed cards.",
 };
 const PICKER_BENCHMARK_BY_CONFIGURATION = new Map(
   MODEL_PICKER_BENCHMARK.results.map((result) => [

@@ -127,6 +127,38 @@ assert.equal(isForbiddenClue("pinball", ["pin", "ball"]), true);
 assert.equal(isForbiddenClue("breakdown", ["break"]), true);
 assert.equal(isForbiddenClue("horse", ["horseshoe"]), true);
 assert.equal(isForbiddenClue("sparrow", ["row"]), false);
+assert.equal(isForbiddenClue("lives", ["life"]), true);
+assert.equal(isForbiddenClue("life", ["lives"]), true);
+assert.equal(isForbiddenClue("stories", ["story"]), true);
+assert.equal(isForbiddenClue("knives", ["knife"]), true);
+assert.equal(isForbiddenClue("running", ["run"]), true);
+assert.equal(isForbiddenClue("stopped", ["stop"]), true);
+assert.equal(isForbiddenClue("making", ["make"]), true);
+assert.equal(isForbiddenClue("carried", ["carry"]), true);
+assert.equal(isForbiddenClue("planet", ["plane"]), false);
+
+const morphologyBoard = [
+  { word: "LIFE", team: "friendly", layoutId: 0 },
+  { word: "BOMB", team: "assassin", layoutId: 1 },
+];
+const morphologyVectors = [
+  Float32Array.from([1, 0]),
+  Float32Array.from([0, 1]),
+];
+const morphologyClueIndex = {
+  clues: ["lives", "garden"],
+  dimensions: 2,
+  frequencies: [5, 5],
+  quantization: { scale: 127 },
+  vectors: Int8Array.from([127, 0, 127, 0]),
+};
+const morphologyResult = analyzeEmbeddedBoard(
+  morphologyBoard,
+  morphologyVectors,
+  morphologyClueIndex,
+);
+assert.equal(morphologyResult.summary.candidateTotal, 1);
+assert.ok(morphologyResult.suggestions.every(({ clue }) => clue !== "lives"));
 
 const result = analyzeEmbeddedBoard(DEFAULT_BOARD, boardVectors, clueIndex, { limit: 8 });
 const boardWithDoneCards = DEFAULT_BOARD.map((card, index) => ({

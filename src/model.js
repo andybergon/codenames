@@ -149,9 +149,10 @@ function emptyAnalysis(friendlyTotal, candidateTotal) {
 function buildLegalCandidateIndices(entries, clues) {
   const boardWords = entries.map((entry) => normalizeTerm(entry.word));
   const candidateIndices = [];
+  const isForbidden = buildClueLegalityFilter(boardWords);
 
   clues.forEach((clue, candidateIndex) => {
-    if (!isForbiddenClue(normalizeTerm(clue), boardWords)) {
+    if (!isForbidden(normalizeTerm(clue))) {
       candidateIndices.push(candidateIndex);
     }
   });
@@ -159,35 +160,91 @@ function buildLegalCandidateIndices(entries, clues) {
   return candidateIndices;
 }
 
-const KNOWN_COMPOUND_COMPONENTS = new Set(
-  EXTENDED_WORDS.map((word) => normalizeTerm(word).replaceAll(" ", "")),
-);
+const KNOWN_COMPOUND_COMPONENTS = new Set([
+  ...EXTENDED_WORDS.map((word) => normalizeTerm(word).replaceAll(" ", "")),
+  "down",
+]);
 
 export function isForbiddenClue(clue, boardWords) {
-  const compactClue = clue.replaceAll(" ", "");
-  const clueStem = simpleStem(compactClue);
+  return buildClueLegalityFilter(boardWords)(clue);
+}
 
-  return boardWords.some((word) => {
-    const compactWord = word.replaceAll(" ", "");
-    const wordStem = simpleStem(compactWord);
+function buildClueLegalityFilter(boardWords) {
+  const compactBoardWords = boardWords.map((word) => word.replaceAll(" ", ""));
+  const boardWordSet = new Set(compactBoardWords);
+  const boardStemSet = new Set(compactBoardWords.map(simpleStem));
+  const boardInflections = new Set(compactBoardWords.flatMap(simpleInflections));
 
-    if (compactClue === compactWord || clueStem === wordStem) {
-      return true;
-    }
-
+  return (clue) => {
+    const compactClue = clue.replaceAll(" ", "");
     if (
-      isKnownCompoundContainment(compactClue, compactWord) ||
-      isKnownCompoundContainment(compactWord, compactClue)
+      boardWordSet.has(compactClue) ||
+      boardStemSet.has(simpleStem(compactClue)) ||
+      boardInflections.has(compactClue) ||
+      simpleInflections(compactClue).some((form) => boardWordSet.has(form))
     ) {
       return true;
     }
 
-    if (compactClue.length >= 5 && compactWord.length >= 5) {
-      return compactClue.includes(compactWord) || compactWord.includes(compactClue);
-    }
+    return compactBoardWords.some(
+      (compactWord) =>
+        isKnownCompoundContainment(compactClue, compactWord) ||
+        isKnownCompoundContainment(compactWord, compactClue),
+    );
+  };
+}
 
-    return false;
-  });
+function simpleInflections(value) {
+  const forms = [];
+  if (!/^[a-z]{3,}$/u.test(value)) {
+    return forms;
+  }
+
+  const consonantY = /[^aeiou]y$/u.test(value);
+  if (consonantY) {
+    forms.push(`${value.slice(0, -1)}ies`, `${value.slice(0, -1)}ied`);
+  } else {
+    forms.push(`${value}s`);
+  }
+
+  if (/(?:s|x|z|ch|sh)$/u.test(value)) {
+    forms.push(`${value}es`);
+  }
+  if (/fe$/u.test(value)) {
+    forms.push(`${value.slice(0, -2)}ves`);
+  } else if (/f$/u.test(value)) {
+    forms.push(`${value.slice(0, -1)}ves`);
+  }
+
+  if (/e$/u.test(value)) {
+    forms.push(`${value}d`);
+  } else if (!consonantY) {
+    forms.push(`${value}ed`);
+  }
+
+  if (/ie$/u.test(value)) {
+    forms.push(`${value.slice(0, -2)}ying`);
+  } else if (/e$/u.test(value) && !/(?:ee|oe|ye)$/u.test(value)) {
+    forms.push(`${value.slice(0, -1)}ing`);
+  } else {
+    forms.push(`${value}ing`);
+  }
+
+  if (shouldDoubleFinalConsonant(value)) {
+    const final = value.at(-1);
+    forms.push(`${value}${final}ed`, `${value}${final}ing`);
+  }
+
+  return forms;
+}
+
+function shouldDoubleFinalConsonant(value) {
+  return (
+    value.length >= 3 &&
+    /[aeiou]/u.test(value.at(-2)) &&
+    /[bcdfghjklmnpqrstvz]/u.test(value.at(-1)) &&
+    /[^aeiou]/u.test(value.at(-3))
+  );
 }
 
 function isKnownCompoundContainment(container, component) {

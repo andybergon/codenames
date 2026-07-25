@@ -36,10 +36,10 @@ A candidate clue is removed when it:
 
 - Equals a remaining board word after normalization.
 - Stem-matches a remaining board word.
-- Contains or is contained by a recognized compound from the trainer word set.
-- Has substantial five-character-or-longer containment with a board word.
+- Is a conservative plural, past-tense, or participle inflection of a remaining board word, or vice versa.
+- Contains or is contained by recognized compound components.
 
-The filter is deterministic and practical, but it does not replace table-specific spymaster rulings.
+The morphology filter uses explicit English suffix transformations rather than generic substring matching, so pairs such as `life` / `lives`, `story` / `stories`, and `run` / `running` are rejected without treating unrelated pairs such as `plane` / `planet` as equivalent. Ranked Train and Play suggestions, benchmark fallback clues, and manually entered Play clues share this legality rule. The filter is deterministic and practical, but it does not replace table-specific spymaster rulings.
 
 ## ☠️ Danger policy
 

@@ -1,4 +1,5 @@
 import { SIDE, otherSide, remainingCardsForSide } from "../gameplay.js";
+import { isForbiddenClue, normalizeTerm } from "../model.js";
 import { normalizePlayBotSettings } from "./settings.js";
 
 export const PLAYER_ROLE = Object.freeze({
@@ -282,8 +283,13 @@ function validateClue(clue, cards) {
   if (!normalized || /\s/u.test(normalized)) {
     throw new Error("A clue must be one word.");
   }
-  if (cards.some((card) => !card.done && card.word.toLowerCase() === normalized.toLowerCase())) {
-    throw new Error("A clue cannot be an unrevealed board word.");
+  const boardWords = cards
+    .filter((card) => !card.done)
+    .map((card) => normalizeTerm(card.word));
+  if (isForbiddenClue(normalizeTerm(normalized), boardWords)) {
+    throw new Error(
+      "A clue cannot match the stem or inflection of an unrevealed board word.",
+    );
   }
   return normalized.toUpperCase();
 }

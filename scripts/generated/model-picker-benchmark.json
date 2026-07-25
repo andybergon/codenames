@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-13T02:39:08.212Z",
+  "generatedAt": "2026-07-25T15:07:51.204Z",
   "environment": {
     "node": "v26.5.0",
     "platform": "darwin",
@@ -8,7 +8,7 @@
     "cpu": "Apple M5 Pro",
     "logicalCores": 18,
     "totalMemoryBytes": 51539607552,
-    "freeMemoryBytesAtReport": 1120157696,
+    "freeMemoryBytesAtReport": 1534066688,
     "garbageCollectionExposed": true
   },
   "methodology": {
@@ -24,18 +24,18 @@
       "model": "Xenova/paraphrase-MiniLM-L3-v2",
       "dimensions": 384,
       "candidateCount": 3000,
-      "legalCandidateCount": 2974,
-      "medianMs": 73.8,
-      "p25Ms": 71.9,
-      "p75Ms": 99,
+      "legalCandidateCount": 2975,
+      "medianMs": 68.1,
+      "p25Ms": 66.2,
+      "p75Ms": 93.9,
       "samplesMs": [
-        67.2,
-        71.6,
-        72.2,
-        73.8,
-        97.9,
-        100,
-        100.8
+        62.2,
+        64.8,
+        67.6,
+        68.1,
+        92.7,
+        95.1,
+        97.6
       ]
     },
     {
@@ -43,18 +43,18 @@
       "model": "Xenova/paraphrase-MiniLM-L3-v2",
       "dimensions": 384,
       "candidateCount": 10000,
-      "legalCandidateCount": 9944,
-      "medianMs": 221.1,
-      "p25Ms": 212.8,
-      "p75Ms": 268.8,
+      "legalCandidateCount": 9950,
+      "medianMs": 214.8,
+      "p25Ms": 205.2,
+      "p75Ms": 256,
       "samplesMs": [
-        210.1,
-        210.2,
-        215.4,
-        221.1,
-        221.9,
-        315.7,
-        318.2
+        198.5,
+        201.8,
+        208.7,
+        214.8,
+        215.3,
+        296.8,
+        303.3
       ]
     },
     {
@@ -62,18 +62,18 @@
       "model": "Xenova/paraphrase-MiniLM-L3-v2",
       "dimensions": 384,
       "candidateCount": 30000,
-      "legalCandidateCount": 29884,
-      "medianMs": 633.4,
-      "p25Ms": 630.2,
-      "p75Ms": 786.7,
+      "legalCandidateCount": 29909,
+      "medianMs": 587.6,
+      "p25Ms": 579.6,
+      "p75Ms": 741.6,
       "samplesMs": [
-        620.2,
-        627.7,
-        632.7,
-        633.4,
-        639.3,
-        934.2,
-        952
+        576.3,
+        579.4,
+        579.7,
+        587.6,
+        600.9,
+        882.3,
+        913.7
       ]
     },
     {
@@ -81,18 +81,18 @@
       "model": "Xenova/paraphrase-MiniLM-L3-v2",
       "dimensions": 384,
       "candidateCount": 100000,
-      "legalCandidateCount": 99633,
-      "medianMs": 2091.9,
-      "p25Ms": 2077.5,
-      "p75Ms": 2184.2,
+      "legalCandidateCount": 99817,
+      "medianMs": 2059.7,
+      "p25Ms": 2005.6,
+      "p75Ms": 2314.9,
       "samplesMs": [
-        2049.7,
-        2074.6,
-        2080.4,
-        2091.9,
-        2166.8,
-        2201.7,
-        3089.9
+        1933.2,
+        1952.1,
+        2059,
+        2059.7,
+        2078.4,
+        2551.4,
+        2617.6
       ]
     },
     {
@@ -100,18 +100,18 @@
       "model": "Xenova/all-MiniLM-L6-v2",
       "dimensions": 384,
       "candidateCount": 3000,
-      "legalCandidateCount": 2974,
-      "medianMs": 73.1,
-      "p25Ms": 71.6,
-      "p75Ms": 74.2,
+      "legalCandidateCount": 2975,
+      "medianMs": 64,
+      "p25Ms": 63.5,
+      "p75Ms": 65.9,
       "samplesMs": [
-        68.9,
-        71.3,
-        71.9,
-        73.1,
-        74.2,
-        74.2,
-        82.7
+        62.4,
+        63.3,
+        63.6,
+        64,
+        64.3,
+        67.4,
+        97.1
       ]
     },
     {
@@ -119,18 +119,18 @@
       "model": "Xenova/all-MiniLM-L6-v2",
       "dimensions": 384,
       "candidateCount": 10000,
-      "legalCandidateCount": 9944,
-      "medianMs": 224,
-      "p25Ms": 220.5,
-      "p75Ms": 275.9,
+      "legalCandidateCount": 9950,
+      "medianMs": 223.5,
+      "p25Ms": 211.3,
+      "p75Ms": 280.3,
       "samplesMs": [
-        214.7,
-        217.5,
+        207.6,
+        208.4,
+        214.1,
         223.5,
-        224,
-        227.7,
-        324.1,
-        325.2
+        241.9,
+        318.6,
+        323.4
       ]
     },
     {
@@ -138,18 +138,18 @@
       "model": "Xenova/all-MiniLM-L6-v2",
       "dimensions": 384,
       "candidateCount": 30000,
-      "legalCandidateCount": 29884,
-      "medianMs": 645.8,
-      "p25Ms": 638.4,
-      "p75Ms": 803.7,
+      "legalCandidateCount": 29909,
+      "medianMs": 582.7,
+      "p25Ms": 575.4,
+      "p75Ms": 765.5,
       "samplesMs": [
-        625.1,
-        633,
-        643.9,
-        645.8,
-        649.3,
-        958,
-        962.3
+        570.2,
+        573.7,
+        577.1,
+        582.7,
+        643.4,
+        887.6,
+        894.8
       ]
     },
     {
@@ -157,18 +157,18 @@
       "model": "Xenova/all-MiniLM-L6-v2",
       "dimensions": 384,
       "candidateCount": 100000,
-      "legalCandidateCount": 99633,
-      "medianMs": 2127.5,
-      "p25Ms": 2097.8,
-      "p75Ms": 2141.2,
+      "legalCandidateCount": 99817,
+      "medianMs": 1944.6,
+      "p25Ms": 1907.7,
+      "p75Ms": 2188.2,
       "samplesMs": [
-        2071.7,
-        2071.8,
-        2123.9,
-        2127.5,
-        2139.9,
-        2142.4,
-        3174.1
+        1897.9,
+        1901.6,
+        1913.9,
+        1944.6,
+        1953.5,
+        2422.9,
+        2453.2
       ]
     },
     {
@@ -176,18 +176,18 @@
       "model": "Xenova/bge-small-en-v1.5",
       "dimensions": 384,
       "candidateCount": 3000,
-      "legalCandidateCount": 2974,
-      "medianMs": 73.1,
-      "p25Ms": 68.9,
-      "p75Ms": 88.3,
+      "legalCandidateCount": 2975,
+      "medianMs": 66.2,
+      "p25Ms": 61.7,
+      "p75Ms": 81.4,
       "samplesMs": [
-        66.6,
-        67.2,
-        70.6,
-        73.1,
-        75.4,
-        101.1,
-        101.6
+        61.4,
+        61.5,
+        61.9,
+        66.2,
+        68.7,
+        94,
+        96
       ]
     },
     {
@@ -195,18 +195,18 @@
       "model": "Xenova/bge-small-en-v1.5",
       "dimensions": 384,
       "candidateCount": 10000,
-      "legalCandidateCount": 9944,
-      "medianMs": 240.5,
-      "p25Ms": 217.9,
-      "p75Ms": 279.9,
+      "legalCandidateCount": 9950,
+      "medianMs": 203.7,
+      "p25Ms": 200.8,
+      "p75Ms": 252.7,
       "samplesMs": [
-        214,
-        217.1,
-        218.6,
-        240.5,
-        240.7,
-        319.1,
-        326.8
+        197.8,
+        198.1,
+        203.5,
+        203.7,
+        203.8,
+        301.6,
+        305.6
       ]
     },
     {
@@ -214,18 +214,18 @@
       "model": "Xenova/bge-small-en-v1.5",
       "dimensions": 384,
       "candidateCount": 30000,
-      "legalCandidateCount": 29884,
-      "medianMs": 657.8,
-      "p25Ms": 649.2,
-      "p75Ms": 810.5,
+      "legalCandidateCount": 29909,
+      "medianMs": 614.2,
+      "p25Ms": 591.3,
+      "p75Ms": 771.3,
       "samplesMs": [
-        642.1,
-        642.8,
-        655.7,
-        657.8,
-        678.1,
-        942.9,
-        953.2
+        588.9,
+        589.7,
+        592.9,
+        614.2,
+        616.7,
+        925.9,
+        946.6
       ]
     },
     {
@@ -233,18 +233,18 @@
       "model": "Xenova/bge-small-en-v1.5",
       "dimensions": 384,
       "candidateCount": 100000,
-      "legalCandidateCount": 99633,
-      "medianMs": 2079.9,
-      "p25Ms": 2066.9,
-      "p75Ms": 2090.7,
+      "legalCandidateCount": 99817,
+      "medianMs": 1958.9,
+      "p25Ms": 1942.7,
+      "p75Ms": 2272.1,
       "samplesMs": [
-        2064.9,
-        2066.9,
-        2067,
-        2079.9,
-        2080.8,
-        2100.7,
-        3111.9
+        1919.6,
+        1939.8,
+        1945.6,
+        1958.9,
+        2080.7,
+        2463.4,
+        2497.2
       ]
     }
   ]
