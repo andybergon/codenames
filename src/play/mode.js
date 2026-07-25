@@ -33,12 +33,14 @@ import {
   GAME_PHASE,
   PLAYER_ROLE,
   actorForSeat,
+  canUndoPlayGame,
   createPlayGame,
   giveClue,
   guessCard,
   passTurn,
   publicGameView,
   randomHumanSeat,
+  undoPlayGame,
 } from "./game-state.js";
 import {
   clearPlaySession,
@@ -53,6 +55,8 @@ import {
 
 const RESULTS_PER_SIZE = 6;
 const BOT_WAIT_DETAIL_DELAY = 1800;
+const BOT_ACTION_DELAY = 720;
+const BOT_ACTION_AFTER_UNDO_DELAY = 5000;
 const PLAY_BOARD_ORDER = Object.freeze({
   TABLE: "table",
   TEAMS: "teams",
@@ -284,7 +288,7 @@ export function createPlayMode(options = {}) {
   let botWaitDetailTimer = 0;
   let botWaitKey = "";
   let botWaitDetailVisible = false;
-  let undoSnapshot = null;
+  let botActionAfterUndo = false;
   let statusMessage = "";
   let statusMessageIsError = false;
   let selectedSuggestion = null;
@@ -470,7 +474,7 @@ export function createPlayMode(options = {}) {
     activeModelId = null;
     statusMessage = message;
     statusMessageIsError = false;
-    undoSnapshot = null;
+    botActionAfterUndo = false;
     selectedSuggestion = null;
     suggestionsExpanded = false;
     suggestionTurnKey = "";
@@ -495,7 +499,7 @@ export function createPlayMode(options = {}) {
     clearBotWaitDetail();
     botBusy = false;
     game = null;
-    undoSnapshot = null;
+    botActionAfterUndo = false;
     selectedHumanSeat = randomHumanSeat();
     elements.setup.hidden = false;
     elements.game.hidden = true;
@@ -563,10 +567,9 @@ export function createPlayMode(options = {}) {
     if (!game) {
       return;
     }
-    const snapshot = structuredClone(game);
     try {
       game = action(game);
-      undoSnapshot = snapshot;
+      botActionAfterUndo = false;
       selectedSuggestion = null;
       statusMessage = "";
       statusMessageIsError = false;
@@ -582,12 +585,13 @@ export function createPlayMode(options = {}) {
   }
 
   function undoAction() {
-    if (!undoSnapshot) {
+    if (!game || !canUndoPlayGame(game)) {
       return;
     }
     window.clearTimeout(botTimer);
-    game = undoSnapshot;
-    undoSnapshot = null;
+    game = undoPlayGame(game);
+    savedGame = game;
+    botActionAfterUndo = true;
     resetAnalysis("Last action undone.");
     savePlaySession(game);
     renderGame();
@@ -698,7 +702,9 @@ export function createPlayMode(options = {}) {
     }
   }
 
-  function queueBotAction(delay = undoSnapshot ? 1200 : 720) {
+  function queueBotAction(
+    delay = botActionAfterUndo ? BOT_ACTION_AFTER_UNDO_DELAY : BOT_ACTION_DELAY,
+  ) {
     window.clearTimeout(botTimer);
     if (!active || !game || game.phase === GAME_PHASE.COMPLETE || botBusy) {
       return;
@@ -729,7 +735,7 @@ export function createPlayMode(options = {}) {
       return;
     }
     botBusy = true;
-    undoSnapshot = null;
+    botActionAfterUndo = false;
     const gameAtStart = game;
     const actingSide = game.activeSide;
 
@@ -863,7 +869,7 @@ export function createPlayMode(options = {}) {
 
     elements.humanSeat.dataset.side = game.humanSeat.side;
     elements.humanSeat.textContent = `${sideEmoji(game.humanSeat.side)} ${roleEmoji(game.humanSeat.role)} You are ${sideLabel(game.humanSeat.side)} ${roleLabel(game.humanSeat.role)}`;
-    elements.undoAction.disabled = !undoSnapshot || botBusy;
+    elements.undoAction.disabled = !canUndoPlayGame(game) || botBusy;
     renderScore();
     renderBoardToolbar();
     renderBoard(view, currentActor, currentRole);

@@ -882,6 +882,160 @@ test("Play rejects a clue inflection of an unrevealed board word", async ({ page
   await expect(page.locator(".play-card", { hasText: "LIFE" })).not.toHaveClass(/is-done/);
 });
 
+test("Play repeatedly undoes saved human and bot actions to the history boundary", async ({
+  page,
+}) => {
+  const teams = [
+    ...Array(9).fill("friendly"),
+    ...Array(8).fill("enemy"),
+    ...Array(7).fill("neutral"),
+    "assassin",
+  ];
+  const blueGuess = {
+    layoutId: 0,
+    word: "WORD0",
+    team: "friendly",
+    actor: "bot",
+  };
+  const redGuess = {
+    layoutId: 9,
+    word: "WORD9",
+    team: "enemy",
+    actor: "bot",
+  };
+  const savedGame = {
+    schemaVersion: 1,
+    seed: "multi-undo-ui",
+    wordSet: "official",
+    humanSeat: { side: "blue", role: "spymaster" },
+    cards: teams.map((team, layoutId) => ({
+      word: `WORD${layoutId}`,
+      team,
+      layoutId,
+      done: layoutId === 0 || layoutId === 9,
+      revealedBy: layoutId === 0 ? "blue" : layoutId === 9 ? "red" : null,
+      revealedTurn: layoutId === 0 ? 1 : layoutId === 9 ? 2 : null,
+    })),
+    activeSide: "blue",
+    phase: "awaiting-guess",
+    turnNumber: 3,
+    currentTurn: {
+      side: "blue",
+      clue: "THIRD",
+      number: 1,
+      actor: "human",
+      intendedLayoutIds: [1],
+      guesses: [],
+    },
+    winner: null,
+    endReason: null,
+    history: [
+      {
+        type: "game-started",
+        humanSeat: { side: "blue", role: "spymaster" },
+        activeSide: "blue",
+      },
+      {
+        type: "clue-given",
+        turn: 1,
+        side: "blue",
+        actor: "human",
+        clue: "FIRST",
+        number: 1,
+        intendedLayoutIds: [0],
+      },
+      { type: "card-guessed", turn: 1, side: "blue", ...blueGuess },
+      { type: "turn-passed", turn: 1, side: "blue", actor: "bot" },
+      {
+        type: "turn-ended",
+        turn: 1,
+        side: "blue",
+        reason: "pass",
+        clue: "FIRST",
+        number: 1,
+        guesses: [blueGuess],
+      },
+      {
+        type: "clue-given",
+        turn: 2,
+        side: "red",
+        actor: "bot",
+        clue: "SECOND",
+        number: 1,
+        intendedLayoutIds: [9],
+      },
+      { type: "card-guessed", turn: 2, side: "red", ...redGuess },
+      { type: "turn-passed", turn: 2, side: "red", actor: "bot" },
+      {
+        type: "turn-ended",
+        turn: 2,
+        side: "red",
+        reason: "pass",
+        clue: "SECOND",
+        number: 1,
+        guesses: [redGuess],
+      },
+      {
+        type: "clue-given",
+        turn: 3,
+        side: "blue",
+        actor: "human",
+        clue: "THIRD",
+        number: 1,
+        intendedLayoutIds: [1],
+      },
+    ],
+  };
+  await page.addInitScript((session) => {
+    localStorage.setItem("codenames-play-session-v1", JSON.stringify(session));
+  }, savedGame);
+  await page.goto("/?mode=play");
+  await page.getByRole("button", { name: "Resume game", exact: true }).click();
+
+  const undo = page.getByRole("button", { name: "Undo", exact: true });
+  const turn = page.locator("#play-clue-display");
+  const blueScore = page.locator('.play-score-team[data-side="blue"] strong');
+  const redScore = page.locator('.play-score-team[data-side="red"] strong');
+
+  await expect(turn).toContainText("THIRD 1");
+  await expect(blueScore).toHaveText("8");
+  await expect(redScore).toHaveText("7");
+  await expect(undo).toBeEnabled();
+
+  await undo.click();
+  await expect(turn).toContainText("Blue turn");
+  await expect(turn).toContainText("Give a clue");
+
+  await undo.click();
+  await expect(turn).toContainText("SECOND 1");
+  await expect(page.locator('.play-card[data-layout-id="9"]')).toHaveClass(/is-done/);
+  await page.waitForTimeout(1500);
+  await expect(turn).toContainText("SECOND 1");
+
+  await undo.click();
+  await expect(turn).toContainText("SECOND 1");
+  await expect(page.locator('.play-card[data-layout-id="9"]')).not.toHaveClass(/is-done/);
+  await expect(redScore).toHaveText("8");
+
+  await undo.click();
+  await expect(turn).toContainText("Red turn");
+  await expect(turn).toContainText("Choosing a clue");
+
+  await undo.click();
+  await expect(turn).toContainText("FIRST 1");
+  await expect(page.locator('.play-card[data-layout-id="0"]')).toHaveClass(/is-done/);
+
+  await undo.click();
+  await expect(turn).toContainText("FIRST 1");
+  await expect(page.locator('.play-card[data-layout-id="0"]')).not.toHaveClass(/is-done/);
+  await expect(blueScore).toHaveText("9");
+
+  await undo.click();
+  await expect(turn).toContainText("Blue turn");
+  await expect(turn).toContainText("Give a clue");
+  await expect(undo).toBeDisabled();
+});
+
 test("Play color-codes turns and lets spymasters switch board order", async ({ page }) => {
   await page.goto("/?mode=play");
   await page.locator('[data-play-seat="blue:spymaster"]').click();

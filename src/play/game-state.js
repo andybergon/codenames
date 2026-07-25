@@ -21,6 +21,7 @@ export const GAME_END_REASON = Object.freeze({
 const SIDES = new Set(Object.values(SIDE));
 const PLAYER_ROLES = new Set(Object.values(PLAYER_ROLE));
 const ACTORS = new Set(["human", "bot"]);
+const PLAY_ACTION_TYPES = new Set(["clue-given", "card-guessed", "turn-passed"]);
 
 export function randomHumanSeat(random = Math.random) {
   return {
@@ -194,6 +195,45 @@ export function passTurn(game, { actor }) {
     },
     "pass",
   );
+}
+
+export function canUndoPlayGame(game) {
+  return game.history.some((event) => PLAY_ACTION_TYPES.has(event.type));
+}
+
+export function undoPlayGame(game) {
+  const actions = game.history.filter((event) => PLAY_ACTION_TYPES.has(event.type));
+  if (actions.length === 0) {
+    return game;
+  }
+
+  let restored = createPlayGame({
+    botSettings: game.botSettings,
+    cards: game.cards,
+    humanSeat: game.humanSeat,
+    seed: game.seed,
+    wordSet: game.wordSet,
+  });
+
+  for (const event of actions.slice(0, -1)) {
+    if (event.type === "clue-given") {
+      restored = giveClue(restored, {
+        clue: event.clue,
+        number: event.number,
+        actor: event.actor,
+        intendedLayoutIds: event.intendedLayoutIds,
+      });
+    } else if (event.type === "card-guessed") {
+      restored = guessCard(restored, {
+        layoutId: event.layoutId,
+        actor: event.actor,
+      });
+    } else {
+      restored = passTurn(restored, { actor: event.actor });
+    }
+  }
+
+  return restored;
 }
 
 export function publicGameView(game) {

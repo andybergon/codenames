@@ -15,12 +15,14 @@ import {
   GAME_PHASE,
   PLAYER_ROLE,
   actorForSeat,
+  canUndoPlayGame,
   createPlayGame,
   giveClue,
   guessCard,
   passTurn,
   publicGameView,
   randomHumanSeat,
+  undoPlayGame,
   validateStoredGame,
 } from "../src/play/game-state.js";
 import {
@@ -244,6 +246,53 @@ game = passTurn(game, { actor: "human" });
 assert.equal(game.activeSide, SIDE.RED);
 assert.equal(game.phase, GAME_PHASE.AWAITING_CLUE);
 
+let undoGame = createPlayGame({
+  cards: sample.cards,
+  humanSeat: { side: SIDE.BLUE, role: PLAYER_ROLE.OPERATIVE },
+  seed: "multi-undo",
+  wordSet: sample.wordSet,
+});
+const undoStates = [structuredClone(undoGame)];
+assert.equal(canUndoPlayGame(undoGame), false);
+assert.strictEqual(undoPlayGame(undoGame), undoGame);
+
+undoGame = giveClue(undoGame, {
+  clue: "space",
+  number: 2,
+  actor: "bot",
+  intendedLayoutIds: [0, 1],
+});
+undoStates.push(structuredClone(undoGame));
+const blueAgent = undoGame.cards.find((card) => card.team === "friendly");
+undoGame = guessCard(undoGame, {
+  layoutId: blueAgent.layoutId,
+  actor: "human",
+});
+undoStates.push(structuredClone(undoGame));
+undoGame = passTurn(undoGame, { actor: "human" });
+undoStates.push(structuredClone(undoGame));
+undoGame = giveClue(undoGame, {
+  clue: "garden",
+  number: 1,
+  actor: "bot",
+});
+undoStates.push(structuredClone(undoGame));
+const redAgent = undoGame.cards.find((card) => card.team === "enemy");
+undoGame = guessCard(undoGame, {
+  layoutId: redAgent.layoutId,
+  actor: "bot",
+});
+undoStates.push(structuredClone(undoGame));
+undoGame = passTurn(undoGame, { actor: "bot" });
+undoStates.push(structuredClone(undoGame));
+
+for (let index = undoStates.length - 2; index >= 0; index -= 1) {
+  assert.equal(canUndoPlayGame(undoGame), true);
+  undoGame = undoPlayGame(undoGame);
+  assert.deepEqual(undoGame, undoStates[index]);
+}
+assert.equal(canUndoPlayGame(undoGame), false);
+
 let neutralGame = createPlayGame({
   cards: sample.cards,
   humanSeat: { side: SIDE.BLUE, role: PLAYER_ROLE.OPERATIVE },
@@ -271,35 +320,51 @@ assassinGame = guessCard(assassinGame, {
 assert.equal(assassinGame.phase, GAME_PHASE.COMPLETE);
 assert.equal(assassinGame.winner, SIDE.RED);
 assert.equal(assassinGame.endReason, GAME_END_REASON.ASSASSIN);
+const resumedAssassinGame = validateStoredGame(structuredClone(assassinGame));
+const restoredAssassinGame = undoPlayGame(resumedAssassinGame);
+assert.equal(restoredAssassinGame.phase, GAME_PHASE.AWAITING_GUESS);
+assert.equal(restoredAssassinGame.winner, null);
+assert.equal(restoredAssassinGame.endReason, null);
+assert.equal(
+  restoredAssassinGame.cards.find((card) => card.layoutId === assassin.layoutId).done,
+  false,
+);
 
 let winningGame = createPlayGame({
-  cards: sample.cards.map((card) => ({
-    ...card,
-    done: card.team === "friendly" && card.layoutId !== 0,
-  })),
+  cards: sample.cards,
   humanSeat: { side: SIDE.BLUE, role: PLAYER_ROLE.OPERATIVE },
   seed: "winner",
   wordSet: sample.wordSet,
 });
-winningGame.cards = winningGame.cards.map((card) => ({
-  ...card,
-  done: card.team === "friendly" && card.layoutId !== 0,
-}));
 winningGame = giveClue(winningGame, {
   clue: "space",
-  number: 1,
+  number: 9,
   actor: "bot",
-  intendedLayoutIds: [0],
+  intendedLayoutIds: winningGame.cards
+    .filter((card) => card.team === "friendly")
+    .map((card) => card.layoutId),
 });
-winningGame = guessCard(winningGame, { layoutId: 0, actor: "human" });
+const winningTargets = winningGame.cards.filter((card) => card.team === "friendly");
+for (const target of winningTargets.slice(0, -1)) {
+  winningGame = guessCard(winningGame, {
+    layoutId: target.layoutId,
+    actor: "human",
+  });
+}
+const beforeWinningGuess = structuredClone(winningGame);
+winningGame = guessCard(winningGame, {
+  layoutId: winningTargets.at(-1).layoutId,
+  actor: "human",
+});
 assert.equal(winningGame.phase, GAME_PHASE.COMPLETE);
 assert.equal(winningGame.winner, SIDE.BLUE);
 const completedView = publicGameView(winningGame);
 assert.equal(completedView.cards.find((card) => !card.done).team !== null, true);
 assert.deepEqual(
   completedView.history.find((event) => event.type === "clue-given").intendedLayoutIds,
-  [0],
+  winningTargets.map((card) => card.layoutId),
 );
+assert.deepEqual(undoPlayGame(winningGame), beforeWinningGuess);
 
 const spyView = publicGameView(
   createPlayGame({
