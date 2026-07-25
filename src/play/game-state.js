@@ -282,6 +282,62 @@ export function publicGameView(game) {
   };
 }
 
+export function replayCompletedClueTurns(game) {
+  if (game.phase !== GAME_PHASE.COMPLETE) {
+    return [];
+  }
+
+  const replayCards = game.cards.map((card) => ({
+    ...card,
+    done: false,
+    revealedBy: null,
+    revealedTurn: null,
+  }));
+  const turns = [];
+
+  for (const event of game.history) {
+    if (event.type === "clue-given") {
+      turns.push({
+        turn: event.turn,
+        side: event.side,
+        actor: event.actor,
+        clue: event.clue,
+        number: event.number,
+        intendedLayoutIds: [...(event.intendedLayoutIds ?? [])],
+        guesses: [],
+        cards: replayCards.map((card) => ({ ...card })),
+      });
+      continue;
+    }
+
+    if (event.type !== "card-guessed") {
+      continue;
+    }
+
+    const activeTurn = turns[turns.length - 1];
+    if (
+      activeTurn?.turn === event.turn &&
+      activeTurn.side === event.side
+    ) {
+      activeTurn.guesses.push({
+        layoutId: event.layoutId,
+        word: event.word,
+        team: event.team,
+        actor: event.actor,
+      });
+    }
+
+    const card = replayCards.find((candidate) => candidate.layoutId === event.layoutId);
+    if (card) {
+      card.done = true;
+      card.revealedBy = event.side;
+      card.revealedTurn = event.turn;
+    }
+  }
+
+  return turns;
+}
+
 export function validateStoredGame(value) {
   if (
     !value ||

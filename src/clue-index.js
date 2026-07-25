@@ -1,12 +1,16 @@
 const jsonPromises = new Map();
 
 export async function loadShardedClueIndex(manifestUrl, candidateCount) {
-  const manifest = await fetchJson(manifestUrl, "clue manifest");
+  const manifest = await loadClueIndexManifest(manifestUrl);
   const selectedShards = manifest.shards.filter((shard) => shard.start < candidateCount);
   const shardResponses = await Promise.all(selectedShards.map((shard) =>
     fetchJson(new URL(shard.file, new URL(manifestUrl, location.origin)).href, "clue shard"),
   ));
   return hydrateClueShards(manifest, shardResponses, candidateCount);
+}
+
+export function loadClueIndexManifest(manifestUrl) {
+  return fetchJson(manifestUrl, "clue manifest");
 }
 
 function fetchJson(url, label) {

@@ -180,4 +180,6 @@ The first 1,024-dimensional `text-embedding-3-large` experiment improved human c
 - [`src/model-lab.js`](../src/model-lab.js) · model-picker configurations and measurements
 - [`src/app.js`](../src/app.js) · board lifecycle, team perspectives, and rendered recommendations
 - [`src/play/bots.js`](../src/play/bots.js) · Play clue selection and public-only operative guesses
+- [`src/play/game-state.js`](../src/play/game-state.js) · Play rules, event history, public projection, and completed-turn replay
+- [`src/play/mode.js`](../src/play/mode.js) · Play rendering, model orchestration, and completion-gated operative score review
 - [`src/play/settings.js`](../src/play/settings.js) · validated Play bot defaults and overrides

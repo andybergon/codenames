@@ -6,7 +6,10 @@ import {
 } from "../board-share.js";
 import PLAY_CLUE_BIAS_ANALYSIS from "../../scripts/generated/play-clue-bias-analysis.json" with { type: "json" };
 import PLAY_MODEL_BENCHMARK from "../../scripts/generated/play-model-benchmark.json" with { type: "json" };
-import { loadShardedClueIndex } from "../clue-index.js";
+import {
+  loadClueIndexManifest,
+  loadShardedClueIndex,
+} from "../clue-index.js";
 import { centerEmbeddings, embedTerms } from "../embeddings.js";
 import {
   SIDE,
@@ -39,6 +42,7 @@ import {
   passTurn,
   publicGameView,
   randomHumanSeat,
+  replayCompletedClueTurns,
   restorePlayGame,
   undoPlayGame,
 } from "./game-state.js";
@@ -286,6 +290,10 @@ export function createPlayMode(options = {}) {
     operativeControls: document.querySelector("#play-operative-controls"),
     guessProgress: document.querySelector("#play-guess-progress"),
     passTurn: document.querySelector("#pass-play-turn"),
+    postGameAnalysis: document.querySelector("#play-post-game-analysis"),
+    postGameOutcome: document.querySelector("#play-post-game-outcome"),
+    analysisSummary: document.querySelector("#play-analysis-summary"),
+    analysisStatus: document.querySelector("#play-analysis-status"),
     historyCount: document.querySelector("#play-history-count"),
     historyViewButtons: [...document.querySelectorAll("[data-play-history-view]")],
     historyList: document.querySelector("#play-history-list"),
@@ -336,7 +344,13 @@ export function createPlayMode(options = {}) {
   let playHistoryView = PLAY_HISTORY_VIEW.TIMELINE;
   let activeModelId = null;
   let shareFeedbackTimer = 0;
+  let postGameTurns = [];
+  let selectedPostGameTurn = 0;
+  let postGameScores = [];
+  let postGameAnalysisState = "idle";
+  let postGameAnalysisMessage = "";
   const clueIndexPromises = new Map();
+  const manifestPromises = new Map();
 
   for (const button of elements.seatButtons) {
     button.addEventListener("click", () => {
@@ -564,6 +578,7 @@ export function createPlayMode(options = {}) {
     elements.clueNumber.replaceChildren();
     elements.clueError.textContent = "";
     elements.suggestionList.replaceChildren();
+    resetPostGameAnalysis();
   }
 
   function discardSavedGame() {
@@ -584,6 +599,7 @@ export function createPlayMode(options = {}) {
     game = null;
     botActionAfterHistoryMove = false;
     forwardHistory = [];
+    resetPostGameAnalysis();
     selectedHumanSeat = randomHumanSeat();
     elements.setup.hidden = false;
     elements.game.hidden = true;
@@ -681,10 +697,12 @@ export function createPlayMode(options = {}) {
     game = undoPlayGame(game);
     savedGame = game;
     botActionAfterHistoryMove = true;
+    resetPostGameAnalysis();
     resetAnalysis("Moved back through game history.");
     savePlaySession(game);
     renderGame();
     ensureAnalysis();
+    ensurePostGameAnalysis();
   }
 
   function forwardAction() {
@@ -695,10 +713,12 @@ export function createPlayMode(options = {}) {
     game = restorePlayGame(forwardHistory.pop());
     savedGame = game;
     botActionAfterHistoryMove = true;
+    resetPostGameAnalysis();
     resetAnalysis("Restored undone game history.");
     savePlaySession(game);
     renderGame();
     ensureAnalysis();
+    ensurePostGameAnalysis();
   }
 
   function resetAnalysis(message = "") {
@@ -710,10 +730,22 @@ export function createPlayMode(options = {}) {
     statusMessageIsError = false;
   }
 
+  function resetPostGameAnalysis() {
+    postGameTurns = [];
+    selectedPostGameTurn = 0;
+    postGameScores = [];
+    postGameAnalysisState = "idle";
+    postGameAnalysisMessage = "";
+  }
+
   function commitGame() {
     savedGame = game;
     savePlaySession(game);
     renderGame();
+    if (game.phase === GAME_PHASE.COMPLETE) {
+      ensurePostGameAnalysis();
+      return;
+    }
     if (game.phase === GAME_PHASE.AWAITING_CLUE) {
       resetAnalysis();
       ensureAnalysis();
@@ -723,7 +755,14 @@ export function createPlayMode(options = {}) {
   }
 
   function ensureAnalysis() {
-    if (!game || game.phase === GAME_PHASE.COMPLETE || analysis[game.activeSide]) {
+    if (!game) {
+      return;
+    }
+    if (game.phase === GAME_PHASE.COMPLETE) {
+      ensurePostGameAnalysis();
+      return;
+    }
+    if (analysis[game.activeSide]) {
       queueBotAction();
       return;
     }
@@ -803,6 +842,89 @@ export function createPlayMode(options = {}) {
       statusMessageIsError = true;
       renderGame();
     }
+  }
+
+  function preparePostGameTurns() {
+    if (
+      game?.phase === GAME_PHASE.COMPLETE &&
+      postGameTurns.length === 0
+    ) {
+      postGameTurns = replayCompletedClueTurns(game);
+      selectedPostGameTurn = Math.max(
+        0,
+        Math.min(selectedPostGameTurn, postGameTurns.length - 1),
+      );
+    }
+  }
+
+  function ensurePostGameAnalysis() {
+    preparePostGameTurns();
+    if (
+      !active ||
+      !game ||
+      game.phase !== GAME_PHASE.COMPLETE ||
+      postGameTurns.length === 0 ||
+      postGameAnalysisState !== "idle"
+    ) {
+      return;
+    }
+    void runPostGameAnalysis();
+  }
+
+  async function runPostGameAnalysis() {
+    const runId = ++analysisRun;
+    const gameAtStart = game;
+    const turnsAtStart = postGameTurns;
+    postGameAnalysisState = "loading";
+    postGameAnalysisMessage = "Loading operative scores...";
+    renderGame();
+
+    try {
+      const { modelId } = gameAtStart.botSettings;
+      if (!manifestPromises.has(modelId)) {
+        const promise = loadClueIndexManifest(indexManifestUrl(modelId)).catch(
+          (error) => {
+            manifestPromises.delete(modelId);
+            throw error;
+          },
+        );
+        manifestPromises.set(modelId, promise);
+      }
+      const model = modelOption(modelId);
+      const terms = [
+        ...gameAtStart.cards.map((card) => card.word),
+        ...turnsAtStart.map((turn) => turn.clue),
+      ];
+      const [manifest, vectors] = await Promise.all([
+        manifestPromises.get(modelId),
+        embedTerms(terms, { model: model.model }),
+      ]);
+      if (runId !== analysisRun || game !== gameAtStart) {
+        return;
+      }
+
+      const centered = centerEmbeddings(vectors, manifest.centering.mean);
+      const cardVectors = centered.slice(0, gameAtStart.cards.length);
+      const clueVectors = centered.slice(gameAtStart.cards.length);
+      postGameScores = clueVectors.map((clueVector) =>
+        Object.fromEntries(
+          gameAtStart.cards.map((card, index) => [
+            card.layoutId,
+            dotVectors(clueVector, cardVectors[index]),
+          ]),
+        ),
+      );
+      postGameAnalysisState = "ready";
+      postGameAnalysisMessage = `${model.label} cosine similarity. Higher scores mean a closer operative match.`;
+    } catch (error) {
+      if (runId !== analysisRun) {
+        return;
+      }
+      postGameAnalysisState = "error";
+      postGameAnalysisMessage =
+        error instanceof Error ? error.message : String(error);
+    }
+    renderGame();
   }
 
   function queueBotAction(
@@ -927,7 +1049,9 @@ export function createPlayMode(options = {}) {
       renderGame();
     }
 
-    if (game?.phase === GAME_PHASE.AWAITING_CLUE) {
+    if (game?.phase === GAME_PHASE.COMPLETE) {
+      ensurePostGameAnalysis();
+    } else if (game?.phase === GAME_PHASE.AWAITING_CLUE) {
       resetAnalysis();
       ensureAnalysis();
     } else {
@@ -957,7 +1081,20 @@ export function createPlayMode(options = {}) {
     if (!game) {
       return;
     }
-    const view = publicGameView(game);
+    preparePostGameTurns();
+    const selectedTurn =
+      game.phase === GAME_PHASE.COMPLETE
+        ? postGameTurns[selectedPostGameTurn] ?? null
+        : null;
+    const view = publicGameView(
+      selectedTurn
+        ? {
+            ...game,
+            activeSide: selectedTurn.side,
+            cards: selectedTurn.cards,
+          }
+        : game,
+    );
     const currentRole =
       game.phase === GAME_PHASE.AWAITING_CLUE
         ? PLAYER_ROLE.SPYMASTER
@@ -981,26 +1118,28 @@ export function createPlayMode(options = {}) {
     elements.humanSeat.replaceChildren(seatContext, seatIdentity);
     elements.undoAction.disabled = !canUndoPlayGame(game) || botBusy;
     elements.forwardAction.disabled = forwardHistory.length === 0 || botBusy;
-    renderScore();
+    renderScore(view.cards, selectedTurn);
     renderBoardToolbar();
-    renderBoard(view, currentActor, currentRole);
-    renderTurnPanel(currentActor, currentRole);
+    renderBoard(view, currentActor, currentRole, selectedTurn);
+    renderTurnPanel(currentActor, currentRole, selectedTurn);
+    renderPostGameAnalysis(selectedTurn);
     renderHistory(view.history);
   }
 
-  function renderScore() {
+  function renderScore(cards, selectedTurn) {
     const scores = [SIDE.BLUE, SIDE.RED].map((side) => {
       const item = document.createElement("div");
       item.className = "play-score-team";
       item.dataset.side = side;
       item.classList.toggle(
         "is-active",
-        game.phase !== GAME_PHASE.COMPLETE && game.activeSide === side,
+        (game.phase !== GAME_PHASE.COMPLETE && game.activeSide === side) ||
+          selectedTurn?.side === side,
       );
       const label = document.createElement("span");
       label.textContent = sideLabel(side);
       const value = document.createElement("strong");
-      const remaining = remainingCardsForSide(game.cards, side);
+      const remaining = remainingCardsForSide(cards, side);
       value.textContent = String(remaining);
       item.setAttribute(
         "aria-label",
@@ -1023,7 +1162,7 @@ export function createPlayMode(options = {}) {
     }
   }
 
-  function renderBoard(view, currentActor, currentRole) {
+  function renderBoard(view, currentActor, currentRole, selectedTurn) {
     const canGuess =
       game.phase === GAME_PHASE.AWAITING_GUESS &&
       currentActor === "human" &&
@@ -1038,6 +1177,14 @@ export function createPlayMode(options = {}) {
               left.layoutId - right.layoutId,
           )
         : view.cards;
+    const turnScores = postGameScores[selectedPostGameTurn] ?? {};
+    const intended = new Set(selectedTurn?.intendedLayoutIds ?? []);
+    const guesses = new Map(
+      (selectedTurn?.guesses ?? []).map((guess, index) => [
+        guess.layoutId,
+        { ...guess, index: index + 1 },
+      ]),
+    );
     const cards = visibleCards.map((card) => {
       const button = document.createElement("button");
       button.type = "button";
@@ -1046,13 +1193,64 @@ export function createPlayMode(options = {}) {
       button.dataset.team = card.team ?? "hidden";
       button.classList.toggle("is-done", card.done);
       button.disabled = !canGuess || card.done;
-      button.textContent = card.word;
+      const word = document.createElement("span");
+      word.className = "play-card-word";
+      word.textContent = card.word;
+      button.append(word);
+      const score = turnScores[card.layoutId];
+      const guess = guesses.get(card.layoutId);
+      if (selectedTurn) {
+        button.dataset.intended = String(intended.has(card.layoutId));
+        button.dataset.guessed = String(Boolean(guess));
+        if (guess) {
+          button.dataset.outcome =
+            sideForTeam(guess.team) === selectedTurn.side ? "correct" : "mistake";
+        }
+        const annotations = document.createElement("span");
+        annotations.className = "play-card-annotations";
+        if (intended.has(card.layoutId)) {
+          const target = document.createElement("span");
+          target.className = "play-card-marker is-target";
+          target.textContent = "Target";
+          annotations.append(target);
+        }
+        if (guess) {
+          const outcome = document.createElement("span");
+          outcome.className = "play-card-marker is-guess";
+          outcome.dataset.outcome =
+            sideForTeam(guess.team) === selectedTurn.side ? "correct" : "mistake";
+          outcome.textContent = `Guess ${guess.index}`;
+          annotations.append(outcome);
+        }
+        if (Number.isFinite(score)) {
+          button.dataset.operativeScore = score.toFixed(3);
+          const scoreLabel = document.createElement("span");
+          scoreLabel.className = "play-card-operative-score";
+          scoreLabel.textContent = score.toFixed(3);
+          scoreLabel.title = "Operative cosine similarity";
+          annotations.append(scoreLabel);
+        }
+        button.append(annotations);
+      }
       const role = card.team ? teamLabel(card.team) : "unrevealed";
+      const reviewDetails = selectedTurn
+        ? [
+            intended.has(card.layoutId) ? "intended target" : null,
+            guess
+              ? `guess ${guess.index}, ${
+                  sideForTeam(guess.team) === selectedTurn.side
+                    ? "correct"
+                    : "mistake"
+                }`
+              : null,
+            Number.isFinite(score) ? `operative score ${score.toFixed(3)}` : null,
+          ].filter(Boolean)
+        : [];
       button.setAttribute(
         "aria-label",
-        card.done || card.team
-          ? `${card.word}, ${role}${card.done ? ", revealed" : ""}`
-          : `Guess ${card.word}`,
+        `${card.done || card.team ? `${card.word}, ${role}` : `Guess ${card.word}`}${
+          card.done ? ", revealed before this clue" : ""
+        }${reviewDetails.length ? `, ${reviewDetails.join(", ")}` : ""}`,
       );
       if (canGuess && !card.done) {
         button.addEventListener("click", () =>
@@ -1066,7 +1264,7 @@ export function createPlayMode(options = {}) {
     elements.boardGrid.replaceChildren(...cards);
   }
 
-  function renderTurnPanel(currentActor, currentRole) {
+  function renderTurnPanel(currentActor, currentRole, selectedTurn) {
     const humanSpymaster =
       game.phase === GAME_PHASE.AWAITING_CLUE &&
       currentActor === "human" &&
@@ -1096,7 +1294,15 @@ export function createPlayMode(options = {}) {
         : "",
     );
 
-    if (game.currentTurn) {
+    if (selectedTurn) {
+      turnLabel.textContent = `Post-game · Turn ${selectedPostGameTurn + 1} of ${postGameTurns.length}`;
+      turnAction.className = "play-current-clue";
+      turnAction.append(
+        createCluePill(selectedTurn.clue),
+        ` ${selectedTurn.number}`,
+      );
+      turnNote.textContent = turnReviewSummary(selectedTurn);
+    } else if (game.currentTurn) {
       turnLabel.textContent = `${sideLabel(game.currentTurn.side)} turn`;
       turnAction.className = "play-current-clue";
       turnAction.append(
@@ -1128,7 +1334,11 @@ export function createPlayMode(options = {}) {
     }
     if (currentActor === "bot" && !statusMessageIsError) {
       renderBotWaitNote(turnNote, botWaitDetail, waitDetailVisible);
-    } else if (statusMessage && !turnNote.textContent.includes(statusMessage)) {
+    } else if (
+      !selectedTurn &&
+      statusMessage &&
+      !turnNote.textContent.includes(statusMessage)
+    ) {
       turnNote.textContent = statusMessage;
     }
     elements.clueDisplay.replaceChildren(turnLabel, turnAction, turnNote);
@@ -1216,6 +1426,36 @@ export function createPlayMode(options = {}) {
     detailText.className = "play-turn-wait-detail";
     detailText.textContent = detail;
     note.replaceChildren(progress, detailText);
+  }
+
+  function renderPostGameAnalysis(selectedTurn) {
+    elements.postGameAnalysis.hidden = !selectedTurn;
+    if (!selectedTurn) {
+      return;
+    }
+
+    elements.postGameOutcome.textContent = `${sideEmoji(game.winner)} ${sideLabel(game.winner)} won · ${
+      game.endReason === GAME_END_REASON.ASSASSIN ? "assassin" : "all agents"
+    }`;
+    elements.analysisSummary.textContent = turnReviewSummary(selectedTurn);
+    elements.analysisStatus.dataset.state = postGameAnalysisState;
+    elements.analysisStatus.textContent = postGameAnalysisMessage;
+  }
+
+  function turnReviewSummary(turn) {
+    const wordsByLayout = new Map(
+      game.cards.map((card) => [card.layoutId, card.word]),
+    );
+    const intendedWords = turn.intendedLayoutIds
+      .map((layoutId) => wordsByLayout.get(layoutId))
+      .filter(Boolean);
+    const guessSummary = turn.guesses.map((guess, index) => {
+      const correct = sideForTeam(guess.team) === turn.side;
+      return `${index + 1}. ${guess.word} ${correct ? "✓" : "✕"}`;
+    });
+    return `Intended: ${
+      intendedWords.length ? intendedWords.join(" + ") : "not recorded"
+    } · Guesses: ${guessSummary.length ? guessSummary.join(", ") : "none"}`;
   }
 
   function renderSuggestionVisibility(humanSpymaster) {
@@ -1343,7 +1583,16 @@ export function createPlayMode(options = {}) {
       ? events.map(createHistoryItem)
       : [createEmptyHistoryItem(emptyMessage)];
     list.replaceChildren(...items);
-    list.scrollTop = list.scrollHeight;
+    if (game.phase === GAME_PHASE.COMPLETE) {
+      const selectedItem = list.querySelector(
+        `[data-analysis-turn="${selectedPostGameTurn}"]`,
+      );
+      list.scrollTop = selectedItem
+        ? selectedItem.offsetTop - list.offsetTop
+        : list.scrollHeight;
+    } else {
+      list.scrollTop = list.scrollHeight;
+    }
   }
 
   function createHistoryItem(event) {
@@ -1356,13 +1605,47 @@ export function createPlayMode(options = {}) {
               .map((layoutId) => game.cards.find((card) => card.layoutId === layoutId)?.word)
               .filter(Boolean)
           : [];
-      item.append(
-        `${sideLabel(event.side)} clue: `,
-        createCluePill(event.clue),
-        ` ${event.number}${
-          intendedWords.length ? `, intended ${intendedWords.join(" + ")}` : ""
-        }`,
-      );
+      const turnIndex =
+        game.phase === GAME_PHASE.COMPLETE
+          ? postGameTurns.findIndex(
+              (turn) =>
+                turn.turn === event.turn &&
+                turn.side === event.side,
+            )
+          : -1;
+      if (turnIndex >= 0) {
+        const button = document.createElement("button");
+        const selected = turnIndex === selectedPostGameTurn;
+        button.type = "button";
+        button.className = "play-history-clue";
+        button.append(
+          `${sideLabel(event.side)} clue: `,
+          createCluePill(event.clue),
+          ` ${event.number}${
+            intendedWords.length ? `, intended ${intendedWords.join(" + ")}` : ""
+          }`,
+        );
+        button.setAttribute(
+          "aria-label",
+          `Review turn ${turnIndex + 1}: ${sideLabel(event.side)} clue ${event.clue} ${event.number}`,
+        );
+        button.setAttribute("aria-pressed", String(selected));
+        item.classList.toggle("is-selected", selected);
+        item.dataset.analysisTurn = String(turnIndex);
+        button.addEventListener("click", () => {
+          selectedPostGameTurn = turnIndex;
+          renderGame();
+        });
+        item.append(button);
+      } else {
+        item.append(
+          `${sideLabel(event.side)} clue: `,
+          createCluePill(event.clue),
+          ` ${event.number}${
+            intendedWords.length ? `, intended ${intendedWords.join(" + ")}` : ""
+          }`,
+        );
+      }
     } else if (event.type === "card-guessed") {
       const card = document.createElement("span");
       card.className = "play-history-card";
@@ -1423,6 +1706,16 @@ function teamLabel(team) {
     neutral: "Neutral",
     assassin: "Assassin",
   }[team] ?? team;
+}
+
+function sideForTeam(team) {
+  if (team === "friendly") {
+    return SIDE.BLUE;
+  }
+  if (team === "enemy") {
+    return SIDE.RED;
+  }
+  return null;
 }
 
 function labelRisk(risk) {

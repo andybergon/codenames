@@ -33,6 +33,7 @@ import {
   randomHumanSeat,
   restorePlayGame,
   undoPlayGame,
+  replayCompletedClueTurns,
   validateStoredGame,
 } from "../src/play/game-state.js";
 import {
@@ -392,6 +393,73 @@ assert.deepEqual(
   winningTargets.map((card) => card.layoutId),
 );
 assert.deepEqual(undoPlayGame(winningGame), beforeWinningGuess);
+
+let replayGame = createPlayGame({
+  cards: sample.cards,
+  humanSeat: { side: SIDE.BLUE, role: PLAYER_ROLE.OPERATIVE },
+  seed: "replay",
+  wordSet: sample.wordSet,
+});
+const firstBlue = replayGame.cards.find((card) => card.team === "friendly");
+const firstRed = replayGame.cards.find((card) => card.team === "enemy");
+const replayAssassin = replayGame.cards.find((card) => card.team === "assassin");
+replayGame = giveClue(replayGame, {
+  clue: "orbit",
+  number: 1,
+  actor: "bot",
+  intendedLayoutIds: [firstBlue.layoutId],
+});
+assert.deepEqual(replayCompletedClueTurns(replayGame), []);
+replayGame = guessCard(replayGame, {
+  layoutId: firstBlue.layoutId,
+  actor: "human",
+});
+replayGame = passTurn(replayGame, { actor: "human" });
+replayGame = giveClue(replayGame, {
+  clue: "scarlet",
+  number: 1,
+  actor: "bot",
+  intendedLayoutIds: [firstRed.layoutId],
+});
+replayGame = guessCard(replayGame, {
+  layoutId: firstRed.layoutId,
+  actor: "bot",
+});
+replayGame = passTurn(replayGame, { actor: "bot" });
+replayGame = giveClue(replayGame, {
+  clue: "danger",
+  number: 1,
+  actor: "bot",
+  intendedLayoutIds: [firstBlue.layoutId],
+});
+replayGame = guessCard(replayGame, {
+  layoutId: replayAssassin.layoutId,
+  actor: "human",
+});
+const replayTurns = replayCompletedClueTurns(replayGame);
+assert.equal(replayTurns.length, 3);
+assert.deepEqual(replayTurns[0].intendedLayoutIds, [firstBlue.layoutId]);
+assert.equal(replayTurns[0].cards.every((card) => !card.done), true);
+assert.equal(
+  replayTurns[1].cards.find((card) => card.layoutId === firstBlue.layoutId).done,
+  true,
+);
+assert.equal(
+  replayTurns[1].cards.find((card) => card.layoutId === firstRed.layoutId).done,
+  false,
+);
+assert.equal(
+  replayTurns[2].cards.find((card) => card.layoutId === firstRed.layoutId).done,
+  true,
+);
+assert.deepEqual(
+  replayTurns[2].guesses.map(({ layoutId }) => layoutId),
+  [replayAssassin.layoutId],
+);
+assert.equal(
+  replayTurns[2].cards.find((card) => card.layoutId === replayAssassin.layoutId).done,
+  false,
+);
 
 const spyView = publicGameView(
   createPlayGame({

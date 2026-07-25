@@ -811,6 +811,8 @@ test("Play enforces operative and spymaster information views", async ({ page })
   );
   await expect(page.locator(".play-card")).toHaveCount(25);
   await expect(page.locator('.play-card[data-team="hidden"]')).toHaveCount(25);
+  await expect(page.locator("#play-post-game-analysis")).toBeHidden();
+  await expect(page.locator(".play-card[data-operative-score]")).toHaveCount(0);
   await expect(page.locator("#play-clue-form")).toBeHidden();
   await expect(page.getByRole("textbox", { name: "Clue", exact: true })).toBeHidden();
 
@@ -1660,7 +1662,7 @@ test("long Play logs remain complete and responsive in both views", async ({ pag
   }
 });
 
-test("completed Play sessions reveal the key and intended targets", async ({ page }) => {
+test("completed Play sessions replay clue turns with operative scores", async ({ page }) => {
   const teams = [
     ...Array(9).fill("friendly"),
     ...Array(8).fill("enemy"),
@@ -1676,16 +1678,30 @@ test("completed Play sessions reveal the key and intended targets", async ({ pag
       word: `WORD${layoutId}`,
       team,
       layoutId,
-      done: layoutId === 0,
-      revealedBy: layoutId === 0 ? "blue" : null,
-      revealedTurn: layoutId === 0 ? 1 : null,
+      done: [0, 24].includes(layoutId),
+      revealedBy: layoutId === 0 ? "blue" : layoutId === 24 ? "red" : null,
+      revealedTurn: layoutId === 0 ? 1 : layoutId === 24 ? 2 : null,
     })),
-    activeSide: "blue",
+    activeSide: "red",
     phase: "complete",
-    turnNumber: 1,
-    currentTurn: null,
+    turnNumber: 2,
+    currentTurn: {
+      side: "red",
+      clue: "SECOND",
+      number: 1,
+      actor: "bot",
+      intendedLayoutIds: [9],
+      guesses: [
+        {
+          layoutId: 24,
+          word: "WORD24",
+          team: "assassin",
+          actor: "human",
+        },
+      ],
+    },
     winner: "blue",
-    endReason: "agents",
+    endReason: "assassin",
     history: [
       {
         type: "game-started",
@@ -1698,8 +1714,8 @@ test("completed Play sessions reveal the key and intended targets", async ({ pag
         side: "blue",
         actor: "bot",
         clue: "FIRST",
-        number: 1,
-        intendedLayoutIds: [0],
+        number: 2,
+        intendedLayoutIds: [0, 1],
       },
       {
         type: "card-guessed",
@@ -1710,7 +1726,42 @@ test("completed Play sessions reveal the key and intended targets", async ({ pag
         team: "friendly",
         actor: "human",
       },
-      { type: "game-ended", turn: 1, winner: "blue", reason: "agents" },
+      { type: "turn-passed", turn: 1, side: "blue", actor: "human" },
+      {
+        type: "turn-ended",
+        turn: 1,
+        side: "blue",
+        reason: "pass",
+        clue: "FIRST",
+        number: 2,
+        guesses: [
+          {
+            layoutId: 0,
+            word: "WORD0",
+            team: "friendly",
+            actor: "human",
+          },
+        ],
+      },
+      {
+        type: "clue-given",
+        turn: 2,
+        side: "red",
+        actor: "bot",
+        clue: "SECOND",
+        number: 1,
+        intendedLayoutIds: [9],
+      },
+      {
+        type: "card-guessed",
+        turn: 2,
+        side: "red",
+        layoutId: 24,
+        word: "WORD24",
+        team: "assassin",
+        actor: "human",
+      },
+      { type: "game-ended", turn: 2, winner: "blue", reason: "assassin" },
     ],
   };
   await page.addInitScript((session) => {
@@ -1719,11 +1770,41 @@ test("completed Play sessions reveal the key and intended targets", async ({ pag
   await page.goto("/?mode=play");
   await page.getByRole("button", { name: "Resume game", exact: true }).click();
 
-  await expect(page.locator("#play-clue-display")).toContainText("Blue wins");
+  await expect(page.locator("#play-post-game-outcome")).toContainText("Blue won");
   await expect(page.locator('.play-card[data-team="friendly"]')).toHaveCount(9);
   await expect(page.locator('.play-card[data-team="enemy"]')).toHaveCount(8);
+  await expect(page.locator("#play-post-game-analysis")).toBeVisible();
+  await expect(page.locator("#play-history-list button")).toHaveCount(2);
+  const firstClue = page.getByRole("button", {
+    name: "Review turn 1: Blue clue FIRST 2",
+    exact: true,
+  });
+  const secondClue = page.getByRole("button", {
+    name: "Review turn 2: Red clue SECOND 1",
+    exact: true,
+  });
+  await expect(firstClue).toHaveAttribute("aria-pressed", "true");
+  await expect(secondClue).toHaveAttribute("aria-pressed", "false");
+  await expect(page.locator("#play-clue-display")).toContainText("FIRST 2");
+  await expect(page.locator('.play-card[data-layout-id="0"]')).toHaveAttribute(
+    "data-intended",
+    "true",
+  );
+  await expect(page.locator('.play-card[data-layout-id="0"]')).toHaveAttribute(
+    "data-outcome",
+    "correct",
+  );
+  await expect(page.locator('.play-card[data-layout-id="0"]')).not.toHaveClass(
+    /is-done/,
+  );
+  await expect(page.locator('.play-card[data-layout-id="24"]')).not.toHaveClass(
+    /is-done/,
+  );
+  await expect(page.locator("#play-analysis-summary")).toContainText(
+    "Intended: WORD0 + WORD1 · Guesses: 1. WORD0 ✓",
+  );
   await expect(page.locator("#play-history-list")).toContainText(
-    "Blue clue: FIRST 1, intended WORD0",
+    "Blue clue: FIRST 2, intended WORD0 + WORD1",
   );
   await expect(page.locator("#play-history-list")).toContainText(
     "Blue guessed WORD0",
@@ -1741,6 +1822,68 @@ test("completed Play sessions reveal the key and intended targets", async ({ pag
   await expect(page.locator("#play-history-list")).not.toContainText("Operative");
   await expect(page.locator("#play-history-list")).not.toContainText("🕵️");
   await expect(page.locator("#play-history-list")).not.toContainText("🔎");
+
+  await secondClue.click();
+  await expect(firstClue).toHaveAttribute("aria-pressed", "false");
+  await expect(secondClue).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator("#play-clue-display")).toContainText("SECOND 1");
+  await expect(page.locator('.play-card[data-layout-id="0"]')).toHaveClass(
+    /is-done/,
+  );
+  await expect(page.locator('.play-card[data-layout-id="24"]')).not.toHaveClass(
+    /is-done/,
+  );
+  await expect(page.locator('.play-card[data-layout-id="9"]')).toHaveAttribute(
+    "data-intended",
+    "true",
+  );
+  await expect(page.locator('.play-card[data-layout-id="24"]')).toHaveAttribute(
+    "data-outcome",
+    "mistake",
+  );
+  await expect(page.locator("#play-analysis-summary")).toContainText(
+    "Intended: WORD9 · Guesses: 1. WORD24 ✕",
+  );
+  await expect(
+    page.locator(".play-card[data-operative-score]"),
+  ).toHaveCount(25, { timeout: 45_000 });
+  await expect(page.locator("#play-analysis-status")).toContainText(
+    "cosine similarity",
+  );
+
+  for (const viewport of [
+    { width: 390, height: 844 },
+    { width: 768, height: 1024 },
+    { width: 1440, height: 900 },
+  ]) {
+    await page.setViewportSize(viewport);
+    const layout = await page.evaluate(() => {
+      const board = document.querySelector("#play-board-grid");
+      const cards = [...document.querySelectorAll(".play-card")];
+      return {
+        pageOverflows:
+          document.documentElement.scrollWidth > document.documentElement.clientWidth,
+        historyOverflows:
+          document.querySelector("#play-history-list").scrollWidth >
+          document.querySelector("#play-history-list").clientWidth,
+        cardsFit: cards.every((card) => {
+          const cardBounds = card.getBoundingClientRect();
+          const boardBounds = board.getBoundingClientRect();
+          return (
+            cardBounds.left >= boardBounds.left - 1 &&
+            cardBounds.right <= boardBounds.right + 1
+          );
+        }),
+        scoreCount: cards.filter(
+          (card) => card.querySelector(".play-card-operative-score"),
+        ).length,
+      };
+    });
+    expect(layout.pageOverflows, `page overflow at ${viewport.width}px`).toBe(false);
+    expect(layout.historyOverflows, `history overflow at ${viewport.width}px`).toBe(false);
+    expect(layout.cardsFit, `card clipping at ${viewport.width}px`).toBe(true);
+    expect(layout.scoreCount, `score count at ${viewport.width}px`).toBe(25);
+  }
 });
 
 test("Play sharing copies a board-only link", async ({ page }) => {

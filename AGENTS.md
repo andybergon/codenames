@@ -36,9 +36,10 @@ Local-first Vite application for embedding-powered Codenames clue recommendation
 - Bare app URLs default to Play. Use `?mode=train` for Train, including board-only share links that rely on Train's shared-board decoder.
 - Play defaults to the preserved table order. Spymasters can switch to a team-grouped key view; operatives must remain in the preserved table order so sorting never reveals hidden roles.
 - `src/play/game-state.js` is the pure rules and event-history owner. Keep clue, guess, pass, turn-end, assassin, final-agent, and history-restoration behavior out of UI event handlers.
+- Reconstruct post-game clue turns from ordered event history. Completion-gate replay and operative score overlays so live operative views never expose intended targets, hidden roles, or analysis.
 - `src/play/settings.js` owns validated Play bot defaults and saved configuration. Keep Play settings independent from Train's Model picker.
 - `src/play/word-reuse.js` owns the fully-random and avoid-recent board policies plus the bounded `codenames-play-word-reuse-v1` history. Record started boards under both policies, preserve the selected policy when clearing history, and prefer least-recently-used words only after unseen words cannot fill 25 cards.
-- `src/play/mode.js` owns Play DOM rendering, model orchestration, bot pacing, setup, resume, and backward/forward history controls. Keep `src/app.js` focused on Train and top-level mode switching.
+- `src/play/mode.js` owns Play DOM rendering, model orchestration, bot pacing, setup, resume, backward/forward history controls, and post-game score overlays. Keep `src/app.js` focused on Train and top-level mode switching.
 - `src/info-control.js` owns the accessible tooltip control and viewport-aware positioning shared by Train and Play.
 - Bot operatives must receive only public clue-to-word similarity candidates. Do not pass hidden roles, intended target IDs, recommendation danger metrics, or the full analysis into `chooseBotGuess`.
 - Play sessions use versioned local storage key `codenames-play-session-v1`. Recent-word history uses `codenames-play-word-reuse-v1` and keeps at most 32 boards. Board share links remain board-only and retain v1-v3 compatibility; avoid-recent boards require explicit links because their words are history-dependent.

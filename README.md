@@ -62,13 +62,15 @@ Play settings are grouped by ownership: Game controls the board word set, All bo
 
 New boards remain fully random by default. The optional Avoid recent words policy records the last 32 local Play boards, uses every unseen word in the selected pool before the least-recently-used repeats, and warns when fewer than 25 unseen words remain. Clear history resets board reuse without changing the selected policy. History and policy stay local under `codenames-play-word-reuse-v1`.
 
+After a game ends, select any clue in the Game log to replay that turn from the event history. The review restores which cards were already revealed when the clue was given, marks intended targets and guess outcomes, and shows the configured operative model's cosine-similarity score for every board word. It is completion-gated, so none of these annotations or hidden roles appear during live operative play.
+
 The Play implementation keeps rules, bot choices, persistence, and rendering separate:
 
-- `src/play/game-state.js` owns the rules, seat authorization, event history, public projection, and win conditions.
+- `src/play/game-state.js` owns the rules, seat authorization, event history, public projection, win conditions, and completed-turn replay.
 - `src/play/bots.js` chooses bot clues and guesses. The operative API accepts only clue-to-word similarities and never receives card roles or intended targets.
 - `src/play/session-store.js` persists the versioned game state under `codenames-play-session-v1`.
 - `src/play/word-reuse.js` owns new-board reuse policy, bounded local history, exhaustion fallback, and reset behavior.
-- `src/play/mode.js` owns Play setup, rendering, model orchestration, bot pacing, and resume/backward/forward controls.
+- `src/play/mode.js` owns Play setup, rendering, model orchestration, bot pacing, resume/backward/forward controls, and post-game score overlays.
 - `scripts/play-smoke.mjs` covers seat ownership, information boundaries, reveal outcomes, deterministic bots, and bounded self-play.
 
 Run `npm run benchmark:play` for paired full-game comparisons and `npm run analyze:play-clues` for controlled opening-board analysis. The latest [same-model benchmark](scripts/generated/play-policy-benchmark.md), [cross-model operative stress test](scripts/generated/play-operative-aggression-cross-model.md), and [clue-number analysis](docs/play-clue-number-analysis.md) preserve the checked evidence.
