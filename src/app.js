@@ -581,7 +581,7 @@ function render() {
 }
 
 function readAppMode() {
-  return new URL(window.location.href).searchParams.get("mode") === "play" ? "play" : "train";
+  return new URL(window.location.href).searchParams.get("mode") === "train" ? "train" : "play";
 }
 
 function setAppMode(nextMode) {
@@ -593,8 +593,8 @@ function setAppMode(nextMode) {
   }
   appMode = nextMode;
   const url = new URL(window.location.href);
-  if (appMode === "play") {
-    url.searchParams.set("mode", "play");
+  if (appMode === "train") {
+    url.searchParams.set("mode", "train");
   } else {
     url.searchParams.delete("mode");
   }

@@ -467,6 +467,7 @@ export function createPlayMode() {
     });
     const url = new URL(window.location.href);
     url.search = "";
+    url.searchParams.set("mode", "train");
     url.searchParams.set("b", code);
     try {
       await writeClipboardText(url.href);

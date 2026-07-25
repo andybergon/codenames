@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import pickerBenchmark from "../scripts/generated/model-picker-benchmark.json" with { type: "json" };
 
-const SHARED_BOARD = "/?b=2sw7fIwN9dL7Yos";
+const SHARED_BOARD = "/?mode=train&b=2sw7fIwN9dL7Yos";
 
 test("mobile board and metric help remain fully usable", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 844 });
@@ -167,10 +167,15 @@ test("recommendation perspective can switch between Blue and Red", async ({ page
 });
 
 test("Play randomly assigns a seat and keeps all four overrides available", async ({ page }) => {
-  await page.goto("/?mode=play");
+  await page.goto("/");
 
   await expect(page.locator("#app-title")).toHaveText("Codenames");
   await expect(page).toHaveTitle("Codenames");
+  await expect(page.getByRole("button", { name: "Play", exact: true })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  expect(new URL(page.url()).searchParams.has("mode")).toBe(false);
   expect(
     await page.locator("[data-app-mode]").evaluateAll((buttons) =>
       buttons.map((button) => button.textContent.trim()),
@@ -248,7 +253,7 @@ test("switching modes keeps shared layout positions stable", async ({ page }) =>
 test("returning to an initialized Train mode reuses its rendered UI", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("/?mode=train");
   await expect(page.locator(".board-panel")).toBeVisible();
 
   await page.evaluate(() => {
@@ -691,7 +696,7 @@ test("Play sharing copies a board-only link", async ({ page }) => {
   await expect(page.locator("#share-play-board svg.lucide-check")).toHaveCount(1);
   const copied = new URL(await page.evaluate(() => window.__copiedBoardLink));
   expect(copied.searchParams.has("b")).toBe(true);
-  expect(copied.searchParams.has("mode")).toBe(false);
+  expect(copied.searchParams.get("mode")).toBe("train");
 });
 
 test("Play board remains usable at phone, tablet, and desktop widths", async ({ page }) => {

@@ -7,7 +7,7 @@ A local-first Codenames clue trainer and one-human game. Train mode ranks clue o
 ## TLDR
 
 - **Embedding:** `Xenova/all-MiniLM-L6-v2`, run locally in the browser with Transformers.js.
-- **Modes:** Train preserves the full clue-analysis workflow. Play creates two teams of a spymaster and operative, with the human in one seat and bots in the other three.
+- **Modes:** Play is the default. It creates two teams of a spymaster and operative, with the human in one seat and bots in the other three. Train preserves the full clue-analysis workflow at `?mode=train`.
 - **Play setup:** each page load independently randomizes the human's Blue/Red team and Spymaster/Operative role; all four seats remain available as overrides before starting.
 - **Fair bot play:** bot spymasters default to BGE-small, hybrid clue scoring, and a five-point preference for near-equal multi clues. Bot operatives receive only the clue, clue number, and public unrevealed words, and stop at the declared number by default.
 - **Configurable bots:** Play setup can override the embedding model, clue vocabulary size, scoring policy, multi-clue tolerance, and optional extra guess.
@@ -25,7 +25,7 @@ A local-first Codenames clue trainer and one-human game. Train mode ranks clue o
 
 The model download happens on first use and is then cached by the browser. Board words are processed locally and are not sent to an application server.
 
-Training progress is session-local. Play progress is saved after every event and can be resumed or discarded from Play setup. Shared board links still restore board words, roles, and layout without Play history.
+Training progress is session-local. Play progress is saved after every event and can be resumed or discarded from Play setup. Shared board links explicitly open Train and restore board words, roles, and layout without Play history.
 
 ## Run
 
