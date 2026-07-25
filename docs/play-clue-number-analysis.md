@@ -7,7 +7,7 @@ Play's single-clue bias is primarily a scoring and policy problem. The standard 
 | 🧩 Factor | 🎯 Verdict | 📊 Strongest evidence |
 | --- | --- | --- |
 | 🧮 Scoring policy | 🔴 Primary | Multi edge falls from +8.9 to -7.2 |
-| 🧠 Embedding model | 🟠 Material | BGE raises full-game multi rate to 37.7% |
+| 🧠 Embedding model | 🟠 Material | 31.65% to 50.36% full-game multi |
 | ➕ Bonus guesses | 🟠 Harmful | Only 26.4% correct |
 | 📚 Candidate count | 🟡 Secondary | 30k adds 7.3 percentage points |
 | 🗂️ Board word set | 🟢 Not causal | Official and Extended differ by 5 points at opening |
@@ -52,6 +52,18 @@ The opening-board ablation uses the same 40 deterministic boards from both team 
 BGE-small is the most promising model change because it also has the strongest human Duet target recall among the selectable models, 58.57% versus MiniLM-L6's 57.43%. MiniLM-L3 produces more multi clues but has lower human target recall, so its larger numbers are not automatically better.
 
 Larger vocabularies improve opening multi-clue availability, but the full-game effect is smaller than the model and policy changes. On the same first 50 boards, moving MiniLM-L6 from 10k to 30k candidates raised the full-game multi rate from 20.0% to 27.3%, an increase of 7.3 percentage points, while roughly tripling scoring work. The deeper tiers also contain less familiar clues: the separate candidate evaluation found that the share of top suggestions matching human-used clues fell from 37.5% at 10k to 16.7% at 30k and 14.6% at 100k.
+
+## 🧠 Same-policy full-game model comparison
+
+Each selectable model played 100 complete games on the same deterministic boards with the recommended 10k vocabulary, hybrid score, five-point multi preference, and stop-at-number policy. The spymaster and operative use the same model, so these results compare model behavior rather than human agreement.
+
+| 🧠 Model | 🔢 Multi clues | 📈 Mean number | ⏩ First-half mean | ✅ Correct per turn | ⏱️ Turns |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 🧠 MiniLM-L3 | 54.58% | 1.62 | 1.92 | 1.62 | 9.60 |
+| 🧠 BGE-small | 50.36% | 1.58 | 1.92 | 1.58 | 9.85 |
+| 🧠 MiniLM-L6 | 31.65% | 1.35 | 1.56 | 1.34 | 11.47 |
+
+MiniLM-L3 produces the most multi-card clues, but BGE-small retains the strongest measured human target recall. The compact source data is stored in [`play-model-benchmark.json`](../scripts/generated/play-model-benchmark.json).
 
 ## 🧮 Why the score collapses toward singles
 
@@ -114,6 +126,7 @@ The product target should be stage-dependent rather than a forced full-game mean
 - Run `npm run analyze:play-clues` for the controlled opening-board ablation. It updates [`play-clue-bias-analysis.json`](../scripts/generated/play-clue-bias-analysis.json).
 - Run `npm run benchmark:play` for the checked 100-board current-versus-hybrid benchmark.
 - Run `node scripts/benchmark-play-policy.mjs --model bge-small --clue-selection tempo --multi-tolerance 5 --bonus-guesses pass --output /tmp/play-bge-tempo.json` for the recommended experimental policy.
+- Repeat the same policy command with `minilm-l6` and `minilm-l3` to refresh the same-policy full-game model comparison in [`play-model-benchmark.json`](../scripts/generated/play-model-benchmark.json).
 
 ## 📚 Primary sources
 

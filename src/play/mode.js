@@ -4,6 +4,8 @@ import {
   createRandomSeed,
   encodeBoardParam,
 } from "../board-share.js";
+import PLAY_CLUE_BIAS_ANALYSIS from "../../scripts/generated/play-clue-bias-analysis.json" with { type: "json" };
+import PLAY_MODEL_BENCHMARK from "../../scripts/generated/play-model-benchmark.json" with { type: "json" };
 import { loadShardedClueIndex } from "../clue-index.js";
 import { centerEmbeddings, embedTerms } from "../embeddings.js";
 import {
@@ -11,7 +13,12 @@ import {
   boardForSide,
   remainingCardsForSide,
 } from "../gameplay.js";
-import { indexManifestUrl, modelOption } from "../model-lab.js";
+import { createInfoControl } from "../info-control.js";
+import {
+  CANDIDATE_OPTIONS,
+  indexManifestUrl,
+  modelOption,
+} from "../model-lab.js";
 import { analyzeEmbeddedBoard } from "../model.js";
 import { WORD_SET } from "../word-data.js";
 import {
@@ -50,6 +57,126 @@ const TEAM_ORDER = Object.freeze({
   neutral: 2,
   assassin: 3,
 });
+const PLAY_MODEL_IDS = ["bge-small", "minilm-l6", "minilm-l3"];
+const OPENING_MULTI_RATE_BY_MODEL = new Map(
+  PLAY_CLUE_BIAS_ANALYSIS.results
+    .filter(
+      ({ candidateCount, modelId, wordSet }) =>
+        candidateCount === 10_000 &&
+        PLAY_MODEL_IDS.includes(modelId) &&
+        wordSet === WORD_SET.OFFICIAL,
+    )
+    .map(({ modelId, selectedMultiRate }) => [modelId, selectedMultiRate]),
+);
+const OPENING_MULTI_RATE_BY_CANDIDATE_COUNT = new Map(
+  PLAY_CLUE_BIAS_ANALYSIS.results
+    .filter(
+      ({ dimension, modelId, wordSet }) =>
+        dimension === "candidate-depth" &&
+        modelId === "minilm-l6" &&
+        wordSet === WORD_SET.OFFICIAL,
+    )
+    .map(({ candidateCount, selectedMultiRate }) => [
+      candidateCount,
+      selectedMultiRate,
+    ]),
+);
+const FULL_GAME_MULTI_RATE_BY_MODEL = new Map(
+  PLAY_MODEL_BENCHMARK.results
+    .filter(({ modelId }) => PLAY_MODEL_IDS.includes(modelId))
+    .map(({ modelId, multiClueRate }) => [modelId, multiClueRate]),
+);
+const BOT_SETTING_INFO = Object.freeze({
+  model: {
+    id: "embedding-model",
+    label: "Embedding model",
+    table: {
+      headers: [
+        "🧠 Model",
+        "🎯 Recall",
+        "🏁 Open multi",
+        "🎮 Game multi",
+        "⬇️ Size",
+      ],
+      numericColumns: [1, 2, 3, 4],
+      rows: PLAY_MODEL_IDS.map((id) => {
+        const model = modelOption(id);
+        return [
+          `🧠 ${model.label}`,
+          formatPercent(model.humanQuality),
+          formatPercent(OPENING_MULTI_RATE_BY_MODEL.get(id)),
+          formatPercent(FULL_GAME_MULTI_RATE_BY_MODEL.get(id)),
+          formatMegabytes(model.modelBytes),
+        ];
+      }),
+    },
+    note: "Open multi uses 80 controlled opening states. Game multi uses 100 complete same-model games with the recommended 10k, human-like, balanced, stop-at-number settings. Recall uses human target pairs. Bot benchmarks are not human win rates.",
+  },
+  candidates: {
+    id: "clue-vocabulary",
+    label: "Clue vocabulary",
+    table: {
+      headers: [
+        "📚 Clues",
+        "👥 Coverage",
+        "🏁 Open multi",
+        "⬇️ Index",
+        "⏱️ Work",
+      ],
+      numericColumns: [1, 2, 3, 4],
+      rows: CANDIDATE_OPTIONS.map(
+        ({ count, humanClueCoverage, indexBytes }) => [
+          `📚 ${formatCompactCount(count)}`,
+          formatPercent(humanClueCoverage),
+          formatPercent(OPENING_MULTI_RATE_BY_CANDIDATE_COUNT.get(count)),
+          formatMegabytes(indexBytes),
+          formatRelativeWork(count),
+        ],
+      ),
+    },
+    note: "Open multi uses 80 controlled opening states per vocabulary size with MiniLM-L6. Larger vocabularies offer more multi-card clues, but their deeper clues are less familiar. This is not a full-game rate.",
+  },
+  cluePolicy: {
+    id: "clue-scoring",
+    label: "Clue scoring",
+    table: {
+      headers: ["🧮 Scoring", "🔢 Multi", "✅ Correct", "⏱️ Turns"],
+      numericColumns: [1, 2, 3],
+      rows: [
+        ["🧪 Human-like", "50.4%", "1.58", "9.85"],
+        ["📍 Conservative", "15.7%", "1.17", "13.34"],
+      ],
+    },
+    note: "100 paired same-model bot games. These are not human win rates.",
+  },
+  multiTolerance: {
+    id: "multi-clue-preference",
+    label: "Prefer multi-card clues",
+    table: {
+      headers: ["🎛️ Setting", "🤖 Pick 2+ if", "🔢 Full-game multi"],
+      numericColumns: [2],
+      rows: [
+        ["🛑 Off", "It has the best score", "Not measured"],
+        ["⚖️ Balanced", "Within 5 points", "50.4%*"],
+        ["🚀 Strong", "Within 10 points", "Not measured"],
+      ],
+    },
+    note: "The bot compares its best clue overall with its best clue for 2+ cards. Allowing more points means accepting a lower-scoring 2+ clue more often. The score combines safety and expected progress. *50.4% comes from 100 paired games using all recommended defaults, so it is not the effect of this setting alone.",
+  },
+  bonusGuesses: {
+    id: "extra-guess",
+    label: "Extra guess",
+    table: {
+      headers: ["➕ Policy", "🔢 Extra", "✅ Result"],
+      numericColumns: [1],
+      rows: [
+        ["🛑 Stop", "0", "Recommended"],
+        ["➕ Allow", "+1", "26.4% correct"],
+      ],
+    },
+    note: "Allow uses only the current clue and cannot revisit unresolved earlier clues.",
+  },
+});
 
 export function createPlayMode() {
   const elements = {
@@ -59,10 +186,15 @@ export function createPlayMode() {
     randomizeSeat: document.querySelector("#randomize-play-seat"),
     wordSetButtons: [...document.querySelectorAll("[data-play-word-set]")],
     botModel: document.querySelector("#play-bot-model"),
+    botModelInfo: document.querySelector("#play-bot-model-info"),
     botCandidates: document.querySelector("#play-bot-candidates"),
+    botCandidatesInfo: document.querySelector("#play-bot-candidates-info"),
     cluePolicy: document.querySelector("#play-clue-policy"),
+    cluePolicyInfo: document.querySelector("#play-clue-policy-info"),
     multiTolerance: document.querySelector("#play-multi-tolerance"),
+    multiToleranceInfo: document.querySelector("#play-multi-tolerance-info"),
     bonusGuesses: document.querySelector("#play-bonus-guesses"),
+    bonusGuessesInfo: document.querySelector("#play-bonus-guesses-info"),
     botSettingsSummary: document.querySelector("#play-bot-settings-summary"),
     startGame: document.querySelector("#start-play-game"),
     savedActions: document.querySelector("#saved-play-actions"),
@@ -90,6 +222,16 @@ export function createPlayMode() {
     historyCount: document.querySelector("#play-history-count"),
     historyList: document.querySelector("#play-history-list"),
   };
+
+  for (const [container, definition] of [
+    [elements.botModelInfo, BOT_SETTING_INFO.model],
+    [elements.botCandidatesInfo, BOT_SETTING_INFO.candidates],
+    [elements.cluePolicyInfo, BOT_SETTING_INFO.cluePolicy],
+    [elements.multiToleranceInfo, BOT_SETTING_INFO.multiTolerance],
+    [elements.bonusGuessesInfo, BOT_SETTING_INFO.bonusGuesses],
+  ]) {
+    container.append(createInfoControl(definition, "play-bot-setting"));
+  }
 
   let active = false;
   let selectedHumanSeat = randomHumanSeat();
@@ -863,6 +1005,26 @@ function teamLabel(team) {
 
 function labelRisk(risk) {
   return risk === "safe" ? "Safe" : risk === "risky" ? "Risky" : "Medium";
+}
+
+function formatPercent(value) {
+  if (!Number.isFinite(value)) {
+    return "N/A";
+  }
+  return `${(value * 100).toFixed(2)}%`;
+}
+
+function formatMegabytes(bytes) {
+  return `${(bytes / 1_000_000).toFixed(1)} MB`;
+}
+
+function formatCompactCount(count) {
+  return `${count / 1000}k`;
+}
+
+function formatRelativeWork(count) {
+  const relative = count / 10_000;
+  return relative === 1 ? "1×" : `~${Number(relative.toFixed(1))}×`;
 }
 
 function botSettingsLabel(settings) {

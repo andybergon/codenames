@@ -26,6 +26,7 @@ import {
   teamForSide,
   winningSide,
 } from "./gameplay.js";
+import { closeInfoPopovers, createInfoControl } from "./info-control.js";
 import { analyzeEmbeddedBoard, calculateBoardMetrics } from "./model.js";
 import { createPlayMode } from "./play/mode.js";
 import { ROLE_SEQUENCE, TEAMS, WORD_SET } from "./word-data.js";
@@ -1329,73 +1330,6 @@ function renderSuggestions(container, suggestions, emptyMessage) {
     attrs: { width: 15, height: 15, "stroke-width": 2.5 },
     root: wrapper,
   });
-}
-
-function createInfoControl(column, tableId) {
-  const control = document.createElement("span");
-  control.className = "info-control";
-  control.addEventListener("pointerenter", () => {
-    control.classList.remove("is-dismissed");
-    positionInfoPopover(button, popover);
-  });
-  control.addEventListener("focusin", () => {
-    control.classList.remove("is-dismissed");
-    positionInfoPopover(button, popover);
-  });
-
-  const tooltipId = `info-${tableId}-${column.id}`;
-  const button = document.createElement("button");
-  button.className = "info-button";
-  button.type = "button";
-  button.setAttribute("aria-label", `About ${column.label}`);
-  button.setAttribute("aria-controls", tooltipId);
-  button.setAttribute("aria-expanded", "false");
-  button.addEventListener("click", (event) => {
-    event.stopPropagation();
-    const wasOpen = button.getAttribute("aria-expanded") === "true";
-    closeInfoPopovers();
-    control.classList.remove("is-dismissed");
-    button.setAttribute("aria-expanded", String(!wasOpen));
-    if (!wasOpen) {
-      positionInfoPopover(button, popover);
-    }
-  });
-
-  const popover = document.createElement("span");
-  popover.className = "info-popover";
-  popover.id = tooltipId;
-  popover.role = "tooltip";
-  popover.textContent = column.info;
-
-  control.append(button, popover);
-  return control;
-}
-
-function positionInfoPopover(button, popover) {
-  requestAnimationFrame(() => {
-    const buttonBounds = button.getBoundingClientRect();
-    const popoverBounds = popover.getBoundingClientRect();
-    const gutter = 12;
-    const gap = 8;
-    const left = Math.max(
-      gutter,
-      Math.min(buttonBounds.left, window.innerWidth - popoverBounds.width - gutter),
-    );
-    const below = buttonBounds.bottom + gap;
-    const top =
-      below + popoverBounds.height <= window.innerHeight - gutter
-        ? below
-        : Math.max(gutter, buttonBounds.top - popoverBounds.height - gap);
-    popover.style.setProperty("--info-left", `${left}px`);
-    popover.style.setProperty("--info-top", `${top}px`);
-  });
-}
-
-function closeInfoPopovers() {
-  for (const control of document.querySelectorAll(".info-control")) {
-    control.querySelector(".info-button")?.setAttribute("aria-expanded", "false");
-    control.classList.add("is-dismissed");
-  }
 }
 
 function setSuggestionSort(column) {

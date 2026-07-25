@@ -1,0 +1,53 @@
+{
+  "generatedAt": "2026-07-25T02:05:48.021Z",
+  "methodology": {
+    "boardCount": 100,
+    "gamesPerModel": 100,
+    "pairedBoards": true,
+    "wordSet": "official",
+    "candidateCount": 10000,
+    "policy": "hybrid",
+    "clueSelection": "Prefer the highest-scoring multi clue when it is within 5 points of the best clue; otherwise choose the best clue.",
+    "bonusGuesses": "Pass after reaching the declared clue number.",
+    "operative": "Each model plays both spymaster and operative using the production Play state machine.",
+    "source": "Each row is the hybrid result from benchmark-play-policy.mjs with identical deterministic boards and Play settings."
+  },
+  "results": [
+    {
+      "modelId": "bge-small",
+      "sourceGeneratedAt": "2026-07-25T00:20:27.590Z",
+      "gameCount": 100,
+      "multiClueRate": 0.503553,
+      "meanClueNumber": 1.57665,
+      "firstHalfMeanClueNumber": 1.915058,
+      "correctCardsPerTurn": 1.575635,
+      "wrongTeamHitsPerGame": 0,
+      "assassinRate": 0,
+      "meanTurnsPerGame": 9.85
+    },
+    {
+      "modelId": "minilm-l6",
+      "sourceGeneratedAt": "2026-07-25T02:05:48.021Z",
+      "gameCount": 100,
+      "multiClueRate": 0.316478,
+      "meanClueNumber": 1.345248,
+      "firstHalfMeanClueNumber": 1.558923,
+      "correctCardsPerTurn": 1.344377,
+      "wrongTeamHitsPerGame": 0,
+      "assassinRate": 0,
+      "meanTurnsPerGame": 11.47
+    },
+    {
+      "modelId": "minilm-l3",
+      "sourceGeneratedAt": "2026-07-25T02:05:36.464Z",
+      "gameCount": 100,
+      "multiClueRate": 0.545833,
+      "meanClueNumber": 1.617708,
+      "firstHalfMeanClueNumber": 1.924303,
+      "correctCardsPerTurn": 1.617708,
+      "wrongTeamHitsPerGame": 0,
+      "assassinRate": 0,
+      "meanTurnsPerGame": 9.6
+    }
+  ]
+}

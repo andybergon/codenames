@@ -30,6 +30,7 @@ Local-first Vite application for embedding-powered Codenames clue recommendation
 - `src/play/game-state.js` is the pure rules and event-history owner. Keep clue, guess, pass, turn-end, assassin, and final-agent behavior out of UI event handlers.
 - `src/play/settings.js` owns validated Play bot defaults and saved configuration. Keep Play settings independent from Train's Model picker.
 - `src/play/mode.js` owns Play DOM rendering, model orchestration, bot pacing, setup, undo, and resume. Keep `src/app.js` focused on Train and top-level mode switching.
+- `src/info-control.js` owns the accessible tooltip control and viewport-aware positioning shared by Train and Play.
 - Bot operatives must receive only public clue-to-word similarity candidates. Do not pass hidden roles, intended target IDs, recommendation danger metrics, or the full analysis into `chooseBotGuess`.
 - Play sessions use versioned local storage key `codenames-play-session-v1`. Board share links remain board-only and retain v1-v3 compatibility.
 - `scripts/play-smoke.mjs` is the headless Play gate. Keep it in `npm run check` alongside the existing trainer smoke suite.

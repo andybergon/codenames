@@ -421,7 +421,10 @@
             </summary>
             <div class="play-bot-settings-grid">
               <label>
-                Embedding model
+                <span class="play-setting-label">
+                  Embedding model
+                  <span id="play-bot-model-info"></span>
+                </span>
                 <select id="play-bot-model">
                   <option value="bge-small">BGE-small, 34 MB</option>
                   <option value="minilm-l6">MiniLM-L6, 23 MB</option>
@@ -429,7 +432,10 @@
                 </select>
               </label>
               <label>
-                Clue vocabulary
+                <span class="play-setting-label">
+                  Clue vocabulary
+                  <span id="play-bot-candidates-info"></span>
+                </span>
                 <select id="play-bot-candidates">
                   <option value="3000">3,000 clues</option>
                   <option value="10000">10,000 clues</option>
@@ -438,22 +444,31 @@
                 </select>
               </label>
               <label>
-                Clue scoring
+                <span class="play-setting-label">
+                  Clue scoring
+                  <span id="play-clue-policy-info"></span>
+                </span>
                 <select id="play-clue-policy">
                   <option value="hybrid">Human-like</option>
                   <option value="current">Conservative</option>
                 </select>
               </label>
               <label>
-                Multi-clue preference
+                <span class="play-setting-label">
+                  Prefer multi-card clues
+                  <span id="play-multi-tolerance-info"></span>
+                </span>
                 <select id="play-multi-tolerance">
-                  <option value="0">Strict, best score only</option>
-                  <option value="5">Balanced, within 5</option>
-                  <option value="10">Strong, within 10</option>
+                  <option value="0">Off, always take the best score</option>
+                  <option value="5">Balanced, accept up to 5 points less</option>
+                  <option value="10">Strong, accept up to 10 points less</option>
                 </select>
               </label>
               <label>
-                Extra guess
+                <span class="play-setting-label">
+                  Extra guess
+                  <span id="play-bonus-guesses-info"></span>
+                </span>
                 <select id="play-bonus-guesses">
                   <option value="pass">Stop at clue number</option>
                   <option value="allow">Allow one extra guess</option>

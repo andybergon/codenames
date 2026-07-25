@@ -294,6 +294,7 @@ test("Play exposes and saves bot policy settings", async ({ page }) => {
   await expect(page.locator("#play-clue-policy")).toHaveValue("hybrid");
   await expect(page.locator("#play-multi-tolerance")).toHaveValue("5");
   await expect(page.locator("#play-bonus-guesses")).toHaveValue("pass");
+  await expect(settings.locator(".play-setting-label .info-button")).toHaveCount(5);
 
   await page.locator("#play-bot-model").selectOption("minilm-l6");
   await page.locator("#play-bot-candidates").selectOption("30000");
@@ -317,6 +318,125 @@ test("Play exposes and saves bot policy settings", async ({ page }) => {
     multiTolerance: 10,
     bonusGuesses: "allow",
   });
+});
+
+test("Play bot setting help explains measured tradeoffs and stays on-screen", async ({
+  page,
+}) => {
+  const settingHelp = [
+    ["Embedding model", 3, "58.57%"],
+    ["Clue vocabulary", 4, "85.47%"],
+    ["Clue scoring", 2, "50.4%"],
+    ["Prefer multi-card clues", 3, "best clue for 2+ cards"],
+    ["Extra guess", 2, "26.4% correct"],
+  ];
+
+  for (const viewport of [
+    { width: 390, height: 844 },
+    { width: 768, height: 1024 },
+    { width: 1440, height: 900 },
+  ]) {
+    await page.setViewportSize(viewport);
+    await page.goto("/?mode=play");
+    await page.locator(".play-bot-settings summary").click();
+
+    for (const [label, rowCount, explanation] of settingHelp) {
+      const button = page.getByRole("button", { name: `About ${label}`, exact: true });
+      await button.hover();
+      const popover = page.locator(`#${await button.getAttribute("aria-controls")}`);
+      await expect(popover).toBeVisible();
+      await expect(popover).toContainText(explanation);
+      await expect(popover.locator("table.info-table")).toBeVisible();
+      await expect(popover.locator("tbody tr")).toHaveCount(rowCount);
+      expect(
+        await popover.locator("table.info-table").evaluate(
+          (table) => table.scrollWidth > table.clientWidth,
+        ),
+      ).toBe(false);
+      const bounds = await popover.boundingBox();
+      expect(bounds.x).toBeGreaterThanOrEqual(0);
+      expect(bounds.y).toBeGreaterThanOrEqual(0);
+      expect(bounds.x + bounds.width).toBeLessThanOrEqual(viewport.width);
+      expect(bounds.y + bounds.height).toBeLessThanOrEqual(viewport.height);
+    }
+  }
+
+  const extraGuess = page.getByRole("button", {
+    name: "About Extra guess",
+    exact: true,
+  });
+  await extraGuess.click();
+  await expect(extraGuess).toHaveAttribute("aria-expanded", "true");
+  const extraGuessPopover = page.locator(
+    `#${await extraGuess.getAttribute("aria-controls")}`,
+  );
+  await expect(extraGuessPopover).toBeVisible();
+  await extraGuess.click();
+  await expect(extraGuess).toHaveAttribute("aria-expanded", "false");
+  await expect(extraGuessPopover).toBeHidden();
+
+  const modelHelp = page.getByRole("button", {
+    name: "About Embedding model",
+    exact: true,
+  });
+  const vocabularyHelp = page.getByRole("button", {
+    name: "About Clue vocabulary",
+    exact: true,
+  });
+  const modelPopover = page.locator(`#${await modelHelp.getAttribute("aria-controls")}`);
+  const vocabularyPopover = page.locator(
+    `#${await vocabularyHelp.getAttribute("aria-controls")}`,
+  );
+  await expect(modelPopover.locator("thead")).toContainText("Open multi");
+  await expect(modelPopover.locator("thead")).toContainText("Game multi");
+  await expect(modelPopover.locator("tbody tr").nth(0)).toContainText("87.50%");
+  await expect(modelPopover.locator("tbody tr").nth(0)).toContainText("50.36%");
+  await expect(modelPopover.locator("tbody tr").nth(1)).toContainText("71.25%");
+  await expect(modelPopover.locator("tbody tr").nth(1)).toContainText("31.65%");
+  await expect(modelPopover.locator("tbody tr").nth(2)).toContainText("93.75%");
+  await expect(modelPopover.locator("tbody tr").nth(2)).toContainText("54.58%");
+  await expect(vocabularyPopover.locator("thead")).toContainText("Open multi");
+  await expect(vocabularyPopover.locator("tbody tr").nth(0)).toContainText(
+    "48.75%",
+  );
+  await expect(vocabularyPopover.locator("tbody tr").nth(1)).toContainText(
+    "71.25%",
+  );
+  await expect(vocabularyPopover.locator("tbody tr").nth(2)).toContainText(
+    "81.25%",
+  );
+  await expect(vocabularyPopover.locator("tbody tr").nth(3)).toContainText(
+    "88.75%",
+  );
+  const multiHelp = page.getByRole("button", {
+    name: "About Prefer multi-card clues",
+    exact: true,
+  });
+  await multiHelp.click();
+  const multiPopover = page.locator(
+    `#${await multiHelp.getAttribute("aria-controls")}`,
+  );
+  await expect(multiPopover.locator("thead")).toContainText("Pick 2+ if");
+  await expect(multiPopover.locator("tbody tr").nth(1)).toContainText(
+    "Within 5 points",
+  );
+  await expect(multiPopover.locator("tbody tr").nth(1)).toContainText("50.4%");
+  await multiHelp.click();
+
+  await modelHelp.hover();
+  await expect(modelPopover).toBeVisible();
+  await vocabularyHelp.hover();
+  await expect(modelPopover).toBeHidden();
+  await expect(vocabularyPopover).toBeVisible();
+  await page.locator(".play-setup-heading").hover();
+  await expect(vocabularyPopover).toBeHidden();
+
+  await modelHelp.click();
+  await expect(modelPopover).toBeVisible();
+  await vocabularyHelp.hover();
+  await expect(modelHelp).toHaveAttribute("aria-expanded", "false");
+  await expect(modelPopover).toBeHidden();
+  await expect(vocabularyPopover).toBeVisible();
 });
 
 test("Play enforces operative and spymaster information views", async ({ page }) => {

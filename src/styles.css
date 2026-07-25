@@ -1651,6 +1651,61 @@ h3 {
   display: block;
 }
 
+.info-popover.has-table {
+  padding: 8px;
+}
+
+.info-table {
+  width: 100%;
+  border-collapse: collapse;
+  color: inherit;
+  font-size: 0.7rem;
+  line-height: 1.25;
+}
+
+.info-table th,
+.info-table td {
+  border-bottom: 1px solid rgb(127 127 127 / 30%);
+  padding: 5px 6px;
+  vertical-align: top;
+}
+
+.info-table thead th {
+  color: inherit;
+  font-size: 0.58rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  opacity: 0.72;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.info-table tbody th {
+  font-weight: 850;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.info-table tbody tr:last-child > * {
+  border-bottom: 0;
+}
+
+.info-table .is-numeric {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.info-table-note {
+  display: block;
+  margin-top: 7px;
+  padding: 0 4px 1px;
+  font-size: 0.67rem;
+  font-weight: 650;
+  line-height: 1.3;
+  opacity: 0.76;
+}
+
 .suggestion-table col.column-clue {
   width: 12%;
 }
@@ -2118,6 +2173,33 @@ h3 {
   font-size: 0.65rem;
   font-weight: 900;
   text-transform: uppercase;
+}
+
+.play-setting-label {
+  display: flex;
+  min-width: 0;
+  min-height: 20px;
+  align-items: center;
+  gap: 3px;
+}
+
+.play-setting-label .info-control {
+  flex-basis: 20px;
+}
+
+.play-setting-label .info-button {
+  width: 20px;
+  height: 20px;
+}
+
+.play-setting-label .info-button::before {
+  width: 15px;
+  height: 15px;
+  font-size: 0.54rem;
+}
+
+.play-setting-label .info-popover {
+  width: min(460px, calc(100vw - 24px));
 }
 
 .play-bot-settings-grid label::after {

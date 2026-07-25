@@ -60,7 +60,7 @@ Run both the static/smoke checks and responsive browser suite with `npm test`.
 
 Play defaults to the preserved table order. Operatives see only unrevealed words and public card reveals. Spymasters see the full key, can switch between table and team-grouped order, type any one-word clue, and open clue suggestions only when wanted.
 
-Bot settings are independent from Train's Model picker and persist with each saved game. The default is BGE-small with 10,000 candidates, hybrid scoring, a five-point multi-clue tolerance, and no automatic extra guess. The setup panel can restore the previous MiniLM/current-policy behavior or tune each parameter separately.
+Bot settings are independent from Train's Model picker and persist with each saved game. The default is BGE-small with 10,000 candidates, hybrid scoring, a five-point multi-clue tolerance, and no automatic extra guess. The setup panel can restore the previous MiniLM/current-policy behavior or tune each parameter separately. Each setting's info control compares the checked quality, speed, and risk tradeoffs in a compact table.
 
 The browser runs bot turns with seeded decisions:
 
