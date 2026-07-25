@@ -2,6 +2,11 @@
 
 ## 🔴 High
 
+- 🧪 Complete Cohere Embed v4 and Voyage 4 Large evaluations.
+  - Vercel AI Gateway allows isolated free-tier probes but returns model-level 429s during sustained generation; OIDC, a capped API key, and Cohere/Bedrock routing produced the same limit.
+  - Next: try a paced Vercel run or another low-cost provider with an explicit $0.10-per-model ceiling, then run the human, same-model Fun, and MiniLM transfer gates.
+  - Store the results in `docs/play-fun-optimization.md` and `scripts/generated/play-embedding-candidate-experiments.json`.
+
 - 🛡️ Regenerate the clue vocabulary with consistent profanity filtering.
   - The WordNet-backed first 88,563 words currently bypass `better_profanity`; only the experimental fallback applies it.
   - Regenerate all affected shards, reports, and the stable-prefix baseline together after reviewing benign false positives.
