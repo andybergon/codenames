@@ -1615,16 +1615,22 @@ export function createPlayMode(options = {}) {
           : -1;
       if (turnIndex >= 0) {
         const button = document.createElement("button");
+        const clueLabel = document.createElement("span");
+        const actionLabel = document.createElement("span");
         const selected = turnIndex === selectedPostGameTurn;
         button.type = "button";
         button.className = "play-history-clue";
-        button.append(
+        clueLabel.className = "play-history-clue-label";
+        clueLabel.append(
           `${sideLabel(event.side)} clue: `,
           createCluePill(event.clue),
           ` ${event.number}${
             intendedWords.length ? `, intended ${intendedWords.join(" + ")}` : ""
           }`,
         );
+        actionLabel.className = "play-history-clue-action";
+        actionLabel.textContent = selected ? "Viewing" : "Review";
+        actionLabel.setAttribute("aria-hidden", "true");
         button.setAttribute(
           "aria-label",
           `Review turn ${turnIndex + 1}: ${sideLabel(event.side)} clue ${event.clue} ${event.number}`,
@@ -1636,6 +1642,7 @@ export function createPlayMode(options = {}) {
           selectedPostGameTurn = turnIndex;
           renderGame();
         });
+        button.append(clueLabel, actionLabel);
         item.append(button);
       } else {
         item.append(

@@ -3138,17 +3138,44 @@ button.play-card:not(:disabled):hover {
 .play-history li.is-selected {
   border-radius: 0 6px 6px 0;
   background: var(--subtle-fill);
+  box-shadow: inset 0 0 0 1px var(--line);
 }
 
 .play-history-clue {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
   width: 100%;
   border: 0;
-  padding: 0;
+  border-radius: 5px;
+  padding: 2px 5px 2px 0;
   background: transparent;
   color: inherit;
   font: inherit;
   line-height: inherit;
   text-align: left;
+  cursor: pointer;
+}
+
+.play-history-clue-label {
+  min-width: 0;
+}
+
+.play-history-clue-action {
+  display: inline-flex;
+  align-items: center;
+  min-height: 20px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 1px 7px;
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 0.56rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  text-transform: uppercase;
 }
 
 .play-history-clue:hover,
@@ -3158,8 +3185,19 @@ button.play-card:not(:disabled):hover {
 }
 
 .play-history-clue:hover {
-  text-decoration: underline;
-  text-underline-offset: 2px;
+  background: var(--subtle-fill);
+}
+
+.play-history-clue:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+.play-history-clue:hover .play-history-clue-action,
+.play-history-clue:focus-visible .play-history-clue-action,
+.play-history-clue[aria-pressed="true"] .play-history-clue-action {
+  border-color: currentColor;
+  color: var(--ink);
 }
 
 @media (max-width: 1120px) {

@@ -1785,6 +1785,8 @@ test("completed Play sessions replay clue turns with operative scores", async ({
   });
   await expect(firstClue).toHaveAttribute("aria-pressed", "true");
   await expect(secondClue).toHaveAttribute("aria-pressed", "false");
+  await expect(firstClue.locator(".play-history-clue-action")).toHaveText("Viewing");
+  await expect(secondClue.locator(".play-history-clue-action")).toHaveText("Review");
   await expect(page.locator("#play-clue-display")).toContainText("FIRST 2");
   await expect(page.locator('.play-card[data-layout-id="0"]')).toHaveAttribute(
     "data-intended",
@@ -1826,6 +1828,8 @@ test("completed Play sessions replay clue turns with operative scores", async ({
   await secondClue.click();
   await expect(firstClue).toHaveAttribute("aria-pressed", "false");
   await expect(secondClue).toHaveAttribute("aria-pressed", "true");
+  await expect(firstClue.locator(".play-history-clue-action")).toHaveText("Review");
+  await expect(secondClue.locator(".play-history-clue-action")).toHaveText("Viewing");
   await expect(page.locator("#play-clue-display")).toContainText("SECOND 1");
   await expect(page.locator('.play-card[data-layout-id="0"]')).toHaveClass(
     /is-done/,
