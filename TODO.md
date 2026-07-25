@@ -20,8 +20,8 @@
   - Keep Worth, margin, fit, cohesion, and similarity values available behind expandable technical details.
 
 - 🧠 Evaluate a more game-specific semantic embedding or reranker.
-  - Current: Jina v5 text-small, Qwen3 Embedding 0.6B, ConceptNet Numberbatch, and OpenAI `text-embedding-3-large` all improve at least one offline metric, but none passes the human-data, Fun Index, and cross-model transfer gates together. Gemini Embedding 2 remains blocked by the current project's free-tier input limit. See `docs/play-fun-optimization.md`.
-  - Next: test ConceptNet as a secondary human-alignment feature, then validate the best ensemble against human ratings of generated clues and recorded gameplay outcomes before changing the default.
+  - Current: Gemini Embedding 2 reached 72.9% human target recall, and Qwen3 Embedding 0.6B reached 88.19 Fun, but no tested model passes the human-data, Fun Index, and cross-model transfer gates together. See `docs/play-fun-optimization.md`.
+  - Next: test Gemini or ConceptNet as a secondary human-alignment feature, then validate the best ensemble against human ratings of generated clues and recorded gameplay outcomes before changing the default.
 
 - 🧹 Bound Model picker caches so exploration cannot retain every loaded model and index.
   - Index promises, parsed shards, model pipelines, and term vectors currently remain cached for the page lifetime.

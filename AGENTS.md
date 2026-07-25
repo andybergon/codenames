@@ -20,7 +20,9 @@ Local-first Vite application for embedding-powered Codenames clue recommendation
 - Model size is not a quality proxy here: centered MiniLM-L3 is 17.5 MB with 56.09% target recall, while 110 MB MPNet-base reaches only 55.85%; both trail the 23 MB MiniLM-L6 default at 57.43%.
 - Use `npm run prepare:embedding-candidate -- --output <experiment-dir>` and `npm run finalize:embedding-candidate -- --experiment-dir <experiment-dir>` for external candidate models. Keep vectors and indexes under `.cache`, then check in only the compact report produced by `npm run summarize:embedding-candidates`.
 - Local MLX candidate runs must preserve the model's symmetric task format. Jina v5 text-small uses its text-matching adapter with the `Document:` prefix. Qwen3 Embedding uses the same semantic-similarity instruction for every clue and board word.
-- The July 2026 external sweep keeps BGE-small in production. Qwen3 Embedding 0.6B improved same-model Fun but failed cross-model safety. ConceptNet Numberbatch produced the strongest human clue recovery but lower standalone Fun and more cross-model wrong-team hits. Treat ConceptNet as a future ensemble signal.
+- The July 2026 external sweep keeps BGE-small in production. Qwen3 Embedding 0.6B improved same-model Fun but failed cross-model safety. Gemini Embedding 2 produced the strongest human clue recovery but much lower full-game Fun. ConceptNet and Gemini are future ensemble signals rather than standalone replacements.
+- Use `npm run embed:gateway-candidate` for resumable OpenRouter or Vercel AI Gateway runs. Keep an explicit cost cap, tune batch size before a full run, and preserve the fixed task prefix across clue and board terms.
+- Before relying on Vercel free credits for an embedding benchmark, verify sustained multi-request throughput. A visible balance and one successful probe do not prove that model-level free-tier limits permit corpus generation.
 - Jina v5 text-small is CC BY-NC 4.0, and ConceptNet Numberbatch is CC BY-SA 4.0. Do not distribute their models or derived indexes without reviewing those licenses.
 
 ## Share Compatibility
