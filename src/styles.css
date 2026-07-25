@@ -1861,6 +1861,7 @@ h3 {
 
 #trainer-workspace[hidden],
 #model-lab[hidden],
+#train-mode-loading[hidden],
 .play-mode[hidden],
 .play-setup[hidden],
 .play-game[hidden],
@@ -1869,6 +1870,64 @@ h3 {
 .play-operative-controls[hidden],
 .saved-play-actions[hidden] {
   display: none;
+}
+
+.train-mode-loading {
+  display: grid;
+  gap: 18px;
+}
+
+.train-loading-card {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 16px;
+  background: var(--panel-fill);
+  box-shadow: var(--shadow);
+}
+
+.train-loading-heading {
+  display: grid;
+  gap: 4px;
+  margin-bottom: 14px;
+}
+
+.train-loading-heading span {
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.train-loading-board {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.train-loading-board span {
+  min-height: 56px;
+  border: 1px solid var(--hairline);
+  border-radius: 7px;
+  background: var(--subtle-fill);
+  animation: train-loading-pulse 900ms ease-in-out infinite alternate;
+}
+
+.train-loading-board span:nth-child(3n + 2) {
+  animation-delay: 120ms;
+}
+
+.train-loading-board span:nth-child(3n) {
+  animation-delay: 240ms;
+}
+
+@keyframes train-loading-pulse {
+  to {
+    background: var(--control-fill);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .train-loading-board span {
+    animation: none;
+  }
 }
 
 .play-setup,

@@ -216,11 +216,39 @@ test("switching modes keeps shared layout positions stable", async ({ page }) =>
 
   const playPositions = await positions();
   await page.getByRole("button", { name: "Train", exact: true }).click();
+  await expect(page.locator("#train-mode-loading")).toBeVisible();
+  await expect(page.locator(".board-panel")).toBeVisible();
   const trainPositions = await positions();
 
   expect(trainPositions.title).toBeCloseTo(playPositions.title, 1);
   expect(trainPositions.modeSwitch).toBeCloseTo(playPositions.modeSwitch, 1);
   expect(trainPositions.mainCard).toBeCloseTo(playPositions.mainCard, 1);
+});
+
+test("returning to an initialized Train mode reuses its rendered UI", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await expect(page.locator(".board-panel")).toBeVisible();
+
+  await page.evaluate(() => {
+    window.__trainModeMatrixMutations = 0;
+    const observer = new MutationObserver((records) => {
+      window.__trainModeMatrixMutations += records.length;
+    });
+    observer.observe(document.querySelector("#model-lab-matrix"), {
+      childList: true,
+      subtree: true,
+    });
+  });
+
+  await page.getByRole("button", { name: "Play", exact: true }).click();
+  await page.getByRole("button", { name: "Train", exact: true }).click();
+  await expect(page.locator(".board-panel")).toBeVisible();
+  await page.waitForTimeout(100);
+
+  expect(await page.evaluate(() => window.__trainModeMatrixMutations)).toBe(0);
+  await expect(page.locator("#train-mode-loading")).toBeHidden();
 });
 
 test("Play exposes and saves bot policy settings", async ({ page }) => {

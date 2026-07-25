@@ -65,6 +65,25 @@
         </div>
       </header>
 
+      <section
+        id="train-mode-loading"
+        class="train-mode-loading"
+        aria-live="polite"
+        aria-busy="true"
+        hidden
+      >
+        <div class="train-loading-card">
+          <div class="train-loading-heading">
+            <strong>Loading trainer</strong>
+            <span>Preparing the board and recommendations</span>
+          </div>
+          <div class="train-loading-board" aria-hidden="true">
+            <span></span><span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span><span></span>
+          </div>
+        </div>
+      </section>
+
       <section id="trainer-workspace" class="workspace">
         <div class="board-panel" aria-label="Codenames board editor">
           <div class="panel-header board-header">

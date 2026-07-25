@@ -167,6 +167,9 @@ let selectedModelId = DEFAULT_MODEL_ID;
 let selectedCandidateCount = DEFAULT_CANDIDATE_COUNT;
 let shareFeedbackTimer = 0;
 let appMode = readAppMode();
+let trainerInitialized = false;
+let trainerInitializationFrame = 0;
+let trainerInitializationTimer = 0;
 
 board =
   boardOrder === BOARD_ORDER.RANDOM ? sortBoardByRandomLayout(board) : sortBoardByRole(board);
@@ -210,6 +213,7 @@ const elements = {
   themeButtons: [...document.querySelectorAll("[data-theme-value]")],
   appTitle: document.querySelector("#app-title"),
   appModeButtons: [...document.querySelectorAll("[data-app-mode]")],
+  trainModeLoading: document.querySelector("#train-mode-loading"),
   trainerWorkspace: document.querySelector("#trainer-workspace"),
   modelLab: document.querySelector("#model-lab"),
   playMode: document.querySelector("#play-mode"),
@@ -414,8 +418,7 @@ applyTheme(readThemeSetting());
 renderAppMode();
 playMode.setActive(appMode === "play");
 if (appMode === "train") {
-  renderModelLab();
-  render();
+  initializeTrainer();
 }
 
 function switchModelLabConfiguration() {
@@ -575,6 +578,9 @@ function setAppMode(nextMode) {
   if (nextMode !== "train" && nextMode !== "play") {
     return;
   }
+  if (appMode === nextMode) {
+    return;
+  }
   appMode = nextMode;
   const url = new URL(window.location.href);
   if (appMode === "play") {
@@ -586,21 +592,76 @@ function setAppMode(nextMode) {
   renderAppMode();
   playMode.setActive(appMode === "play");
   if (appMode === "train") {
-    renderModelLab();
-    render();
+    if (trainerInitialized) {
+      if (!hasAnalysis) {
+        scheduleAnalysis();
+      }
+    } else {
+      scheduleTrainerInitialization();
+    }
+  } else {
+    cancelTrainerInitialization();
+    pauseTrainerAnalysis();
   }
 }
 
 function renderAppMode() {
   const isPlay = appMode === "play";
-  elements.trainerWorkspace.hidden = isPlay;
-  elements.modelLab.hidden = isPlay;
+  const isTrainerLoading = !isPlay && !trainerInitialized;
+  elements.trainModeLoading.hidden = !isTrainerLoading;
+  elements.trainerWorkspace.hidden = isPlay || isTrainerLoading;
+  elements.modelLab.hidden = isPlay || isTrainerLoading;
   elements.playMode.hidden = !isPlay;
   elements.appTitle.textContent = "Codenames";
   document.title = "Codenames";
   for (const button of elements.appModeButtons) {
     button.setAttribute("aria-pressed", String(button.dataset.appMode === appMode));
   }
+}
+
+function initializeTrainer() {
+  if (trainerInitialized) {
+    return;
+  }
+  renderModelLab();
+  renderBoard();
+  renderTurnControls();
+  trainerInitialized = true;
+  renderAppMode();
+  scheduleAnalysis();
+}
+
+function scheduleTrainerInitialization() {
+  if (
+    trainerInitialized ||
+    trainerInitializationFrame ||
+    trainerInitializationTimer
+  ) {
+    return;
+  }
+  trainerInitializationFrame = window.requestAnimationFrame(() => {
+    trainerInitializationFrame = 0;
+    trainerInitializationTimer = window.setTimeout(() => {
+      trainerInitializationTimer = 0;
+      if (appMode === "train") {
+        initializeTrainer();
+      }
+    }, 80);
+  });
+}
+
+function cancelTrainerInitialization() {
+  window.cancelAnimationFrame(trainerInitializationFrame);
+  window.clearTimeout(trainerInitializationTimer);
+  trainerInitializationFrame = 0;
+  trainerInitializationTimer = 0;
+}
+
+function pauseTrainerAnalysis() {
+  window.clearTimeout(analyzeTimer);
+  analyzeTimer = 0;
+  analysisRun += 1;
+  setAnalysisBusy(false);
 }
 
 function readThemeSetting() {
