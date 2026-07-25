@@ -16,7 +16,7 @@ A local-first Codenames clue trainer and one-human game. Train mode ranks clue o
 - 🎨 **Appearance** · system, light, and dark modes
 - 🔒 **Privacy** · board words stay in the browser and are not sent to an application server
 
-The first model load is cached by the browser. Training progress is session-local. Play progress is saved after every event and can be resumed or discarded from setup. Shared board links open Train without Play history.
+The first model load is cached by the browser. Training progress is session-local. Play progress is saved after every event and can be resumed or discarded from setup. During an active game, history can move backward and forward. Shared board links open Train without Play history.
 
 ## Docs
 
@@ -64,7 +64,7 @@ The Play implementation keeps rules, bot choices, persistence, and rendering sep
 - `src/play/game-state.js` owns the rules, seat authorization, event history, public projection, and win conditions.
 - `src/play/bots.js` chooses bot clues and guesses. The operative API accepts only clue-to-word similarities and never receives card roles or intended targets.
 - `src/play/session-store.js` persists the versioned game state under `codenames-play-session-v1`.
-- `src/play/mode.js` owns Play setup, rendering, model orchestration, bot pacing, and resume/undo controls.
+- `src/play/mode.js` owns Play setup, rendering, model orchestration, bot pacing, and resume/backward/forward controls.
 - `scripts/play-smoke.mjs` covers seat ownership, information boundaries, reveal outcomes, deterministic bots, and bounded self-play.
 
 Run `npm run benchmark:play` for paired full-game comparisons and `npm run analyze:play-clues` for controlled opening-board analysis. The latest [same-model benchmark](scripts/generated/play-policy-benchmark.md), [cross-model operative stress test](scripts/generated/play-operative-aggression-cross-model.md), and [clue-number analysis](docs/play-clue-number-analysis.md) preserve the checked evidence.

@@ -541,6 +541,7 @@ test("Play enforces operative and spymaster information views", async ({ page })
 
   await expect(page.locator("#play-clue-form")).toBeVisible();
   await expect(page.locator("#undo-play-action svg.lucide-undo-2")).toHaveCount(1);
+  await expect(page.locator("#forward-play-action svg.lucide-redo-2")).toHaveCount(1);
   await expect(page.locator("#share-play-board svg.lucide-share-2")).toHaveCount(1);
   await expect(page.locator("#leave-play-game svg.lucide-refresh-cw")).toHaveCount(1);
   const clueInput = page.getByRole("textbox", { name: "Clue", exact: true });
@@ -723,7 +724,7 @@ test("Play keeps game creation actions prominent across responsive states", asyn
       exact: true,
     });
     await expect(gameActions).toBeVisible();
-    await expect(gameActions.locator(".icon-button")).toHaveCount(2);
+    await expect(gameActions.locator(".icon-button")).toHaveCount(3);
     await expect(gameActions.locator("#leave-play-game")).toHaveCount(1);
     await expect(newGame).toContainText("Start new game");
     await expect(newGame).toHaveClass(/primary/);
@@ -882,9 +883,7 @@ test("Play rejects a clue inflection of an unrevealed board word", async ({ page
   await expect(page.locator(".play-card", { hasText: "LIFE" })).not.toHaveClass(/is-done/);
 });
 
-test("Play repeatedly undoes saved human and bot actions to the history boundary", async ({
-  page,
-}) => {
+test("Play moves through history and groups fully automated turns", async ({ page }) => {
   const teams = [
     ...Array(9).fill("friendly"),
     ...Array(8).fill("enemy"),
@@ -993,6 +992,7 @@ test("Play repeatedly undoes saved human and bot actions to the history boundary
   await page.getByRole("button", { name: "Resume game", exact: true }).click();
 
   const undo = page.getByRole("button", { name: "Undo", exact: true });
+  const forward = page.getByRole("button", { name: "Forward", exact: true });
   const turn = page.locator("#play-clue-display");
   const blueScore = page.locator('.play-score-team[data-side="blue"] strong');
   const redScore = page.locator('.play-score-team[data-side="red"] strong');
@@ -1001,25 +1001,35 @@ test("Play repeatedly undoes saved human and bot actions to the history boundary
   await expect(blueScore).toHaveText("8");
   await expect(redScore).toHaveText("7");
   await expect(undo).toBeEnabled();
+  await expect(forward).toBeDisabled();
 
   await undo.click();
   await expect(turn).toContainText("Blue turn");
   await expect(turn).toContainText("Give a clue");
-
-  await undo.click();
-  await expect(turn).toContainText("SECOND 1");
-  await expect(page.locator('.play-card[data-layout-id="9"]')).toHaveClass(/is-done/);
-  await page.waitForTimeout(1500);
-  await expect(turn).toContainText("SECOND 1");
-
-  await undo.click();
-  await expect(turn).toContainText("SECOND 1");
-  await expect(page.locator('.play-card[data-layout-id="9"]')).not.toHaveClass(/is-done/);
-  await expect(redScore).toHaveText("8");
+  await expect(forward).toBeEnabled();
 
   await undo.click();
   await expect(turn).toContainText("Red turn");
-  await expect(turn).toContainText("Choosing a clue");
+  await expect(turn).toHaveAttribute("data-side", "red");
+  await expect(page.locator('.play-card[data-layout-id="9"]')).not.toHaveClass(/is-done/);
+  await expect(redScore).toHaveText("8");
+  await page.waitForTimeout(1500);
+  await expect(turn).toHaveAttribute("data-side", "red");
+
+  await forward.click();
+  await expect(turn).toContainText("Blue turn");
+  await expect(turn).toContainText("Give a clue");
+  await expect(page.locator('.play-card[data-layout-id="9"]')).toHaveClass(/is-done/);
+  await expect(redScore).toHaveText("7");
+
+  await forward.click();
+  await expect(turn).toContainText("THIRD 1");
+  await expect(forward).toBeDisabled();
+
+  await undo.click();
+  await undo.click();
+  await expect(turn).toContainText("Red turn");
+  await expect(turn).toHaveAttribute("data-side", "red");
 
   await undo.click();
   await expect(turn).toContainText("FIRST 1");
@@ -1034,6 +1044,11 @@ test("Play repeatedly undoes saved human and bot actions to the history boundary
   await expect(turn).toContainText("Blue turn");
   await expect(turn).toContainText("Give a clue");
   await expect(undo).toBeDisabled();
+  await expect(forward).toBeEnabled();
+
+  await page.getByRole("textbox", { name: "Clue", exact: true }).fill("BRANCH");
+  await page.getByRole("button", { name: "Give clue", exact: true }).click();
+  await expect(forward).toBeDisabled();
 });
 
 test("Play color-codes turns and lets spymasters switch board order", async ({ page }) => {

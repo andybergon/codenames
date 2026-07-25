@@ -207,6 +207,24 @@ export function undoPlayGame(game) {
     return game;
   }
 
+  const lastTurn = actions.at(-1).turn;
+  const firstLastTurnAction = actions.findIndex((event) => event.turn === lastTurn);
+  const lastTurnActions = actions.slice(firstLastTurnAction);
+  const undoCount = lastTurnActions.every((event) => event.actor === "bot")
+    ? lastTurnActions.length
+    : 1;
+
+  return replayPlayActions(game, actions.slice(0, -undoCount));
+}
+
+export function restorePlayGame(game) {
+  return replayPlayActions(
+    game,
+    game.history.filter((event) => PLAY_ACTION_TYPES.has(event.type)),
+  );
+}
+
+function replayPlayActions(game, actions) {
   let restored = createPlayGame({
     botSettings: game.botSettings,
     cards: game.cards,
@@ -215,7 +233,7 @@ export function undoPlayGame(game) {
     wordSet: game.wordSet,
   });
 
-  for (const event of actions.slice(0, -1)) {
+  for (const event of actions) {
     if (event.type === "clue-given") {
       restored = giveClue(restored, {
         clue: event.clue,

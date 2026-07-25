@@ -40,6 +40,7 @@ import {
   passTurn,
   publicGameView,
   randomHumanSeat,
+  restorePlayGame,
   undoPlayGame,
 } from "./game-state.js";
 import {
@@ -237,6 +238,7 @@ export function createPlayMode(options = {}) {
     discardSession: document.querySelector("#discard-play-session"),
     leaveGame: document.querySelector("#leave-play-game"),
     undoAction: document.querySelector("#undo-play-action"),
+    forwardAction: document.querySelector("#forward-play-action"),
     shareBoard: document.querySelector("#share-play-board"),
     humanSeat: document.querySelector("#play-human-seat"),
     score: document.querySelector("#play-score"),
@@ -288,7 +290,8 @@ export function createPlayMode(options = {}) {
   let botWaitDetailTimer = 0;
   let botWaitKey = "";
   let botWaitDetailVisible = false;
-  let botActionAfterUndo = false;
+  let botActionAfterHistoryMove = false;
+  let forwardHistory = [];
   let statusMessage = "";
   let statusMessageIsError = false;
   let selectedSuggestion = null;
@@ -348,6 +351,7 @@ export function createPlayMode(options = {}) {
   elements.discardSession.addEventListener("click", discardSavedGame);
   elements.leaveGame.addEventListener("click", showSetup);
   elements.undoAction.addEventListener("click", undoAction);
+  elements.forwardAction.addEventListener("click", forwardAction);
   elements.shareBoard.addEventListener("click", () => void copyBoardLink());
   elements.toggleSuggestions.addEventListener("click", () => {
     suggestionsExpanded = !suggestionsExpanded;
@@ -474,7 +478,8 @@ export function createPlayMode(options = {}) {
     activeModelId = null;
     statusMessage = message;
     statusMessageIsError = false;
-    botActionAfterUndo = false;
+    botActionAfterHistoryMove = false;
+    forwardHistory = [];
     selectedSuggestion = null;
     suggestionsExpanded = false;
     suggestionTurnKey = "";
@@ -490,6 +495,8 @@ export function createPlayMode(options = {}) {
     clearPlaySession();
     savedGame = null;
     game = null;
+    botActionAfterHistoryMove = false;
+    forwardHistory = [];
     selectedHumanSeat = randomHumanSeat();
     renderSetup();
   }
@@ -499,7 +506,8 @@ export function createPlayMode(options = {}) {
     clearBotWaitDetail();
     botBusy = false;
     game = null;
-    botActionAfterUndo = false;
+    botActionAfterHistoryMove = false;
+    forwardHistory = [];
     selectedHumanSeat = randomHumanSeat();
     elements.setup.hidden = false;
     elements.game.hidden = true;
@@ -569,7 +577,8 @@ export function createPlayMode(options = {}) {
     }
     try {
       game = action(game);
-      botActionAfterUndo = false;
+      botActionAfterHistoryMove = false;
+      forwardHistory = [];
       selectedSuggestion = null;
       statusMessage = "";
       statusMessageIsError = false;
@@ -589,10 +598,25 @@ export function createPlayMode(options = {}) {
       return;
     }
     window.clearTimeout(botTimer);
+    forwardHistory.push(structuredClone(game));
     game = undoPlayGame(game);
     savedGame = game;
-    botActionAfterUndo = true;
-    resetAnalysis("Last action undone.");
+    botActionAfterHistoryMove = true;
+    resetAnalysis("Moved back through game history.");
+    savePlaySession(game);
+    renderGame();
+    ensureAnalysis();
+  }
+
+  function forwardAction() {
+    if (!game || forwardHistory.length === 0) {
+      return;
+    }
+    window.clearTimeout(botTimer);
+    game = restorePlayGame(forwardHistory.pop());
+    savedGame = game;
+    botActionAfterHistoryMove = true;
+    resetAnalysis("Restored undone game history.");
     savePlaySession(game);
     renderGame();
     ensureAnalysis();
@@ -703,7 +727,7 @@ export function createPlayMode(options = {}) {
   }
 
   function queueBotAction(
-    delay = botActionAfterUndo ? BOT_ACTION_AFTER_UNDO_DELAY : BOT_ACTION_DELAY,
+    delay = botActionAfterHistoryMove ? BOT_ACTION_AFTER_UNDO_DELAY : BOT_ACTION_DELAY,
   ) {
     window.clearTimeout(botTimer);
     if (!active || !game || game.phase === GAME_PHASE.COMPLETE || botBusy) {
@@ -735,7 +759,7 @@ export function createPlayMode(options = {}) {
       return;
     }
     botBusy = true;
-    botActionAfterUndo = false;
+    botActionAfterHistoryMove = false;
     const gameAtStart = game;
     const actingSide = game.activeSide;
 
@@ -817,6 +841,7 @@ export function createPlayMode(options = {}) {
           statusMessageIsError = false;
         }
       }
+      forwardHistory = [];
       savedGame = game;
       savePlaySession(game);
     } catch (error) {
@@ -870,6 +895,7 @@ export function createPlayMode(options = {}) {
     elements.humanSeat.dataset.side = game.humanSeat.side;
     elements.humanSeat.textContent = `${sideEmoji(game.humanSeat.side)} ${roleEmoji(game.humanSeat.role)} You are ${sideLabel(game.humanSeat.side)} ${roleLabel(game.humanSeat.role)}`;
     elements.undoAction.disabled = !canUndoPlayGame(game) || botBusy;
+    elements.forwardAction.disabled = forwardHistory.length === 0 || botBusy;
     renderScore();
     renderBoardToolbar();
     renderBoard(view, currentActor, currentRole);

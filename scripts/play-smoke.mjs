@@ -22,6 +22,7 @@ import {
   passTurn,
   publicGameView,
   randomHumanSeat,
+  restorePlayGame,
   undoPlayGame,
   validateStoredGame,
 } from "../src/play/game-state.js";
@@ -286,7 +287,11 @@ undoStates.push(structuredClone(undoGame));
 undoGame = passTurn(undoGame, { actor: "bot" });
 undoStates.push(structuredClone(undoGame));
 
-for (let index = undoStates.length - 2; index >= 0; index -= 1) {
+assert.deepEqual(restorePlayGame(undoGame), undoGame);
+undoGame = undoPlayGame(undoGame);
+assert.deepEqual(undoGame, undoStates[3]);
+
+for (let index = 2; index >= 0; index -= 1) {
   assert.equal(canUndoPlayGame(undoGame), true);
   undoGame = undoPlayGame(undoGame);
   assert.deepEqual(undoGame, undoStates[index]);
