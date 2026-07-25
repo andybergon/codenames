@@ -20,9 +20,8 @@
   - Keep Worth, margin, fit, cohesion, and similarity values available behind expandable technical details.
 
 - 🧠 Evaluate a more game-specific semantic embedding or reranker.
-  - Current: the benchmark spans 17.5 MB MiniLM-L3 through 110 MB MPNet-base; the picker keeps the distinct Pareto choices MiniLM-L3, MiniLM-L6, and BGE-small. Every model still has compatible lazy-loaded indexes, measured human target recall, model size, and controlled median Node scoring time.
-  - OpenAI `text-embedding-3-large` at 1,024 dimensions improved Cultural Codes target recall from 58.57% to 62.46%, but failed the default Fun Index and cross-model clue-transfer gates. See `docs/play-fun-optimization.md`.
-  - Next: capture human ratings of the trainer's generated top clues and gameplay outcomes before changing the default or fitting a reranker. Embedding-layer recall alone does not validate the end-to-end ranking.
+  - Current: Jina v5 text-small, Qwen3 Embedding 0.6B, ConceptNet Numberbatch, and OpenAI `text-embedding-3-large` all improve at least one offline metric, but none passes the human-data, Fun Index, and cross-model transfer gates together. Gemini Embedding 2 remains blocked by the current project's free-tier input limit. See `docs/play-fun-optimization.md`.
+  - Next: test ConceptNet as a secondary human-alignment feature, then validate the best ensemble against human ratings of generated clues and recorded gameplay outcomes before changing the default.
 
 - 🧹 Bound Model picker caches so exploration cannot retain every loaded model and index.
   - Index promises, parsed shards, model pipelines, and term vectors currently remain cached for the page lifetime.

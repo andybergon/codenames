@@ -1,0 +1,523 @@
+{
+  "generatedAt": "2026-07-25T03:43:31.681Z",
+  "sample": {
+    "boards": 20,
+    "candidates": 10000,
+    "cluePolicy": "hybrid",
+    "clueSelection": "tempo",
+    "multiTolerance": 5,
+    "bonusGuesses": "pass after declared number",
+    "centeringCorpus": "30,000 clue words when available"
+  },
+  "baseline": {
+    "model": "Xenova/bge-small-en-v1.5",
+    "dimensions": 384,
+    "selfPlay": {
+      "fun": {
+        "objectiveVersion": 1,
+        "score": 86.3699,
+        "selectionScore": 86.3699,
+        "components": {
+          "ambition": 78.7698,
+          "momentum": 92.4631,
+          "suspense": 80,
+          "flow": 100
+        },
+        "guardrailsPassed": true,
+        "violations": []
+      },
+      "multiClueRate": 0.525253,
+      "firstHalfMeanClueNumber": 1.962264,
+      "correctCardsPerTurn": 1.60101,
+      "closeFinishRate": 0.95,
+      "meanTurnsPerGame": 9.9,
+      "wrongTeamHitsPerGame": 0,
+      "assassinRate": 0
+    },
+    "crossModel": {
+      "operativeModel": "Xenova/all-MiniLM-L6-v2",
+      "fun": {
+        "objectiveVersion": 1,
+        "score": 75.8531,
+        "selectionScore": null,
+        "components": {
+          "ambition": 78.0383,
+          "momentum": 45.6386,
+          "suspense": 95,
+          "flow": 100
+        },
+        "guardrailsPassed": false,
+        "violations": [
+          {
+            "metric": "assassinRate",
+            "actual": 0.2,
+            "limit": 0.02
+          },
+          {
+            "metric": "wrongTeamHitsPerGame",
+            "actual": 0.55,
+            "limit": 0.15
+          },
+          {
+            "metric": "neutralHitsPerGame",
+            "actual": 1.4,
+            "limit": 0.35
+          }
+        ]
+      },
+      "correctCardsPerTurn": 1.296651,
+      "wrongTeamHitsPerGame": 0.55,
+      "assassinRate": 0.2
+    }
+  },
+  "baselineHuman": {
+    "culturalCodes": {
+      "scoredGuessTurns": 7625,
+      "scoredTargetTurns": 7703,
+      "firstGuessAccuracy": 0.5204,
+      "guessRecallAtHumanCount": 0.5173,
+      "targetRecallAtCount": 0.5857,
+      "exactTargetSetAccuracy": 0.5254,
+      "avoidWordRate": 0.0946,
+      "pairwiseTargetAccuracy": 0.8537
+    },
+    "connector": {
+      "scoredGuessTurns": 0,
+      "scoredTargetTurns": 2250,
+      "firstGuessAccuracy": null,
+      "guessRecallAtHumanCount": null,
+      "targetRecallAtCount": 0.5249,
+      "exactTargetSetAccuracy": 0.2364,
+      "avoidWordRate": 0,
+      "pairwiseTargetAccuracy": 0.8204
+    }
+  },
+  "candidates": [
+    {
+      "id": "qwen3-embedding-0.6b",
+      "label": "Qwen3 Embedding 0.6B",
+      "directory": "qwen3-embedding-0.6b-instructed-1024",
+      "configuration": "8-bit MLX, 1,024 dimensions, symmetric semantic-similarity instruction",
+      "human": {
+        "guardrailsPassed": true,
+        "coverage": {
+          "availableTerms": 31253,
+          "totalTerms": 31253,
+          "rate": 1,
+          "centeringWords": 30000,
+          "candidatePoolScanned": 10000,
+          "humanTurns": {
+            "culturalCodes": {
+              "scoredTurns": 7703,
+              "totalTurns": 7703,
+              "rate": 1
+            },
+            "connector": {
+              "scoredTurns": 2250,
+              "totalTurns": 2250,
+              "rate": 1
+            }
+          }
+        },
+        "culturalCodes": {
+          "scoredGuessTurns": 7625,
+          "scoredTargetTurns": 7703,
+          "firstGuessAccuracy": 0.5308,
+          "guessRecallAtHumanCount": 0.5279,
+          "targetRecallAtCount": 0.6025,
+          "exactTargetSetAccuracy": 0.5428,
+          "avoidWordRate": 0.0941,
+          "pairwiseTargetAccuracy": 0.8709
+        },
+        "connector": {
+          "scoredGuessTurns": 0,
+          "scoredTargetTurns": 2250,
+          "firstGuessAccuracy": null,
+          "guessRecallAtHumanCount": null,
+          "targetRecallAtCount": 0.5538,
+          "exactTargetSetAccuracy": 0.2978,
+          "avoidWordRate": 0,
+          "pairwiseTargetAccuracy": 0.8561
+        }
+      },
+      "selfPlay": {
+        "fun": 88.1864,
+        "multiClueRate": 0.507538,
+        "firstHalfMeanClueNumber": 1.933333,
+        "correctCardsPerTurn": 1.582915,
+        "wrongTeamHitsPerGame": 0,
+        "assassinRate": 0,
+        "meanTurnsPerGame": 9.95
+      },
+      "crossModel": {
+        "operativeModel": "Xenova/all-MiniLM-L6-v2",
+        "fun": 56.446,
+        "multiClueRate": 0.564815,
+        "firstHalfMeanClueNumber": 1.973214,
+        "correctCardsPerTurn": 1.018519,
+        "wrongTeamHitsPerGame": 1.85,
+        "assassinRate": 0.2,
+        "meanTurnsPerGame": 10.8
+      },
+      "toleranceZero": {
+        "selfPlay": {
+          "fun": 81.8473,
+          "multiClueRate": 0.444444,
+          "firstHalfMeanClueNumber": 1.87156,
+          "correctCardsPerTurn": 1.516908,
+          "wrongTeamHitsPerGame": 0,
+          "assassinRate": 0,
+          "meanTurnsPerGame": 10.35
+        },
+        "crossModel": {
+          "fun": 60.3502,
+          "multiClueRate": 0.545024,
+          "firstHalfMeanClueNumber": 1.954545,
+          "correctCardsPerTurn": 1.07109,
+          "wrongTeamHitsPerGame": 1.6,
+          "assassinRate": 0.3,
+          "meanTurnsPerGame": 10.55
+        }
+      },
+      "promotionGates": [
+        {
+          "gate": "Human validity",
+          "passed": true,
+          "candidate": "Pass",
+          "requirement": "Pass"
+        },
+        {
+          "gate": "Default Fun Index",
+          "passed": true,
+          "candidate": 88.1864,
+          "requirement": ">= 86.3699"
+        },
+        {
+          "gate": "Cross-model correct per turn",
+          "passed": false,
+          "candidate": 1.018519,
+          "requirement": ">= 1.2467"
+        },
+        {
+          "gate": "Cross-model wrong per game",
+          "passed": false,
+          "candidate": 1.85,
+          "requirement": "<= 0.65"
+        },
+        {
+          "gate": "Cross-model assassin rate",
+          "passed": true,
+          "candidate": 0.2,
+          "requirement": "<= 25.0%"
+        }
+      ],
+      "promote": false
+    },
+    {
+      "id": "conceptnet-numberbatch",
+      "label": "ConceptNet Numberbatch",
+      "directory": "conceptnet-numberbatch-300",
+      "configuration": "English 19.08 vectors, 300 dimensions, available-term centering",
+      "human": {
+        "guardrailsPassed": true,
+        "coverage": {
+          "availableTerms": 30991,
+          "totalTerms": 31253,
+          "rate": 0.9916,
+          "centeringWords": 29940,
+          "candidatePoolScanned": 10000,
+          "humanTurns": {
+            "culturalCodes": {
+              "scoredTurns": 7442,
+              "totalTurns": 7703,
+              "rate": 0.9661
+            },
+            "connector": {
+              "scoredTurns": 2236,
+              "totalTurns": 2250,
+              "rate": 0.9938
+            }
+          }
+        },
+        "culturalCodes": {
+          "scoredGuessTurns": 7371,
+          "scoredTargetTurns": 7442,
+          "firstGuessAccuracy": 0.6334,
+          "guessRecallAtHumanCount": 0.6263,
+          "targetRecallAtCount": 0.7083,
+          "exactTargetSetAccuracy": 0.6458,
+          "avoidWordRate": 0.0724,
+          "pairwiseTargetAccuracy": 0.9127
+        },
+        "connector": {
+          "scoredGuessTurns": 0,
+          "scoredTargetTurns": 2236,
+          "firstGuessAccuracy": null,
+          "guessRecallAtHumanCount": null,
+          "targetRecallAtCount": 0.6201,
+          "exactTargetSetAccuracy": 0.3685,
+          "avoidWordRate": 0,
+          "pairwiseTargetAccuracy": 0.8672
+        }
+      },
+      "selfPlay": {
+        "fun": 63.2875,
+        "multiClueRate": 0.313808,
+        "firstHalfMeanClueNumber": 1.56,
+        "correctCardsPerTurn": 1.322176,
+        "wrongTeamHitsPerGame": 0,
+        "assassinRate": 0,
+        "meanTurnsPerGame": 11.95
+      },
+      "crossModel": {
+        "operativeModel": "Xenova/all-MiniLM-L6-v2",
+        "fun": 56.9057,
+        "multiClueRate": 0.345992,
+        "firstHalfMeanClueNumber": 1.572581,
+        "correctCardsPerTurn": 1.126582,
+        "wrongTeamHitsPerGame": 1.1,
+        "assassinRate": 0.15,
+        "meanTurnsPerGame": 11.85
+      },
+      "promotionGates": [
+        {
+          "gate": "Human validity",
+          "passed": true,
+          "candidate": "Pass",
+          "requirement": "Pass"
+        },
+        {
+          "gate": "Default Fun Index",
+          "passed": false,
+          "candidate": 63.2875,
+          "requirement": ">= 86.3699"
+        },
+        {
+          "gate": "Cross-model correct per turn",
+          "passed": false,
+          "candidate": 1.126582,
+          "requirement": ">= 1.2467"
+        },
+        {
+          "gate": "Cross-model wrong per game",
+          "passed": false,
+          "candidate": 1.1,
+          "requirement": "<= 0.65"
+        },
+        {
+          "gate": "Cross-model assassin rate",
+          "passed": true,
+          "candidate": 0.15,
+          "requirement": "<= 25.0%"
+        }
+      ],
+      "promote": false
+    },
+    {
+      "id": "jina-v5-text-small",
+      "label": "Jina v5 text-small",
+      "directory": "jina-v5-small-text-matching-1024",
+      "configuration": "FP16 MLX, 1,024 dimensions, text-matching adapter with Document prefix",
+      "human": {
+        "guardrailsPassed": true,
+        "coverage": {
+          "availableTerms": 31253,
+          "totalTerms": 31253,
+          "rate": 1,
+          "centeringWords": 30000,
+          "candidatePoolScanned": 10000,
+          "humanTurns": {
+            "culturalCodes": {
+              "scoredTurns": 7703,
+              "totalTurns": 7703,
+              "rate": 1
+            },
+            "connector": {
+              "scoredTurns": 2250,
+              "totalTurns": 2250,
+              "rate": 1
+            }
+          }
+        },
+        "culturalCodes": {
+          "scoredGuessTurns": 7625,
+          "scoredTargetTurns": 7703,
+          "firstGuessAccuracy": 0.5533,
+          "guessRecallAtHumanCount": 0.5478,
+          "targetRecallAtCount": 0.6265,
+          "exactTargetSetAccuracy": 0.5656,
+          "avoidWordRate": 0.0858,
+          "pairwiseTargetAccuracy": 0.8787
+        },
+        "connector": {
+          "scoredGuessTurns": 0,
+          "scoredTargetTurns": 2250,
+          "firstGuessAccuracy": null,
+          "guessRecallAtHumanCount": null,
+          "targetRecallAtCount": 0.5698,
+          "exactTargetSetAccuracy": 0.3129,
+          "avoidWordRate": 0,
+          "pairwiseTargetAccuracy": 0.8491
+        }
+      },
+      "selfPlay": {
+        "fun": 52.3966,
+        "multiClueRate": 0.22449,
+        "firstHalfMeanClueNumber": 1.370079,
+        "correctCardsPerTurn": 1.240816,
+        "wrongTeamHitsPerGame": 0,
+        "assassinRate": 0,
+        "meanTurnsPerGame": 12.25
+      },
+      "crossModel": {
+        "operativeModel": "Xenova/all-MiniLM-L6-v2",
+        "fun": 34.1733,
+        "multiClueRate": 0.255605,
+        "firstHalfMeanClueNumber": 1.401709,
+        "correctCardsPerTurn": 0.856502,
+        "wrongTeamHitsPerGame": 1.6,
+        "assassinRate": 0.5,
+        "meanTurnsPerGame": 11.15
+      },
+      "promotionGates": [
+        {
+          "gate": "Human validity",
+          "passed": true,
+          "candidate": "Pass",
+          "requirement": "Pass"
+        },
+        {
+          "gate": "Default Fun Index",
+          "passed": false,
+          "candidate": 52.3966,
+          "requirement": ">= 86.3699"
+        },
+        {
+          "gate": "Cross-model correct per turn",
+          "passed": false,
+          "candidate": 0.856502,
+          "requirement": ">= 1.2467"
+        },
+        {
+          "gate": "Cross-model wrong per game",
+          "passed": false,
+          "candidate": 1.6,
+          "requirement": "<= 0.65"
+        },
+        {
+          "gate": "Cross-model assassin rate",
+          "passed": false,
+          "candidate": 0.5,
+          "requirement": "<= 25.0%"
+        }
+      ],
+      "promote": false
+    }
+  ],
+  "gemini": {
+    "id": "gemini-embedding-2",
+    "status": "blocked",
+    "dimensions": 768,
+    "taskPrefix": "task: sentence similarity | query: ",
+    "preflight": {
+      "terms": 31253,
+      "estimatedTokens": 483607,
+      "maximumCostUsd": 0.1
+    },
+    "knownPaidCostUsd": 0,
+    "reason": "The existing Gemini project is limited to 100 free-tier embedding inputs, and async embedding batches fail their project precondition."
+  },
+  "priorOpenAiExperiment": {
+    "model": "text-embedding-3-large",
+    "human": {
+      "culturalCodes": {
+        "scoredGuessTurns": 7625,
+        "scoredTargetTurns": 7703,
+        "firstGuessAccuracy": 0.5496,
+        "guessRecallAtHumanCount": 0.547,
+        "targetRecallAtCount": 0.6246,
+        "exactTargetSetAccuracy": 0.5626,
+        "avoidWordRate": 0.09,
+        "pairwiseTargetAccuracy": 0.8845
+      },
+      "connector": {
+        "scoredGuessTurns": 0,
+        "scoredTargetTurns": 2250,
+        "firstGuessAccuracy": null,
+        "guessRecallAtHumanCount": null,
+        "targetRecallAtCount": 0.5227,
+        "exactTargetSetAccuracy": 0.2316,
+        "avoidWordRate": 0,
+        "pairwiseTargetAccuracy": 0.8353
+      }
+    },
+    "selfPlay": {
+      "fun": {
+        "objectiveVersion": 1,
+        "score": 61.7864,
+        "selectionScore": 61.7864,
+        "components": {
+          "ambition": 27.9269,
+          "momentum": 48.8611,
+          "suspense": 95,
+          "flow": 100
+        },
+        "guardrailsPassed": true,
+        "violations": []
+      },
+      "multiClueRate": 0.291845,
+      "firstHalfMeanClueNumber": 1.528926,
+      "correctCardsPerTurn": 1.317597,
+      "closeFinishRate": 0.9,
+      "meanTurnsPerGame": 11.65,
+      "wrongTeamHitsPerGame": 0,
+      "assassinRate": 0
+    },
+    "crossModel": {
+      "operativeModel": "Xenova/bge-small-en-v1.5",
+      "fun": {
+        "objectiveVersion": 1,
+        "score": 36.5029,
+        "selectionScore": null,
+        "components": {
+          "ambition": 39.4481,
+          "momentum": 3.0615,
+          "suspense": 35,
+          "flow": 100
+        },
+        "guardrailsPassed": false,
+        "violations": [
+          {
+            "metric": "assassinRate",
+            "actual": 0.45,
+            "limit": 0.02
+          },
+          {
+            "metric": "wrongTeamHitsPerGame",
+            "actual": 1.05,
+            "limit": 0.15
+          },
+          {
+            "metric": "neutralHitsPerGame",
+            "actual": 1.15,
+            "limit": 0.35
+          }
+        ]
+      },
+      "correctCardsPerTurn": 1.0199,
+      "wrongTeamHitsPerGame": 1.05,
+      "assassinRate": 0.45
+    },
+    "cost": {
+      "knownBilledTokens": 65649,
+      "knownBilledCostUsd": 0.008534,
+      "maximumPossibleTimedOutRequestCostUsd": 0.0002,
+      "upperBoundCostUsd": 0.008734
+    }
+  },
+  "verdict": {
+    "promote": false,
+    "productionModel": "Xenova/bge-small-en-v1.5",
+    "recommendation": "Keep BGE-small. Qwen is the only candidate to improve same-model Fun, but it fails cross-model safety. Use ConceptNet as a human-alignment signal in a future ensemble experiment rather than replacing the production embedding."
+  }
+}
