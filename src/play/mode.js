@@ -62,6 +62,10 @@ const PLAY_BOARD_ORDER = Object.freeze({
   TABLE: "table",
   TEAMS: "teams",
 });
+const PLAY_HISTORY_VIEW = Object.freeze({
+  TIMELINE: "timeline",
+  TEAMS: "teams",
+});
 const TEAM_ORDER = Object.freeze({
   friendly: 0,
   enemy: 1,
@@ -258,7 +262,11 @@ export function createPlayMode(options = {}) {
     guessProgress: document.querySelector("#play-guess-progress"),
     passTurn: document.querySelector("#pass-play-turn"),
     historyCount: document.querySelector("#play-history-count"),
+    historyViewButtons: [...document.querySelectorAll("[data-play-history-view]")],
     historyList: document.querySelector("#play-history-list"),
+    historyTeamLists: document.querySelector("#play-history-team-lists"),
+    historyBlueList: document.querySelector("#play-history-blue-list"),
+    historyRedList: document.querySelector("#play-history-red-list"),
   };
 
   for (const [container, definition] of [
@@ -298,6 +306,7 @@ export function createPlayMode(options = {}) {
   let suggestionsExpanded = false;
   let suggestionTurnKey = "";
   let playBoardOrder = PLAY_BOARD_ORDER.TABLE;
+  let playHistoryView = PLAY_HISTORY_VIEW.TIMELINE;
   let activeModelId = null;
   let shareFeedbackTimer = 0;
   const clueIndexPromises = new Map();
@@ -342,6 +351,13 @@ export function createPlayMode(options = {}) {
   for (const button of elements.boardOrderButtons) {
     button.addEventListener("click", () => {
       playBoardOrder = button.dataset.playBoardOrder;
+      renderGame();
+    });
+  }
+
+  for (const button of elements.historyViewButtons) {
+    button.addEventListener("click", () => {
+      playHistoryView = button.dataset.playHistoryView;
       renderGame();
     });
   }
@@ -484,6 +500,7 @@ export function createPlayMode(options = {}) {
     suggestionsExpanded = false;
     suggestionTurnKey = "";
     playBoardOrder = PLAY_BOARD_ORDER.TABLE;
+    playHistoryView = PLAY_HISTORY_VIEW.TIMELINE;
     elements.clueInput.value = "";
     elements.clueNumber.replaceChildren();
     elements.clueError.textContent = "";
@@ -1223,33 +1240,67 @@ export function createPlayMode(options = {}) {
     const visible = history.filter((event) =>
       ["clue-given", "card-guessed", "turn-passed", "game-ended"].includes(event.type),
     );
-    const items = visible.slice(-16).map((event) => {
-      const item = document.createElement("li");
-      item.dataset.side = event.side ?? event.winner ?? "";
-      if (event.type === "clue-given") {
-        const intendedWords =
-          game.phase === GAME_PHASE.COMPLETE && event.intendedLayoutIds?.length
-            ? event.intendedLayoutIds
-                .map((layoutId) => game.cards.find((card) => card.layoutId === layoutId)?.word)
-                .filter(Boolean)
-            : [];
-        item.textContent = `${sideEmoji(event.side)} ${roleEmoji(PLAYER_ROLE.SPYMASTER)} ${sideLabel(event.side)} clue: ${event.clue} ${event.number}${
-          intendedWords.length ? `, intended ${intendedWords.join(" + ")}` : ""
-        }`;
-      } else if (event.type === "card-guessed") {
-        item.textContent = `${sideEmoji(event.side)} ${roleEmoji(PLAYER_ROLE.OPERATIVE)} ${sideLabel(event.side)} guessed ${event.word}, ${teamLabel(event.team)}`;
-      } else if (event.type === "turn-passed") {
-        item.textContent = `${sideEmoji(event.side)} ${roleEmoji(PLAYER_ROLE.OPERATIVE)} ${sideLabel(event.side)} passed`;
-      } else {
-        item.textContent = `🏁 ${sideEmoji(event.winner)} ${sideLabel(event.winner)} won by ${
-          event.reason === GAME_END_REASON.ASSASSIN ? "assassin" : "finding every agent"
-        }`;
-      }
-      return item;
-    });
     elements.historyCount.textContent = `${visible.length} events`;
-    elements.historyList.replaceChildren(...items);
-    elements.historyList.scrollTop = elements.historyList.scrollHeight;
+    for (const button of elements.historyViewButtons) {
+      button.setAttribute(
+        "aria-pressed",
+        String(button.dataset.playHistoryView === playHistoryView),
+      );
+    }
+    elements.historyList.hidden = playHistoryView !== PLAY_HISTORY_VIEW.TIMELINE;
+    elements.historyTeamLists.hidden = playHistoryView !== PLAY_HISTORY_VIEW.TEAMS;
+
+    renderHistoryList(elements.historyList, visible, "No game actions yet.");
+    renderHistoryList(
+      elements.historyBlueList,
+      visible.filter((event) => (event.side ?? event.winner) === SIDE.BLUE),
+      "No Blue actions yet.",
+    );
+    renderHistoryList(
+      elements.historyRedList,
+      visible.filter((event) => (event.side ?? event.winner) === SIDE.RED),
+      "No Red actions yet.",
+    );
+  }
+
+  function renderHistoryList(list, events, emptyMessage) {
+    const items = events.length
+      ? events.map(createHistoryItem)
+      : [createEmptyHistoryItem(emptyMessage)];
+    list.replaceChildren(...items);
+    list.scrollTop = list.scrollHeight;
+  }
+
+  function createHistoryItem(event) {
+    const item = document.createElement("li");
+    item.dataset.side = event.side ?? event.winner ?? "";
+    if (event.type === "clue-given") {
+      const intendedWords =
+        game.phase === GAME_PHASE.COMPLETE && event.intendedLayoutIds?.length
+          ? event.intendedLayoutIds
+              .map((layoutId) => game.cards.find((card) => card.layoutId === layoutId)?.word)
+              .filter(Boolean)
+          : [];
+      item.textContent = `${sideEmoji(event.side)} ${roleEmoji(PLAYER_ROLE.SPYMASTER)} ${sideLabel(event.side)} clue: ${event.clue} ${event.number}${
+        intendedWords.length ? `, intended ${intendedWords.join(" + ")}` : ""
+      }`;
+    } else if (event.type === "card-guessed") {
+      item.textContent = `${sideEmoji(event.side)} ${roleEmoji(PLAYER_ROLE.OPERATIVE)} ${sideLabel(event.side)} guessed ${event.word}, ${teamLabel(event.team)}`;
+    } else if (event.type === "turn-passed") {
+      item.textContent = `${sideEmoji(event.side)} ${roleEmoji(PLAYER_ROLE.OPERATIVE)} ${sideLabel(event.side)} passed`;
+    } else {
+      item.textContent = `🏁 ${sideEmoji(event.winner)} ${sideLabel(event.winner)} won by ${
+        event.reason === GAME_END_REASON.ASSASSIN ? "assassin" : "finding every agent"
+      }`;
+    }
+    return item;
+  }
+
+  function createEmptyHistoryItem(message) {
+    const item = document.createElement("li");
+    item.className = "play-history-empty";
+    item.textContent = message;
+    return item;
   }
 
 }

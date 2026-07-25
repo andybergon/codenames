@@ -22,6 +22,51 @@ async function useTestBotAction(page, delay) {
   }, delay);
 }
 
+function playSessionWithHistory(history) {
+  const teams = [
+    ...Array(9).fill("friendly"),
+    ...Array(8).fill("enemy"),
+    ...Array(7).fill("neutral"),
+    "assassin",
+  ];
+  return {
+    schemaVersion: 1,
+    seed: "history-ui",
+    wordSet: "official",
+    humanSeat: { side: "blue", role: "spymaster" },
+    cards: teams.map((team, layoutId) => ({
+      word: `WORD${layoutId}`,
+      team,
+      layoutId,
+      done: false,
+      revealedBy: null,
+      revealedTurn: null,
+    })),
+    activeSide: "blue",
+    phase: "awaiting-clue",
+    turnNumber: 7,
+    currentTurn: null,
+    winner: null,
+    endReason: null,
+    history: [
+      {
+        type: "game-started",
+        humanSeat: { side: "blue", role: "spymaster" },
+        activeSide: "blue",
+      },
+      ...history,
+    ],
+  };
+}
+
+async function resumePlaySession(page, history) {
+  await page.addInitScript((session) => {
+    localStorage.setItem("codenames-play-session-v1", JSON.stringify(session));
+  }, playSessionWithHistory(history));
+  await page.goto("/?mode=play");
+  await page.getByRole("button", { name: "Resume game", exact: true }).click();
+}
+
 test("mobile board and metric help remain fully usable", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 844 });
   await page.goto(SHARED_BOARD);
@@ -831,7 +876,7 @@ test("starting a second Play game clears the previous clue and analysis", async 
   await expect(page.locator("#play-clue-error")).toBeEmpty();
   await expect(page.locator("#play-clue-display")).not.toContainText("HIBERNATION 2");
   await expect(page.locator("#play-history-count")).toHaveText("0 events");
-  await expect(page.locator("#play-history-list")).toBeEmpty();
+  await expect(page.locator("#play-history-list")).toHaveText("No game actions yet.");
   await expect(page.locator("#play-suggestion-list")).toBeEmpty();
 });
 
@@ -1131,6 +1176,173 @@ test("Play uses the Red turn treatment for an active Red spymaster", async ({ pa
   await expect(page.locator("#play-clue-display")).toContainText("🔴 Red turn");
   await expect(page.locator("#play-clue-display")).toContainText("🕵️ Give a clue");
   await expect(page.locator("#play-suggestions")).toBeHidden();
+});
+
+test("Play game log shows clear empty states in both views", async ({ page }) => {
+  await resumePlaySession(page, []);
+
+  await expect(page.locator("#play-history-count")).toHaveText("0 events");
+  await expect(page.locator("#play-history-list")).toHaveText("No game actions yet.");
+
+  const teamsView = page.getByRole("button", { name: "↔️ By team", exact: true });
+  await teamsView.click();
+
+  await expect(teamsView).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator("#play-history-list")).toBeHidden();
+  await expect(page.locator("#play-history-blue-list")).toHaveText("No Blue actions yet.");
+  await expect(page.locator("#play-history-red-list")).toHaveText("No Red actions yet.");
+});
+
+test("Play game log switches between chronological and separated team views", async ({
+  page,
+}) => {
+  await resumePlaySession(page, [
+    {
+      type: "clue-given",
+      turn: 1,
+      side: "blue",
+      actor: "human",
+      clue: "OCEAN",
+      number: 2,
+      intendedLayoutIds: [],
+    },
+    {
+      type: "card-guessed",
+      turn: 1,
+      side: "blue",
+      layoutId: 0,
+      word: "WORD0",
+      team: "friendly",
+      actor: "bot",
+    },
+    {
+      type: "clue-given",
+      turn: 2,
+      side: "red",
+      actor: "bot",
+      clue: "FIRE",
+      number: 1,
+      intendedLayoutIds: [],
+    },
+    {
+      type: "turn-passed",
+      turn: 2,
+      side: "red",
+      actor: "bot",
+    },
+  ]);
+
+  const timelineView = page.getByRole("button", { name: "🕒 Timeline", exact: true });
+  const teamsView = page.getByRole("button", { name: "↔️ By team", exact: true });
+  const timeline = page.locator("#play-history-list");
+
+  await expect(timelineView).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator("#play-history-count")).toHaveText("4 events");
+  await expect(timeline.locator("li")).toHaveCount(4);
+  expect(await timeline.locator("li").allTextContents()).toEqual([
+    "🔵 🕵️ Blue clue: OCEAN 2",
+    "🔵 🔎 Blue guessed WORD0, Blue",
+    "🔴 🕵️ Red clue: FIRE 1",
+    "🔴 🔎 Red passed",
+  ]);
+
+  await teamsView.click();
+
+  await expect(teamsView).toHaveAttribute("aria-pressed", "true");
+  await expect(timeline).toBeHidden();
+  expect(await page.locator("#play-history-blue-list li").allTextContents()).toEqual([
+    "🔵 🕵️ Blue clue: OCEAN 2",
+    "🔵 🔎 Blue guessed WORD0, Blue",
+  ]);
+  expect(await page.locator("#play-history-red-list li").allTextContents()).toEqual([
+    "🔴 🕵️ Red clue: FIRE 1",
+    "🔴 🔎 Red passed",
+  ]);
+
+  await timelineView.click();
+  await expect(timelineView).toHaveAttribute("aria-pressed", "true");
+  await expect(timeline).toBeVisible();
+});
+
+test("long Play logs remain complete and responsive in both views", async ({ page }) => {
+  const history = Array.from({ length: 6 }, (_, index) => {
+    const turn = index + 1;
+    return [
+      {
+        type: "clue-given",
+        turn,
+        side: "blue",
+        actor: "human",
+        clue: `BLUE${turn}`,
+        number: 1,
+        intendedLayoutIds: [],
+      },
+      {
+        type: "card-guessed",
+        turn,
+        side: "blue",
+        layoutId: index,
+        word: `BLUEWORD${turn}`,
+        team: "friendly",
+        actor: "bot",
+      },
+      {
+        type: "clue-given",
+        turn,
+        side: "red",
+        actor: "bot",
+        clue: `RED${turn}`,
+        number: 1,
+        intendedLayoutIds: [],
+      },
+      {
+        type: "turn-passed",
+        turn,
+        side: "red",
+        actor: "bot",
+      },
+    ];
+  }).flat();
+  await resumePlaySession(page, history);
+
+  await expect(page.locator("#play-history-count")).toHaveText("24 events");
+  await expect(page.locator("#play-history-list li")).toHaveCount(24);
+  expect(
+    await page.locator("#play-history-list").evaluate(
+      (list) => list.scrollHeight > list.clientHeight,
+    ),
+  ).toBe(true);
+
+  await page.getByRole("button", { name: "↔️ By team", exact: true }).click();
+  await expect(page.locator("#play-history-blue-list li")).toHaveCount(12);
+  await expect(page.locator("#play-history-red-list li")).toHaveCount(12);
+
+  for (const viewport of [
+    { width: 390, height: 844, columns: 1 },
+    { width: 768, height: 1024, columns: 2 },
+    { width: 1440, height: 900, columns: 2 },
+  ]) {
+    await page.setViewportSize(viewport);
+    const layout = await page.evaluate(() => {
+      const historyPanel = document.querySelector(".play-history");
+      const teamLists = document.querySelector("#play-history-team-lists");
+      const teamSections = [...document.querySelectorAll(".play-history-team")];
+      const panelBounds = historyPanel.getBoundingClientRect();
+      return {
+        pageOverflows:
+          document.documentElement.scrollWidth > document.documentElement.clientWidth,
+        columns: getComputedStyle(teamLists).gridTemplateColumns.split(" ").length,
+        teamsFit: teamSections.every((section) => {
+          const bounds = section.getBoundingClientRect();
+          return bounds.left >= panelBounds.left - 1 && bounds.right <= panelBounds.right + 1;
+        }),
+      };
+    });
+
+    expect(layout.pageOverflows, `page overflow at ${viewport.width}px`).toBe(false);
+    expect(layout.columns, `team columns at ${viewport.width}px`).toBe(viewport.columns);
+    expect(layout.teamsFit, `team log clipping at ${viewport.width}px`).toBe(true);
+  }
 });
 
 test("completed Play sessions reveal the key and intended targets", async ({ page }) => {

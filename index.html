@@ -640,11 +640,51 @@
               </div>
 
               <div class="play-history">
-                <div class="play-section-heading">
-                  <strong>Game log</strong>
-                  <span id="play-history-count"></span>
+                <div class="play-section-heading play-history-heading">
+                  <div class="play-history-title">
+                    <strong>Game log</strong>
+                    <span id="play-history-count"></span>
+                  </div>
+                  <div class="play-history-switch" role="group" aria-label="Game log view">
+                    <button
+                      type="button"
+                      data-play-history-view="timeline"
+                      aria-pressed="true"
+                    >
+                      🕒 Timeline
+                    </button>
+                    <button
+                      type="button"
+                      data-play-history-view="teams"
+                      aria-pressed="false"
+                    >
+                      ↔️ By team
+                    </button>
+                  </div>
                 </div>
-                <ol id="play-history-list"></ol>
+                <ol
+                  id="play-history-list"
+                  class="play-history-list"
+                  aria-label="Chronological game log"
+                ></ol>
+                <div id="play-history-team-lists" class="play-history-team-lists" hidden>
+                  <section class="play-history-team" data-side="blue">
+                    <h3 id="play-history-blue-title">🔵 Blue</h3>
+                    <ol
+                      id="play-history-blue-list"
+                      class="play-history-list"
+                      aria-labelledby="play-history-blue-title"
+                    ></ol>
+                  </section>
+                  <section class="play-history-team" data-side="red">
+                    <h3 id="play-history-red-title">🔴 Red</h3>
+                    <ol
+                      id="play-history-red-list"
+                      class="play-history-list"
+                      aria-labelledby="play-history-red-title"
+                    ></ol>
+                  </section>
+                </div>
               </div>
             </aside>
           </div>

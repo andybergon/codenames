@@ -2431,7 +2431,8 @@ h3 {
   text-transform: uppercase;
 }
 
-.play-board-order {
+.play-board-order,
+.play-history-switch {
   display: inline-flex;
   gap: 2px;
   border: 1px solid var(--line);
@@ -2440,7 +2441,8 @@ h3 {
   background: var(--surface);
 }
 
-.play-board-order button {
+.play-board-order button,
+.play-history-switch button {
   min-height: 28px;
   border: 0;
   border-radius: 5px;
@@ -2451,7 +2453,8 @@ h3 {
   font-weight: 850;
 }
 
-.play-board-order button[aria-pressed="true"] {
+.play-board-order button[aria-pressed="true"],
+.play-history-switch button[aria-pressed="true"] {
   background: var(--ink);
   color: var(--on-ink);
 }
@@ -2777,7 +2780,22 @@ button.play-card:not(:disabled):hover {
   padding-top: 12px;
 }
 
-.play-history ol {
+.play-history-heading {
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.play-history-title {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.play-history-switch {
+  flex: 0 0 auto;
+}
+
+.play-history-list {
   display: grid;
   max-height: 270px;
   gap: 6px;
@@ -2787,7 +2805,7 @@ button.play-card:not(:disabled):hover {
   list-style: none;
 }
 
-.play-history li {
+.play-history-list li {
   border-left: 3px solid var(--line);
   padding: 4px 0 4px 9px;
   color: var(--muted);
@@ -2795,12 +2813,43 @@ button.play-card:not(:disabled):hover {
   line-height: 1.35;
 }
 
-.play-history li[data-side="blue"] {
+.play-history-list li[data-side="blue"] {
   border-left-color: var(--blue);
 }
 
-.play-history li[data-side="red"] {
+.play-history-list li[data-side="red"] {
   border-left-color: var(--red);
+}
+
+.play-history-list .play-history-empty {
+  border-left-color: var(--line);
+  color: var(--muted);
+  font-style: italic;
+}
+
+.play-history-team-lists {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.play-history-team-lists[hidden],
+.play-history-list[hidden] {
+  display: none;
+}
+
+.play-history-team {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 8px;
+  background: var(--surface);
+}
+
+.play-history-team h3 {
+  margin: 0 0 7px;
+  color: var(--ink);
+  font-size: 0.72rem;
 }
 
 @media (max-width: 1120px) {
@@ -2952,6 +3001,10 @@ button.play-card:not(:disabled):hover {
 
   .play-clue-form .button {
     grid-column: 1 / -1;
+  }
+
+  .play-history-team-lists {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .recommendation-header {
