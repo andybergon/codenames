@@ -281,7 +281,7 @@ test("Play exposes and saves bot policy settings", async ({ page }) => {
 
   const settings = page.locator(".play-bot-settings");
   await expect(settings).toContainText(
-    "BGE-small, 10k, human-like, stop at number",
+    "BGE-small, 10k, human-like, dynamic operative, stop at number",
   );
   await expect(settings).not.toHaveAttribute("open", "");
   await expect(settings.locator(".play-bot-settings-toggle")).toContainText(
@@ -298,13 +298,17 @@ test("Play exposes and saves bot policy settings", async ({ page }) => {
   await expect(page.locator("#play-bot-candidates")).toHaveValue("10000");
   await expect(page.locator("#play-clue-policy")).toHaveValue("hybrid");
   await expect(page.locator("#play-multi-tolerance")).toHaveValue("5");
+  await expect(page.locator("#play-operative-aggression")).toHaveValue(
+    "dynamic",
+  );
   await expect(page.locator("#play-bonus-guesses")).toHaveValue("pass");
-  await expect(settings.locator(".play-setting-label .info-button")).toHaveCount(5);
+  await expect(settings.locator(".play-setting-label .info-button")).toHaveCount(6);
 
   await page.locator("#play-bot-model").selectOption("minilm-l6");
   await page.locator("#play-bot-candidates").selectOption("30000");
   await page.locator("#play-clue-policy").selectOption("current");
   await page.locator("#play-multi-tolerance").selectOption("10");
+  await page.locator("#play-operative-aggression").selectOption("conservative");
   await page.locator("#play-bonus-guesses").selectOption("allow");
   await page.locator('[data-play-seat="blue:spymaster"]').click();
   await page.getByRole("button", { name: "Start new game", exact: true }).click();
@@ -321,6 +325,7 @@ test("Play exposes and saves bot policy settings", async ({ page }) => {
     candidateCount: 30000,
     cluePolicy: "current",
     multiTolerance: 10,
+    operativeAggression: "conservative",
     bonusGuesses: "allow",
   });
 });
@@ -333,6 +338,7 @@ test("Play bot setting help explains measured tradeoffs and stays on-screen", as
     ["Clue vocabulary", 4, "85.47%"],
     ["Clue scoring", 2, "50.4%"],
     ["Prefer multi-card clues", 3, "best clue for 2+ cards"],
+    ["Operative aggression", 3, "revealed-card counts"],
     ["Extra guess", 2, "26.4% correct"],
   ];
 

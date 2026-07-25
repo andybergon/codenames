@@ -12,11 +12,11 @@ Play's single-clue bias is primarily a scoring and policy problem. The standard 
 | 📚 Candidate count | 🟡 Secondary | 30k adds 7.3 percentage points |
 | 🗂️ Board word set | 🟢 Not causal | Official and Extended differ by 5 points at opening |
 
-The implemented Play default is BGE-small, the hybrid score, a five-point multi-clue tolerance, and passing after the declared clue number. Across 100 paired deterministic games, that combination produced a 1.58 mean clue number and 50.4% multi-card clues. Opening clues averaged 2.18, the chronological first half averaged 1.92, and late-game singles remained available.
+The implemented Play default is BGE-small, the hybrid score, a five-point multi-clue tolerance, Dynamic operative aggression, and passing after the declared clue number. Across 100 deterministic games, that combination produced a 1.57 mean clue number and 49.7% multi-card clues. Opening clues averaged 2.18, the chronological first half averaged 1.90, and late-game singles remained available.
 
 BGE-small is `Xenova/bge-small-en-v1.5`. Its quantized model is 34.0 MB versus 23.0 MB for the previous MiniLM-L6 model. With the same 5.3 MB 10k clue index, the total download is about 39.3 MB versus 28.2 MB.
 
-This is a policy benchmark, not proof of human-level safety. The simulated spymaster and operative share the same embedding geometry, so their agreement is higher than agreement with a human player.
+This is a policy benchmark, not proof of human-level safety. The simulated spymaster and operative share the same embedding geometry, so their agreement is higher than agreement with a human player. The separate MiniLM-L6 operative run is a transfer stress test, not a human simulation.
 
 ## 👥 What human evidence supports
 
@@ -55,7 +55,7 @@ Larger vocabularies improve opening multi-clue availability, but the full-game e
 
 ## 🧠 Same-policy full-game model comparison
 
-Each selectable model played 100 complete games on the same deterministic boards with the recommended 10k vocabulary, hybrid score, five-point multi preference, and stop-at-number policy. The spymaster and operative use the same model, so these results compare model behavior rather than human agreement.
+Each selectable model played 100 complete games on the same deterministic boards with the recommended 10k vocabulary, hybrid score, five-point multi preference, stop-at-number policy, and the former Aggressive operative thresholds. The spymaster and operative use the same model, so these historical results compare model behavior rather than human agreement.
 
 | 🧠 Model | 🔢 Multi clues | 📈 Mean number | ⏩ First-half mean | ✅ Correct per turn | ⏱️ Turns |
 | --- | ---: | ---: | ---: | ---: | ---: |
@@ -89,8 +89,8 @@ The bot operative also takes an automatic number-plus-one guess using the curren
 
 | 🎛️ Policy | 📈 Full mean | ⏩ First-half mean | 🔢 Multi clues | ✅ Correct per turn | 🔴 Wrong hits | ☠️ Assassin | ⏱️ Turns |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| 🧪 BGE hybrid, tempo, pass | 1.58 | 1.92 | 50.4% | 1.58 | 0.00 | 0.0% | 9.85 |
-| 📍 BGE current, tempo, pass | 1.17 | 1.19 | 15.7% | 1.17 | 0.00 | 0.0% | 13.34 |
+| 🧪 BGE hybrid, Dynamic, pass | 1.57 | 1.90 | 49.7% | 1.48 | 0.00 | 0.0% | 10.43 |
+| 📍 BGE current, Dynamic, pass | 1.17 | 1.19 | 15.6% | 1.16 | 0.00 | 0.0% | 13.42 |
 | 🧠 BGE hybrid, random, bonus | 1.42 | N/A | 37.7% | 1.49 | 0.57 | 3.0% | 9.74 |
 | 🧱 MiniLM hybrid, random, bonus | 1.26 | N/A | 22.8% | 1.31 | 0.50 | 7.0% | 10.83 |
 
@@ -114,18 +114,20 @@ The zero-error self-play result must not be treated as a human safety estimate. 
 
 1. Play bot turns use BGE-small while Train keeps its independent default.
 2. The hybrid score prefers a multi clue within five points of the best clue.
-3. Bot operatives pass after the declared clue number.
-4. The default candidate vocabulary remains 10,000.
-5. Official remains the default 400-word board set.
-6. Play setup can override every bot parameter.
+3. Bot operatives use Dynamic aggression and adapt only to public remaining-agent counts.
+4. Bot operatives pass after the declared clue number.
+5. The default candidate vocabulary remains 10,000.
+6. Official remains the default 400-word board set.
+7. Play setup can override and persist every bot parameter.
 
 The product target should be stage-dependent rather than a forced full-game mean of two. Aim for an opening mean around two, frequent pairs while five or more agents remain, and justified singles near the end.
 
 ## 🔁 Reproduce
 
 - Run `npm run analyze:play-clues` for the controlled opening-board ablation. It updates [`play-clue-bias-analysis.json`](../scripts/generated/play-clue-bias-analysis.json).
-- Run `npm run benchmark:play` for the checked 100-board current-versus-hybrid benchmark.
-- Run `node scripts/benchmark-play-policy.mjs --model bge-small --clue-selection tempo --multi-tolerance 5 --bonus-guesses pass --output /tmp/play-bge-tempo.json` for the recommended experimental policy.
+- Run `npm run benchmark:play` for the checked 100-board clue-policy and operative-aggression benchmark.
+- Run `node scripts/benchmark-play-policy.mjs --model bge-small --clue-selection tempo --multi-tolerance 5 --operative-aggression dynamic --bonus-guesses pass --output /tmp/play-bge-tempo.json` for the recommended experimental policy.
+- Add `--operative-model minilm-l6 --report-detail compact` for the checked cross-model aggregate report without per-game records.
 - Repeat the same policy command with `minilm-l6` and `minilm-l3` to refresh the same-policy full-game model comparison in [`play-model-benchmark.json`](../scripts/generated/play-model-benchmark.json).
 
 ## 📚 Primary sources

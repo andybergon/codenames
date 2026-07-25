@@ -26,6 +26,7 @@ import {
 import {
   DEFAULT_PLAY_BOT_SETTINGS,
   PLAY_BONUS_POLICY,
+  PLAY_OPERATIVE_AGGRESSION,
   normalizePlayBotSettings,
 } from "../src/play/settings.js";
 
@@ -36,6 +37,12 @@ const playPolicyBenchmark = JSON.parse(
 const playPolicySummary = await readFile(
   "scripts/generated/play-policy-benchmark.md",
   "utf8",
+);
+const operativeCrossModelBenchmark = JSON.parse(
+  await readFile(
+    "scripts/generated/play-operative-aggression-cross-model.json",
+    "utf8",
+  ),
 );
 const apiEmbeddingComparison = JSON.parse(
   await readFile(
@@ -51,8 +58,29 @@ assert.equal(playPolicyBenchmark.methodology.boardCount, 100);
 assert.equal(playPolicyBenchmark.methodology.pairedBoards, true);
 assert.equal(playPolicyBenchmark.methodology.candidateCount, 10_000);
 assert.equal(playPolicyBenchmark.methodology.funObjective.version, 1);
+assert.equal(
+  playPolicyBenchmark.methodology.operativeAggression.includes("dynamic"),
+  true,
+);
+assert.deepEqual(
+  Object.keys(playPolicyBenchmark.operativeAggression).sort(),
+  ["aggressive", "conservative", "dynamic"],
+);
+assert.equal(
+  playPolicyBenchmark.operativeAggression.dynamic.gameCount,
+  100,
+);
+assert.equal(
+  operativeCrossModelBenchmark.methodology.operativeModelId,
+  "minilm-l6",
+);
+assert.equal(
+  operativeCrossModelBenchmark.operativeAggression.aggressive.gameCount,
+  100,
+);
 assert.match(playPolicySummary, /^\# Play policy benchmark/m);
 assert.ok(playPolicySummary.includes(playPolicyBenchmark.generatedAt));
+assert.match(playPolicySummary, /Operative aggression/);
 assert.match(
   playPolicySummary,
   /\| 🎯 Policy \| 🎉 Fun \| 🔢 Multi clues \| ⏩ First-half mean \| ✅ Correct per turn \| 🤝 Close finishes \| ☠️ Assassin rate \| ⏱️ Turns per game \|/,
@@ -387,6 +415,7 @@ assert.throws(
 
 assert.equal(
   chooseBotGuess({
+    aggression: PLAY_OPERATIVE_AGGRESSION.AGGRESSIVE,
     candidates: [
       { layoutId: 4, similarity: 0.4 },
       { layoutId: 8, similarity: 0.1 },
@@ -399,6 +428,7 @@ assert.equal(
 );
 assert.equal(
   chooseBotGuess({
+    aggression: PLAY_OPERATIVE_AGGRESSION.AGGRESSIVE,
     candidates: [
       { layoutId: 4, similarity: 0.12 },
       { layoutId: 8, similarity: 0.11 },
@@ -408,6 +438,112 @@ assert.equal(
     random: () => 0.5,
   }),
   null,
+);
+assert.equal(
+  chooseBotGuess({
+    aggression: PLAY_OPERATIVE_AGGRESSION.CONSERVATIVE,
+    candidates: [
+      { layoutId: 4, similarity: 0.2 },
+      { layoutId: 8, similarity: 0.05 },
+    ],
+    guessesMade: 1,
+    clueNumber: 2,
+    ownRemaining: 5,
+    opponentRemaining: 5,
+    random: () => 0.5,
+  }),
+  null,
+);
+assert.equal(
+  chooseBotGuess({
+    aggression: PLAY_OPERATIVE_AGGRESSION.AGGRESSIVE,
+    candidates: [
+      { layoutId: 4, similarity: 0.15 },
+      { layoutId: 8, similarity: 0.05 },
+    ],
+    guessesMade: 0,
+    clueNumber: 2,
+    ownRemaining: 5,
+    opponentRemaining: 5,
+    random: () => 0.5,
+  }),
+  4,
+);
+assert.equal(
+  chooseBotGuess({
+    aggression: PLAY_OPERATIVE_AGGRESSION.DYNAMIC,
+    candidates: [
+      { layoutId: 4, similarity: 0.16 },
+      { layoutId: 8, similarity: 0.05 },
+    ],
+    guessesMade: 1,
+    clueNumber: 2,
+    ownRemaining: 4,
+    opponentRemaining: 4,
+    random: () => 0.5,
+  }),
+  null,
+);
+assert.equal(
+  chooseBotGuess({
+    aggression: PLAY_OPERATIVE_AGGRESSION.DYNAMIC,
+    candidates: [
+      { layoutId: 4, similarity: 0.16 },
+      { layoutId: 8, similarity: 0.05 },
+    ],
+    guessesMade: 1,
+    clueNumber: 2,
+    ownRemaining: 1,
+    opponentRemaining: 4,
+    random: () => 0.5,
+  }),
+  4,
+);
+assert.equal(
+  chooseBotGuess({
+    aggression: PLAY_OPERATIVE_AGGRESSION.DYNAMIC,
+    candidates: [
+      { layoutId: 4, similarity: 0.24 },
+      { layoutId: 8, similarity: 0.05 },
+    ],
+    guessesMade: 1,
+    clueNumber: 2,
+    ownRemaining: 5,
+    opponentRemaining: 2,
+    random: () => 0.5,
+  }),
+  4,
+);
+assert.equal(
+  chooseBotGuess({
+    aggression: PLAY_OPERATIVE_AGGRESSION.DYNAMIC,
+    candidates: [
+      { layoutId: 4, similarity: 0.24 },
+      { layoutId: 8, similarity: 0.05 },
+    ],
+    guessesMade: 1,
+    clueNumber: 2,
+    ownRemaining: 2,
+    opponentRemaining: 5,
+    random: () => 0.5,
+  }),
+  null,
+);
+assert.throws(
+  () =>
+    chooseBotGuess({
+      aggression: "unknown",
+      candidates: [
+        { layoutId: 4, similarity: 0.4 },
+        { layoutId: 8, similarity: 0.1 },
+      ],
+      guessesMade: 0,
+      clueNumber: 1,
+      ownRemaining: 1,
+      opponentRemaining: 1,
+      random: () => 0.5,
+    }),
+  /Unknown operative aggression/,
 );
 assert.equal(
   shouldBotTakeAnotherGuess({
@@ -431,6 +567,10 @@ const upgradedStoredGame = validateStoredGame({
   botSettings: undefined,
 });
 assert.equal(upgradedStoredGame.botSettings.modelId, "bge-small");
+assert.equal(
+  upgradedStoredGame.botSettings.operativeAggression,
+  PLAY_OPERATIVE_AGGRESSION.DYNAMIC,
+);
 assert.equal(upgradedStoredGame.botSettings.bonusGuesses, PLAY_BONUS_POLICY.PASS);
 
 const seededA = createSeededRandom("same");

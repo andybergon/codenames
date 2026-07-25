@@ -45,7 +45,11 @@ import {
   loadPlaySession,
   savePlaySession,
 } from "./session-store.js";
-import { PLAY_BONUS_POLICY, normalizePlayBotSettings } from "./settings.js";
+import {
+  PLAY_BONUS_POLICY,
+  PLAY_OPERATIVE_AGGRESSION,
+  normalizePlayBotSettings,
+} from "./settings.js";
 
 const RESULTS_PER_SIZE = 6;
 const PLAY_BOARD_ORDER = Object.freeze({
@@ -164,6 +168,19 @@ const BOT_SETTING_INFO = Object.freeze({
     },
     note: "The bot compares its best clue overall with its best clue for 2+ cards. Allowing more points means accepting a lower-scoring 2+ clue more often. The score combines safety and expected progress. *50.4% comes from 100 paired games using all recommended defaults, so it is not the effect of this setting alone.",
   },
+  operativeAggression: {
+    id: "operative-aggression",
+    label: "Operative aggression",
+    table: {
+      headers: ["🔎 Mode", "🎯 Threshold", "🏁 Game state"],
+      rows: [
+        ["🛡️ Conservative", "Highest", "Ignored"],
+        ["🚀 Aggressive", "Lowest", "Ignored"],
+        ["⚖️ Dynamic", "Adaptive", "Public score"],
+      ],
+    },
+    note: "Dynamic becomes bolder when the team can win this turn or is trailing an opponent near victory, and more selective with a comfortable lead. It uses only clue similarities, revealed-card counts, and the public score.",
+  },
   bonusGuesses: {
     id: "extra-guess",
     label: "Extra guess",
@@ -194,6 +211,10 @@ export function createPlayMode() {
     cluePolicyInfo: document.querySelector("#play-clue-policy-info"),
     multiTolerance: document.querySelector("#play-multi-tolerance"),
     multiToleranceInfo: document.querySelector("#play-multi-tolerance-info"),
+    operativeAggression: document.querySelector("#play-operative-aggression"),
+    operativeAggressionInfo: document.querySelector(
+      "#play-operative-aggression-info",
+    ),
     bonusGuesses: document.querySelector("#play-bonus-guesses"),
     bonusGuessesInfo: document.querySelector("#play-bonus-guesses-info"),
     botSettingsSummary: document.querySelector("#play-bot-settings-summary"),
@@ -230,6 +251,10 @@ export function createPlayMode() {
     [elements.botCandidatesInfo, BOT_SETTING_INFO.candidates],
     [elements.cluePolicyInfo, BOT_SETTING_INFO.cluePolicy],
     [elements.multiToleranceInfo, BOT_SETTING_INFO.multiTolerance],
+    [
+      elements.operativeAggressionInfo,
+      BOT_SETTING_INFO.operativeAggression,
+    ],
     [elements.bonusGuessesInfo, BOT_SETTING_INFO.bonusGuesses],
   ]) {
     container.append(createInfoControl(definition, "play-bot-setting"));
@@ -282,6 +307,7 @@ export function createPlayMode() {
     [elements.botCandidates, "candidateCount", Number],
     [elements.cluePolicy, "cluePolicy", String],
     [elements.multiTolerance, "multiTolerance", Number],
+    [elements.operativeAggression, "operativeAggression", String],
     [elements.bonusGuesses, "bonusGuesses", String],
   ]) {
     element.addEventListener("change", () => {
@@ -374,6 +400,8 @@ export function createPlayMode() {
     elements.botCandidates.value = String(selectedBotSettings.candidateCount);
     elements.cluePolicy.value = selectedBotSettings.cluePolicy;
     elements.multiTolerance.value = String(selectedBotSettings.multiTolerance);
+    elements.operativeAggression.value =
+      selectedBotSettings.operativeAggression;
     elements.bonusGuesses.value = selectedBotSettings.bonusGuesses;
     elements.botSettingsSummary.textContent = botSettingsLabel(selectedBotSettings);
     elements.savedActions.hidden = !savedGame;
@@ -697,9 +725,18 @@ export function createPlayMode() {
           })
             ? null
             : chooseBotGuess({
+                aggression: game.botSettings.operativeAggression,
                 candidates,
                 guessesMade: game.currentTurn.guesses.length,
                 clueNumber: game.currentTurn.number,
+                ownRemaining: remainingCardsForSide(
+                  game.cards,
+                  game.activeSide,
+                ),
+                opponentRemaining: remainingCardsForSide(
+                  game.cards,
+                  game.activeSide === SIDE.BLUE ? SIDE.RED : SIDE.BLUE,
+                ),
                 random: decisionRandom,
               });
         if (layoutId === null) {
@@ -1094,11 +1131,16 @@ function formatRelativeWork(count) {
 function botSettingsLabel(settings) {
   const model = modelOption(settings.modelId);
   const style = settings.cluePolicy === "hybrid" ? "human-like" : "conservative";
+  const aggression = {
+    [PLAY_OPERATIVE_AGGRESSION.CONSERVATIVE]: "conservative operative",
+    [PLAY_OPERATIVE_AGGRESSION.AGGRESSIVE]: "aggressive operative",
+    [PLAY_OPERATIVE_AGGRESSION.DYNAMIC]: "dynamic operative",
+  }[settings.operativeAggression];
   const bonus =
     settings.bonusGuesses === PLAY_BONUS_POLICY.PASS
       ? "stop at number"
       : "allow +1";
-  return `${model.label}, ${settings.candidateCount / 1000}k, ${style}, ${bonus}`;
+  return `${model.label}, ${settings.candidateCount / 1000}k, ${style}, ${aggression}, ${bonus}`;
 }
 
 function dotVectors(left, right) {

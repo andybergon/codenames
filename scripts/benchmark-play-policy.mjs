@@ -3,6 +3,7 @@ import { readFile, writeFile } from "node:fs/promises";
 import { isAbsolute, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { performance } from "node:perf_hooks";
+import { env } from "@huggingface/transformers";
 import { BOARD_ORDER, createGeneratedBoardState } from "../src/board-share.js";
 import { hydrateClueShards } from "../src/clue-index.js";
 import { centerEmbeddings, embedTerms } from "../src/embeddings.js";
@@ -24,6 +25,7 @@ import {
 import {
   DEFAULT_PLAY_BOT_SETTINGS,
   PLAY_BONUS_POLICY,
+  PLAY_OPERATIVE_AGGRESSION,
 } from "../src/play/settings.js";
 import {
   GAME_PHASE,
@@ -39,12 +41,14 @@ import { PLAY_FUN_OBJECTIVE, scorePlayFun } from "./play-fun-score.mjs";
 import { writePlayPolicySummary } from "./play-policy-summary.mjs";
 
 const ROOT = resolve(fileURLToPath(new URL("..", import.meta.url)));
+env.cacheDir = resolve(ROOT, ".cache/huggingface");
 const DEFAULT_BOARD_COUNT = 100;
 const DEFAULT_OUTPUT = "scripts/generated/play-policy-benchmark.json";
 const DEFAULT_SUMMARY_OUTPUT = "scripts/generated/play-policy-benchmark.md";
 const RESULTS_PER_SIZE = 6;
 const MAX_ACTIONS_PER_GAME = 500;
 const POLICIES = [PLAY_CLUE_POLICY.CURRENT, PLAY_CLUE_POLICY.HYBRID];
+const OPERATIVE_AGGRESSIONS = Object.values(PLAY_OPERATIVE_AGGRESSION);
 
 const options = parseOptions(process.argv.slice(2));
 const outputPath = isAbsolute(options.output) ? options.output : resolve(ROOT, options.output);
@@ -94,6 +98,9 @@ const operativeContext = await loadOperativeContext({
   modelId: options.operativeModel,
 });
 const resultsByPolicy = new Map(POLICIES.map((policy) => [policy, []]));
+const resultsByAggression = new Map(
+  OPERATIVE_AGGRESSIONS.map((aggression) => [aggression, []]),
+);
 const startedAt = performance.now();
 
 for (let boardIndex = 0; boardIndex < options.boards; boardIndex += 1) {
@@ -142,19 +149,56 @@ for (let boardIndex = 0; boardIndex < options.boards; boardIndex += 1) {
       clueSelection: options.clueSelection,
       multiTolerance: options.multiTolerance,
       bonusGuesses: options.bonusGuesses,
+      operativeAggression: options.operativeAggression,
       wordSet: options.wordSet,
     });
     resultsByPolicy.get(policy).push(result);
+    if (policy === PLAY_CLUE_POLICY.HYBRID) {
+      resultsByAggression.get(options.operativeAggression).push(result);
+    }
+  }
+
+  for (const operativeAggression of OPERATIVE_AGGRESSIONS) {
+    if (operativeAggression === options.operativeAggression) {
+      continue;
+    }
+    resultsByAggression.get(operativeAggression).push(
+      await simulateGame({
+        boardIndex,
+        boardVectors,
+        operativeContext: operativeGameContext,
+        cards,
+        clueIndex,
+        centeredClueVectors,
+        policy: PLAY_CLUE_POLICY.HYBRID,
+        seed,
+        clueSelection: options.clueSelection,
+        multiTolerance: options.multiTolerance,
+        bonusGuesses: options.bonusGuesses,
+        operativeAggression,
+        wordSet: options.wordSet,
+      }),
+    );
   }
 
   if ((boardIndex + 1) % 10 === 0 || boardIndex + 1 === options.boards) {
     const seconds = ((performance.now() - startedAt) / 1000).toFixed(1);
-    console.log(`Completed ${boardIndex + 1}/${options.boards} paired boards in ${seconds}s`);
+    console.log(
+      `Completed ${boardIndex + 1}/${options.boards} controlled boards in ${seconds}s`,
+    );
   }
 }
 
 const policies = Object.fromEntries(
   POLICIES.map((policy) => [policy, summarizePolicy(resultsByPolicy.get(policy))]),
+);
+const operativeAggression = Object.fromEntries(
+  OPERATIVE_AGGRESSIONS.map((aggression) => [
+    aggression,
+    compactOperativeSummary(
+      summarizePolicy(resultsByAggression.get(aggression)),
+    ),
+  ]),
 );
 const report = {
   generatedAt: new Date().toISOString(),
@@ -195,6 +239,16 @@ const report = {
         : "Match Play runtime by allowing a number-plus-one guess.",
     operative:
       `The bot guesser sees only centered clue-to-unrevealed-word similarities from ${operativeContext.model}.`,
+    operativeAggression:
+      `Policy comparison uses ${options.operativeAggression} for the clue-policy rows and holds hybrid clue scoring fixed across all three operative modes.`,
+    operativeAggressionModes: {
+      conservative:
+        "Uses the highest similarity and separation thresholds and does not adapt to score.",
+      aggressive:
+        "Uses the former production thresholds and pursues the declared clue number unless confidence is extremely low.",
+      dynamic:
+        "Uses public remaining-agent counts to lower thresholds for a possible win or urgent comeback and raise them with a comfortable lead.",
+    },
     operativeModelId: options.operativeModel,
     operativeModel: operativeContext.model,
     rules:
@@ -218,10 +272,24 @@ const report = {
     },
   },
   policies,
+  operativeAggression,
+  operativeAggressionVsDynamic: Object.fromEntries(
+    OPERATIVE_AGGRESSIONS.filter(
+      (aggression) => aggression !== PLAY_OPERATIVE_AGGRESSION.DYNAMIC,
+    ).map((aggression) => [
+      aggression,
+      operativeMetricDeltas(
+        operativeAggression.dynamic,
+        operativeAggression[aggression],
+      ),
+    ]),
+  ),
   hybridMinusCurrent: metricDeltas(policies.current, policies.hybrid),
 };
 
-await writeFile(outputPath, `${JSON.stringify(report, null, 2)}\n`);
+const outputReport =
+  options.reportDetail === "compact" ? compactReport(report) : report;
+await writeFile(outputPath, `${JSON.stringify(outputReport, null, 2)}\n`);
 await writePlayPolicySummary(report, summaryOutputPath);
 console.log(`Wrote ${outputPath}`);
 console.log(`Wrote ${summaryOutputPath}`);
@@ -239,6 +307,7 @@ async function simulateGame({
   clueSelection,
   multiTolerance,
   bonusGuesses: bonusGuessPolicy,
+  operativeAggression,
   wordSet,
 }) {
   let game = createPlayGame({
@@ -247,6 +316,7 @@ async function simulateGame({
       candidateCount: options.candidates,
       cluePolicy: policy,
       multiTolerance,
+      operativeAggression,
       bonusGuesses: bonusGuessPolicy,
     },
     cards,
@@ -259,6 +329,7 @@ async function simulateGame({
   let bonusGuesses = 0;
   let correctBonusGuesses = 0;
   const clueDecisions = [];
+  const guessDecisions = [];
 
   while (game.phase !== GAME_PHASE.COMPLETE && actions < MAX_ACTIONS_PER_GAME) {
     actions += 1;
@@ -365,21 +436,44 @@ async function simulateGame({
       .map(({ layoutId, similarity }) => ({ layoutId, similarity }));
     const reachedDeclaredNumber =
       game.currentTurn.guesses.length >= game.currentTurn.number;
+    const guessesMade = game.currentTurn.guesses.length;
+    const ownRemaining = remainingCardsForSide(game.cards, game.activeSide);
+    const opponentRemaining = remainingCardsForSide(
+      game.cards,
+      otherSide(game.activeSide),
+    );
     const layoutId =
       bonusGuessPolicy === "pass" && reachedDeclaredNumber
         ? null
         : chooseBotGuess({
+            aggression: operativeAggression,
             candidates,
-            guessesMade: game.currentTurn.guesses.length,
+            guessesMade,
             clueNumber: game.currentTurn.number,
+            ownRemaining,
+            opponentRemaining,
             random,
           });
     const actor = actorForSeat(game, game.activeSide, PLAYER_ROLE.OPERATIVE);
+    const selectedCandidate = candidates.find(
+      (candidate) => candidate.layoutId === layoutId,
+    );
+    const selectedCard = game.cards.find((card) => card.layoutId === layoutId);
+    guessDecisions.push({
+      accepted: layoutId !== null,
+      similarity: selectedCandidate?.similarity ?? null,
+      bestSimilarity: Math.max(...candidates.map(({ similarity }) => similarity)),
+      guessesMade,
+      clueNumber: game.currentTurn.number,
+      fillsDeclaredNumber: guessesMade + 1 === game.currentTurn.number,
+      ownRemaining,
+      opponentRemaining,
+      outcome: selectedCard?.team ?? "pass",
+    });
     if (layoutId !== null && game.currentTurn.guesses.length >= game.currentTurn.number) {
       bonusGuesses += 1;
-      const guessedCard = game.cards.find((card) => card.layoutId === layoutId);
       correctBonusGuesses += Number(
-        guessedCard?.team === teamForSide(game.activeSide),
+        selectedCard?.team === teamForSide(game.activeSide),
       );
     }
     game =
@@ -398,6 +492,7 @@ async function simulateGame({
     clueDecisions,
     correctBonusGuesses,
     fallbackClues,
+    guessDecisions,
   });
 }
 
@@ -469,7 +564,13 @@ function summarizeGame(
   game,
   boardIndex,
   actions,
-  { bonusGuesses, clueDecisions, correctBonusGuesses, fallbackClues },
+  {
+    bonusGuesses,
+    clueDecisions,
+    correctBonusGuesses,
+    fallbackClues,
+    guessDecisions,
+  },
 ) {
   const clues = game.history.filter((event) => event.type === "clue-given");
   const guesses = game.history.filter((event) => event.type === "card-guessed");
@@ -496,6 +597,7 @@ function summarizeGame(
     bonusGuesses,
     correctBonusGuesses,
     clueDecisions,
+    guessDecisions,
     clues: clueDistribution(clues),
     firstHalfClueNumbers: clues
       .slice(0, Math.ceil(clues.length / 2))
@@ -526,6 +628,7 @@ function summarizePolicy(gameResults) {
       summary.bonusGuesses += game.bonusGuesses;
       summary.correctBonusGuesses += game.correctBonusGuesses;
       summary.clueDecisions.push(...game.clueDecisions);
+      summary.guessDecisions.push(...game.guessDecisions);
       summary.firstHalfClueNumbers.push(...game.firstHalfClueNumbers);
       summary.blueWins += Number(game.winner === SIDE.BLUE);
       summary.redWins += Number(game.winner === SIDE.RED);
@@ -548,6 +651,7 @@ function summarizePolicy(gameResults) {
       bonusGuesses: 0,
       correctBonusGuesses: 0,
       clueDecisions: [],
+      guessDecisions: [],
       firstHalfClueNumbers: [],
       blueWins: 0,
       redWins: 0,
@@ -596,17 +700,66 @@ function summarizePolicy(gameResults) {
       totals.correctBonusGuesses,
       totals.bonusGuesses,
     ),
+    operativeGuessQuality: summarizeGuessDecisions(totals.guessDecisions),
     clueNumberByOwnRemaining: summarizeClueDecisions(totals.clueDecisions),
     wins: {
       blue: totals.blueWins,
       red: totals.redWins,
     },
-    gameResults: gameResults.map(({ clueDecisions, ...result }) => result),
+    gameResults: gameResults.map(
+      ({ clueDecisions, guessDecisions, ...result }) => result,
+    ),
   };
   return {
     ...policy,
     fun: scorePlayFun(policy),
   };
+}
+
+function summarizeGuessDecisions(decisions) {
+  const accepted = decisions.filter(({ accepted }) => accepted);
+  const declaredFill = accepted.filter(({ fillsDeclaredNumber }) => fillsDeclaredNumber);
+  const preDeclared = decisions.filter(
+    ({ clueNumber, guessesMade }) => guessesMade < clueNumber,
+  );
+  const preDeclaredPasses = preDeclared.filter(({ accepted }) => !accepted);
+  const weakSimilarityThreshold = 0.25;
+  const weak = accepted.filter(
+    ({ similarity }) => similarity < weakSimilarityThreshold,
+  );
+  const weakDeclaredFill = declaredFill.filter(
+    ({ similarity }) => similarity < weakSimilarityThreshold,
+  );
+  return {
+    acceptedGuesses: accepted.length,
+    meanAcceptedSimilarity: mean(accepted.map(({ similarity }) => similarity)),
+    tenthPercentileAcceptedSimilarity: percentile(
+      accepted.map(({ similarity }) => similarity),
+      0.1,
+    ),
+    minimumAcceptedSimilarity:
+      accepted.length > 0
+        ? Math.min(...accepted.map(({ similarity }) => similarity))
+        : null,
+    weakSimilarityThreshold,
+    weakGuesses: weak.length,
+    weakGuessRate: ratio(weak.length, accepted.length),
+    declaredFillGuesses: declaredFill.length,
+    weakDeclaredFillGuesses: weakDeclaredFill.length,
+    weakDeclaredFillRate: ratio(weakDeclaredFill.length, declaredFill.length),
+    preDeclaredDecisions: preDeclared.length,
+    preDeclaredPasses: preDeclaredPasses.length,
+    preDeclaredPassRate: ratio(
+      preDeclaredPasses.length,
+      preDeclared.length,
+    ),
+  };
+}
+
+function percentile(values, fraction) {
+  if (values.length === 0) return null;
+  const sorted = [...values].sort((left, right) => left - right);
+  return sorted[Math.floor((sorted.length - 1) * fraction)];
 }
 
 function clueDistribution(clues) {
@@ -639,6 +792,46 @@ function metricDeltas(current, hybrid) {
   );
 }
 
+function compactOperativeSummary(policy) {
+  return {
+    gameCount: policy.gameCount,
+    correctCardsPerTurn: policy.correctCardsPerTurn,
+    wrongTeamHitsPerGame: policy.wrongTeamHitsPerGame,
+    neutralHitsPerGame: policy.neutralHitsPerGame,
+    assassinRate: policy.assassinRate,
+    meanTurnsPerGame: policy.meanTurnsPerGame,
+    passesPerGame: policy.passesPerGame,
+    operativeGuessQuality: policy.operativeGuessQuality,
+    fun: policy.fun,
+    wins: policy.wins,
+  };
+}
+
+function operativeMetricDeltas(dynamic, candidate) {
+  return Object.fromEntries(
+    [
+      "correctCardsPerTurn",
+      "wrongTeamHitsPerGame",
+      "neutralHitsPerGame",
+      "assassinRate",
+      "meanTurnsPerGame",
+      "passesPerGame",
+    ].map((metric) => [metric, rounded(candidate[metric] - dynamic[metric])]),
+  );
+}
+
+function compactReport(report) {
+  return {
+    ...report,
+    policies: Object.fromEntries(
+      Object.entries(report.policies).map(([name, policy]) => {
+        const { gameResults, ...summary } = policy;
+        return [name, summary];
+      }),
+    ),
+  };
+}
+
 function boardSeed(boardIndex) {
   const bytes = Buffer.alloc(8);
   bytes.write("CODE", 0, "ascii");
@@ -655,6 +848,8 @@ function parseOptions(args) {
     clueSelection: "tempo",
     multiTolerance: DEFAULT_PLAY_BOT_SETTINGS.multiTolerance,
     bonusGuesses: PLAY_BONUS_POLICY.PASS,
+    operativeAggression: DEFAULT_PLAY_BOT_SETTINGS.operativeAggression,
+    reportDetail: "full",
     output: DEFAULT_OUTPUT,
     summaryOutput: null,
     indexDir: null,
@@ -693,6 +888,18 @@ function parseOptions(args) {
         throw new Error(`${option} must be allow or pass.`);
       }
       values.bonusGuesses = value;
+    } else if (option === "--operative-aggression") {
+      if (!OPERATIVE_AGGRESSIONS.includes(value)) {
+        throw new Error(
+          `${option} must be conservative, aggressive, or dynamic.`,
+        );
+      }
+      values.operativeAggression = value;
+    } else if (option === "--report-detail") {
+      if (!["compact", "full"].includes(value)) {
+        throw new Error(`${option} must be compact or full.`);
+      }
+      values.reportDetail = value;
     } else if (option === "--output") {
       if (!value) throw new Error(`${option} requires a path.`);
       values.output = value;

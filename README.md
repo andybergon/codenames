@@ -7,7 +7,7 @@ A local-first Codenames clue trainer and one-human game. Train mode ranks clue o
 ## Current product
 
 - 🎮 **Modes** · Play is the default · Train keeps the complete analysis workflow at `?mode=train`
-- 🤖 **Play bots** · configurable model, vocabulary, clue policy, multi tolerance, and bonus guesses
+- 🤖 **Play bots** · configurable model, vocabulary, clue policy, operative aggression, and bonus guesses
 - 🧠 **Train model** · MiniLM-L6 by default · browser-local inference
 - 📚 **Clue index** · balanced 10,000-word default · selectable 3k, 30k, and experimental 100k tiers
 - 🛡️ **Recommendations** · safe clues for one to three targets · stretch clues for four to nine
@@ -57,7 +57,7 @@ npm run benchmark:picker
 
 Play defaults to the preserved table order. Operatives see only unrevealed words and public card reveals. Spymasters see the full key, can switch between table and team-grouped order, type any one-word clue, and open clue suggestions only when wanted.
 
-Bot settings are independent from Train's Model picker and persist with each saved game. The default is BGE-small with 10,000 candidates, hybrid scoring, a five-point multi-clue tolerance, and no automatic extra guess. The setup panel can restore the previous MiniLM/current-policy behavior or tune each parameter separately. Each setting's info control compares the checked quality, speed, and risk tradeoffs in a compact table.
+Bot settings are independent from Train's Model picker and persist with each saved game. The default is BGE-small with 10,000 candidates, hybrid scoring, a five-point multi-clue tolerance, Dynamic operative aggression, and no automatic extra guess. Conservative passes on doubtful follow-up guesses, Aggressive pursues the declared clue number with the former thresholds, and Dynamic adapts using only the public remaining-agent counts. The setup panel can tune each parameter separately. Each setting's info control compares the checked quality, speed, and risk tradeoffs in a compact table.
 
 The Play implementation keeps rules, bot choices, persistence, and rendering separate:
 
@@ -67,7 +67,7 @@ The Play implementation keeps rules, bot choices, persistence, and rendering sep
 - `src/play/mode.js` owns Play setup, rendering, model orchestration, bot pacing, and resume/undo controls.
 - `scripts/play-smoke.mjs` covers seat ownership, information boundaries, reveal outcomes, deterministic bots, and bounded self-play.
 
-Run `npm run benchmark:play` for paired full-game comparisons and `npm run analyze:play-clues` for controlled opening-board analysis. The latest [benchmark summary](scripts/generated/play-policy-benchmark.md) and [clue-number analysis](docs/play-clue-number-analysis.md) preserve the checked evidence.
+Run `npm run benchmark:play` for paired full-game comparisons and `npm run analyze:play-clues` for controlled opening-board analysis. The latest [same-model benchmark](scripts/generated/play-policy-benchmark.md), [cross-model operative stress test](scripts/generated/play-operative-aggression-cross-model.md), and [clue-number analysis](docs/play-clue-number-analysis.md) preserve the checked evidence.
 
 The benchmark also reports a 0-100 Fun Index that balances ambitious multi-card clues, productive guesses, close finishes, and games in the 8 to 12 turn range. Wrong-team hits, assassin losses, neutral hits, and fallbacks remain promotion guardrails rather than sources of points. Use `--operative-model <model-id>` to stress-test whether clues transfer to a different embedding geometry instead of relying only on optimistic same-model self-play.
 

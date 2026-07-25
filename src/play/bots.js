@@ -1,9 +1,13 @@
 import {
   PLAY_BONUS_POLICY,
   PLAY_CLUE_POLICY,
+  PLAY_OPERATIVE_AGGRESSION,
 } from "./settings.js";
 
-export { PLAY_CLUE_POLICY } from "./settings.js";
+export {
+  PLAY_CLUE_POLICY,
+  PLAY_OPERATIVE_AGGRESSION,
+} from "./settings.js";
 
 const RISK_VALUE = Object.freeze({
   safe: 8,
@@ -77,7 +81,15 @@ export function scorePlayClue(
   );
 }
 
-export function chooseBotGuess({ candidates, guessesMade, clueNumber, random }) {
+export function chooseBotGuess({
+  aggression = PLAY_OPERATIVE_AGGRESSION.DYNAMIC,
+  candidates,
+  clueNumber,
+  guessesMade,
+  opponentRemaining,
+  ownRemaining,
+  random,
+}) {
   if (!Array.isArray(candidates) || candidates.length === 0) {
     return null;
   }
@@ -90,14 +102,92 @@ export function chooseBotGuess({ candidates, guessesMade, clueNumber, random }) 
     .sort((left, right) => right.botScore - left.botScore);
   const best = ranked[0];
   const gap = best.botScore - (ranked[1]?.botScore ?? -1);
-  const isBonusGuess = guessesMade >= clueNumber;
-  const minimumSimilarity = isBonusGuess ? 0.2 : guessesMade === 0 ? 0.055 : 0.09;
-  const minimumGap = isBonusGuess ? 0.035 : -0.02;
+  const { minimumGap, minimumSimilarity } = operativeGuessThresholds({
+    aggression,
+    clueNumber,
+    guessesMade,
+    opponentRemaining,
+    ownRemaining,
+  });
 
   if (best.botScore < minimumSimilarity || gap < minimumGap) {
     return null;
   }
   return best.layoutId;
+}
+
+export function operativeGuessThresholds({
+  aggression,
+  clueNumber,
+  guessesMade,
+  opponentRemaining,
+  ownRemaining,
+}) {
+  const isBonusGuess = guessesMade >= clueNumber;
+  if (aggression === PLAY_OPERATIVE_AGGRESSION.CONSERVATIVE) {
+    return isBonusGuess
+      ? { minimumSimilarity: 0.36, minimumGap: 0.05 }
+      : {
+          minimumSimilarity: guessesMade === 0 ? 0.1 : 0.32,
+          minimumGap: guessesMade === 0 ? -0.005 : 0.02,
+        };
+  }
+  if (aggression === PLAY_OPERATIVE_AGGRESSION.AGGRESSIVE) {
+    return isBonusGuess
+      ? { minimumSimilarity: 0.2, minimumGap: 0.035 }
+      : {
+          minimumSimilarity: guessesMade === 0 ? 0.055 : 0.09,
+          minimumGap: -0.02,
+        };
+  }
+  if (aggression !== PLAY_OPERATIVE_AGGRESSION.DYNAMIC) {
+    throw new Error(`Unknown operative aggression: ${aggression}`);
+  }
+
+  const knownOwnRemaining = Number.isFinite(ownRemaining);
+  const knownOpponentRemaining = Number.isFinite(opponentRemaining);
+  const guessesLeftForClue = Math.max(0, clueNumber - guessesMade);
+  const guessesStillAvailable = isBonusGuess ? 1 : guessesLeftForClue;
+  const canWinThisTurn =
+    knownOwnRemaining && ownRemaining <= guessesStillAvailable;
+  const opponentCanWinSoon =
+    knownOpponentRemaining && opponentRemaining <= 2;
+  const trailing =
+    knownOwnRemaining &&
+    knownOpponentRemaining &&
+    ownRemaining > opponentRemaining;
+  const comfortablyAhead =
+    knownOwnRemaining &&
+    knownOpponentRemaining &&
+    ownRemaining + 2 < opponentRemaining;
+
+  if (isBonusGuess) {
+    return canWinThisTurn || (opponentCanWinSoon && trailing)
+      ? { minimumSimilarity: 0.24, minimumGap: 0.025 }
+      : { minimumSimilarity: 0.34, minimumGap: 0.045 };
+  }
+  if (canWinThisTurn) {
+    return {
+      minimumSimilarity: guessesMade === 0 ? 0.07 : 0.16,
+      minimumGap: -0.01,
+    };
+  }
+  if (opponentCanWinSoon && trailing) {
+    return {
+      minimumSimilarity: guessesMade === 0 ? 0.08 : 0.22,
+      minimumGap: guessesMade === 0 ? -0.015 : 0,
+    };
+  }
+  if (comfortablyAhead) {
+    return {
+      minimumSimilarity: guessesMade === 0 ? 0.12 : 0.3,
+      minimumGap: guessesMade === 0 ? -0.005 : 0.015,
+    };
+  }
+  return {
+    minimumSimilarity: guessesMade === 0 ? 0.1 : 0.26,
+    minimumGap: guessesMade === 0 ? -0.01 : 0.005,
+  };
 }
 
 export function shouldBotTakeAnotherGuess({

@@ -22,7 +22,7 @@ The 0-100 Fun Index balances ambitious clues, productive guesses, close finishes
 
 Human target recall replays a real human clue and its intended number of targets, ranks every target, neutral, and avoid word by embedding similarity, then measures how many intended targets appear in the top N. It is averaged across the recorded Cultural Codes turns.
 
-The model sweep uses the same 20 deterministic boards, 10,000 clue candidates, hybrid scoring, five-point multi-clue tolerance, and passing at the declared clue number. Same-model scores measure the ceiling of a shared embedding space. MiniLM-L6 operative runs stress whether clues transfer beyond that space.
+The historical model sweep uses the same 20 deterministic boards, 10,000 clue candidates, hybrid scoring, five-point multi-clue tolerance, the former Aggressive operative thresholds, and passing at the declared clue number. Same-model scores measure the ceiling of a shared embedding space. MiniLM-L6 operative runs stress whether clues transfer beyond that space. The current Conservative, Aggressive, and Dynamic comparison is documented in [Clue engine](clue-engine.md#-play-operative-policy).
 
 ## 📈 Findings
 

@@ -13,11 +13,18 @@ export const PLAY_BONUS_POLICY = Object.freeze({
   PASS: "pass",
 });
 
+export const PLAY_OPERATIVE_AGGRESSION = Object.freeze({
+  CONSERVATIVE: "conservative",
+  AGGRESSIVE: "aggressive",
+  DYNAMIC: "dynamic",
+});
+
 export const DEFAULT_PLAY_BOT_SETTINGS = Object.freeze({
   modelId: "bge-small",
   candidateCount: 10_000,
   cluePolicy: PLAY_CLUE_POLICY.HYBRID,
   multiTolerance: 5,
+  operativeAggression: PLAY_OPERATIVE_AGGRESSION.DYNAMIC,
   bonusGuesses: PLAY_BONUS_POLICY.PASS,
 });
 
@@ -25,6 +32,9 @@ const MODEL_IDS = new Set(PICKER_MODEL_OPTIONS.map(({ id }) => id));
 const CANDIDATE_COUNTS = new Set(CANDIDATE_OPTIONS.map(({ count }) => count));
 const CLUE_POLICIES = new Set(Object.values(PLAY_CLUE_POLICY));
 const BONUS_POLICIES = new Set(Object.values(PLAY_BONUS_POLICY));
+const OPERATIVE_AGGRESSIONS = new Set(
+  Object.values(PLAY_OPERATIVE_AGGRESSION),
+);
 
 export function normalizePlayBotSettings(value = {}) {
   const candidateCount = Number(value.candidateCount);
@@ -42,6 +52,9 @@ export function normalizePlayBotSettings(value = {}) {
     multiTolerance: Number.isFinite(multiTolerance)
       ? Math.min(20, Math.max(0, multiTolerance))
       : DEFAULT_PLAY_BOT_SETTINGS.multiTolerance,
+    operativeAggression: OPERATIVE_AGGRESSIONS.has(value.operativeAggression)
+      ? value.operativeAggression
+      : DEFAULT_PLAY_BOT_SETTINGS.operativeAggression,
     bonusGuesses: BONUS_POLICIES.has(value.bonusGuesses)
       ? value.bonusGuesses
       : DEFAULT_PLAY_BOT_SETTINGS.bonusGuesses,

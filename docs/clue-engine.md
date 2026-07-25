@@ -106,6 +106,38 @@ edge       = Blue ease - Red ease
 
 Four safe options provide full breadth credit. Edge values within three points are displayed as even.
 
+## 🔎 Play operative policy
+
+The bot operative ranks only centered clue-to-unrevealed-word cosine similarities, with deterministic noise in the range `-0.0275` to `+0.0275` to avoid identical play. It never receives hidden roles, intended target IDs, spymaster danger metrics, or the full recommendation analysis.
+
+| 🔎 Mode | 🎯 First minimum | 🧩 Later minimum | ↔️ Separation | 🏁 Public score |
+|---|---:|---:|---:|---|
+| 🛡️ Conservative | `0.10` | `0.32` | Strict | Ignored |
+| ⚖️ Dynamic | `0.07–0.12` | `0.16–0.30` | Adaptive | Used |
+| 🚀 Aggressive | `0.055` | `0.09` | Permissive | Ignored |
+
+Conservative keeps the first guess permissive enough for games to progress, then requires much stronger evidence before filling the second or later slot of a multi-card clue. Aggressive preserves the former production thresholds.
+
+Dynamic uses only facts visible to an operative: guesses already made, the declared clue number, and both teams' remaining-agent counts. It lowers follow-up thresholds when the team can win within the current clue or trails an opponent with at most two agents left. It raises them with a comfortable lead and otherwise uses the middle thresholds. The separate Extra guess setting still decides whether any number-plus-one guess is available.
+
+The checked 100-board same-model run measures deterministic production regression and game shape:
+
+| 🔎 Mode | 🧩 Low-sim fill | 🛑 Early pass | ✅ Correct per turn | 🔴 Wrong per game | ☠️ Assassin | ⏱️ Turns |
+|---|---:|---:|---:|---:|---:|---:|
+| ⚖️ Dynamic | 1.1% | 4.4% | 1.48 | 0.00 | 0.0% | 10.43 |
+| 🛡️ Conservative | 0.0% | 17.1% | 1.23 | 0.00 | 0.0% | 12.73 |
+| 🚀 Aggressive | 3.9% | 0.0% | 1.58 | 0.00 | 0.0% | 9.85 |
+
+The [MiniLM-L6 operative stress run](../scripts/generated/play-operative-aggression-cross-model.md) holds BGE-small spymaster clues fixed while changing the guesser's embedding geometry:
+
+| 🔎 Mode | 🧩 Low-sim fill | 🛑 Early pass | ✅ Correct per turn | 🔴 Wrong per game | ☠️ Assassin | ⏱️ Turns |
+|---|---:|---:|---:|---:|---:|---:|
+| ⚖️ Dynamic | 12.7% | 26.3% | 0.96 | 0.46 | 9.0% | 14.34 |
+| 🛡️ Conservative | 12.6% | 29.7% | 0.91 | 0.49 | 5.0% | 15.40 |
+| 🚀 Aggressive | 42.3% | 1.7% | 1.28 | 0.85 | 9.0% | 10.59 |
+
+Low-sim fill means a guess that reaches the declared clue number has centered similarity below `0.25`. This is an explicit diagnostic threshold, not a human semantic judgment. Same-model self-play overstates agreement, and cross-model transfer is a stress test rather than evidence of human guessing behavior. Human-realism claims require recorded human choices or Play telemetry.
+
 ## 📦 Model and index assets
 
 | 📦 Asset | 🎯 Role | 📍 Source |
@@ -128,7 +160,7 @@ The picker exposes MiniLM-L3, MiniLM-L6, and BGE-small because each offers a dis
 | 🧠 `npm run evaluate:embeddings` | [`embedding-model-comparison.json`](../scripts/generated/embedding-model-comparison.json) | Human target/avoid fit |
 | 📚 `npm run evaluate:candidates` | [`candidate-coverage.json`](../scripts/generated/candidate-coverage.json) | Human clue coverage |
 | ⏱️ `npm run benchmark:picker` | [`model-picker-benchmark.json`](../scripts/generated/model-picker-benchmark.json) | Controlled scoring cost |
-| 🎮 `npm run benchmark:play` | [`play-policy-benchmark.md`](../scripts/generated/play-policy-benchmark.md) | Paired full-game policy |
+| 🎮 `npm run benchmark:play` | [`play-policy-benchmark.md`](../scripts/generated/play-policy-benchmark.md) | Full-game clue and operative policy |
 | 🔢 `npm run analyze:play-clues` | [`play-clue-bias-analysis.json`](../scripts/generated/play-clue-bias-analysis.json) | Opening-board clue depth |
 | 🌐 `npm run experiment:api-index` | Gitignored API index | Cost-capped hosted model |
 | 👥 `npm run evaluate:api-embeddings` | [`api-embedding-comparison.json`](../scripts/generated/api-embedding-comparison.json) | Hosted human fit |
