@@ -772,6 +772,15 @@ test("recommendations collapse without losing controls or results state", async 
 });
 
 test("model lab lazy-loads only selected model and incremental clue shards", async ({ page }) => {
+  await page.addInitScript(() => {
+    const originalFetch = window.fetch.bind(window);
+    window.fetch = (input, init) => {
+      const url = new URL(typeof input === "string" ? input : input.url, window.location.href);
+      return url.origin === window.location.origin
+        ? originalFetch(input, init)
+        : new Promise(() => {});
+    };
+  });
   const requests = [];
   page.on("request", (request) => {
     const path = new URL(request.url()).pathname;
