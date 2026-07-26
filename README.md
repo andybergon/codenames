@@ -48,7 +48,7 @@ npm run dev -- --host 127.0.0.1 --port 3535
 
 Production uses the `OPENAI_API_KEY` Vercel environment variable. The browser never receives the key.
 
-The hidden human-calibration page remains fully usable with browser storage alone. To sync answers between browsers, connect a Neon database to the Vercel project and provide server-side `DATABASE_URL` and `CALIBRATION_SYNC_SECRET` variables. The page asks for the sync key once, exchanges it for an HTTP-only cookie, and then records each correction automatically in both browser storage and Postgres. Copy `.env.example` to `.env.local` to exercise the same flow locally.
+The hidden human-calibration page remains fully usable with browser storage alone. To sync answers between browsers, connect a Neon database to the Vercel project and provide server-side `DATABASE_URL` and `CALIBRATION_SYNC_SECRET` variables. Production asks for the sync key once, exchanges it for an HTTP-only cookie, and then records each correction automatically in both browser storage and Postgres. The loopback Vite server trusts local requests when `DATABASE_URL` is present, so local calibration never asks for the production pairing key. Copy `.env.example` to `.env.local` to exercise the local flow.
 
 ## Verification
 

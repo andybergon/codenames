@@ -29,7 +29,6 @@
 
 - 👥 Finish the first human embedding calibration and analyze it.
   - Current: the first export contained one substantive Cohere answer and four accidental empty passes caused by unclear navigation; clear those passes before continuing.
-  - Connect Neon to the `codenames` Vercel project and configure `CALIBRATION_SYNC_SECRET` to activate the implemented automatic database backup.
   - Complete all 30 blinded tasks at `?mode=calibrate`, export the corrected answers, then run `npm run calibration:evaluate -- --input <export.json> --answer-key scripts/generated/calibration-answer-keys/embedding-finalists-v1.json`.
   - Review pass rate, target recall, exact targets, and wrong-team, neutral, and assassin selections per model as a gross-failure screen, not a model ranker.
 

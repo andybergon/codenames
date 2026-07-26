@@ -14,6 +14,10 @@ export default defineConfig({
   },
   webServer: {
     command: "npm run dev -- --host 127.0.0.1 --port 42873",
+    env: {
+      DATABASE_URL: "",
+      CALIBRATION_SYNC_SECRET: "",
+    },
     url: "http://127.0.0.1:42873",
     reuseExistingServer: false,
   },

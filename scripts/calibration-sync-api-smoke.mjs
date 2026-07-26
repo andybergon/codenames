@@ -42,6 +42,16 @@ const unconfigured = await handleCalibrationSyncRequest({
 assert.equal(unconfigured.status, 503);
 assert.equal(unconfigured.body.code, "not_configured");
 
+const trustedLocal = await handleCalibrationSyncRequest({
+  method: "GET",
+  databaseUrl,
+  syncSecret: "",
+  trustLocalClient: true,
+  storeFactory,
+});
+assert.equal(trustedLocal.status, 200);
+assert.deepEqual(trustedLocal.body.answers, []);
+
 const rejected = await request("POST", {
   action: "authenticate",
   key: "wrong-key",

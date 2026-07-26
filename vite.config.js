@@ -60,6 +60,7 @@ function calibrationSyncApi({ databaseUrl, syncSecret }) {
           databaseUrl,
           syncSecret,
           secureCookie: false,
+          trustLocalClient: true,
         });
         response.statusCode = result.status;
         for (const [name, value] of Object.entries(result.headers ?? {})) {

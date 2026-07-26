@@ -14,16 +14,17 @@ export async function handleCalibrationSyncRequest({
   databaseUrl,
   syncSecret,
   secureCookie = true,
+  trustLocalClient = false,
   storeFactory = createNeonCalibrationStore,
 }) {
-  if (!databaseUrl || !syncSecret) {
+  if (!databaseUrl || (!syncSecret && !trustLocalClient)) {
     return jsonResult(503, {
       error: "Calibration database sync is not configured.",
       code: "not_configured",
     });
   }
 
-  if (method === "POST" && body?.action === "authenticate") {
+  if (!trustLocalClient && method === "POST" && body?.action === "authenticate") {
     if (!safeEqual(body?.key, syncSecret)) {
       return jsonResult(401, {
         error: "The calibration sync key is invalid.",
@@ -40,7 +41,7 @@ export async function handleCalibrationSyncRequest({
     };
   }
 
-  if (!hasValidAuthCookie(headers.cookie, syncSecret)) {
+  if (!trustLocalClient && !hasValidAuthCookie(headers.cookie, syncSecret)) {
     return jsonResult(401, {
       error: "Calibration database authentication is required.",
       code: "auth_required",
