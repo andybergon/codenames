@@ -160,6 +160,8 @@ The bot spymaster reconstructs unresolved intended targets from its own prior `c
 
 The penalty is applied before the multi-card tolerance comparison. `npm run benchmark:play` uses the same policy and accepts `--missed-target-timing late|balanced|immediate`.
 
+Clue reuse is a three-way Play setting. **Never repeat in this game** is the default and excludes every clue previously given by the same team. **Block the team's previous clue** excludes only that team's immediately preceding clue. **Allow repeats** applies no history exclusion. The other team's clue history never counts, and a replacement clue may target any overlap with earlier intended cards. Live Play excludes the configured history from the full candidate analysis, with defensive filtering during ranking. Benchmarks apply the same rule to analysis, ranking, and fallback selection through `--clue-repeat-policy allow|previous|never`.
+
 In the checked 100-board default run, 142 Hybrid clue turns had an unresolved prior target. Late recovery retried one on 31.0% of those eligible turns overall, but on 0 of 43 turns where at least four never-targeted friendly cards remained. The same run kept 0 wrong-team hits per game, a 0% assassin rate, 1.53 correct cards per turn, and 10.19 turns per game.
 
 ## 🔎 Play operative policy

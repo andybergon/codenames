@@ -206,6 +206,18 @@ assert.equal(morphologyResult.summary.candidateTotal, 1);
 assert.ok(morphologyResult.suggestions.every(({ clue }) => clue !== "lives"));
 
 const result = analyzeEmbeddedBoard(DEFAULT_BOARD, boardVectors, clueIndex, { limit: 8 });
+const excludedClue = result.suggestions[0].clue;
+const excludedResult = analyzeEmbeddedBoard(DEFAULT_BOARD, boardVectors, clueIndex, {
+  excludedClues: [excludedClue.toUpperCase()],
+  limit: 8,
+});
+assert.equal(
+  excludedResult.summary.candidateTotal,
+  result.summary.candidateTotal - 1,
+);
+assert.ok(
+  excludedResult.suggestions.every(({ clue }) => clue !== excludedClue),
+);
 const boardWithDoneCards = DEFAULT_BOARD.map((card, index) => ({
   ...card,
   done: index === 0 || index === 9,

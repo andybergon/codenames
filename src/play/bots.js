@@ -1,12 +1,14 @@
 import {
   PLAY_BONUS_POLICY,
   PLAY_CLUE_POLICY,
+  PLAY_CLUE_REPEAT_POLICY,
   PLAY_MISSED_TARGET_TIMING,
   PLAY_OPERATIVE_AGGRESSION,
 } from "./settings.js";
 
 export {
   PLAY_CLUE_POLICY,
+  PLAY_CLUE_REPEAT_POLICY,
   PLAY_MISSED_TARGET_TIMING,
   PLAY_OPERATIVE_AGGRESSION,
 } from "./settings.js";
@@ -45,6 +47,8 @@ export function chooseBotClue({
   missedTargetTiming = PLAY_MISSED_TARGET_TIMING.LATE,
   ownRemaining,
   opponentRemaining,
+  teamClues = [],
+  clueRepeatPolicy = PLAY_CLUE_REPEAT_POLICY.NEVER,
   random,
   policy = PLAY_CLUE_POLICY.CURRENT,
   multiTolerance = null,
@@ -56,6 +60,8 @@ export function chooseBotClue({
     missedTargetTiming,
     ownRemaining,
     opponentRemaining,
+    teamClues,
+    clueRepeatPolicy,
     random,
     policy,
     multiTolerance,
@@ -69,11 +75,18 @@ export function evaluateBotClue({
   missedTargetTiming = PLAY_MISSED_TARGET_TIMING.LATE,
   ownRemaining,
   opponentRemaining,
+  teamClues = [],
+  clueRepeatPolicy = PLAY_CLUE_REPEAT_POLICY.NEVER,
   random,
   policy = PLAY_CLUE_POLICY.CURRENT,
   multiTolerance = null,
 }) {
-  const suggestions = analysis?.suggestions ?? [];
+  const excludedClues = new Set(
+    botClueExclusions(teamClues, clueRepeatPolicy).map(clueIdentity),
+  );
+  const suggestions = (analysis?.suggestions ?? []).filter(
+    ({ clue }) => !excludedClues.has(clueIdentity(clue)),
+  );
   if (suggestions.length === 0) {
     return { ranked: [], selected: null, selection: "none" };
   }
@@ -116,6 +129,26 @@ export function evaluateBotClue({
     selected: shortlist[pick].suggestion,
     selection: "shortlist-random",
   };
+}
+
+export function botClueExclusions(
+  teamClues = [],
+  policy = PLAY_CLUE_REPEAT_POLICY.NEVER,
+) {
+  if (policy === PLAY_CLUE_REPEAT_POLICY.ALLOW) {
+    return [];
+  }
+  if (policy === PLAY_CLUE_REPEAT_POLICY.PREVIOUS) {
+    return teamClues.slice(-1);
+  }
+  if (policy === PLAY_CLUE_REPEAT_POLICY.NEVER) {
+    return [...teamClues];
+  }
+  throw new Error(`Unknown clue repeat policy: ${policy}`);
+}
+
+function clueIdentity(clue) {
+  return String(clue ?? "").trim().toLocaleLowerCase();
 }
 
 export function scoreMissedTargetPreference(

@@ -49,6 +49,7 @@ export function analyzeEmbeddedBoard(board, boardVectors, clueIndex, options = {
     entries,
     clueIndex.clues,
     options.language,
+    options.excludedClues,
   );
 
   if (friendlies.length < 1 || hazards.length === 0 || candidateIndices.length === 0) {
@@ -172,14 +173,20 @@ function emptyAnalysis(friendlyTotal, candidateTotal) {
   };
 }
 
-function buildLegalCandidateIndices(entries, clues, language = LANGUAGE.ENGLISH) {
+function buildLegalCandidateIndices(
+  entries,
+  clues,
+  language = LANGUAGE.ENGLISH,
+  excludedClues = [],
+) {
   const boardWords = entries.map((entry) => normalizeTerm(entry.word));
   const candidateIndices = [];
   const isForbidden = buildClueLegalityFilter(boardWords, language);
+  const excluded = new Set(excludedClues.map((clue) => normalizeTerm(clue)));
 
   clues.forEach((clue, candidateIndex) => {
     const normalizedClue = normalizeTerm(clue);
-    if (!isForbidden(normalizedClue)) {
+    if (!excluded.has(normalizedClue) && !isForbidden(normalizedClue)) {
       candidateIndices.push(candidateIndex);
     }
   });

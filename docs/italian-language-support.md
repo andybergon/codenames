@@ -131,14 +131,14 @@ These results are directional. They do not establish native-speaker quality, leg
 
 ### Full-game behavior
 
-Both checked runs use 100 paired deterministic boards per clue policy and the production Play state machine. Every one of the 400 simulated policy games completed within the 500-action bound.
+Both checked runs use 100 paired deterministic boards per clue policy and the production Play state machine. Every simulated game completed within the 100-action bound.
 
 | 🧪 Hybrid run | 🤖 Operative | 🎉 Fun | 🔢 Multi | ✅ Correct/turn | 🔴 Wrong/game | ☠️ Assassin | ⏱️ Turns |
 | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| 🇮🇹 Same E5 | E5 | 58.22 | 30.9% | 1.24 | 0.02 | 0% | 12.44 |
-| 🔀 Transfer | MiniLM-L6 | 40.53 | 49.5% | 0.54 | 2.83 | 61% | 13.20 |
+| 🇮🇹 Same E5 | E5 | 56.80 | 30.2% | 1.24 | 0.02 | 0% | 12.37 |
+| 🔀 Transfer | MiniLM-L6 | 32.54 | 35.3% | 0.58 | 2.55 | 63% | 13.61 |
 
-The [same-model report](../scripts/generated/italian-play-policy-benchmark.md) confirms bounded runtime behavior and no analyzer fallbacks, but it shares one geometry between clue giver and guesser. The [transfer report](../scripts/generated/italian-play-minilm-transfer-benchmark.md) deliberately uses English MiniLM-L6 as an independent operative. Its poor result is a warning about geometry agreement, not a prediction that Italian players hit the assassin 61% of the time. The transfer simulation forces the highest-similarity available guess after a complete round of passes so every stress-test game terminates, and reports those interventions separately.
+The [same-model report](../scripts/generated/italian-play-policy-benchmark.md) confirms bounded runtime behavior and no analyzer fallbacks, but it shares one geometry between clue giver and guesser. The compact [transfer report](../scripts/generated/italian-play-minilm-transfer-benchmark.md) deliberately uses English MiniLM-L6 as an independent operative. Its poor result is a warning about geometry agreement, not a prediction that Italian players hit the assassin 63% of the time. The transfer simulation forces the highest-similarity available guess after a complete round of passes so every stress-test game terminates, and reports those interventions separately.
 
 Promotion beyond beta still requires at least 100 native-reviewed turns and human operative guesses. A higher self-play Fun score alone is insufficient.
 

@@ -13,6 +13,7 @@ import {
   passTurn,
   validateStoredGame,
 } from "./game-state.js";
+import { PLAY_CLUE_REPEAT_POLICY } from "./settings.js";
 import { PLAY_WORD_REUSE_POLICY } from "./word-reuse.js";
 
 const SHARE_VERSION = 3;
@@ -24,7 +25,7 @@ const REPLAYABLE_RULES_VERSIONS = new Set([
   LEGACY_PLAY_RULES_VERSION,
   PLAY_RULES_VERSION,
 ]);
-const SETTINGS_VERSION = 1;
+const SETTINGS_VERSION = 2;
 const MAX_SHARE_LENGTH = 12_000;
 const MAX_ACTIONS = 512;
 const MAX_DIAGNOSTIC_BYTES = 12_288;
@@ -35,6 +36,9 @@ const MISSED_TARGET_TIMINGS = new Set([
   "balanced",
   "immediate",
 ]);
+const CLUE_REPEAT_POLICIES = new Set(
+  Object.values(PLAY_CLUE_REPEAT_POLICY),
+);
 const ACTION = Object.freeze({
   CLUE: "c",
   GUESS: "g",
@@ -174,6 +178,7 @@ export function encodePlayGame(
       missedTargetTiming,
       settings.operativeAggression,
       settings.bonusGuesses,
+      settings.clueRepeatPolicy,
     ],
     WORD_REUSE_CODE[validated.wordReusePolicy],
     validated.developerMode === true ? 1 : 0,
@@ -376,6 +381,7 @@ function decodeParsedCompletedGame(parsed) {
   const normalizedBotSettings = {
     ...validated.botSettings,
     missedTargetTiming: botSettings.missedTargetTiming,
+    clueRepeatPolicy: botSettings.clueRepeatPolicy,
   };
   const history = restoreDeveloperDiagnostics(
     validated.history,
@@ -526,18 +532,26 @@ function validLegacyPayloadShape(payload) {
 }
 
 function decodeSettings(rawSettings, settingsVersion) {
-  const hasMissedTargetTiming =
-    settingsVersion === SETTINGS_VERSION && rawSettings.length === 7;
+  const currentSettings =
+    settingsVersion === SETTINGS_VERSION && rawSettings.length === 8;
+  const previousSettings =
+    settingsVersion === 1 && rawSettings.length === 7;
   const legacySettings =
     settingsVersion === 0 && [6, 7].includes(rawSettings.length);
-  if (!hasMissedTargetTiming && !legacySettings) {
+  if (!currentSettings && !previousSettings && !legacySettings) {
     return null;
   }
-  const includesTiming = rawSettings.length === 7;
+  const includesTiming = rawSettings.length >= 7;
   const missedTargetTiming = includesTiming
     ? rawSettings[4]
     : "late";
   if (!MISSED_TARGET_TIMINGS.has(missedTargetTiming)) {
+    throw new Error("Play game contains unsupported settings.");
+  }
+  const clueRepeatPolicy = currentSettings
+    ? rawSettings[7]
+    : PLAY_CLUE_REPEAT_POLICY.NEVER;
+  if (!CLUE_REPEAT_POLICIES.has(clueRepeatPolicy)) {
     throw new Error("Play game contains unsupported settings.");
   }
   return {
@@ -548,6 +562,7 @@ function decodeSettings(rawSettings, settingsVersion) {
     missedTargetTiming,
     operativeAggression: rawSettings[includesTiming ? 5 : 4],
     bonusGuesses: rawSettings[includesTiming ? 6 : 5],
+    clueRepeatPolicy,
   };
 }
 

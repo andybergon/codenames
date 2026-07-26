@@ -11,12 +11,6 @@
   - Create several compact mockups to test before changing production, including icon-only actions with accessible labels and tooltips, plus placements adjacent to clue and guess pills.
   - Compare the options in completed-game and developer live analysis at 390x844, 768x1024, and 1440x900. Preserve the explicit paid-action boundary and the clue-plus-selected-words network payload.
 
-- 🧠 Prevent the bot spymaster from repeating the previous clue.
-  - A human operative remembers an immediately repeated clue, so giving it again adds no useful information even when it remains the highest-ranked option.
-  - Select the next-best legal clue instead. Its intended cards may overlap with zero, some, or all of the previous clue's intended cards.
-  - Decide whether this rule is always enabled or exposed as a Play bot setting.
-  - Add deterministic consecutive-turn coverage, then rerun the English and Italian Play benchmarks to measure clue quality, safety, and full-game effects.
-
 - 🛡️ Regenerate the clue vocabulary with consistent profanity filtering.
   - The WordNet-backed first 88,563 words currently bypass `better_profanity`; only the experimental fallback applies it.
   - Regenerate all affected shards, reports, and the stable-prefix baseline together after reviewing benign false positives.
@@ -40,7 +34,7 @@
 
 - 🇮🇹 Native-review the Italian Train and Play beta.
   - Have two native Italian speakers review all 800 `it:extended-v1` words, localized copy, and generated clues for familiarity, regional bias, clue potential, and accidental offensiveness.
-  - Same-model and MiniLM operative runs now cover 100 paired boards each. The MiniLM stress run is intentionally harsh and reached a 61% hybrid assassin rate after the spelling-artifact guard, so do not treat E5 self-play as human safety evidence.
+  - Same-model and MiniLM operative runs now cover 100 paired boards each. The MiniLM stress run is intentionally harsh and reached a 63% hybrid assassin rate, so do not treat E5 self-play as human safety evidence.
   - Next: expand the original fixture to at least 100 reviewed turns and collect native-player guesses before removing the beta label.
 
 - 📊 Calibrate Play bots and Worth from recorded outcomes.

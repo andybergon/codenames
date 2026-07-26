@@ -32,6 +32,7 @@ import {
   createSeededRandom,
   evaluateBotClue,
   evaluateBotGuess,
+  botClueExclusions,
   operativeGuessThresholds,
   scorePlayClue,
   shouldBotTakeAnotherGuess,
@@ -46,6 +47,7 @@ import {
   differentRandomHumanSeat,
   giveClue,
   guessCard,
+  cluesForSide,
   markPlayGameAsDeveloper,
   passTurn,
   publicGameView,
@@ -75,6 +77,7 @@ import {
 } from "./session-store.js";
 import {
   PLAY_BONUS_POLICY,
+  PLAY_CLUE_REPEAT_POLICY,
   PLAY_MISSED_TARGET_TIMING,
   PLAY_OPERATIVE_AGGRESSION,
   normalizePlayBotSettings,
@@ -201,6 +204,19 @@ const BOT_SETTING_INFO = Object.freeze({
     },
     note: "100 paired same-model bot games. These are not human win rates.",
   },
+  clueRepeatPolicy: {
+    id: "clue-repeat-policy",
+    label: "Clue reuse",
+    table: {
+      headers: ["🧠 Policy", "🚫 Excludes"],
+      rows: [
+        ["🛡️ Never", "All team clues"],
+        ["↩️ Previous", "Last team clue"],
+        ["🔁 Allow", "Nothing"],
+      ],
+    },
+    note: "Only clues previously given by the same team count. The other team's clues and previously targeted cards do not count.",
+  },
   multiTolerance: {
     id: "multi-clue-preference",
     label: "Prefer multi-card clues",
@@ -308,6 +324,10 @@ export function createPlayMode(options = {}) {
     botCandidatesInfo: document.querySelector("#play-bot-candidates-info"),
     cluePolicy: document.querySelector("#play-clue-policy"),
     cluePolicyInfo: document.querySelector("#play-clue-policy-info"),
+    clueRepeatPolicy: document.querySelector("#play-clue-repeat-policy"),
+    clueRepeatPolicyInfo: document.querySelector(
+      "#play-clue-repeat-policy-info",
+    ),
     multiTolerance: document.querySelector("#play-multi-tolerance"),
     multiToleranceInfo: document.querySelector("#play-multi-tolerance-info"),
     missedTargetTiming: document.querySelector(
@@ -393,6 +413,10 @@ export function createPlayMode(options = {}) {
     [elements.botModelInfo, BOT_SETTING_INFO.model],
     [elements.botCandidatesInfo, BOT_SETTING_INFO.candidates],
     [elements.cluePolicyInfo, BOT_SETTING_INFO.cluePolicy],
+    [
+      elements.clueRepeatPolicyInfo,
+      BOT_SETTING_INFO.clueRepeatPolicy,
+    ],
     [elements.multiToleranceInfo, BOT_SETTING_INFO.multiTolerance],
     [
       elements.missedTargetTimingInfo,
@@ -557,6 +581,7 @@ export function createPlayMode(options = {}) {
     [elements.botModel, "modelId", String],
     [elements.botCandidates, "candidateCount", Number],
     [elements.cluePolicy, "cluePolicy", String],
+    [elements.clueRepeatPolicy, "clueRepeatPolicy", String],
     [elements.multiTolerance, "multiTolerance", Number],
     [elements.missedTargetTiming, "missedTargetTiming", String],
     [elements.operativeAggression, "operativeAggression", String],
@@ -750,6 +775,8 @@ export function createPlayMode(options = {}) {
     elements.botModel.value = selectedBotSettings.modelId;
     elements.botCandidates.value = String(selectedBotSettings.candidateCount);
     elements.cluePolicy.value = selectedBotSettings.cluePolicy;
+    elements.clueRepeatPolicy.value =
+      selectedBotSettings.clueRepeatPolicy;
     elements.multiTolerance.value = String(selectedBotSettings.multiTolerance);
     elements.missedTargetTiming.value =
       selectedBotSettings.missedTargetTiming;
@@ -1299,6 +1326,10 @@ export function createPlayMode(options = {}) {
             : boardForSide(cards, SIDE.RED);
         const nextAnalysis = await analysisExecutor({
           cards: activeCards,
+          excludedClues: botClueExclusions(
+            cluesForSide(gameAtStart, gameAtStart.activeSide),
+            gameAtStart.botSettings.clueRepeatPolicy,
+          ),
           language,
           modelId,
           candidateCount,
@@ -1368,6 +1399,10 @@ export function createPlayMode(options = {}) {
       activeModelId = modelId;
       analysis = {
         [SIDE.BLUE]: analyzeEmbeddedBoard(cards, centered, loadedIndex, {
+          excludedClues: botClueExclusions(
+            cluesForSide(gameAtStart, SIDE.BLUE),
+            gameAtStart.botSettings.clueRepeatPolicy,
+          ),
           limit: RESULTS_PER_SIZE,
           language,
         }),
@@ -1375,7 +1410,14 @@ export function createPlayMode(options = {}) {
           boardForSide(cards, SIDE.RED),
           centered,
           loadedIndex,
-          { limit: RESULTS_PER_SIZE, language },
+          {
+            excludedClues: botClueExclusions(
+              cluesForSide(gameAtStart, SIDE.RED),
+              gameAtStart.botSettings.clueRepeatPolicy,
+            ),
+            limit: RESULTS_PER_SIZE,
+            language,
+          },
         ),
       };
       statusMessage = "";
@@ -1623,11 +1665,13 @@ export function createPlayMode(options = {}) {
           freshTargetCount: ownRemaining - missedTargetLayoutIds.length,
           missedTargetLayoutIds,
           missedTargetTiming: game.botSettings.missedTargetTiming,
+          clueRepeatPolicy: game.botSettings.clueRepeatPolicy,
           ownRemaining,
           opponentRemaining: remainingCardsForSide(
             game.cards,
             game.activeSide === SIDE.BLUE ? SIDE.RED : SIDE.BLUE,
           ),
+          teamClues: cluesForSide(game, game.activeSide),
           policy: game.botSettings.cluePolicy,
           multiTolerance: game.botSettings.multiTolerance,
           random: decisionRandom,
@@ -3102,6 +3146,14 @@ function settingsLabel(
       ? "humanLike"
       : "conservative",
   ).toLocaleLowerCase(language);
+  const clueReuse = translate(
+    language,
+    {
+      [PLAY_CLUE_REPEAT_POLICY.NEVER]: "neverRepeatClues",
+      [PLAY_CLUE_REPEAT_POLICY.PREVIOUS]: "blockPreviousClue",
+      [PLAY_CLUE_REPEAT_POLICY.ALLOW]: "allowClueRepeats",
+    }[settings.clueRepeatPolicy],
+  ).toLocaleLowerCase(language);
   const aggression = translate(
     language,
     {
@@ -3132,7 +3184,7 @@ function settingsLabel(
     wordReusePolicy === PLAY_WORD_REUSE_POLICY.AVOID_RECENT
       ? translate(language, "avoidRecent").toLocaleLowerCase(language)
       : translate(language, "fullyRandom").toLocaleLowerCase(language);
-  return `${words}, ${reuse}, ${model.label}, ${settings.candidateCount / 1000}k, ${style}, ${missedTargets}, ${aggression}, ${bonus}`;
+  return `${words}, ${reuse}, ${model.label}, ${settings.candidateCount / 1000}k, ${style}, ${clueReuse}, ${missedTargets}, ${aggression}, ${bonus}`;
 }
 
 function localizePlayError(message, language) {

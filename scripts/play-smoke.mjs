@@ -34,6 +34,7 @@ import {
   differentRandomHumanSeat,
   giveClue,
   guessCard,
+  cluesForSide,
   markPlayGameAsDeveloper,
   passTurn,
   publicGameView,
@@ -55,6 +56,7 @@ import {
 import {
   DEFAULT_PLAY_BOT_SETTINGS,
   PLAY_BONUS_POLICY,
+  PLAY_CLUE_REPEAT_POLICY,
   PLAY_MISSED_TARGET_TIMING,
   PLAY_OPERATIVE_AGGRESSION,
   normalizePlayBotSettings,
@@ -230,9 +232,9 @@ assert.ok(
     ({ passed }) => passed === false,
   ),
 );
-for (const [report, operativeModelId] of [
-  [italianPlayBenchmark, "same"],
-  [italianPlayTransferBenchmark, "minilm-l6"],
+for (const [report, operativeModelId, includesGameResults] of [
+  [italianPlayBenchmark, "same", true],
+  [italianPlayTransferBenchmark, "minilm-l6", false],
 ]) {
   assert.equal(report.methodology.language, LANGUAGE.ITALIAN);
   assert.equal(report.methodology.wordSet, WORD_SET.EXTENDED);
@@ -242,14 +244,18 @@ for (const [report, operativeModelId] of [
   for (const policy of Object.values(PLAY_CLUE_POLICY)) {
     const result = report.policies[policy];
     assert.equal(result.completedGames, 100);
-    assert.equal(result.gameResults.length, 100);
-    assert.ok(
-      result.gameResults.every(
-        ({ actions, endReason }) =>
-          actions <= 500 &&
-          ["agents", "assassin"].includes(endReason),
-      ),
-    );
+    if (includesGameResults) {
+      assert.equal(result.gameResults.length, 100);
+      assert.ok(
+        result.gameResults.every(
+          ({ actions, endReason }) =>
+            actions <= report.methodology.maxActionsPerGame &&
+            ["agents", "assassin"].includes(endReason),
+        ),
+      );
+    } else {
+      assert.equal(result.gameResults, undefined);
+    }
   }
   assert.deepEqual(
     Object.keys(report.operativeAggression).sort(),
@@ -911,6 +917,141 @@ const clueDecision = evaluateBotClue({
 assert.equal(clueDecision.selected.clue, "pair");
 assert.equal(clueDecision.selection, "multi-tolerance");
 assert.equal(typeof clueDecision.ranked[0].playScore, "number");
+let consecutiveClueGame = createPlayGame({
+  cards: sample.cards,
+  humanSeat: { side: SIDE.BLUE, role: PLAYER_ROLE.SPYMASTER },
+  seed: "consecutive-clues",
+  wordSet: sample.wordSet,
+});
+const repeatedSide = consecutiveClueGame.activeSide;
+consecutiveClueGame = giveClue(consecutiveClueGame, {
+  clue: "repeat",
+  number: 1,
+  actor: actorForSeat(
+    consecutiveClueGame,
+    consecutiveClueGame.activeSide,
+    PLAYER_ROLE.SPYMASTER,
+  ),
+});
+consecutiveClueGame = passTurn(consecutiveClueGame, {
+  actor: actorForSeat(
+    consecutiveClueGame,
+    consecutiveClueGame.activeSide,
+    PLAYER_ROLE.OPERATIVE,
+  ),
+});
+consecutiveClueGame = giveClue(consecutiveClueGame, {
+  clue: "interlude",
+  number: 1,
+  actor: actorForSeat(
+    consecutiveClueGame,
+    consecutiveClueGame.activeSide,
+    PLAYER_ROLE.SPYMASTER,
+  ),
+});
+consecutiveClueGame = passTurn(consecutiveClueGame, {
+  actor: actorForSeat(
+    consecutiveClueGame,
+    consecutiveClueGame.activeSide,
+    PLAYER_ROLE.OPERATIVE,
+  ),
+});
+assert.equal(consecutiveClueGame.activeSide, repeatedSide);
+consecutiveClueGame = giveClue(consecutiveClueGame, {
+  clue: "recent",
+  number: 1,
+  actor: actorForSeat(
+    consecutiveClueGame,
+    consecutiveClueGame.activeSide,
+    PLAYER_ROLE.SPYMASTER,
+  ),
+});
+consecutiveClueGame = passTurn(consecutiveClueGame, {
+  actor: actorForSeat(
+    consecutiveClueGame,
+    consecutiveClueGame.activeSide,
+    PLAYER_ROLE.OPERATIVE,
+  ),
+});
+consecutiveClueGame = giveClue(consecutiveClueGame, {
+  clue: "opponent",
+  number: 1,
+  actor: actorForSeat(
+    consecutiveClueGame,
+    consecutiveClueGame.activeSide,
+    PLAYER_ROLE.SPYMASTER,
+  ),
+});
+consecutiveClueGame = passTurn(consecutiveClueGame, {
+  actor: actorForSeat(
+    consecutiveClueGame,
+    consecutiveClueGame.activeSide,
+    PLAYER_ROLE.OPERATIVE,
+  ),
+});
+assert.equal(consecutiveClueGame.activeSide, repeatedSide);
+assert.deepEqual(
+  cluesForSide(consecutiveClueGame, repeatedSide),
+  ["REPEAT", "RECENT"],
+);
+const repeatPolicyAnalysis = {
+  analysis: {
+    suggestions: [
+      {
+        clue: "repeat",
+        worth: 90,
+        risk: "safe",
+        number: 1,
+        margin: 0.2,
+        expectedNet: 1,
+        success: 0.9,
+      },
+      {
+        clue: "recent",
+        worth: 85,
+        risk: "safe",
+        number: 1,
+        margin: 0.2,
+        expectedNet: 1,
+        success: 0.9,
+      },
+      {
+        clue: "replacement",
+        worth: 80,
+        risk: "safe",
+        number: 1,
+        margin: 0.2,
+        expectedNet: 1,
+        success: 0.9,
+      },
+    ],
+  },
+  teamClues: cluesForSide(consecutiveClueGame, repeatedSide),
+  ownRemaining: 7,
+  opponentRemaining: 5,
+  policy: PLAY_CLUE_POLICY.HYBRID,
+  multiTolerance: 5,
+  random: () => 0,
+};
+const allowRepeatDecision = evaluateBotClue({
+  ...repeatPolicyAnalysis,
+  clueRepeatPolicy: PLAY_CLUE_REPEAT_POLICY.ALLOW,
+});
+assert.equal(allowRepeatDecision.selected.clue, "repeat");
+const previousRepeatDecision = evaluateBotClue({
+  ...repeatPolicyAnalysis,
+  clueRepeatPolicy: PLAY_CLUE_REPEAT_POLICY.PREVIOUS,
+});
+assert.equal(previousRepeatDecision.selected.clue, "repeat");
+const neverRepeatDecision = evaluateBotClue({
+  ...repeatPolicyAnalysis,
+  clueRepeatPolicy: PLAY_CLUE_REPEAT_POLICY.NEVER,
+});
+assert.equal(neverRepeatDecision.selected.clue, "replacement");
+assert.deepEqual(
+  neverRepeatDecision.ranked.map(({ suggestion: { clue } }) => clue),
+  ["replacement"],
+);
 assert.ok(
   scorePlayClue(
     {
@@ -1120,6 +1261,10 @@ assert.equal(
   PLAY_MISSED_TARGET_TIMING.LATE,
 );
 assert.equal(
+  upgradedStoredGame.botSettings.clueRepeatPolicy,
+  PLAY_CLUE_REPEAT_POLICY.NEVER,
+);
+assert.equal(
   normalizePlayBotSettings({
     missedTargetTiming: "unknown",
   }).missedTargetTiming,
@@ -1130,6 +1275,18 @@ assert.equal(
     missedTargetTiming: PLAY_MISSED_TARGET_TIMING.IMMEDIATE,
   }).missedTargetTiming,
   PLAY_MISSED_TARGET_TIMING.IMMEDIATE,
+);
+assert.equal(
+  normalizePlayBotSettings({
+    clueRepeatPolicy: "unknown",
+  }).clueRepeatPolicy,
+  PLAY_CLUE_REPEAT_POLICY.NEVER,
+);
+assert.equal(
+  normalizePlayBotSettings({
+    clueRepeatPolicy: PLAY_CLUE_REPEAT_POLICY.ALLOW,
+  }).clueRepeatPolicy,
+  PLAY_CLUE_REPEAT_POLICY.ALLOW,
 );
 assert.equal(upgradedStoredGame.botSettings.bonusGuesses, PLAY_BONUS_POLICY.PASS);
 assert.equal(
@@ -1360,6 +1517,10 @@ assert.deepEqual(
 );
 
 let simulated = createPlayGame({
+  botSettings: {
+    ...DEFAULT_PLAY_BOT_SETTINGS,
+    clueRepeatPolicy: PLAY_CLUE_REPEAT_POLICY.ALLOW,
+  },
   cards: sample.cards,
   humanSeat: { side: SIDE.RED, role: PLAYER_ROLE.SPYMASTER },
   seed: "bounded",
@@ -1418,6 +1579,10 @@ assert.equal(
   sharedCompletedGame.botSettings.missedTargetTiming,
   "late",
 );
+assert.equal(
+  sharedCompletedGame.botSettings.clueRepeatPolicy,
+  "allow",
+);
 assert.equal(sharedCompletedGame.developerMode, false);
 assert.equal(
   sharedCompletedGame.history[0].developerMode,
@@ -1437,7 +1602,7 @@ assert.deepEqual(
   {
     formatVersion: 3,
     rulesVersion: 2,
-    settingsVersion: 1,
+    settingsVersion: 2,
     compatibility: "full",
   },
 );
@@ -1510,7 +1675,14 @@ const versionTwoGame = decodeCompletedGame(
 );
 assert.equal(versionTwoGame.shareMetadata.formatVersion, 2);
 assert.equal(versionTwoGame.winner, simulated.winner);
-const legacySettings = currentPayload[7].filter(
+const previousSettingsPayload = structuredClone(currentPayload);
+previousSettingsPayload[2] = 1;
+previousSettingsPayload[7] = previousSettingsPayload[7].slice(0, 7);
+const previousSettingsGame = decodeCompletedGame(
+  Buffer.from(JSON.stringify(previousSettingsPayload)).toString("base64url"),
+);
+assert.equal(previousSettingsGame.botSettings.clueRepeatPolicy, "never");
+const legacySettings = currentPayload[7].slice(0, 7).filter(
   (_value, index) => index !== 4,
 );
 const legacyActions = currentPayload[11].map((action) => {
@@ -1535,6 +1707,7 @@ const legacyCompletedGame = decodeCompletedGame(
   Buffer.from(JSON.stringify(legacyPayload)).toString("base64url"),
 );
 assert.equal(legacyCompletedGame.botSettings.missedTargetTiming, "late");
+assert.equal(legacyCompletedGame.botSettings.clueRepeatPolicy, "never");
 assert.equal(legacyCompletedGame.developerMode, false);
 assert.equal(legacyCompletedGame.shareMetadata.formatVersion, 1);
 const unsupportedRulesPayload = structuredClone(currentPayload);

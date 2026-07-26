@@ -23,6 +23,7 @@ import {
 import { ITALIAN_MODEL_ID } from "../src/model-lab.js";
 import {
   PLAY_CLUE_POLICY,
+  botClueExclusions,
   chooseBotClue,
   chooseBotGuess,
   createSeededRandom,
@@ -32,6 +33,7 @@ import {
 import {
   DEFAULT_PLAY_BOT_SETTINGS,
   PLAY_BONUS_POLICY,
+  PLAY_CLUE_REPEAT_POLICY,
   PLAY_MISSED_TARGET_TIMING,
   PLAY_OPERATIVE_AGGRESSION,
 } from "../src/play/settings.js";
@@ -42,6 +44,7 @@ import {
   createPlayGame,
   giveClue,
   guessCard,
+  cluesForSide,
   passTurn,
   unresolvedIntendedTargetIds,
 } from "../src/play/game-state.js";
@@ -63,6 +66,7 @@ const DEFAULT_MAX_ACTIONS_PER_GAME = 100;
 const POLICIES = [PLAY_CLUE_POLICY.CURRENT, PLAY_CLUE_POLICY.HYBRID];
 const OPERATIVE_AGGRESSIONS = Object.values(PLAY_OPERATIVE_AGGRESSION);
 const MISSED_TARGET_TIMINGS = Object.values(PLAY_MISSED_TARGET_TIMING);
+const CLUE_REPEAT_POLICIES = Object.values(PLAY_CLUE_REPEAT_POLICY);
 const BENCHMARK_SPLITS = Object.freeze({
   smoke: { boardOffset: 0, boards: 20 },
   calibration: { boardOffset: 20, boards: 100 },
@@ -190,6 +194,7 @@ for (let boardIndex = 0; boardIndex < options.boards; boardIndex += 1) {
       clueSelection: options.clueSelection,
       multiTolerance: options.multiTolerance,
       missedTargetTiming: options.missedTargetTiming,
+      clueRepeatPolicy: options.clueRepeatPolicy,
       bonusGuesses: options.bonusGuesses,
       operativeAggression: options.operativeAggression,
       language: options.language,
@@ -220,6 +225,7 @@ for (let boardIndex = 0; boardIndex < options.boards; boardIndex += 1) {
         clueSelection: options.clueSelection,
         multiTolerance: options.multiTolerance,
         missedTargetTiming: options.missedTargetTiming,
+        clueRepeatPolicy: options.clueRepeatPolicy,
         bonusGuesses: options.bonusGuesses,
         operativeAggression,
         language: options.language,
@@ -303,6 +309,15 @@ const report = {
       `Policy comparison uses ${options.operativeAggression} for the clue-policy rows and holds hybrid clue scoring fixed across all three operative modes.`,
     missedTargetTiming:
       `Clue ranking uses ${options.missedTargetTiming} missed-target timing. The fresh-target bias is based on unresolved intended targets from prior clues and fades as never-targeted friendly cards run out.`,
+    repeatedClues:
+      {
+        [PLAY_CLUE_REPEAT_POLICY.NEVER]:
+          "The spymaster excludes every clue previously given by the same team before analysis, ranking, and fallback selection.",
+        [PLAY_CLUE_REPEAT_POLICY.PREVIOUS]:
+          "The spymaster excludes the same team's immediately previous clue before analysis, ranking, and fallback selection.",
+        [PLAY_CLUE_REPEAT_POLICY.ALLOW]:
+          "The spymaster may reuse earlier clues.",
+      }[options.clueRepeatPolicy],
     stalledGameResolution:
       "After two consecutive passes, the next operative takes its highest-similarity available guess. This keeps cross-model simulations bounded and is counted separately.",
     operativeAggressionModes: {
@@ -388,6 +403,7 @@ async function simulateGame({
   clueSelection,
   multiTolerance,
   missedTargetTiming,
+  clueRepeatPolicy,
   bonusGuesses: bonusGuessPolicy,
   operativeAggression,
   language,
@@ -402,6 +418,7 @@ async function simulateGame({
       cluePolicy: policy,
       multiTolerance,
       missedTargetTiming,
+      clueRepeatPolicy,
       operativeAggression,
       bonusGuesses: bonusGuessPolicy,
     },
@@ -427,11 +444,21 @@ async function simulateGame({
     );
 
     if (game.phase === GAME_PHASE.AWAITING_CLUE) {
+      const teamClues = cluesForSide(game, game.activeSide);
+      const excludedClues = botClueExclusions(
+        teamClues,
+        clueRepeatPolicy,
+      );
       const analysis = analyzeEmbeddedBoard(
         boardForSide(game.cards, game.activeSide),
         boardVectors,
         activeClueIndex,
-        { limit: RESULTS_PER_SIZE, language, similarityCalibration },
+        {
+          excludedClues,
+          limit: RESULTS_PER_SIZE,
+          language,
+          similarityCalibration,
+        },
       );
       const ownRemaining = remainingCardsForSide(game.cards, game.activeSide);
       const opponentRemaining = remainingCardsForSide(
@@ -482,6 +509,8 @@ async function simulateGame({
           freshTargetCount,
           missedTargetLayoutIds,
           missedTargetTiming,
+          teamClues,
+          clueRepeatPolicy,
           random: clueSelection === "top" ? () => 0 : random,
         });
       }
@@ -491,6 +520,7 @@ async function simulateGame({
           boardVectors,
           activeClueIndex,
           language,
+          excludedClues,
         );
         fallbackClues += 1;
       }
@@ -646,12 +676,14 @@ function chooseFallbackClue(
   boardVectors,
   activeClueIndex,
   language,
+  excludedClues,
 ) {
   const unrevealed = board
     .map((card, index) => ({ ...card, vector: boardVectors[index] }))
     .filter((card) => !card.done);
   const friendlies = unrevealed.filter((card) => card.team === "friendly");
   const boardWords = unrevealed.map((card) => normalizeTerm(card.word));
+  const excluded = new Set(excludedClues.map((clue) => normalizeTerm(clue)));
   let best = null;
 
   for (
@@ -661,6 +693,7 @@ function chooseFallbackClue(
   ) {
     const clue = activeClueIndex.clues[candidateIndex];
     if (
+      excluded.has(normalizeTerm(clue)) ||
       isForbiddenClue(normalizeTerm(clue), boardWords, { language })
     ) {
       continue;
@@ -1079,6 +1112,7 @@ function parseOptions(args) {
     clueSelection: "tempo",
     multiTolerance: DEFAULT_PLAY_BOT_SETTINGS.multiTolerance,
     missedTargetTiming: DEFAULT_PLAY_BOT_SETTINGS.missedTargetTiming,
+    clueRepeatPolicy: DEFAULT_PLAY_BOT_SETTINGS.clueRepeatPolicy,
     bonusGuesses: PLAY_BONUS_POLICY.PASS,
     operativeAggression: DEFAULT_PLAY_BOT_SETTINGS.operativeAggression,
     reportDetail: "full",
@@ -1141,6 +1175,13 @@ function parseOptions(args) {
         );
       }
       values.missedTargetTiming = value;
+    } else if (option === "--clue-repeat-policy") {
+      if (!CLUE_REPEAT_POLICIES.includes(value)) {
+        throw new Error(
+          `${option} must be allow, previous, or never.`,
+        );
+      }
+      values.clueRepeatPolicy = value;
     } else if (option === "--similarity-scale") {
       values.similarityScale = positiveNumber(value, option);
     } else if (option === "--similarity-offset") {

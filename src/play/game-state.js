@@ -431,6 +431,15 @@ export function unresolvedIntendedTargetIds(game, side) {
   ].filter((layoutId) => availableOwnTargets.has(layoutId));
 }
 
+export function cluesForSide(game, side) {
+  validateSide(side);
+  return game.history
+    .filter(
+      (event) => event.type === "clue-given" && event.side === side,
+    )
+    .map((event) => event.clue);
+}
+
 function publicCurrentTurn(currentTurn) {
   const {
     developerDiagnostics: _developerDiagnostics,

@@ -11,6 +11,12 @@ export const PLAY_CLUE_POLICY = Object.freeze({
   HYBRID: "hybrid",
 });
 
+export const PLAY_CLUE_REPEAT_POLICY = Object.freeze({
+  ALLOW: "allow",
+  PREVIOUS: "previous",
+  NEVER: "never",
+});
+
 export const PLAY_BONUS_POLICY = Object.freeze({
   ALLOW: "allow",
   PASS: "pass",
@@ -32,6 +38,7 @@ export const DEFAULT_PLAY_BOT_SETTINGS = Object.freeze({
   modelId: "bge-small",
   candidateCount: 10_000,
   cluePolicy: PLAY_CLUE_POLICY.HYBRID,
+  clueRepeatPolicy: PLAY_CLUE_REPEAT_POLICY.NEVER,
   multiTolerance: 5,
   missedTargetTiming: PLAY_MISSED_TARGET_TIMING.LATE,
   operativeAggression: PLAY_OPERATIVE_AGGRESSION.DYNAMIC,
@@ -44,6 +51,9 @@ const ITALIAN_CANDIDATE_COUNTS = new Set(
   ITALIAN_CANDIDATE_OPTIONS.map(({ count }) => count),
 );
 const CLUE_POLICIES = new Set(Object.values(PLAY_CLUE_POLICY));
+const CLUE_REPEAT_POLICIES = new Set(
+  Object.values(PLAY_CLUE_REPEAT_POLICY),
+);
 const BONUS_POLICIES = new Set(Object.values(PLAY_BONUS_POLICY));
 const OPERATIVE_AGGRESSIONS = new Set(
   Object.values(PLAY_OPERATIVE_AGGRESSION),
@@ -76,6 +86,9 @@ export function normalizePlayBotSettings(
     cluePolicy: CLUE_POLICIES.has(value.cluePolicy)
       ? value.cluePolicy
       : DEFAULT_PLAY_BOT_SETTINGS.cluePolicy,
+    clueRepeatPolicy: CLUE_REPEAT_POLICIES.has(value.clueRepeatPolicy)
+      ? value.clueRepeatPolicy
+      : DEFAULT_PLAY_BOT_SETTINGS.clueRepeatPolicy,
     multiTolerance: Number.isFinite(multiTolerance)
       ? Math.min(20, Math.max(0, multiTolerance))
       : DEFAULT_PLAY_BOT_SETTINGS.multiTolerance,
