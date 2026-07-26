@@ -203,12 +203,22 @@ The picker exposes MiniLM-L3, MiniLM-L6, and BGE-small because each offers a dis
 | 💬 `npm run evaluate:explanations -- --max-cost-usd 0.08` | [`recommendation-explanation-evaluation.json`](../scripts/generated/recommendation-explanation-evaluation.json) | Plain-language explanation quality and model cost |
 | ⏱️ `npm run benchmark:picker` | [`model-picker-benchmark.json`](../scripts/generated/model-picker-benchmark.json) | Controlled scoring cost |
 | 🎮 `npm run benchmark:play` | [`play-policy-benchmark.md`](../scripts/generated/play-policy-benchmark.md) | Full-game clue and operative policy |
+| 📊 `npm run benchmark:compare` | Comparison JSON | Paired bootstrap and promotion gates |
+| 📐 `npm run benchmark:calibrate-similarity` | Calibration JSON | Comparable score geometry |
+| 👥 `npm run calibration:build` | Calibration round JSON | Blinded human tasks |
+| 🧾 `npm run calibration:evaluate` | Human result JSON | Exported answer scoring |
 | 🔢 `npm run analyze:play-clues` | [`play-clue-bias-analysis.json`](../scripts/generated/play-clue-bias-analysis.json) | Opening-board clue depth |
 | 🌐 `npm run experiment:api-index` | Gitignored API index | Cost-capped hosted model |
 | 👥 `npm run evaluate:api-embeddings` | [`api-embedding-comparison.json`](../scripts/generated/api-embedding-comparison.json) | Hosted human fit |
 | 🏗️ `npm run generate:data` | Words + model shards | Generated asset parity |
 
 Embedding evaluation uses the pinned Cultural Codes and Connector datasets without redistributing their unlicensed source files. Treat embedding-layer recall as one input, not proof that the complete generated ranking is better.
+
+The full-game benchmark has frozen smoke, calibration, development, and test board ranges. Use `--comparison-only` for embedding selection, then compare full reports with `npm run benchmark:compare`. Candidate models must first match BGE-small's fixed similarity-probe mean and spread through `--similarity-scale` and `--similarity-offset`. This makes the five-point multi-clue tolerance and absolute operative thresholds comparable across models.
+
+The hidden `?mode=calibrate` page loads versioned rounds from `public/data/calibration/manifest.json`. It stores editable answers under `codenames-human-calibration-v1`, supports JSON import and export, and never loads model labels, intended targets, or team roles. Those fields stay in `scripts/generated/calibration-answer-keys/` and are joined only by `npm run calibration:evaluate -- --answer-key <key.json>`. Use the first 30-task round once as a gross-failure calibration baseline. Add later rounds only when new evidence is needed.
+
+The locked selection contract is `scripts/generated/embedding-finalist-protocol.json`. Cross-model transfer is the primary development gate, while same-model self-play is a regression and efficacy screen. Held-out test runs require the protocol path, an eligible model entry, and a new output path.
 
 Hosted challengers stay out of the browser and production bundle until they pass the same promotion gates. `npm run experiment:api-index -- --max-cost-usd 0.03` builds a batch-cached OpenAI index after a cost preflight, checks billed usage after each request, and keeps every vector under `.cache`. `npm run evaluate:api-embeddings` reuses that cache for the human datasets. Supply the key through `OPENAI_API_KEY`; neither command writes it to disk.
 

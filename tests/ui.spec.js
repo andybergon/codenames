@@ -334,6 +334,133 @@ test("select option menus follow the dark theme", async ({ page }) => {
   });
 });
 
+test("human calibration stays hidden outside its direct URL", async ({ page }) => {
+  await page.goto("/");
+
+  await expect(page.locator("#calibration-mode")).toBeHidden();
+  await expect(
+    page.getByRole("button", { name: "Human calibration" }),
+  ).toHaveCount(0);
+  expect(
+    await page.locator("[data-app-mode]").evaluateAll((buttons) =>
+      buttons.map((button) => button.textContent.trim()),
+    ),
+  ).toEqual(["Play", "Train"]);
+});
+
+test("human calibration answers can be corrected and survive reloads", async ({
+  page,
+}) => {
+  await page.goto("/?mode=calibrate");
+
+  await expect(page.locator("#calibration-clue")).not.toHaveText(
+    "Loading calibration",
+  );
+  await expect(page.locator("#calibration-progress")).toHaveText(
+    "0/30 answered",
+  );
+  const firstWord = page.locator(".calibration-word").first();
+  const secondWord = page.locator(".calibration-word").nth(1);
+  await firstWord.click();
+  await secondWord.click();
+  await page.locator("#calibration-judgment").selectOption("good");
+  await page.locator("#calibration-note").fill("First pass");
+  await page.getByRole("button", { name: "Save and next" }).click();
+  await expect(page.locator("#calibration-progress")).toHaveText(
+    "1/30 answered",
+  );
+
+  await page.reload();
+  await expect(page.locator("#calibration-progress")).toHaveText(
+    "1/30 answered",
+  );
+  await page
+    .getByRole("button", { name: "Open calibration task 1", exact: true })
+    .click();
+  await expect(page.locator(".calibration-word[data-selected='true']")).toHaveCount(
+    2,
+  );
+  await secondWord.click();
+  await page.locator("#calibration-note").fill("Corrected");
+  await page.getByRole("button", { name: "Save and next" }).click();
+  await page.reload();
+  await page
+    .getByRole("button", { name: "Open calibration task 1", exact: true })
+    .click();
+  await expect(page.locator(".calibration-word[data-selected='true']")).toHaveCount(
+    1,
+  );
+  await expect(page.locator("#calibration-note")).toHaveValue("Corrected");
+});
+
+test("human calibration fits the required responsive viewports", async ({
+  page,
+}) => {
+  for (const viewport of [
+    { width: 390, height: 844 },
+    { width: 768, height: 1024 },
+    { width: 1440, height: 900 },
+  ]) {
+    await page.setViewportSize(viewport);
+    await page.goto("/?mode=calibrate");
+    await expect(page.locator(".calibration-board")).toBeVisible();
+    expect(
+      await page.evaluate(
+        () =>
+          document.documentElement.scrollWidth >
+          document.documentElement.clientWidth,
+      ),
+      `page overflow at ${viewport.width}x${viewport.height}`,
+    ).toBe(false);
+    await expect(page.locator(".calibration-word")).toHaveCount(25);
+  }
+});
+
+test("human calibration imports later rounds and exports answers", async ({
+  page,
+}) => {
+  await page.goto("/?mode=calibrate");
+  const importedRound = {
+    schemaVersion: 1,
+    roundId: "future-round",
+    title: "Future round",
+    tasks: [
+      {
+        taskId: "future-001",
+        clue: "orbit",
+        number: 1,
+        activeSide: "blue",
+        words: [
+          { layoutId: 1, word: "MOON", team: "friendly" },
+          { layoutId: 2, word: "BOMB", team: "assassin" },
+        ],
+        intendedLayoutIds: [1],
+        source: { modelId: "future-model", board: 1, turn: 1 },
+      },
+    ],
+  };
+  await page.locator("#calibration-import-input").setInputFiles({
+    name: "future-round.json",
+    mimeType: "application/json",
+    buffer: Buffer.from(JSON.stringify(importedRound)),
+  });
+
+  await expect(page.locator("#calibration-clue")).toHaveText("orbit");
+  await expect(page.locator("#calibration-round")).toHaveValue("future-round");
+  await page.getByRole("button", { name: "MOON" }).click();
+  await page.getByRole("button", { name: "Save and next" }).click();
+  const downloadPromise = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Export answers" }).click();
+  const stream = await (await downloadPromise).createReadStream();
+  const chunks = [];
+  for await (const chunk of stream) chunks.push(chunk);
+  const exported = JSON.parse(Buffer.concat(chunks).toString("utf8"));
+  const future = exported.rounds.find(
+    ({ round }) => round.roundId === "future-round",
+  );
+  expect(future.answers["future-001"].guessedLayoutIds).toEqual([1]);
+});
+
 test("switching modes keeps shared layout positions stable", async ({ page }) => {
   await page.setViewportSize({ width: 857, height: 998 });
   await page.goto("/?mode=play");

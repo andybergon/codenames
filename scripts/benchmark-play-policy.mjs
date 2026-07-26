@@ -1,5 +1,5 @@
 import { cpus, platform, release } from "node:os";
-import { readFile, writeFile } from "node:fs/promises";
+import { access, readFile, writeFile } from "node:fs/promises";
 import { isAbsolute, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { performance } from "node:perf_hooks";
@@ -14,7 +14,12 @@ import {
   remainingCardsForSide,
   teamForSide,
 } from "../src/gameplay.js";
-import { analyzeEmbeddedBoard, isForbiddenClue, normalizeTerm } from "../src/model.js";
+import {
+  analyzeEmbeddedBoard,
+  calibrateSimilarity,
+  isForbiddenClue,
+  normalizeTerm,
+} from "../src/model.js";
 import {
   PLAY_CLUE_POLICY,
   chooseBotClue,
@@ -46,12 +51,19 @@ const DEFAULT_BOARD_COUNT = 100;
 const DEFAULT_OUTPUT = "scripts/generated/play-policy-benchmark.json";
 const DEFAULT_SUMMARY_OUTPUT = "scripts/generated/play-policy-benchmark.md";
 const RESULTS_PER_SIZE = 6;
-const MAX_ACTIONS_PER_GAME = 500;
+const DEFAULT_MAX_ACTIONS_PER_GAME = 100;
 const POLICIES = [PLAY_CLUE_POLICY.CURRENT, PLAY_CLUE_POLICY.HYBRID];
 const OPERATIVE_AGGRESSIONS = Object.values(PLAY_OPERATIVE_AGGRESSION);
+const BENCHMARK_SPLITS = Object.freeze({
+  smoke: { boardOffset: 0, boards: 20 },
+  calibration: { boardOffset: 20, boards: 100 },
+  development: { boardOffset: 120, boards: 128 },
+  test: { boardOffset: 248, boards: 150 },
+});
 
 const options = parseOptions(process.argv.slice(2));
 const outputPath = isAbsolute(options.output) ? options.output : resolve(ROOT, options.output);
+await validateHeldOutTestRun(options, outputPath);
 const summaryOutput = options.summaryOutput ?? summaryPathFor(options.output);
 const summaryOutputPath = isAbsolute(summaryOutput)
   ? summaryOutput
@@ -82,13 +94,24 @@ const centeredBoardWords =
         boardWords,
       )
     : await embedLocalBoardWords(boardWords, manifest, clueIndex);
+const similarityCalibration = {
+  scale: options.similarityScale,
+  offset: options.similarityOffset,
+};
+const similarityGeometry = measureSimilarityGeometry(
+  clueIndex,
+  centeredBoardWords,
+);
+const activePolicies = options.comparisonOnly
+  ? [PLAY_CLUE_POLICY.HYBRID]
+  : POLICIES;
+const activeAggressions = options.comparisonOnly
+  ? [options.operativeAggression]
+  : OPERATIVE_AGGRESSIONS;
 const vectorByWord = new Map(
   boardWords.map((word, index) => [word, centeredBoardWords[index]]),
 );
-const centeredClueVectors =
-  manifest.embeddingRuntime === "precomputed"
-    ? buildPrecomputedClueVectorCache(clueIndex)
-    : new Map();
+const centeredClueVectors = buildPrecomputedClueVectorCache(clueIndex);
 const operativeContext = await loadOperativeContext({
   boardWords,
   clueIndex,
@@ -97,14 +120,17 @@ const operativeContext = await loadOperativeContext({
   manifest,
   modelId: options.operativeModel,
 });
-const resultsByPolicy = new Map(POLICIES.map((policy) => [policy, []]));
+const resultsByPolicy = new Map(
+  activePolicies.map((policy) => [policy, []]),
+);
 const resultsByAggression = new Map(
-  OPERATIVE_AGGRESSIONS.map((aggression) => [aggression, []]),
+  activeAggressions.map((aggression) => [aggression, []]),
 );
 const startedAt = performance.now();
 
 for (let boardIndex = 0; boardIndex < options.boards; boardIndex += 1) {
-  const seed = boardSeed(boardIndex);
+  const benchmarkBoardIndex = options.boardOffset + boardIndex;
+  const seed = boardSeed(benchmarkBoardIndex);
   const boardState = createGeneratedBoardState(
     seed,
     BOARD_ORDER.RANDOM,
@@ -136,9 +162,9 @@ for (let boardIndex = 0; boardIndex < options.boards; boardIndex += 1) {
     }),
   };
 
-  for (const policy of POLICIES) {
+  for (const policy of activePolicies) {
     const result = await simulateGame({
-      boardIndex,
+      boardIndex: benchmarkBoardIndex,
       boardVectors,
       operativeContext: operativeGameContext,
       cards,
@@ -151,6 +177,8 @@ for (let boardIndex = 0; boardIndex < options.boards; boardIndex += 1) {
       bonusGuesses: options.bonusGuesses,
       operativeAggression: options.operativeAggression,
       wordSet: options.wordSet,
+      maxActions: options.maxActions,
+      similarityCalibration,
     });
     resultsByPolicy.get(policy).push(result);
     if (policy === PLAY_CLUE_POLICY.HYBRID) {
@@ -158,13 +186,13 @@ for (let boardIndex = 0; boardIndex < options.boards; boardIndex += 1) {
     }
   }
 
-  for (const operativeAggression of OPERATIVE_AGGRESSIONS) {
+  for (const operativeAggression of activeAggressions) {
     if (operativeAggression === options.operativeAggression) {
       continue;
     }
     resultsByAggression.get(operativeAggression).push(
       await simulateGame({
-        boardIndex,
+        boardIndex: benchmarkBoardIndex,
         boardVectors,
         operativeContext: operativeGameContext,
         cards,
@@ -177,6 +205,8 @@ for (let boardIndex = 0; boardIndex < options.boards; boardIndex += 1) {
         bonusGuesses: options.bonusGuesses,
         operativeAggression,
         wordSet: options.wordSet,
+        maxActions: options.maxActions,
+        similarityCalibration,
       }),
     );
   }
@@ -190,10 +220,13 @@ for (let boardIndex = 0; boardIndex < options.boards; boardIndex += 1) {
 }
 
 const policies = Object.fromEntries(
-  POLICIES.map((policy) => [policy, summarizePolicy(resultsByPolicy.get(policy))]),
+  activePolicies.map((policy) => [
+    policy,
+    summarizePolicy(resultsByPolicy.get(policy)),
+  ]),
 );
 const operativeAggression = Object.fromEntries(
-  OPERATIVE_AGGRESSIONS.map((aggression) => [
+  activeAggressions.map((aggression) => [
     aggression,
     compactOperativeSummary(
       summarizePolicy(resultsByAggression.get(aggression)),
@@ -212,8 +245,11 @@ const report = {
   },
   methodology: {
     boardCount: options.boards,
+    boardOffset: options.boardOffset,
+    split: options.split,
     gamesPerPolicy: options.boards,
     pairedBoards: true,
+    comparisonOnly: options.comparisonOnly,
     wordSet: options.wordSet,
     modelId: options.modelId,
     model: manifest.model,
@@ -251,8 +287,19 @@ const report = {
     },
     operativeModelId: options.operativeModel,
     operativeModel: operativeContext.model,
+    maxActionsPerGame: options.maxActions,
+    similarityCalibration: {
+      ...similarityCalibration,
+      rawGeometry: similarityGeometry,
+      calibratedGeometry: transformSimilarityGeometry(
+        similarityGeometry,
+        similarityCalibration,
+      ),
+      note:
+        "Scale and offset are applied to clue-board and board-board similarities before scoring. Cross-model operative runs retain the operative model's native scale.",
+    },
     rules:
-      "Every simulation uses the production Play state machine and stops only at an agent or assassin win.",
+      "Every simulation uses the production Play state machine. Games that exceed the action bound remain in the report as stalls.",
     fallback:
       "If the production analyzer has no ranked suggestion, use the legal indexed clue closest to one remaining agent, number 1, and count the turn.",
     firstHalf:
@@ -274,7 +321,7 @@ const report = {
   policies,
   operativeAggression,
   operativeAggressionVsDynamic: Object.fromEntries(
-    OPERATIVE_AGGRESSIONS.filter(
+    activeAggressions.filter(
       (aggression) => aggression !== PLAY_OPERATIVE_AGGRESSION.DYNAMIC,
     ).map((aggression) => [
       aggression,
@@ -284,16 +331,22 @@ const report = {
       ),
     ]),
   ),
-  hybridMinusCurrent: metricDeltas(policies.current, policies.hybrid),
+  hybridMinusCurrent: policies.current
+    ? metricDeltas(policies.current, policies.hybrid)
+    : null,
 };
 
 const outputReport =
   options.reportDetail === "compact" ? compactReport(report) : report;
 await writeFile(outputPath, `${JSON.stringify(outputReport, null, 2)}\n`);
-await writePlayPolicySummary(report, summaryOutputPath);
+if (!options.comparisonOnly) {
+  await writePlayPolicySummary(report, summaryOutputPath);
+}
 console.log(`Wrote ${outputPath}`);
-console.log(`Wrote ${summaryOutputPath}`);
-printSummary(policies);
+if (!options.comparisonOnly) {
+  console.log(`Wrote ${summaryOutputPath}`);
+}
+printSummary(policies, activePolicies);
 
 async function simulateGame({
   boardIndex,
@@ -309,6 +362,8 @@ async function simulateGame({
   bonusGuesses: bonusGuessPolicy,
   operativeAggression,
   wordSet,
+  maxActions,
+  similarityCalibration,
 }) {
   let game = createPlayGame({
     botSettings: {
@@ -331,7 +386,7 @@ async function simulateGame({
   const clueDecisions = [];
   const guessDecisions = [];
 
-  while (game.phase !== GAME_PHASE.COMPLETE && actions < MAX_ACTIONS_PER_GAME) {
+  while (game.phase !== GAME_PHASE.COMPLETE && actions < maxActions) {
     actions += 1;
     const random = createSeededRandom(
       `${game.seed}:${game.turnNumber}:${game.history.length}`,
@@ -342,7 +397,7 @@ async function simulateGame({
         boardForSide(game.cards, game.activeSide),
         boardVectors,
         activeClueIndex,
-        { limit: RESULTS_PER_SIZE },
+        { limit: RESULTS_PER_SIZE, similarityCalibration },
       );
       const ownRemaining = remainingCardsForSide(game.cards, game.activeSide);
       const opponentRemaining = remainingCardsForSide(
@@ -409,6 +464,12 @@ async function simulateGame({
           bestSingle && bestMulti
             ? rounded(bestMulti.score - bestSingle.score)
             : null,
+        words: game.cards
+          .filter((card) => !card.done)
+          .map(({ layoutId, word, team }) => ({ layoutId, word, team })),
+        intendedLayoutIds: suggestion.targets.map(
+          ({ layoutId }) => layoutId,
+        ),
       });
       game = giveClue(game, {
         clue: suggestion.clue,
@@ -427,10 +488,19 @@ async function simulateGame({
       .map((card, index) => ({
         layoutId: card.layoutId,
         done: card.done,
-        similarity: dotVectors(
-          clueVector,
-          operativeContext.boardVectors[index],
-        ),
+        similarity:
+          options.operativeModel === "same"
+            ? calibrateSimilarity(
+                dotVectors(
+                  clueVector,
+                  operativeContext.boardVectors[index],
+                ),
+                similarityCalibration,
+              )
+            : dotVectors(
+                clueVector,
+                operativeContext.boardVectors[index],
+              ),
       }))
       .filter((candidate) => !candidate.done)
       .map(({ layoutId, similarity }) => ({ layoutId, similarity }));
@@ -482,17 +552,13 @@ async function simulateGame({
         : guessCard(game, { layoutId, actor });
   }
 
-  if (game.phase !== GAME_PHASE.COMPLETE) {
-    throw new Error(
-      `${policy} game on board ${boardIndex + 1} exceeded ${MAX_ACTIONS_PER_GAME} actions.`,
-    );
-  }
   return summarizeGame(game, boardIndex, actions, {
     bonusGuesses,
     clueDecisions,
     correctBonusGuesses,
     fallbackClues,
     guessDecisions,
+    stalled: game.phase !== GAME_PHASE.COMPLETE,
   });
 }
 
@@ -570,6 +636,7 @@ function summarizeGame(
     correctBonusGuesses,
     fallbackClues,
     guessDecisions,
+    stalled,
   },
 ) {
   const clues = game.history.filter((event) => event.type === "clue-given");
@@ -583,14 +650,22 @@ function summarizeGame(
   ).length;
   const neutralHits = guesses.filter((event) => event.team === "neutral").length;
   const assassinHits = guesses.filter((event) => event.team === "assassin").length;
-  const losingSide = game.winner === SIDE.BLUE ? SIDE.RED : SIDE.BLUE;
-  const losingAgentsRemaining = remainingCardsForSide(game.cards, losingSide);
+  const losingSide =
+    game.winner === SIDE.BLUE
+      ? SIDE.RED
+      : game.winner === SIDE.RED
+        ? SIDE.BLUE
+        : null;
+  const losingAgentsRemaining = losingSide
+    ? remainingCardsForSide(game.cards, losingSide)
+    : null;
 
   return {
     board: boardIndex + 1,
     seed: game.seed,
     winner: game.winner,
     endReason: game.endReason,
+    stalled,
     actions,
     turns: clues.length,
     fallbackClues,
@@ -621,8 +696,16 @@ function summarizePolicy(gameResults) {
       summary.wrongTeamHits += game.wrongTeamHits;
       summary.neutralHits += game.neutralHits;
       summary.assassinHits += game.assassinHits;
-      summary.closeFinishes += Number(game.losingAgentsRemaining <= 2);
-      summary.losingAgentsRemaining += game.losingAgentsRemaining;
+      summary.completedGames += Number(!game.stalled);
+      summary.stalledGames += Number(game.stalled);
+      summary.closeFinishes += Number(
+        !game.stalled && game.losingAgentsRemaining <= 2,
+      );
+      summary.losingAgentsRemaining += Number.isFinite(
+        game.losingAgentsRemaining,
+      )
+        ? game.losingAgentsRemaining
+        : 0;
       summary.passes += game.passes;
       summary.fallbackClues += game.fallbackClues;
       summary.bonusGuesses += game.bonusGuesses;
@@ -644,6 +727,8 @@ function summarizePolicy(gameResults) {
       wrongTeamHits: 0,
       neutralHits: 0,
       assassinHits: 0,
+      completedGames: 0,
+      stalledGames: 0,
       closeFinishes: 0,
       losingAgentsRemaining: 0,
       passes: 0,
@@ -670,7 +755,9 @@ function summarizePolicy(gameResults) {
 
   const policy = {
     gameCount,
-    completedGames: gameCount,
+    completedGames: totals.completedGames,
+    stalledGames: totals.stalledGames,
+    stallRate: ratio(totals.stalledGames, gameCount),
     clueCount: totals.turns,
     clueNumberDistribution: totals.clues,
     multiClueRate: ratio(multiClues, totals.turns),
@@ -684,10 +771,10 @@ function summarizePolicy(gameResults) {
     neutralHitsPerGame: ratio(totals.neutralHits, gameCount),
     assassinHits: totals.assassinHits,
     assassinRate: ratio(totals.assassinHits, gameCount),
-    closeFinishRate: ratio(totals.closeFinishes, gameCount),
+    closeFinishRate: ratio(totals.closeFinishes, totals.completedGames),
     meanLosingAgentsRemaining: ratio(
       totals.losingAgentsRemaining,
-      gameCount,
+      totals.completedGames,
     ),
     meanTurnsPerGame: ratio(totals.turns, gameCount),
     meanGuessesPerTurn: ratio(totals.guesses, totals.turns),
@@ -707,7 +794,17 @@ function summarizePolicy(gameResults) {
       red: totals.redWins,
     },
     gameResults: gameResults.map(
-      ({ clueDecisions, guessDecisions, ...result }) => result,
+      ({ clueDecisions, guessDecisions, ...result }) => ({
+        ...result,
+        calibrationTurns: clueDecisions.slice(0, 1).map((decision) => ({
+          turn: decision.turn,
+          side: decision.side,
+          clue: decision.clue,
+          number: decision.number,
+          words: decision.words,
+          intendedLayoutIds: decision.intendedLayoutIds,
+        })),
+      }),
     ),
   };
   return {
@@ -786,6 +883,7 @@ function metricDeltas(current, hybrid) {
       "meanGuessesPerTurn",
       "passesPerGame",
       "fallbackClueRate",
+      "stallRate",
       "bonusGuessesPerGame",
       "correctBonusGuessRate",
     ].map((metric) => [metric, rounded(hybrid[metric] - current[metric])]),
@@ -799,6 +897,7 @@ function compactOperativeSummary(policy) {
     wrongTeamHitsPerGame: policy.wrongTeamHitsPerGame,
     neutralHitsPerGame: policy.neutralHitsPerGame,
     assassinRate: policy.assassinRate,
+    stallRate: policy.stallRate,
     meanTurnsPerGame: policy.meanTurnsPerGame,
     passesPerGame: policy.passesPerGame,
     operativeGuessQuality: policy.operativeGuessQuality,
@@ -814,6 +913,7 @@ function operativeMetricDeltas(dynamic, candidate) {
       "wrongTeamHitsPerGame",
       "neutralHitsPerGame",
       "assassinRate",
+      "stallRate",
       "meanTurnsPerGame",
       "passesPerGame",
     ].map((metric) => [metric, rounded(candidate[metric] - dynamic[metric])]),
@@ -840,8 +940,25 @@ function boardSeed(boardIndex) {
 }
 
 function parseOptions(args) {
-  const values = {
+  const splitIndex = args.indexOf("--split");
+  const requestedSplit = splitIndex >= 0 ? args[splitIndex + 1] : "custom";
+  if (
+    requestedSplit !== "custom" &&
+    !Object.hasOwn(BENCHMARK_SPLITS, requestedSplit)
+  ) {
+    throw new Error(
+      `--split must be ${Object.keys(BENCHMARK_SPLITS).join(", ")}, or custom.`,
+    );
+  }
+  const splitDefaults = BENCHMARK_SPLITS[requestedSplit] ?? {
+    boardOffset: 0,
     boards: DEFAULT_BOARD_COUNT,
+  };
+  const values = {
+    boards: splitDefaults.boards,
+    boardOffset: splitDefaults.boardOffset,
+    split: requestedSplit,
+    maxActions: DEFAULT_MAX_ACTIONS_PER_GAME,
     candidates: DEFAULT_PLAY_BOT_SETTINGS.candidateCount,
     modelId: DEFAULT_PLAY_BOT_SETTINGS.modelId,
     wordSet: WORD_SET.OFFICIAL,
@@ -854,12 +971,22 @@ function parseOptions(args) {
     summaryOutput: null,
     indexDir: null,
     operativeModel: "same",
+    similarityScale: 1,
+    similarityOffset: 0,
+    comparisonOnly: false,
+    testProtocol: null,
   };
   for (let index = 0; index < args.length; index += 1) {
     const option = args[index];
     const value = args[index + 1];
     if (option === "--boards") {
       values.boards = positiveInteger(value, option);
+    } else if (option === "--board-offset") {
+      values.boardOffset = nonNegativeInteger(value, option);
+    } else if (option === "--split") {
+      values.split = requestedSplit;
+    } else if (option === "--max-actions") {
+      values.maxActions = positiveInteger(value, option);
     } else if (option === "--candidates") {
       values.candidates = positiveInteger(value, option);
     } else if (option === "--model") {
@@ -883,6 +1010,15 @@ function parseOptions(args) {
       values.clueSelection = value;
     } else if (option === "--multi-tolerance") {
       values.multiTolerance = nonNegativeNumber(value, option);
+    } else if (option === "--similarity-scale") {
+      values.similarityScale = positiveNumber(value, option);
+    } else if (option === "--similarity-offset") {
+      values.similarityOffset = finiteNumber(value, option);
+    } else if (option === "--comparison-only") {
+      values.comparisonOnly = true;
+      index -= 1;
+    } else if (option === "--test-protocol") {
+      values.testProtocol = requiredValue(value, option);
     } else if (option === "--bonus-guesses") {
       if (!["allow", "pass"].includes(value)) {
         throw new Error(`${option} must be allow or pass.`);
@@ -922,12 +1058,69 @@ function positiveInteger(value, option) {
   return parsed;
 }
 
+function nonNegativeInteger(value, option) {
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed < 0) {
+    throw new Error(`${option} requires a non-negative integer.`);
+  }
+  return parsed;
+}
+
 function nonNegativeNumber(value, option) {
   const parsed = Number(value);
   if (!Number.isFinite(parsed) || parsed < 0) {
     throw new Error(`${option} requires a non-negative number.`);
   }
   return parsed;
+}
+
+function positiveNumber(value, option) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    throw new Error(`${option} requires a positive number.`);
+  }
+  return parsed;
+}
+
+function finiteNumber(value, option) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) {
+    throw new Error(`${option} requires a finite number.`);
+  }
+  return parsed;
+}
+
+function requiredValue(value, option) {
+  if (!value) throw new Error(`${option} requires a value.`);
+  return value;
+}
+
+async function validateHeldOutTestRun(values, output) {
+  if (values.split !== "test") return;
+  if (!values.testProtocol) {
+    throw new Error(
+      "--split test requires --test-protocol so held-out eligibility is explicit.",
+    );
+  }
+  const protocol = JSON.parse(
+    await readFile(resolve(ROOT, values.testProtocol), "utf8"),
+  );
+  if (
+    protocol.heldOutTest?.status !== "authorized" ||
+    !protocol.heldOutTest.eligibleModelIds?.includes(values.modelId)
+  ) {
+    throw new Error(
+      `${values.modelId} is not authorized by the held-out test protocol.`,
+    );
+  }
+  try {
+    await access(output);
+  } catch {
+    return;
+  }
+  throw new Error(
+    `Held-out result already exists at ${output}. Refusing a repeat run.`,
+  );
 }
 
 function summaryPathFor(reportPath) {
@@ -981,6 +1174,87 @@ function summarizeClueDecisions(decisions) {
   );
 }
 
+function measureSimilarityGeometry(activeClueIndex, boardVectors) {
+  const clueRows = sampledIndices(activeClueIndex.clues.length, 128);
+  const boardRows = sampledIndices(boardVectors.length, 128);
+  const values = new Float64Array(clueRows.length * boardRows.length);
+  let valueIndex = 0;
+  for (const clueRow of clueRows) {
+    const vectorOffset = clueRow * activeClueIndex.dimensions;
+    for (const boardRow of boardRows) {
+      const boardVector = boardVectors[boardRow];
+      let total = 0;
+      for (
+        let dimension = 0;
+        dimension < activeClueIndex.dimensions;
+        dimension += 1
+      ) {
+        total +=
+          activeClueIndex.vectors[vectorOffset + dimension] *
+          boardVector[dimension];
+      }
+      values[valueIndex] = total / activeClueIndex.quantization.scale;
+      valueIndex += 1;
+    }
+  }
+  values.sort();
+  const average =
+    values.reduce((total, value) => total + value, 0) / values.length;
+  const variance =
+    values.reduce(
+      (total, value) => total + (value - average) ** 2,
+      0,
+    ) / values.length;
+  return {
+    clueSamples: clueRows.length,
+    boardWordSamples: boardRows.length,
+    pairSamples: values.length,
+    mean: rounded(average),
+    standardDeviation: rounded(Math.sqrt(variance)),
+    minimum: rounded(values[0]),
+    p05: rounded(quantile(values, 0.05)),
+    median: rounded(quantile(values, 0.5)),
+    p95: rounded(quantile(values, 0.95)),
+    maximum: rounded(values.at(-1)),
+  };
+}
+
+function sampledIndices(length, maximum) {
+  const count = Math.min(length, maximum);
+  if (count === length) return Array.from({ length }, (_, index) => index);
+  return Array.from({ length: count }, (_, index) =>
+    Math.round((index * (length - 1)) / (count - 1)),
+  );
+}
+
+function quantile(sorted, fraction) {
+  const position = (sorted.length - 1) * fraction;
+  const lower = Math.floor(position);
+  const upper = Math.ceil(position);
+  if (lower === upper) return sorted[lower];
+  return (
+    sorted[lower] * (upper - position) +
+    sorted[upper] * (position - lower)
+  );
+}
+
+function transformSimilarityGeometry(geometry, calibration) {
+  const transform = (value) =>
+    rounded(calibrateSimilarity(value, calibration));
+  return {
+    ...geometry,
+    mean: transform(geometry.mean),
+    standardDeviation: rounded(
+      geometry.standardDeviation * calibration.scale,
+    ),
+    minimum: transform(geometry.minimum),
+    p05: transform(geometry.p05),
+    median: transform(geometry.median),
+    p95: transform(geometry.p95),
+    maximum: transform(geometry.maximum),
+  };
+}
+
 function dotVectors(left, right) {
   let total = 0;
   for (let index = 0; index < left.length; index += 1) {
@@ -1021,14 +1295,44 @@ async function loadOperativeContext({
       "utf8",
     ),
   );
+  const operativeDirectory = resolve(
+    ROOT,
+    `public/data/model-lab/${modelId}`,
+  );
+  const operativeShards = await Promise.all(
+    operativeManifest.shards
+      .filter((shard) => shard.start < activeClueIndex.clues.length)
+      .map(async ({ file }) =>
+        JSON.parse(
+          await readFile(resolve(operativeDirectory, file), "utf8"),
+        ),
+      ),
+  );
+  const operativeClueIndex = hydrateClueShards(
+    operativeManifest,
+    operativeShards,
+    activeClueIndex.clues.length,
+  );
+  if (
+    operativeClueIndex.clues.some(
+      (clue, index) => clue !== activeClueIndex.clues[index],
+    )
+  ) {
+    throw new Error(
+      "The operative and spymaster clue vocabularies do not match.",
+    );
+  }
   const raw = await embedTerms(words, { model: operativeManifest.model });
-  const centered = centerEmbeddings(raw, operativeManifest.centering.mean);
+  const centered = centerEmbeddings(
+    raw,
+    operativeClueIndex.centering.mean,
+  );
   return {
     vectorByWord: new Map(
       words.map((word, index) => [word, centered[index]]),
     ),
-    cache: new Map(),
-    centeringMean: operativeManifest.centering.mean,
+    cache: buildPrecomputedClueVectorCache(operativeClueIndex),
+    centeringMean: operativeClueIndex.centering.mean,
     model: operativeManifest.model,
   };
 }
@@ -1102,9 +1406,9 @@ function rounded(value) {
   return Number(value.toFixed(6));
 }
 
-function printSummary(policyResults) {
+function printSummary(policyResults, policyNames = POLICIES) {
   console.table(
-    POLICIES.map((policy) => ({
+    policyNames.map((policy) => ({
       policy,
       games: policyResults[policy].gameCount,
       "multi clues": policyResults[policy].multiClueRate,

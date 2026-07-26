@@ -23,6 +23,7 @@ import {
 import {
   analyzeEmbeddedBoard,
   applyDangerPenalty,
+  calibrateSimilarity,
   calculateBoardMetrics,
   isForbiddenClue,
 } from "../src/model.js";
@@ -122,6 +123,10 @@ assert.deepEqual(
 
 assert.ok(applyDangerPenalty(0.4, "enemy") > applyDangerPenalty(0.4, "neutral"));
 assert.ok(applyDangerPenalty(0.4, "assassin") > applyDangerPenalty(0.4, "enemy"));
+assert.equal(
+  calibrateSimilarity(0.25, { scale: 2, offset: -0.1 }),
+  0.4,
+);
 assert.equal(isForbiddenClue("pinball", ["pin"]), true);
 assert.equal(isForbiddenClue("pinball", ["ball"]), true);
 assert.equal(isForbiddenClue("pinball", ["pin", "ball"]), true);

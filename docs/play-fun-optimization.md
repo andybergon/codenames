@@ -2,7 +2,21 @@
 
 ## 🎯 Recommendation
 
-Keep BGE-small as the production Play embedding. Voyage 4 Large substantially improves human clue recovery, but its same-model Fun is lower and its MiniLM transfer run exceeds the bounded game limit. Cohere Embed v4 also lowers Fun and fails the same transfer guardrail. Voyage, Gemini, and ConceptNet remain promising ensemble signals, not standalone replacements.
+Keep BGE-small as the production Play embedding. Similarity calibration made Cohere look substantially better in same-model self-play and put Voyage level with BGE, but both failed the primary MiniLM-L6 operative transfer screen. Cohere and Voyage are therefore ineligible for the held-out test. The 30-task human round remains useful as a one-time gross-failure calibration baseline for future model work.
+
+## 🧪 Calibrated development
+
+| 🧠 Model | 🚦 Status | 💵 Added cost | 🎉 Same Fun | ✅ Same correct | ✅ Cross correct | 🔴 Cross wrong | ☠️ Cross assassin | ⛔ Stalls |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 🟢 BGE-small | ✅ Keep | Local | 81.38 | 1.48 | 0.97 | 0.48 | 6.3% | 0 |
+| 🪸 Cohere Embed v4 | ❌ Transfer | $0 cached | 86.72 | 1.56 | 0.67 | 1.41 | 30.5% | 6 |
+| 🚢 Voyage 4 Large | ❌ Transfer | $0 cached | 81.49 | 1.48 | 0.76 | 1.20 | 23.4% | 2 |
+
+Cohere's calibrated same-model correct-card delta was +0.089 with a paired 95% interval of +0.046 to +0.133. Voyage's delta was +0.003 with an interval of -0.039 to +0.046. In the primary cross-model screen, Cohere fell by 0.302 correct cards per turn and Voyage fell by 0.206, with both intervals entirely below the -0.05 noninferiority gate.
+
+The checked reports are [same-model development](../scripts/generated/play-embedding-finalist-development.json), [cross-model development](../scripts/generated/play-embedding-finalist-development-cross-model.json), and the locked [selection protocol](../scripts/generated/embedding-finalist-protocol.json).
+
+## 📚 Historical screening
 
 | 🧠 Model | 🎯 Rating | 🌐 General benchmark | 💵 Test cost | 👥 Human target recall | 🎉 Fun Index | ✅ Cross correct | 🔴 Cross wrong | ☠️ Cross assassin | 📌 Decision |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
@@ -24,7 +38,27 @@ The 0-100 Fun Index balances ambitious clues, productive guesses, close finishes
 
 Human target recall replays a real human clue and its intended number of targets, ranks every target, neutral, and avoid word by embedding similarity, then measures how many intended targets appear in the top N. It is averaged across the recorded Cultural Codes turns.
 
-The historical model sweep uses the same 20 deterministic boards, 10,000 clue candidates, hybrid scoring, five-point multi-clue tolerance, the former Aggressive operative thresholds, and passing at the declared clue number. Same-model scores measure the ceiling of a shared embedding space. MiniLM-L6 operative runs stress whether clues transfer beyond that space. The current Conservative, Aggressive, and Dynamic comparison is documented in [Clue engine](clue-engine.md#-play-operative-policy).
+The table above is the historical exploratory sweep. It uses the same 20 deterministic boards, 10,000 clue candidates, hybrid scoring, five-point multi-clue tolerance, the former Aggressive operative thresholds, and passing at the declared clue number. Its raw Fun values are useful for screening, but not authoritative model rankings because the models use different similarity score ranges.
+
+## 🧭 Authoritative protocol
+
+| 🧪 Split | 🎴 Boards | 🔢 Offset | 🎯 Use |
+| --- | ---: | ---: | --- |
+| 💨 Smoke | 20 | 0 | Regression |
+| 🧑 Calibration | 100 | 20 | Human round |
+| 🛠️ Development | 128 | 120 | Tune once |
+| 🔒 Test | 150 | 248 | Final decision |
+
+- 📐 Measure every model on the same 16,384 fixed clue-word pairs. Match its mean and standard deviation to BGE-small with `npm run benchmark:calibrate-similarity` before tuning score thresholds.
+- 🎚️ `multiTolerance` is the number of clue-score points a multi-card clue may trail the best overall clue and still be preferred. Tune it only on the development split after similarity calibration.
+- 🎮 Use `--comparison-only` for model selection. It runs only the production Hybrid and Dynamic path, avoiding unrelated policy variants.
+- 📊 Compare candidates on paired boards with `npm run benchmark:compare`. The report bootstraps whole boards 10,000 times and records 95% intervals.
+- 🛡️ Require zero stalls, at most 1% fallback clues, and baseline-relative noninferiority bounds. The 95% upper bound may add at most 0.05 assassin losses, 0.15 wrong-team hits, or 0.15 neutral hits per game, while the lower bound may lose at most 0.05 correct cards per turn.
+- 👥 Complete the first blinded human round at `?mode=calibrate`. The 30 tasks contain 10 paired-board opening clues per finalist. Answers are editable, browser-local, and exportable. Model labels, intended targets, and roles live in a separate answer key that the page never loads. Treat this single-rater round as a gross-failure disqualifier, not a ranker.
+- 🔐 Run the 150-board test split once for finalists that pass development and human calibration. Do not tune against its result.
+- 🧾 The checked protocol locks the held-out test when no candidate is eligible. A test run also requires `--test-protocol` and refuses to overwrite an existing result.
+
+Same-model scores still measure the ceiling of a shared embedding space. Cross-model operative runs stress whether clues transfer beyond that space, but do not replace human guesses. The current Conservative, Aggressive, and Dynamic comparison is documented in [Clue engine](clue-engine.md#-play-operative-policy).
 
 ## 📈 Findings
 
@@ -38,7 +72,7 @@ The historical model sweep uses the same 20 deterministic boards, 10,000 clue ca
 - 💵 The full OpenRouter Gemini and Qwen 8B generations cost $0.0544 combined.
 - 💳 Vercel free-tier generation reached 480 terms before a model-level 429. Adding $10.0000 of paid credit cost $13.0300 after fees and tax, then completed both 31,253-term corpora for $0.0640 of model usage.
 
-## 🧪 Promotion gates
+## 🧪 Historical promotion gates
 
 | 🧠 Candidate | 🚦 Human | 🚦 Fun | 🚦 Bounded | 🚦 Cross correct | 🚦 Cross wrong | 🚦 Assassin |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -55,8 +89,11 @@ The historical model sweep uses the same 20 deterministic boards, 10,000 clue ca
 1. Prepare the shared terms with `node scripts/prepare-embedding-candidate.mjs --output <experiment-dir>`.
 2. Generate local vectors with `scripts/embed-local-candidate.py`, or hosted vectors with `npm run embed:gateway-candidate` and an explicit cost cap.
 3. Build the human report and precomputed 10,000-clue index with `node scripts/finalize-embedding-candidate.mjs --experiment-dir <experiment-dir>`.
-4. Run same-model and MiniLM operative Play benchmarks with `scripts/benchmark-play-policy.mjs`.
-5. Refresh this report with `node scripts/summarize-embedding-candidates.mjs`.
+4. Run a one-board raw report per model, then derive the candidate transform with `npm run benchmark:calibrate-similarity`.
+5. Run the development split with `--comparison-only` and the derived similarity scale and offset.
+6. Build or extend a blinded human round with `npm run calibration:build -- --answer-key <key.json>`, then evaluate exported answers with `npm run calibration:evaluate -- --answer-key <key.json>`.
+7. Run the test split once for finalists and compare paired results with `npm run benchmark:compare`.
+8. Refresh the historical report with `node scripts/summarize-embedding-candidates.mjs` when adding candidates.
 
 The checked machine-readable result is [play-embedding-candidate-experiments.json](../scripts/generated/play-embedding-candidate-experiments.json).
 

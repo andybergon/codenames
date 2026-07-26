@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "baselineModelId": "bge-small",
+  "candidateModelIds": [
+    "cohere-embed-v4",
+    "voyage-4-large"
+  ],
+  "similarityCalibration": {
+    "referenceModelId": "bge-small",
+    "probePairs": 16384,
+    "cohere-embed-v4": {
+      "scale": 1.68624868,
+      "offset": -0.00033872
+    },
+    "voyage-4-large": {
+      "scale": 1.08427911,
+      "offset": 0.01189083
+    }
+  },
+  "splits": {
+    "smoke": {
+      "boardOffset": 0,
+      "boards": 20
+    },
+    "calibration": {
+      "boardOffset": 20,
+      "boards": 100
+    },
+    "development": {
+      "boardOffset": 120,
+      "boards": 128
+    },
+    "test": {
+      "boardOffset": 248,
+      "boards": 150
+    }
+  },
+  "development": {
+    "sameModelRole": "Regression and efficacy screen",
+    "crossModelRole": "Primary transfer and safety screen",
+    "operativeModelId": "minilm-l6",
+    "requiredReports": [
+      "scripts/generated/play-embedding-finalist-development.json",
+      "scripts/generated/play-embedding-finalist-development-cross-model.json"
+    ]
+  },
+  "promotion": {
+    "required": [
+      "zero stalls",
+      "fallback clue rate at most 0.01",
+      "correct cards per turn lower delta above -0.05",
+      "assassin loss upper delta at most 0.05",
+      "wrong-team hit upper delta at most 0.15",
+      "neutral hit upper delta at most 0.15",
+      "no gross human calibration failure"
+    ],
+    "selection": "Among all gate-passers, choose the greatest lower 95% bound on cross-model correct cards per turn. Break a practical tie by artifact size, measured load latency, and runtime cost."
+  },
+  "humanCalibration": {
+    "roundId": "embedding-finalists-v1",
+    "tasksPerModel": 10,
+    "role": "Blinded gross-failure disqualifier, not a ranker",
+    "requiredBeforeTest": true
+  },
+  "heldOutTest": {
+    "status": "locked",
+    "eligibleModelIds": [],
+    "reason": "Both candidates failed the cross-model development gates."
+  }
+}

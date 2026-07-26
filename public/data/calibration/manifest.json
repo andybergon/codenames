@@ -1,0 +1,6 @@
+{
+  "schemaVersion": 1,
+  "rounds": [
+    "./embedding-finalists-v1.json"
+  ]
+}

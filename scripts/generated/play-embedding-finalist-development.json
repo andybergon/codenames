@@ -1,0 +1,714 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-07-26T02:42:27.328Z",
+  "baseline": {
+    "path": ".cache/evaluations/play-finalists/development-bge.json",
+    "methodology": {
+      "boardCount": 128,
+      "boardOffset": 120,
+      "split": "development",
+      "gamesPerPolicy": 128,
+      "pairedBoards": true,
+      "comparisonOnly": true,
+      "wordSet": "official",
+      "modelId": "bge-small",
+      "model": "Xenova/bge-small-en-v1.5",
+      "provider": "local",
+      "dimensions": 384,
+      "indexDirectory": "public/data/model-lab/bge-small",
+      "candidateCount": 10000,
+      "resultsPerTargetSize": 6,
+      "boardSeed": "Eight deterministic bytes: ASCII CODE followed by a big-endian 1-based board index.",
+      "decisionSeed": "Matches Play runtime: board seed, turn number, and history length for each action.",
+      "clueSelection": "Prefer the highest-scoring multi clue when it is within 5 points of the best clue; otherwise choose the best clue.",
+      "bonusGuesses": "Pass after reaching the declared clue number.",
+      "operative": "The bot guesser sees only centered clue-to-unrevealed-word similarities from Xenova/bge-small-en-v1.5.",
+      "operativeAggression": "Policy comparison uses dynamic for the clue-policy rows and holds hybrid clue scoring fixed across all three operative modes.",
+      "operativeAggressionModes": {
+        "conservative": "Uses the highest similarity and separation thresholds and does not adapt to score.",
+        "aggressive": "Uses the former production thresholds and pursues the declared clue number unless confidence is extremely low.",
+        "dynamic": "Uses public remaining-agent counts to lower thresholds for a possible win or urgent comeback and raise them with a comfortable lead."
+      },
+      "operativeModelId": "same",
+      "operativeModel": "Xenova/bge-small-en-v1.5",
+      "maxActionsPerGame": 100,
+      "similarityCalibration": {
+        "scale": 1,
+        "offset": 0,
+        "rawGeometry": {
+          "clueSamples": 128,
+          "boardWordSamples": 128,
+          "pairSamples": 16384,
+          "mean": 0.012755,
+          "standardDeviation": 0.083213,
+          "minimum": -0.307545,
+          "p05": -0.104427,
+          "median": 0.003957,
+          "p95": 0.160136,
+          "maximum": 0.992276
+        },
+        "calibratedGeometry": {
+          "clueSamples": 128,
+          "boardWordSamples": 128,
+          "pairSamples": 16384,
+          "mean": 0.012755,
+          "standardDeviation": 0.083213,
+          "minimum": -0.307545,
+          "p05": -0.104427,
+          "median": 0.003957,
+          "p95": 0.160136,
+          "maximum": 0.992276
+        },
+        "note": "Scale and offset are applied to clue-board and board-board similarities before scoring. Cross-model operative runs retain the operative model's native scale."
+      },
+      "rules": "Every simulation uses the production Play state machine. Games that exceed the action bound remain in the report as stalls.",
+      "fallback": "If the production analyzer has no ranked suggestion, use the legal indexed clue closest to one remaining agent, number 1, and count the turn.",
+      "firstHalf": "For each completed game, take the first ceiling(total clue turns / 2) clue turns, then aggregate their clue numbers.",
+      "funObjective": {
+        "definition": "A 0-100 proxy balancing ambitious clues, productive guesses, close finishes, and a playable game length.",
+        "caution": "The Fun Index ranks deterministic self-play experiments. Human embedding agreement remains a separate validity guardrail.",
+        "version": 1,
+        "weights": {
+          "ambition": 0.3,
+          "momentum": 0.3,
+          "suspense": 0.25,
+          "flow": 0.15
+        },
+        "targets": {
+          "multiClueRate": [
+            0.2,
+            0.6
+          ],
+          "firstHalfMeanClueNumber": [
+            1.2,
+            2.2
+          ],
+          "correctCardsPerTurn": [
+            1,
+            1.65
+          ],
+          "closeFinishRate": [
+            0.35,
+            0.75
+          ],
+          "idealTurnsPerGame": [
+            8,
+            12
+          ],
+          "playableTurnsPerGame": [
+            6,
+            16
+          ]
+        },
+        "guardrails": {
+          "assassinRate": 0.02,
+          "wrongTeamHitsPerGame": 0.15,
+          "neutralHitsPerGame": 0.35,
+          "fallbackClueRate": 0.01,
+          "stallRate": 0
+        }
+      },
+      "policies": {
+        "current": "Worth + current risk adjustment + state-dependent clue-number bonus + 18 x margin.",
+        "hybrid": "0.35 x Worth + 25 x expected net + 10 x success + 6 x margin + risk adjustment."
+      }
+    }
+  },
+  "methodology": {
+    "pairedByBoard": true,
+    "bootstrapUnit": "board",
+    "bootstrapIterations": 10000,
+    "confidence": 0.95,
+    "seed": "CODE-STATS"
+  },
+  "candidates": [
+    {
+      "id": "cohere-embed-v4",
+      "methodology": {
+        "boardCount": 128,
+        "boardOffset": 120,
+        "split": "development",
+        "gamesPerPolicy": 128,
+        "pairedBoards": true,
+        "comparisonOnly": true,
+        "wordSet": "official",
+        "modelId": "cohere-embed-v4",
+        "model": "cohere/embed-v4.0",
+        "provider": "vercel-ai-gateway",
+        "dimensions": 1536,
+        "indexDirectory": ".cache/embedding-experiments/cohere-embed-v4-1536/index",
+        "candidateCount": 10000,
+        "resultsPerTargetSize": 6,
+        "boardSeed": "Eight deterministic bytes: ASCII CODE followed by a big-endian 1-based board index.",
+        "decisionSeed": "Matches Play runtime: board seed, turn number, and history length for each action.",
+        "clueSelection": "Prefer the highest-scoring multi clue when it is within 5 points of the best clue; otherwise choose the best clue.",
+        "bonusGuesses": "Pass after reaching the declared clue number.",
+        "operative": "The bot guesser sees only centered clue-to-unrevealed-word similarities from cohere/embed-v4.0.",
+        "operativeAggression": "Policy comparison uses dynamic for the clue-policy rows and holds hybrid clue scoring fixed across all three operative modes.",
+        "operativeAggressionModes": {
+          "conservative": "Uses the highest similarity and separation thresholds and does not adapt to score.",
+          "aggressive": "Uses the former production thresholds and pursues the declared clue number unless confidence is extremely low.",
+          "dynamic": "Uses public remaining-agent counts to lower thresholds for a possible win or urgent comeback and raise them with a comfortable lead."
+        },
+        "operativeModelId": "same",
+        "operativeModel": "cohere/embed-v4.0",
+        "maxActionsPerGame": 100,
+        "similarityCalibration": {
+          "scale": 1.68624868,
+          "offset": -0.00033872,
+          "rawGeometry": {
+            "clueSamples": 128,
+            "boardWordSamples": 128,
+            "pairSamples": 16384,
+            "mean": 0.007765,
+            "standardDeviation": 0.049348,
+            "minimum": -0.128836,
+            "p05": -0.055428,
+            "median": 0.001426,
+            "p95": 0.090635,
+            "maximum": 1.013454
+          },
+          "calibratedGeometry": {
+            "clueSamples": 128,
+            "boardWordSamples": 128,
+            "pairSamples": 16384,
+            "mean": 0.012755,
+            "standardDeviation": 0.083213,
+            "minimum": -0.217588,
+            "p05": -0.093804,
+            "median": 0.002066,
+            "p95": 0.152494,
+            "maximum": 1.708597
+          },
+          "note": "Scale and offset are applied to clue-board and board-board similarities before scoring. Cross-model operative runs retain the operative model's native scale."
+        },
+        "rules": "Every simulation uses the production Play state machine. Games that exceed the action bound remain in the report as stalls.",
+        "fallback": "If the production analyzer has no ranked suggestion, use the legal indexed clue closest to one remaining agent, number 1, and count the turn.",
+        "firstHalf": "For each completed game, take the first ceiling(total clue turns / 2) clue turns, then aggregate their clue numbers.",
+        "funObjective": {
+          "definition": "A 0-100 proxy balancing ambitious clues, productive guesses, close finishes, and a playable game length.",
+          "caution": "The Fun Index ranks deterministic self-play experiments. Human embedding agreement remains a separate validity guardrail.",
+          "version": 1,
+          "weights": {
+            "ambition": 0.3,
+            "momentum": 0.3,
+            "suspense": 0.25,
+            "flow": 0.15
+          },
+          "targets": {
+            "multiClueRate": [
+              0.2,
+              0.6
+            ],
+            "firstHalfMeanClueNumber": [
+              1.2,
+              2.2
+            ],
+            "correctCardsPerTurn": [
+              1,
+              1.65
+            ],
+            "closeFinishRate": [
+              0.35,
+              0.75
+            ],
+            "idealTurnsPerGame": [
+              8,
+              12
+            ],
+            "playableTurnsPerGame": [
+              6,
+              16
+            ]
+          },
+          "guardrails": {
+            "assassinRate": 0.02,
+            "wrongTeamHitsPerGame": 0.15,
+            "neutralHitsPerGame": 0.35,
+            "fallbackClueRate": 0.01,
+            "stallRate": 0
+          }
+        },
+        "policies": {
+          "current": "Worth + current risk adjustment + state-dependent clue-number bonus + 18 x margin.",
+          "hybrid": "0.35 x Worth + 25 x expected net + 10 x success + 6 x margin + risk adjustment."
+        }
+      },
+      "comparison": {
+        "pairedBoards": 128,
+        "bootstrapIterations": 10000,
+        "metrics": {
+          "correctCardsPerTurn": {
+            "baseline": 1.475056,
+            "candidate": 1.564062,
+            "delta": {
+              "estimate": 0.089007,
+              "lower": 0.046051,
+              "upper": 0.132603
+            }
+          },
+          "wrongTeamHitsPerGame": {
+            "baseline": 0,
+            "candidate": 0,
+            "delta": {
+              "estimate": 0,
+              "lower": 0,
+              "upper": 0
+            }
+          },
+          "neutralHitsPerGame": {
+            "baseline": 0,
+            "candidate": 0,
+            "delta": {
+              "estimate": 0,
+              "lower": 0,
+              "upper": 0
+            }
+          },
+          "assassinRate": {
+            "baseline": 0,
+            "candidate": 0,
+            "delta": {
+              "estimate": 0,
+              "lower": 0,
+              "upper": 0
+            }
+          },
+          "fallbackClueRate": {
+            "baseline": 0,
+            "candidate": 0,
+            "delta": {
+              "estimate": 0,
+              "lower": 0,
+              "upper": 0
+            }
+          },
+          "stallRate": {
+            "baseline": 0,
+            "candidate": 0,
+            "delta": {
+              "estimate": 0,
+              "lower": 0,
+              "upper": 0
+            }
+          },
+          "meanTurnsPerGame": {
+            "baseline": 10.492188,
+            "candidate": 10,
+            "delta": {
+              "estimate": -0.492188,
+              "lower": -0.8125,
+              "upper": -0.179688
+            }
+          }
+        }
+      },
+      "promotion": {
+        "thresholds": {
+          "assassinDeltaUpper": 0.05,
+          "wrongTeamDeltaUpper": 0.15,
+          "neutralDeltaUpper": 0.15,
+          "fallbackRate": 0.01,
+          "correctNonInferiority": -0.05
+        },
+        "gates": {
+          "zeroStalls": {
+            "passed": true,
+            "actual": 0,
+            "maximum": 0
+          },
+          "assassinNonInferiority": {
+            "passed": true,
+            "actual": {
+              "estimate": 0,
+              "lower": 0,
+              "upper": 0
+            },
+            "maximumUpperBound": 0.05,
+            "candidateRate": {
+              "estimate": 0,
+              "lower": 0,
+              "upper": 0.029137
+            }
+          },
+          "wrongTeamNonInferiority": {
+            "passed": true,
+            "actual": {
+              "estimate": 0,
+              "lower": 0,
+              "upper": 0
+            },
+            "maximumUpperBound": 0.15,
+            "candidateRate": 0
+          },
+          "neutralNonInferiority": {
+            "passed": true,
+            "actual": {
+              "estimate": 0,
+              "lower": 0,
+              "upper": 0
+            },
+            "maximumUpperBound": 0.15
+          },
+          "fallback": {
+            "passed": true,
+            "actual": 0,
+            "maximum": 0.01
+          },
+          "correctNonInferiority": {
+            "passed": true,
+            "actual": {
+              "estimate": 0.089007,
+              "lower": 0.046051,
+              "upper": 0.132603
+            },
+            "minimumLowerBound": -0.05
+          },
+          "correctSuperiority": {
+            "passed": true,
+            "actual": {
+              "estimate": 0.089007,
+              "lower": 0.046051,
+              "upper": 0.132603
+            },
+            "minimumLowerBound": 0
+          }
+        },
+        "playSafetyPassed": true,
+        "playPromotionPassed": true,
+        "correctSuperiorityObserved": true,
+        "candidateSafetyEvidence": {
+          "games": 128,
+          "assassin": {
+            "eventCount": 0,
+            "eventsPerGame": 0,
+            "gamesWithEvent": 0,
+            "gameRateInterval": {
+              "estimate": 0,
+              "lower": 0,
+              "upper": 0.029137
+            },
+            "zeroEventUpperBound": 0.023132
+          },
+          "wrongTeam": {
+            "eventCount": 0,
+            "eventsPerGame": 0,
+            "gamesWithEvent": 0,
+            "gameRateInterval": {
+              "estimate": 0,
+              "lower": 0,
+              "upper": 0.029137
+            },
+            "zeroEventUpperBound": 0.023132
+          },
+          "neutral": {
+            "eventCount": 0,
+            "eventsPerGame": 0,
+            "gamesWithEvent": 0,
+            "gameRateInterval": {
+              "estimate": 0,
+              "lower": 0,
+              "upper": 0.029137
+            },
+            "zeroEventUpperBound": 0.023132
+          }
+        },
+        "humanCalibrationRequired": true
+      }
+    },
+    {
+      "id": "voyage-4-large",
+      "methodology": {
+        "boardCount": 128,
+        "boardOffset": 120,
+        "split": "development",
+        "gamesPerPolicy": 128,
+        "pairedBoards": true,
+        "comparisonOnly": true,
+        "wordSet": "official",
+        "modelId": "voyage-4-large",
+        "model": "voyage/voyage-4-large",
+        "provider": "vercel-ai-gateway",
+        "dimensions": 1024,
+        "indexDirectory": ".cache/embedding-experiments/voyage-4-large-1024/index",
+        "candidateCount": 10000,
+        "resultsPerTargetSize": 6,
+        "boardSeed": "Eight deterministic bytes: ASCII CODE followed by a big-endian 1-based board index.",
+        "decisionSeed": "Matches Play runtime: board seed, turn number, and history length for each action.",
+        "clueSelection": "Prefer the highest-scoring multi clue when it is within 5 points of the best clue; otherwise choose the best clue.",
+        "bonusGuesses": "Pass after reaching the declared clue number.",
+        "operative": "The bot guesser sees only centered clue-to-unrevealed-word similarities from voyage/voyage-4-large.",
+        "operativeAggression": "Policy comparison uses dynamic for the clue-policy rows and holds hybrid clue scoring fixed across all three operative modes.",
+        "operativeAggressionModes": {
+          "conservative": "Uses the highest similarity and separation thresholds and does not adapt to score.",
+          "aggressive": "Uses the former production thresholds and pursues the declared clue number unless confidence is extremely low.",
+          "dynamic": "Uses public remaining-agent counts to lower thresholds for a possible win or urgent comeback and raise them with a comfortable lead."
+        },
+        "operativeModelId": "same",
+        "operativeModel": "voyage/voyage-4-large",
+        "maxActionsPerGame": 100,
+        "similarityCalibration": {
+          "scale": 1.08427911,
+          "offset": 0.01189083,
+          "rawGeometry": {
+            "clueSamples": 128,
+            "boardWordSamples": 128,
+            "pairSamples": 16384,
+            "mean": 0.000797,
+            "standardDeviation": 0.076745,
+            "minimum": -0.249923,
+            "p05": -0.104842,
+            "median": -0.007874,
+            "p95": 0.136196,
+            "maximum": 0.96404
+          },
+          "calibratedGeometry": {
+            "clueSamples": 128,
+            "boardWordSamples": 128,
+            "pairSamples": 16384,
+            "mean": 0.012755,
+            "standardDeviation": 0.083213,
+            "minimum": -0.259095,
+            "p05": -0.101787,
+            "median": 0.003353,
+            "p95": 0.159565,
+            "maximum": 1.057179
+          },
+          "note": "Scale and offset are applied to clue-board and board-board similarities before scoring. Cross-model operative runs retain the operative model's native scale."
+        },
+        "rules": "Every simulation uses the production Play state machine. Games that exceed the action bound remain in the report as stalls.",
+        "fallback": "If the production analyzer has no ranked suggestion, use the legal indexed clue closest to one remaining agent, number 1, and count the turn.",
+        "firstHalf": "For each completed game, take the first ceiling(total clue turns / 2) clue turns, then aggregate their clue numbers.",
+        "funObjective": {
+          "definition": "A 0-100 proxy balancing ambitious clues, productive guesses, close finishes, and a playable game length.",
+          "caution": "The Fun Index ranks deterministic self-play experiments. Human embedding agreement remains a separate validity guardrail.",
+          "version": 1,
+          "weights": {
+            "ambition": 0.3,
+            "momentum": 0.3,
+            "suspense": 0.25,
+            "flow": 0.15
+          },
+          "targets": {
+            "multiClueRate": [
+              0.2,
+              0.6
+            ],
+            "firstHalfMeanClueNumber": [
+              1.2,
+              2.2
+            ],
+            "correctCardsPerTurn": [
+              1,
+              1.65
+            ],
+            "closeFinishRate": [
+              0.35,
+              0.75
+            ],
+            "idealTurnsPerGame": [
+              8,
+              12
+            ],
+            "playableTurnsPerGame": [
+              6,
+              16
+            ]
+          },
+          "guardrails": {
+            "assassinRate": 0.02,
+            "wrongTeamHitsPerGame": 0.15,
+            "neutralHitsPerGame": 0.35,
+            "fallbackClueRate": 0.01,
+            "stallRate": 0
+          }
+        },
+        "policies": {
+          "current": "Worth + current risk adjustment + state-dependent clue-number bonus + 18 x margin.",
+          "hybrid": "0.35 x Worth + 25 x expected net + 10 x success + 6 x margin + risk adjustment."
+        }
+      },
+      "comparison": {
+        "pairedBoards": 128,
+        "bootstrapIterations": 10000,
+        "metrics": {
+          "correctCardsPerTurn": {
+            "baseline": 1.475056,
+            "candidate": 1.478519,
+            "delta": {
+              "estimate": 0.003463,
+              "lower": -0.03897,
+              "upper": 0.046419
+            }
+          },
+          "wrongTeamHitsPerGame": {
+            "baseline": 0,
+            "candidate": 0,
+            "delta": {
+              "estimate": 0,
+              "lower": 0,
+              "upper": 0
+            }
+          },
+          "neutralHitsPerGame": {
+            "baseline": 0,
+            "candidate": 0,
+            "delta": {
+              "estimate": 0,
+              "lower": 0,
+              "upper": 0
+            }
+          },
+          "assassinRate": {
+            "baseline": 0,
+            "candidate": 0,
+            "delta": {
+              "estimate": 0,
+              "lower": 0,
+              "upper": 0
+            }
+          },
+          "fallbackClueRate": {
+            "baseline": 0,
+            "candidate": 0,
+            "delta": {
+              "estimate": 0,
+              "lower": 0,
+              "upper": 0
+            }
+          },
+          "stallRate": {
+            "baseline": 0,
+            "candidate": 0,
+            "delta": {
+              "estimate": 0,
+              "lower": 0,
+              "upper": 0
+            }
+          },
+          "meanTurnsPerGame": {
+            "baseline": 10.492188,
+            "candidate": 10.546875,
+            "delta": {
+              "estimate": 0.054688,
+              "lower": -0.289258,
+              "upper": 0.40625
+            }
+          }
+        }
+      },
+      "promotion": {
+        "thresholds": {
+          "assassinDeltaUpper": 0.05,
+          "wrongTeamDeltaUpper": 0.15,
+          "neutralDeltaUpper": 0.15,
+          "fallbackRate": 0.01,
+          "correctNonInferiority": -0.05
+        },
+        "gates": {
+          "zeroStalls": {
+            "passed": true,
+            "actual": 0,
+            "maximum": 0
+          },
+          "assassinNonInferiority": {
+            "passed": true,
+            "actual": {
+              "estimate": 0,
+              "lower": 0,
+              "upper": 0
+            },
+            "maximumUpperBound": 0.05,
+            "candidateRate": {
+              "estimate": 0,
+              "lower": 0,
+              "upper": 0.029137
+            }
+          },
+          "wrongTeamNonInferiority": {
+            "passed": true,
+            "actual": {
+              "estimate": 0,
+              "lower": 0,
+              "upper": 0
+            },
+            "maximumUpperBound": 0.15,
+            "candidateRate": 0
+          },
+          "neutralNonInferiority": {
+            "passed": true,
+            "actual": {
+              "estimate": 0,
+              "lower": 0,
+              "upper": 0
+            },
+            "maximumUpperBound": 0.15
+          },
+          "fallback": {
+            "passed": true,
+            "actual": 0,
+            "maximum": 0.01
+          },
+          "correctNonInferiority": {
+            "passed": true,
+            "actual": {
+              "estimate": 0.003463,
+              "lower": -0.03897,
+              "upper": 0.046419
+            },
+            "minimumLowerBound": -0.05
+          },
+          "correctSuperiority": {
+            "passed": false,
+            "actual": {
+              "estimate": 0.003463,
+              "lower": -0.03897,
+              "upper": 0.046419
+            },
+            "minimumLowerBound": 0
+          }
+        },
+        "playSafetyPassed": true,
+        "playPromotionPassed": true,
+        "correctSuperiorityObserved": false,
+        "candidateSafetyEvidence": {
+          "games": 128,
+          "assassin": {
+            "eventCount": 0,
+            "eventsPerGame": 0,
+            "gamesWithEvent": 0,
+            "gameRateInterval": {
+              "estimate": 0,
+              "lower": 0,
+              "upper": 0.029137
+            },
+            "zeroEventUpperBound": 0.023132
+          },
+          "wrongTeam": {
+            "eventCount": 0,
+            "eventsPerGame": 0,
+            "gamesWithEvent": 0,
+            "gameRateInterval": {
+              "estimate": 0,
+              "lower": 0,
+              "upper": 0.029137
+            },
+            "zeroEventUpperBound": 0.023132
+          },
+          "neutral": {
+            "eventCount": 0,
+            "eventsPerGame": 0,
+            "gamesWithEvent": 0,
+            "gameRateInterval": {
+              "estimate": 0,
+              "lower": 0,
+              "upper": 0.029137
+            },
+            "zeroEventUpperBound": 0.023132
+          }
+        },
+        "humanCalibrationRequired": true
+      }
+    }
+  ]
+}

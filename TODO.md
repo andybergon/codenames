@@ -24,8 +24,12 @@
   - Aggregate archived outcome summaries and fit bot confidence, multi tolerance, and Worth coefficients against actual play.
 
 - 🧠 Evaluate a more game-specific semantic embedding or reranker.
-  - Current: Gemini Embedding 2 reached 72.9% human target recall, Qwen3 Embedding 0.6B reached 88.19 Fun, and Voyage 4 Large reached 66.6% human target recall but failed bounded MiniLM transfer completion. No tested model passes all promotion gates. See `docs/play-fun-optimization.md`.
-  - Next: test Gemini or ConceptNet as a secondary human-alignment feature, then validate the best ensemble against human ratings of generated clues and recorded gameplay outcomes before changing the default.
+  - Current: calibrated same-model development favored Cohere and tied Voyage with BGE, but both failed the primary MiniLM-L6 transfer gates, so BGE stays in production and the held-out test remains locked.
+  - Next: complete and export the hidden 30-task human round once to establish a gross-failure baseline, then require any future candidate to pass calibrated development, cross-model transfer, and human gates before unlocking the held-out test.
+
+- 🧪 Remove network dependence from Play suggestion UI tests.
+  - Full-suite runs can show `Failed to fetch` while waiting for `.play-suggestion`; the exact tests pass immediately in isolation.
+  - Preload the model fixture or route embedding fetches to deterministic local test assets so UI verification does not depend on transient model downloads.
 
 - 🧹 Bound Model picker caches so exploration cannot retain every loaded model and index.
   - Index promises, parsed shards, model pipelines, and term vectors currently remain cached for the page lifetime.

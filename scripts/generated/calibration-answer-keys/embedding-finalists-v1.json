@@ -1,0 +1,3433 @@
+{
+  "schemaVersion": 1,
+  "roundId": "embedding-finalists-v1",
+  "tasks": [
+    {
+      "taskId": "embedding-finalists-v1-f000ee0bab49c800",
+      "intendedLayoutIds": [
+        6,
+        7
+      ],
+      "teams": [
+        {
+          "layoutId": 11,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 24,
+          "team": "assassin"
+        },
+        {
+          "layoutId": 9,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 4,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 8,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 19,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 17,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 10,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 12,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 6,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 7,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 3,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 5,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 13,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 16,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 20,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 23,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 21,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 0,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 2,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 14,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 22,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 1,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 15,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 18,
+          "team": "neutral"
+        }
+      ],
+      "source": {
+        "modelId": "voyage-4-large",
+        "board": 22,
+        "turn": 1
+      }
+    },
+    {
+      "taskId": "embedding-finalists-v1-56a81f5215fe003b",
+      "intendedLayoutIds": [
+        0,
+        1
+      ],
+      "teams": [
+        {
+          "layoutId": 3,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 2,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 4,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 9,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 14,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 10,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 20,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 6,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 12,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 11,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 22,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 24,
+          "team": "assassin"
+        },
+        {
+          "layoutId": 1,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 23,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 7,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 8,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 19,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 18,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 16,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 0,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 15,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 17,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 13,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 5,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 21,
+          "team": "neutral"
+        }
+      ],
+      "source": {
+        "modelId": "bge-small",
+        "board": 30,
+        "turn": 1
+      }
+    },
+    {
+      "taskId": "embedding-finalists-v1-9f50a9bf2c5086a1",
+      "intendedLayoutIds": [
+        3,
+        0
+      ],
+      "teams": [
+        {
+          "layoutId": 13,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 11,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 17,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 21,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 24,
+          "team": "assassin"
+        },
+        {
+          "layoutId": 9,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 6,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 18,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 4,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 20,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 14,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 1,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 12,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 2,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 15,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 16,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 22,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 19,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 5,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 0,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 7,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 23,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 8,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 3,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 10,
+          "team": "enemy"
+        }
+      ],
+      "source": {
+        "modelId": "voyage-4-large",
+        "board": 28,
+        "turn": 1
+      }
+    },
+    {
+      "taskId": "embedding-finalists-v1-72745f2590baf889",
+      "intendedLayoutIds": [
+        1,
+        4
+      ],
+      "teams": [
+        {
+          "layoutId": 4,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 13,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 1,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 5,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 17,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 0,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 6,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 8,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 21,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 9,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 23,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 24,
+          "team": "assassin"
+        },
+        {
+          "layoutId": 10,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 12,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 2,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 22,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 11,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 14,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 7,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 3,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 15,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 19,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 16,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 20,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 18,
+          "team": "neutral"
+        }
+      ],
+      "source": {
+        "modelId": "bge-small",
+        "board": 24,
+        "turn": 1
+      }
+    },
+    {
+      "taskId": "embedding-finalists-v1-ccf2eb517337df37",
+      "intendedLayoutIds": [
+        0,
+        2,
+        3
+      ],
+      "teams": [
+        {
+          "layoutId": 13,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 11,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 17,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 21,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 24,
+          "team": "assassin"
+        },
+        {
+          "layoutId": 9,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 6,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 18,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 4,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 20,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 14,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 1,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 12,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 2,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 15,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 16,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 22,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 19,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 5,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 0,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 7,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 23,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 8,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 3,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 10,
+          "team": "enemy"
+        }
+      ],
+      "source": {
+        "modelId": "cohere-embed-v4",
+        "board": 28,
+        "turn": 1
+      }
+    },
+    {
+      "taskId": "embedding-finalists-v1-38d1126c11ef76f6",
+      "intendedLayoutIds": [
+        5,
+        1
+      ],
+      "teams": [
+        {
+          "layoutId": 4,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 13,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 1,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 5,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 17,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 0,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 6,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 8,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 21,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 9,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 23,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 24,
+          "team": "assassin"
+        },
+        {
+          "layoutId": 10,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 12,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 2,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 22,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 11,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 14,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 7,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 3,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 15,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 19,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 16,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 20,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 18,
+          "team": "neutral"
+        }
+      ],
+      "source": {
+        "modelId": "cohere-embed-v4",
+        "board": 24,
+        "turn": 1
+      }
+    },
+    {
+      "taskId": "embedding-finalists-v1-cf1570b160a71e25",
+      "intendedLayoutIds": [
+        5,
+        7
+      ],
+      "teams": [
+        {
+          "layoutId": 0,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 20,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 22,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 10,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 15,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 11,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 1,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 13,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 17,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 5,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 3,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 9,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 12,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 7,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 19,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 2,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 4,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 16,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 18,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 21,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 24,
+          "team": "assassin"
+        },
+        {
+          "layoutId": 6,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 8,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 23,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 14,
+          "team": "enemy"
+        }
+      ],
+      "source": {
+        "modelId": "voyage-4-large",
+        "board": 26,
+        "turn": 1
+      }
+    },
+    {
+      "taskId": "embedding-finalists-v1-e8ed5ca88130a9e8",
+      "intendedLayoutIds": [
+        0,
+        2
+      ],
+      "teams": [
+        {
+          "layoutId": 13,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 11,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 17,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 21,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 24,
+          "team": "assassin"
+        },
+        {
+          "layoutId": 9,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 6,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 18,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 4,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 20,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 14,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 1,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 12,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 2,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 15,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 16,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 22,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 19,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 5,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 0,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 7,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 23,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 8,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 3,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 10,
+          "team": "enemy"
+        }
+      ],
+      "source": {
+        "modelId": "bge-small",
+        "board": 28,
+        "turn": 1
+      }
+    },
+    {
+      "taskId": "embedding-finalists-v1-8bd49808db6d94c0",
+      "intendedLayoutIds": [
+        2
+      ],
+      "teams": [
+        {
+          "layoutId": 11,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 5,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 13,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 1,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 2,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 22,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 14,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 16,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 18,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 3,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 8,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 0,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 9,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 12,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 15,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 17,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 24,
+          "team": "assassin"
+        },
+        {
+          "layoutId": 4,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 21,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 20,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 6,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 10,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 7,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 23,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 19,
+          "team": "neutral"
+        }
+      ],
+      "source": {
+        "modelId": "voyage-4-large",
+        "board": 27,
+        "turn": 1
+      }
+    },
+    {
+      "taskId": "embedding-finalists-v1-e98b059b43b3e276",
+      "intendedLayoutIds": [
+        3,
+        6
+      ],
+      "teams": [
+        {
+          "layoutId": 11,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 5,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 13,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 1,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 2,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 22,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 14,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 16,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 18,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 3,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 8,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 0,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 9,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 12,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 15,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 17,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 24,
+          "team": "assassin"
+        },
+        {
+          "layoutId": 4,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 21,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 20,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 6,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 10,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 7,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 23,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 19,
+          "team": "neutral"
+        }
+      ],
+      "source": {
+        "modelId": "bge-small",
+        "board": 27,
+        "turn": 1
+      }
+    },
+    {
+      "taskId": "embedding-finalists-v1-92836264c8ed00d5",
+      "intendedLayoutIds": [
+        2,
+        5
+      ],
+      "teams": [
+        {
+          "layoutId": 0,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 20,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 22,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 10,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 15,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 11,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 1,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 13,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 17,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 5,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 3,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 9,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 12,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 7,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 19,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 2,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 4,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 16,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 18,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 21,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 24,
+          "team": "assassin"
+        },
+        {
+          "layoutId": 6,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 8,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 23,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 14,
+          "team": "enemy"
+        }
+      ],
+      "source": {
+        "modelId": "cohere-embed-v4",
+        "board": 26,
+        "turn": 1
+      }
+    },
+    {
+      "taskId": "embedding-finalists-v1-5fc1d0b700984278",
+      "intendedLayoutIds": [
+        2,
+        1,
+        7,
+        5
+      ],
+      "teams": [
+        {
+          "layoutId": 11,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 5,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 13,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 1,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 2,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 22,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 14,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 16,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 18,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 3,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 8,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 0,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 9,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 12,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 15,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 17,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 24,
+          "team": "assassin"
+        },
+        {
+          "layoutId": 4,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 21,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 20,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 6,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 10,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 7,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 23,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 19,
+          "team": "neutral"
+        }
+      ],
+      "source": {
+        "modelId": "cohere-embed-v4",
+        "board": 27,
+        "turn": 1
+      }
+    },
+    {
+      "taskId": "embedding-finalists-v1-fe78aef013b0a245",
+      "intendedLayoutIds": [
+        3,
+        7
+      ],
+      "teams": [
+        {
+          "layoutId": 5,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 6,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 11,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 20,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 24,
+          "team": "assassin"
+        },
+        {
+          "layoutId": 7,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 13,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 22,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 12,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 8,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 15,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 10,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 4,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 16,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 0,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 19,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 2,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 3,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 23,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 9,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 18,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 1,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 21,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 14,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 17,
+          "team": "neutral"
+        }
+      ],
+      "source": {
+        "modelId": "cohere-embed-v4",
+        "board": 23,
+        "turn": 1
+      }
+    },
+    {
+      "taskId": "embedding-finalists-v1-4efeb94a29d81f7e",
+      "intendedLayoutIds": [
+        4,
+        5,
+        7
+      ],
+      "teams": [
+        {
+          "layoutId": 3,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 2,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 4,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 9,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 14,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 10,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 20,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 6,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 12,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 11,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 22,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 24,
+          "team": "assassin"
+        },
+        {
+          "layoutId": 1,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 23,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 7,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 8,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 19,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 18,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 16,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 0,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 15,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 17,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 13,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 5,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 21,
+          "team": "neutral"
+        }
+      ],
+      "source": {
+        "modelId": "voyage-4-large",
+        "board": 30,
+        "turn": 1
+      }
+    },
+    {
+      "taskId": "embedding-finalists-v1-1840ae57390a1a22",
+      "intendedLayoutIds": [
+        4,
+        2
+      ],
+      "teams": [
+        {
+          "layoutId": 0,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 20,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 22,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 10,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 15,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 11,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 1,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 13,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 17,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 5,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 3,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 9,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 12,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 7,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 19,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 2,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 4,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 16,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 18,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 21,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 24,
+          "team": "assassin"
+        },
+        {
+          "layoutId": 6,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 8,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 23,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 14,
+          "team": "enemy"
+        }
+      ],
+      "source": {
+        "modelId": "bge-small",
+        "board": 26,
+        "turn": 1
+      }
+    },
+    {
+      "taskId": "embedding-finalists-v1-ac9c6180d1ada8b8",
+      "intendedLayoutIds": [
+        6,
+        0,
+        4
+      ],
+      "teams": [
+        {
+          "layoutId": 7,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 24,
+          "team": "assassin"
+        },
+        {
+          "layoutId": 5,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 6,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 23,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 12,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 22,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 19,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 8,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 20,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 16,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 3,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 10,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 0,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 1,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 18,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 4,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 14,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 21,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 11,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 15,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 17,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 9,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 2,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 13,
+          "team": "enemy"
+        }
+      ],
+      "source": {
+        "modelId": "cohere-embed-v4",
+        "board": 25,
+        "turn": 1
+      }
+    },
+    {
+      "taskId": "embedding-finalists-v1-7b9a9fbb2a62ceba",
+      "intendedLayoutIds": [
+        6,
+        7,
+        0
+      ],
+      "teams": [
+        {
+          "layoutId": 11,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 24,
+          "team": "assassin"
+        },
+        {
+          "layoutId": 9,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 4,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 8,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 19,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 17,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 10,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 12,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 6,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 7,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 3,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 5,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 13,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 16,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 20,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 23,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 21,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 0,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 2,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 14,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 22,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 1,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 15,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 18,
+          "team": "neutral"
+        }
+      ],
+      "source": {
+        "modelId": "cohere-embed-v4",
+        "board": 22,
+        "turn": 1
+      }
+    },
+    {
+      "taskId": "embedding-finalists-v1-9e0edcbbdebf1c40",
+      "intendedLayoutIds": [
+        5,
+        1
+      ],
+      "teams": [
+        {
+          "layoutId": 4,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 13,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 1,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 5,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 17,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 0,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 6,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 8,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 21,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 9,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 23,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 24,
+          "team": "assassin"
+        },
+        {
+          "layoutId": 10,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 12,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 2,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 22,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 11,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 14,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 7,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 3,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 15,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 19,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 16,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 20,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 18,
+          "team": "neutral"
+        }
+      ],
+      "source": {
+        "modelId": "voyage-4-large",
+        "board": 24,
+        "turn": 1
+      }
+    },
+    {
+      "taskId": "embedding-finalists-v1-54b873ee83d6b6e9",
+      "intendedLayoutIds": [
+        5,
+        3,
+        4
+      ],
+      "teams": [
+        {
+          "layoutId": 3,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 2,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 4,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 9,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 14,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 10,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 20,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 6,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 12,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 11,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 22,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 24,
+          "team": "assassin"
+        },
+        {
+          "layoutId": 1,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 23,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 7,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 8,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 19,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 18,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 16,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 0,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 15,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 17,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 13,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 5,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 21,
+          "team": "neutral"
+        }
+      ],
+      "source": {
+        "modelId": "cohere-embed-v4",
+        "board": 30,
+        "turn": 1
+      }
+    },
+    {
+      "taskId": "embedding-finalists-v1-c4510d46f779d124",
+      "intendedLayoutIds": [
+        5,
+        7
+      ],
+      "teams": [
+        {
+          "layoutId": 16,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 5,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 22,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 23,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 2,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 1,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 17,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 6,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 11,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 0,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 8,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 4,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 19,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 3,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 12,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 21,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 24,
+          "team": "assassin"
+        },
+        {
+          "layoutId": 14,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 20,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 13,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 18,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 10,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 15,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 7,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 9,
+          "team": "enemy"
+        }
+      ],
+      "source": {
+        "modelId": "voyage-4-large",
+        "board": 29,
+        "turn": 1
+      }
+    },
+    {
+      "taskId": "embedding-finalists-v1-659d21fa3d98255b",
+      "intendedLayoutIds": [
+        5,
+        7
+      ],
+      "teams": [
+        {
+          "layoutId": 16,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 5,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 22,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 23,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 2,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 1,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 17,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 6,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 11,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 0,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 8,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 4,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 19,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 3,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 12,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 21,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 24,
+          "team": "assassin"
+        },
+        {
+          "layoutId": 14,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 20,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 13,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 18,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 10,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 15,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 7,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 9,
+          "team": "enemy"
+        }
+      ],
+      "source": {
+        "modelId": "bge-small",
+        "board": 29,
+        "turn": 1
+      }
+    },
+    {
+      "taskId": "embedding-finalists-v1-1846f5d1dc9e27b0",
+      "intendedLayoutIds": [
+        7
+      ],
+      "teams": [
+        {
+          "layoutId": 5,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 2,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 7,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 23,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 19,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 13,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 18,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 3,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 15,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 11,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 4,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 20,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 9,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 0,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 6,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 22,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 8,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 14,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 17,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 12,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 1,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 24,
+          "team": "assassin"
+        },
+        {
+          "layoutId": 16,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 21,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 10,
+          "team": "enemy"
+        }
+      ],
+      "source": {
+        "modelId": "cohere-embed-v4",
+        "board": 21,
+        "turn": 1
+      }
+    },
+    {
+      "taskId": "embedding-finalists-v1-15b6b278639ba29f",
+      "intendedLayoutIds": [
+        4,
+        6
+      ],
+      "teams": [
+        {
+          "layoutId": 7,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 24,
+          "team": "assassin"
+        },
+        {
+          "layoutId": 5,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 6,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 23,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 12,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 22,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 19,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 8,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 20,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 16,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 3,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 10,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 0,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 1,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 18,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 4,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 14,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 21,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 11,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 15,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 17,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 9,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 2,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 13,
+          "team": "enemy"
+        }
+      ],
+      "source": {
+        "modelId": "voyage-4-large",
+        "board": 25,
+        "turn": 1
+      }
+    },
+    {
+      "taskId": "embedding-finalists-v1-3cdbb65dc4c7242e",
+      "intendedLayoutIds": [
+        5,
+        7
+      ],
+      "teams": [
+        {
+          "layoutId": 16,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 5,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 22,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 23,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 2,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 1,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 17,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 6,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 11,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 0,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 8,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 4,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 19,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 3,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 12,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 21,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 24,
+          "team": "assassin"
+        },
+        {
+          "layoutId": 14,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 20,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 13,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 18,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 10,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 15,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 7,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 9,
+          "team": "enemy"
+        }
+      ],
+      "source": {
+        "modelId": "cohere-embed-v4",
+        "board": 29,
+        "turn": 1
+      }
+    },
+    {
+      "taskId": "embedding-finalists-v1-e4f8ee4facfd310e",
+      "intendedLayoutIds": [
+        2,
+        0,
+        7
+      ],
+      "teams": [
+        {
+          "layoutId": 7,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 24,
+          "team": "assassin"
+        },
+        {
+          "layoutId": 5,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 6,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 23,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 12,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 22,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 19,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 8,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 20,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 16,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 3,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 10,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 0,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 1,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 18,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 4,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 14,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 21,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 11,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 15,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 17,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 9,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 2,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 13,
+          "team": "enemy"
+        }
+      ],
+      "source": {
+        "modelId": "bge-small",
+        "board": 25,
+        "turn": 1
+      }
+    },
+    {
+      "taskId": "embedding-finalists-v1-d2de5d8a78c40658",
+      "intendedLayoutIds": [
+        3,
+        7
+      ],
+      "teams": [
+        {
+          "layoutId": 5,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 6,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 11,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 20,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 24,
+          "team": "assassin"
+        },
+        {
+          "layoutId": 7,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 13,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 22,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 12,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 8,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 15,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 10,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 4,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 16,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 0,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 19,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 2,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 3,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 23,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 9,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 18,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 1,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 21,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 14,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 17,
+          "team": "neutral"
+        }
+      ],
+      "source": {
+        "modelId": "bge-small",
+        "board": 23,
+        "turn": 1
+      }
+    },
+    {
+      "taskId": "embedding-finalists-v1-ee125faf449ff13a",
+      "intendedLayoutIds": [
+        7,
+        2
+      ],
+      "teams": [
+        {
+          "layoutId": 5,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 2,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 7,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 23,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 19,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 13,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 18,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 3,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 15,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 11,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 4,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 20,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 9,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 0,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 6,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 22,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 8,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 14,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 17,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 12,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 1,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 24,
+          "team": "assassin"
+        },
+        {
+          "layoutId": 16,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 21,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 10,
+          "team": "enemy"
+        }
+      ],
+      "source": {
+        "modelId": "voyage-4-large",
+        "board": 21,
+        "turn": 1
+      }
+    },
+    {
+      "taskId": "embedding-finalists-v1-b5da7f27c86994c1",
+      "intendedLayoutIds": [
+        2,
+        0,
+        7
+      ],
+      "teams": [
+        {
+          "layoutId": 5,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 2,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 7,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 23,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 19,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 13,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 18,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 3,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 15,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 11,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 4,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 20,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 9,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 0,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 6,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 22,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 8,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 14,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 17,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 12,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 1,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 24,
+          "team": "assassin"
+        },
+        {
+          "layoutId": 16,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 21,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 10,
+          "team": "enemy"
+        }
+      ],
+      "source": {
+        "modelId": "bge-small",
+        "board": 21,
+        "turn": 1
+      }
+    },
+    {
+      "taskId": "embedding-finalists-v1-1579189cf91eff90",
+      "intendedLayoutIds": [
+        3,
+        7
+      ],
+      "teams": [
+        {
+          "layoutId": 5,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 6,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 11,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 20,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 24,
+          "team": "assassin"
+        },
+        {
+          "layoutId": 7,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 13,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 22,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 12,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 8,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 15,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 10,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 4,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 16,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 0,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 19,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 2,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 3,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 23,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 9,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 18,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 1,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 21,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 14,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 17,
+          "team": "neutral"
+        }
+      ],
+      "source": {
+        "modelId": "voyage-4-large",
+        "board": 23,
+        "turn": 1
+      }
+    },
+    {
+      "taskId": "embedding-finalists-v1-c764bd31c2911a85",
+      "intendedLayoutIds": [
+        6,
+        7
+      ],
+      "teams": [
+        {
+          "layoutId": 11,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 24,
+          "team": "assassin"
+        },
+        {
+          "layoutId": 9,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 4,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 8,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 19,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 17,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 10,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 12,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 6,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 7,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 3,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 5,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 13,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 16,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 20,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 23,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 21,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 0,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 2,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 14,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 22,
+          "team": "neutral"
+        },
+        {
+          "layoutId": 1,
+          "team": "friendly"
+        },
+        {
+          "layoutId": 15,
+          "team": "enemy"
+        },
+        {
+          "layoutId": 18,
+          "team": "neutral"
+        }
+      ],
+      "source": {
+        "modelId": "bge-small",
+        "board": 22,
+        "turn": 1
+      }
+    }
+  ]
+}

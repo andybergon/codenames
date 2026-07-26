@@ -18,6 +18,7 @@ const FULL_SAFE_BREADTH = 4;
 
 export function analyzeEmbeddedBoard(board, boardVectors, clueIndex, options = {}) {
   const limit = options.limit ?? 8;
+  const similarityCalibration = options.similarityCalibration;
   const entries = board
     .map((card, sourceIndex) => ({
       sourceIndex,
@@ -44,8 +45,12 @@ export function analyzeEmbeddedBoard(board, boardVectors, clueIndex, options = {
     entries,
     candidateIndices,
     clueIndex,
+    similarityCalibration,
   );
-  const boardSimilarities = buildBoardSimilarities(entries);
+  const boardSimilarities = buildBoardSimilarities(
+    entries,
+    similarityCalibration,
+  );
   const preparedCandidates = prepareCandidates({
     candidateIndices,
     candidateSimilarities,
@@ -100,6 +105,11 @@ export function analyzeEmbeddedBoard(board, boardVectors, clueIndex, options = {
 export function applyDangerPenalty(similarity, team) {
   const policy = HAZARD_POLICY[team] ?? HAZARD_POLICY.neutral;
   return similarity + Math.max(0, similarity) * (policy.multiplier - 1) + policy.offset;
+}
+
+export function calibrateSimilarity(similarity, calibration) {
+  if (!calibration) return similarity;
+  return similarity * calibration.scale + calibration.offset;
 }
 
 export function calculateBoardMetrics(blueAnalysis, redAnalysis) {
@@ -261,7 +271,12 @@ function isKnownCompoundContainment(container, component) {
   return remainder.length >= 3 && KNOWN_COMPOUND_COMPONENTS.has(remainder);
 }
 
-function buildCandidateSimilarities(entries, candidateIndices, clueIndex) {
+function buildCandidateSimilarities(
+  entries,
+  candidateIndices,
+  clueIndex,
+  similarityCalibration,
+) {
   const similarities = new Float32Array(clueIndex.clues.length * entries.length);
   const scale = clueIndex.quantization.scale;
 
@@ -274,22 +289,26 @@ function buildCandidateSimilarities(entries, candidateIndices, clueIndex) {
       for (let dimension = 0; dimension < clueIndex.dimensions; dimension += 1) {
         total += clueIndex.vectors[vectorOffset + dimension] * entry.vector[dimension];
       }
-      similarities[rowOffset + entry.entryIndex] = total / scale;
+      similarities[rowOffset + entry.entryIndex] = calibrateSimilarity(
+        total / scale,
+        similarityCalibration,
+      );
     }
   }
 
   return similarities;
 }
 
-function buildBoardSimilarities(entries) {
+function buildBoardSimilarities(entries, similarityCalibration) {
   const similarities = new Float32Array(entries.length * entries.length);
 
   for (const left of entries) {
     for (const right of entries) {
-      similarities[left.entryIndex * entries.length + right.entryIndex] = dot(
-        left.vector,
-        right.vector,
-      );
+      similarities[left.entryIndex * entries.length + right.entryIndex] =
+        calibrateSimilarity(
+          dot(left.vector, right.vector),
+          similarityCalibration,
+        );
     }
   }
 

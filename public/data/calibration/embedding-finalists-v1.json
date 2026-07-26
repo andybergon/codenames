@@ -1,0 +1,3249 @@
+{
+  "schemaVersion": 1,
+  "roundId": "embedding-finalists-v1",
+  "title": "Embedding finalists",
+  "description": "Blinded opening clues from similarity-calibrated BGE-small, Cohere Embed v4, and Voyage 4 Large on paired boards.",
+  "createdAt": "2026-07-26T02:39:57.228Z",
+  "tasks": [
+    {
+      "taskId": "embedding-finalists-v1-f000ee0bab49c800",
+      "clue": "tiger",
+      "number": 2,
+      "activeSide": "blue",
+      "words": [
+        {
+          "layoutId": 11,
+          "word": "BOND"
+        },
+        {
+          "layoutId": 24,
+          "word": "NUT"
+        },
+        {
+          "layoutId": 9,
+          "word": "KNIFE"
+        },
+        {
+          "layoutId": 4,
+          "word": "LITTER"
+        },
+        {
+          "layoutId": 8,
+          "word": "SPINE"
+        },
+        {
+          "layoutId": 19,
+          "word": "OLYMPUS"
+        },
+        {
+          "layoutId": 17,
+          "word": "MUG"
+        },
+        {
+          "layoutId": 10,
+          "word": "STRING"
+        },
+        {
+          "layoutId": 12,
+          "word": "WAR"
+        },
+        {
+          "layoutId": 6,
+          "word": "LION"
+        },
+        {
+          "layoutId": 7,
+          "word": "KANGAROO"
+        },
+        {
+          "layoutId": 3,
+          "word": "COOK"
+        },
+        {
+          "layoutId": 5,
+          "word": "STRAW"
+        },
+        {
+          "layoutId": 13,
+          "word": "CRANE"
+        },
+        {
+          "layoutId": 16,
+          "word": "LOG"
+        },
+        {
+          "layoutId": 20,
+          "word": "CROWN"
+        },
+        {
+          "layoutId": 23,
+          "word": "YARD"
+        },
+        {
+          "layoutId": 21,
+          "word": "CONDUCTOR"
+        },
+        {
+          "layoutId": 0,
+          "word": "GIANT"
+        },
+        {
+          "layoutId": 2,
+          "word": "SPELL"
+        },
+        {
+          "layoutId": 14,
+          "word": "BLOCK"
+        },
+        {
+          "layoutId": 22,
+          "word": "HAM"
+        },
+        {
+          "layoutId": 1,
+          "word": "FLUTE"
+        },
+        {
+          "layoutId": 15,
+          "word": "GAME"
+        },
+        {
+          "layoutId": 18,
+          "word": "PLANE"
+        }
+      ]
+    },
+    {
+      "taskId": "embedding-finalists-v1-56a81f5215fe003b",
+      "clue": "lining",
+      "number": 2,
+      "activeSide": "blue",
+      "words": [
+        {
+          "layoutId": 3,
+          "word": "SCUBA DIVER"
+        },
+        {
+          "layoutId": 2,
+          "word": "GHOST"
+        },
+        {
+          "layoutId": 4,
+          "word": "HELICOPTER"
+        },
+        {
+          "layoutId": 9,
+          "word": "ROBIN"
+        },
+        {
+          "layoutId": 14,
+          "word": "NIGHT"
+        },
+        {
+          "layoutId": 10,
+          "word": "TOOTH"
+        },
+        {
+          "layoutId": 20,
+          "word": "LION"
+        },
+        {
+          "layoutId": 6,
+          "word": "HEART"
+        },
+        {
+          "layoutId": 12,
+          "word": "WAR"
+        },
+        {
+          "layoutId": 11,
+          "word": "MOUNT"
+        },
+        {
+          "layoutId": 22,
+          "word": "BERRY"
+        },
+        {
+          "layoutId": 24,
+          "word": "PLAY"
+        },
+        {
+          "layoutId": 1,
+          "word": "GROUND"
+        },
+        {
+          "layoutId": 23,
+          "word": "AUSTRALIA"
+        },
+        {
+          "layoutId": 7,
+          "word": "TOWER"
+        },
+        {
+          "layoutId": 8,
+          "word": "LAWYER"
+        },
+        {
+          "layoutId": 19,
+          "word": "DRAFT"
+        },
+        {
+          "layoutId": 18,
+          "word": "BAT"
+        },
+        {
+          "layoutId": 16,
+          "word": "SHOP"
+        },
+        {
+          "layoutId": 0,
+          "word": "DRESS"
+        },
+        {
+          "layoutId": 15,
+          "word": "AIR"
+        },
+        {
+          "layoutId": 17,
+          "word": "EUROPE"
+        },
+        {
+          "layoutId": 13,
+          "word": "BACK"
+        },
+        {
+          "layoutId": 5,
+          "word": "CRASH"
+        },
+        {
+          "layoutId": 21,
+          "word": "KETCHUP"
+        }
+      ]
+    },
+    {
+      "taskId": "embedding-finalists-v1-9f50a9bf2c5086a1",
+      "clue": "city",
+      "number": 2,
+      "activeSide": "blue",
+      "words": [
+        {
+          "layoutId": 13,
+          "word": "CRICKET"
+        },
+        {
+          "layoutId": 11,
+          "word": "CROWN"
+        },
+        {
+          "layoutId": 17,
+          "word": "CZECH"
+        },
+        {
+          "layoutId": 21,
+          "word": "SPIKE"
+        },
+        {
+          "layoutId": 24,
+          "word": "WALL"
+        },
+        {
+          "layoutId": 9,
+          "word": "FILM"
+        },
+        {
+          "layoutId": 6,
+          "word": "BOND"
+        },
+        {
+          "layoutId": 18,
+          "word": "SCREEN"
+        },
+        {
+          "layoutId": 4,
+          "word": "WITCH"
+        },
+        {
+          "layoutId": 20,
+          "word": "SHOT"
+        },
+        {
+          "layoutId": 14,
+          "word": "PASTE"
+        },
+        {
+          "layoutId": 1,
+          "word": "NEEDLE"
+        },
+        {
+          "layoutId": 12,
+          "word": "VET"
+        },
+        {
+          "layoutId": 2,
+          "word": "GERMANY"
+        },
+        {
+          "layoutId": 15,
+          "word": "MISSILE"
+        },
+        {
+          "layoutId": 16,
+          "word": "AUSTRALIA"
+        },
+        {
+          "layoutId": 22,
+          "word": "DRESS"
+        },
+        {
+          "layoutId": 19,
+          "word": "MAMMOTH"
+        },
+        {
+          "layoutId": 5,
+          "word": "PIPE"
+        },
+        {
+          "layoutId": 0,
+          "word": "BEIJING"
+        },
+        {
+          "layoutId": 7,
+          "word": "HORSE"
+        },
+        {
+          "layoutId": 23,
+          "word": "MOUNT"
+        },
+        {
+          "layoutId": 8,
+          "word": "PLATYPUS"
+        },
+        {
+          "layoutId": 3,
+          "word": "CAPITAL"
+        },
+        {
+          "layoutId": 10,
+          "word": "BOW"
+        }
+      ]
+    },
+    {
+      "taskId": "embedding-finalists-v1-72745f2590baf889",
+      "clue": "cloth",
+      "number": 2,
+      "activeSide": "blue",
+      "words": [
+        {
+          "layoutId": 4,
+          "word": "GLASS"
+        },
+        {
+          "layoutId": 13,
+          "word": "SINK"
+        },
+        {
+          "layoutId": 1,
+          "word": "SOCK"
+        },
+        {
+          "layoutId": 5,
+          "word": "SUIT"
+        },
+        {
+          "layoutId": 17,
+          "word": "SCALE"
+        },
+        {
+          "layoutId": 0,
+          "word": "OIL"
+        },
+        {
+          "layoutId": 6,
+          "word": "PIT"
+        },
+        {
+          "layoutId": 8,
+          "word": "MODEL"
+        },
+        {
+          "layoutId": 21,
+          "word": "CAP"
+        },
+        {
+          "layoutId": 9,
+          "word": "HONEY"
+        },
+        {
+          "layoutId": 23,
+          "word": "BEAT"
+        },
+        {
+          "layoutId": 24,
+          "word": "MERCURY"
+        },
+        {
+          "layoutId": 10,
+          "word": "WAKE"
+        },
+        {
+          "layoutId": 12,
+          "word": "ROULETTE"
+        },
+        {
+          "layoutId": 2,
+          "word": "CLUB"
+        },
+        {
+          "layoutId": 22,
+          "word": "PIN"
+        },
+        {
+          "layoutId": 11,
+          "word": "CARD"
+        },
+        {
+          "layoutId": 14,
+          "word": "PIE"
+        },
+        {
+          "layoutId": 7,
+          "word": "ATLANTIS"
+        },
+        {
+          "layoutId": 3,
+          "word": "TIME"
+        },
+        {
+          "layoutId": 15,
+          "word": "FENCE"
+        },
+        {
+          "layoutId": 19,
+          "word": "CENTER"
+        },
+        {
+          "layoutId": 16,
+          "word": "GIANT"
+        },
+        {
+          "layoutId": 20,
+          "word": "BAT"
+        },
+        {
+          "layoutId": 18,
+          "word": "SERVER"
+        }
+      ]
+    },
+    {
+      "taskId": "embedding-finalists-v1-ccf2eb517337df37",
+      "clue": "stockholm",
+      "number": 3,
+      "activeSide": "blue",
+      "words": [
+        {
+          "layoutId": 13,
+          "word": "CRICKET"
+        },
+        {
+          "layoutId": 11,
+          "word": "CROWN"
+        },
+        {
+          "layoutId": 17,
+          "word": "CZECH"
+        },
+        {
+          "layoutId": 21,
+          "word": "SPIKE"
+        },
+        {
+          "layoutId": 24,
+          "word": "WALL"
+        },
+        {
+          "layoutId": 9,
+          "word": "FILM"
+        },
+        {
+          "layoutId": 6,
+          "word": "BOND"
+        },
+        {
+          "layoutId": 18,
+          "word": "SCREEN"
+        },
+        {
+          "layoutId": 4,
+          "word": "WITCH"
+        },
+        {
+          "layoutId": 20,
+          "word": "SHOT"
+        },
+        {
+          "layoutId": 14,
+          "word": "PASTE"
+        },
+        {
+          "layoutId": 1,
+          "word": "NEEDLE"
+        },
+        {
+          "layoutId": 12,
+          "word": "VET"
+        },
+        {
+          "layoutId": 2,
+          "word": "GERMANY"
+        },
+        {
+          "layoutId": 15,
+          "word": "MISSILE"
+        },
+        {
+          "layoutId": 16,
+          "word": "AUSTRALIA"
+        },
+        {
+          "layoutId": 22,
+          "word": "DRESS"
+        },
+        {
+          "layoutId": 19,
+          "word": "MAMMOTH"
+        },
+        {
+          "layoutId": 5,
+          "word": "PIPE"
+        },
+        {
+          "layoutId": 0,
+          "word": "BEIJING"
+        },
+        {
+          "layoutId": 7,
+          "word": "HORSE"
+        },
+        {
+          "layoutId": 23,
+          "word": "MOUNT"
+        },
+        {
+          "layoutId": 8,
+          "word": "PLATYPUS"
+        },
+        {
+          "layoutId": 3,
+          "word": "CAPITAL"
+        },
+        {
+          "layoutId": 10,
+          "word": "BOW"
+        }
+      ]
+    },
+    {
+      "taskId": "embedding-finalists-v1-38d1126c11ef76f6",
+      "clue": "cloth",
+      "number": 2,
+      "activeSide": "blue",
+      "words": [
+        {
+          "layoutId": 4,
+          "word": "GLASS"
+        },
+        {
+          "layoutId": 13,
+          "word": "SINK"
+        },
+        {
+          "layoutId": 1,
+          "word": "SOCK"
+        },
+        {
+          "layoutId": 5,
+          "word": "SUIT"
+        },
+        {
+          "layoutId": 17,
+          "word": "SCALE"
+        },
+        {
+          "layoutId": 0,
+          "word": "OIL"
+        },
+        {
+          "layoutId": 6,
+          "word": "PIT"
+        },
+        {
+          "layoutId": 8,
+          "word": "MODEL"
+        },
+        {
+          "layoutId": 21,
+          "word": "CAP"
+        },
+        {
+          "layoutId": 9,
+          "word": "HONEY"
+        },
+        {
+          "layoutId": 23,
+          "word": "BEAT"
+        },
+        {
+          "layoutId": 24,
+          "word": "MERCURY"
+        },
+        {
+          "layoutId": 10,
+          "word": "WAKE"
+        },
+        {
+          "layoutId": 12,
+          "word": "ROULETTE"
+        },
+        {
+          "layoutId": 2,
+          "word": "CLUB"
+        },
+        {
+          "layoutId": 22,
+          "word": "PIN"
+        },
+        {
+          "layoutId": 11,
+          "word": "CARD"
+        },
+        {
+          "layoutId": 14,
+          "word": "PIE"
+        },
+        {
+          "layoutId": 7,
+          "word": "ATLANTIS"
+        },
+        {
+          "layoutId": 3,
+          "word": "TIME"
+        },
+        {
+          "layoutId": 15,
+          "word": "FENCE"
+        },
+        {
+          "layoutId": 19,
+          "word": "CENTER"
+        },
+        {
+          "layoutId": 16,
+          "word": "GIANT"
+        },
+        {
+          "layoutId": 20,
+          "word": "BAT"
+        },
+        {
+          "layoutId": 18,
+          "word": "SERVER"
+        }
+      ]
+    },
+    {
+      "taskId": "embedding-finalists-v1-cf1570b160a71e25",
+      "clue": "nurses",
+      "number": 2,
+      "activeSide": "blue",
+      "words": [
+        {
+          "layoutId": 0,
+          "word": "DAY"
+        },
+        {
+          "layoutId": 20,
+          "word": "PISTOL"
+        },
+        {
+          "layoutId": 22,
+          "word": "KNIFE"
+        },
+        {
+          "layoutId": 10,
+          "word": "TEMPLE"
+        },
+        {
+          "layoutId": 15,
+          "word": "FORK"
+        },
+        {
+          "layoutId": 11,
+          "word": "WEB"
+        },
+        {
+          "layoutId": 1,
+          "word": "FIRE"
+        },
+        {
+          "layoutId": 13,
+          "word": "BOOT"
+        },
+        {
+          "layoutId": 17,
+          "word": "GENIUS"
+        },
+        {
+          "layoutId": 5,
+          "word": "DOCTOR"
+        },
+        {
+          "layoutId": 3,
+          "word": "HELICOPTER"
+        },
+        {
+          "layoutId": 9,
+          "word": "MOSCOW"
+        },
+        {
+          "layoutId": 12,
+          "word": "ARM"
+        },
+        {
+          "layoutId": 7,
+          "word": "STAFF"
+        },
+        {
+          "layoutId": 19,
+          "word": "BUCK"
+        },
+        {
+          "layoutId": 2,
+          "word": "FILE"
+        },
+        {
+          "layoutId": 4,
+          "word": "BACK"
+        },
+        {
+          "layoutId": 16,
+          "word": "CROWN"
+        },
+        {
+          "layoutId": 18,
+          "word": "PLATE"
+        },
+        {
+          "layoutId": 21,
+          "word": "PUPIL"
+        },
+        {
+          "layoutId": 24,
+          "word": "LAWYER"
+        },
+        {
+          "layoutId": 6,
+          "word": "FOOT"
+        },
+        {
+          "layoutId": 8,
+          "word": "GRACE"
+        },
+        {
+          "layoutId": 23,
+          "word": "UNDERTAKER"
+        },
+        {
+          "layoutId": 14,
+          "word": "PIRATE"
+        }
+      ]
+    },
+    {
+      "taskId": "embedding-finalists-v1-e8ed5ca88130a9e8",
+      "clue": "berlin",
+      "number": 2,
+      "activeSide": "blue",
+      "words": [
+        {
+          "layoutId": 13,
+          "word": "CRICKET"
+        },
+        {
+          "layoutId": 11,
+          "word": "CROWN"
+        },
+        {
+          "layoutId": 17,
+          "word": "CZECH"
+        },
+        {
+          "layoutId": 21,
+          "word": "SPIKE"
+        },
+        {
+          "layoutId": 24,
+          "word": "WALL"
+        },
+        {
+          "layoutId": 9,
+          "word": "FILM"
+        },
+        {
+          "layoutId": 6,
+          "word": "BOND"
+        },
+        {
+          "layoutId": 18,
+          "word": "SCREEN"
+        },
+        {
+          "layoutId": 4,
+          "word": "WITCH"
+        },
+        {
+          "layoutId": 20,
+          "word": "SHOT"
+        },
+        {
+          "layoutId": 14,
+          "word": "PASTE"
+        },
+        {
+          "layoutId": 1,
+          "word": "NEEDLE"
+        },
+        {
+          "layoutId": 12,
+          "word": "VET"
+        },
+        {
+          "layoutId": 2,
+          "word": "GERMANY"
+        },
+        {
+          "layoutId": 15,
+          "word": "MISSILE"
+        },
+        {
+          "layoutId": 16,
+          "word": "AUSTRALIA"
+        },
+        {
+          "layoutId": 22,
+          "word": "DRESS"
+        },
+        {
+          "layoutId": 19,
+          "word": "MAMMOTH"
+        },
+        {
+          "layoutId": 5,
+          "word": "PIPE"
+        },
+        {
+          "layoutId": 0,
+          "word": "BEIJING"
+        },
+        {
+          "layoutId": 7,
+          "word": "HORSE"
+        },
+        {
+          "layoutId": 23,
+          "word": "MOUNT"
+        },
+        {
+          "layoutId": 8,
+          "word": "PLATYPUS"
+        },
+        {
+          "layoutId": 3,
+          "word": "CAPITAL"
+        },
+        {
+          "layoutId": 10,
+          "word": "BOW"
+        }
+      ]
+    },
+    {
+      "taskId": "embedding-finalists-v1-8bd49808db6d94c0",
+      "clue": "gun",
+      "number": 1,
+      "activeSide": "blue",
+      "words": [
+        {
+          "layoutId": 11,
+          "word": "HORN"
+        },
+        {
+          "layoutId": 5,
+          "word": "UNICORN"
+        },
+        {
+          "layoutId": 13,
+          "word": "GRASS"
+        },
+        {
+          "layoutId": 1,
+          "word": "ROBOT"
+        },
+        {
+          "layoutId": 2,
+          "word": "PISTOL"
+        },
+        {
+          "layoutId": 22,
+          "word": "PLANE"
+        },
+        {
+          "layoutId": 14,
+          "word": "OLYMPUS"
+        },
+        {
+          "layoutId": 16,
+          "word": "HEAD"
+        },
+        {
+          "layoutId": 18,
+          "word": "DOG"
+        },
+        {
+          "layoutId": 3,
+          "word": "BELT"
+        },
+        {
+          "layoutId": 8,
+          "word": "PASTE"
+        },
+        {
+          "layoutId": 0,
+          "word": "BEIJING"
+        },
+        {
+          "layoutId": 9,
+          "word": "CENTER"
+        },
+        {
+          "layoutId": 12,
+          "word": "VAN"
+        },
+        {
+          "layoutId": 15,
+          "word": "CHOCOLATE"
+        },
+        {
+          "layoutId": 17,
+          "word": "DROP"
+        },
+        {
+          "layoutId": 24,
+          "word": "MAIL"
+        },
+        {
+          "layoutId": 4,
+          "word": "STADIUM"
+        },
+        {
+          "layoutId": 21,
+          "word": "STAR"
+        },
+        {
+          "layoutId": 20,
+          "word": "TAIL"
+        },
+        {
+          "layoutId": 6,
+          "word": "STRING"
+        },
+        {
+          "layoutId": 10,
+          "word": "FIGHTER"
+        },
+        {
+          "layoutId": 7,
+          "word": "WASHER"
+        },
+        {
+          "layoutId": 23,
+          "word": "CONTRACT"
+        },
+        {
+          "layoutId": 19,
+          "word": "PARACHUTE"
+        }
+      ]
+    },
+    {
+      "taskId": "embedding-finalists-v1-e98b059b43b3e276",
+      "clue": "strap",
+      "number": 2,
+      "activeSide": "blue",
+      "words": [
+        {
+          "layoutId": 11,
+          "word": "HORN"
+        },
+        {
+          "layoutId": 5,
+          "word": "UNICORN"
+        },
+        {
+          "layoutId": 13,
+          "word": "GRASS"
+        },
+        {
+          "layoutId": 1,
+          "word": "ROBOT"
+        },
+        {
+          "layoutId": 2,
+          "word": "PISTOL"
+        },
+        {
+          "layoutId": 22,
+          "word": "PLANE"
+        },
+        {
+          "layoutId": 14,
+          "word": "OLYMPUS"
+        },
+        {
+          "layoutId": 16,
+          "word": "HEAD"
+        },
+        {
+          "layoutId": 18,
+          "word": "DOG"
+        },
+        {
+          "layoutId": 3,
+          "word": "BELT"
+        },
+        {
+          "layoutId": 8,
+          "word": "PASTE"
+        },
+        {
+          "layoutId": 0,
+          "word": "BEIJING"
+        },
+        {
+          "layoutId": 9,
+          "word": "CENTER"
+        },
+        {
+          "layoutId": 12,
+          "word": "VAN"
+        },
+        {
+          "layoutId": 15,
+          "word": "CHOCOLATE"
+        },
+        {
+          "layoutId": 17,
+          "word": "DROP"
+        },
+        {
+          "layoutId": 24,
+          "word": "MAIL"
+        },
+        {
+          "layoutId": 4,
+          "word": "STADIUM"
+        },
+        {
+          "layoutId": 21,
+          "word": "STAR"
+        },
+        {
+          "layoutId": 20,
+          "word": "TAIL"
+        },
+        {
+          "layoutId": 6,
+          "word": "STRING"
+        },
+        {
+          "layoutId": 10,
+          "word": "FIGHTER"
+        },
+        {
+          "layoutId": 7,
+          "word": "WASHER"
+        },
+        {
+          "layoutId": 23,
+          "word": "CONTRACT"
+        },
+        {
+          "layoutId": 19,
+          "word": "PARACHUTE"
+        }
+      ]
+    },
+    {
+      "taskId": "embedding-finalists-v1-92836264c8ed00d5",
+      "clue": "doc",
+      "number": 2,
+      "activeSide": "blue",
+      "words": [
+        {
+          "layoutId": 0,
+          "word": "DAY"
+        },
+        {
+          "layoutId": 20,
+          "word": "PISTOL"
+        },
+        {
+          "layoutId": 22,
+          "word": "KNIFE"
+        },
+        {
+          "layoutId": 10,
+          "word": "TEMPLE"
+        },
+        {
+          "layoutId": 15,
+          "word": "FORK"
+        },
+        {
+          "layoutId": 11,
+          "word": "WEB"
+        },
+        {
+          "layoutId": 1,
+          "word": "FIRE"
+        },
+        {
+          "layoutId": 13,
+          "word": "BOOT"
+        },
+        {
+          "layoutId": 17,
+          "word": "GENIUS"
+        },
+        {
+          "layoutId": 5,
+          "word": "DOCTOR"
+        },
+        {
+          "layoutId": 3,
+          "word": "HELICOPTER"
+        },
+        {
+          "layoutId": 9,
+          "word": "MOSCOW"
+        },
+        {
+          "layoutId": 12,
+          "word": "ARM"
+        },
+        {
+          "layoutId": 7,
+          "word": "STAFF"
+        },
+        {
+          "layoutId": 19,
+          "word": "BUCK"
+        },
+        {
+          "layoutId": 2,
+          "word": "FILE"
+        },
+        {
+          "layoutId": 4,
+          "word": "BACK"
+        },
+        {
+          "layoutId": 16,
+          "word": "CROWN"
+        },
+        {
+          "layoutId": 18,
+          "word": "PLATE"
+        },
+        {
+          "layoutId": 21,
+          "word": "PUPIL"
+        },
+        {
+          "layoutId": 24,
+          "word": "LAWYER"
+        },
+        {
+          "layoutId": 6,
+          "word": "FOOT"
+        },
+        {
+          "layoutId": 8,
+          "word": "GRACE"
+        },
+        {
+          "layoutId": 23,
+          "word": "UNDERTAKER"
+        },
+        {
+          "layoutId": 14,
+          "word": "PIRATE"
+        }
+      ]
+    },
+    {
+      "taskId": "embedding-finalists-v1-5fc1d0b700984278",
+      "clue": "laser",
+      "number": 4,
+      "activeSide": "blue",
+      "words": [
+        {
+          "layoutId": 11,
+          "word": "HORN"
+        },
+        {
+          "layoutId": 5,
+          "word": "UNICORN"
+        },
+        {
+          "layoutId": 13,
+          "word": "GRASS"
+        },
+        {
+          "layoutId": 1,
+          "word": "ROBOT"
+        },
+        {
+          "layoutId": 2,
+          "word": "PISTOL"
+        },
+        {
+          "layoutId": 22,
+          "word": "PLANE"
+        },
+        {
+          "layoutId": 14,
+          "word": "OLYMPUS"
+        },
+        {
+          "layoutId": 16,
+          "word": "HEAD"
+        },
+        {
+          "layoutId": 18,
+          "word": "DOG"
+        },
+        {
+          "layoutId": 3,
+          "word": "BELT"
+        },
+        {
+          "layoutId": 8,
+          "word": "PASTE"
+        },
+        {
+          "layoutId": 0,
+          "word": "BEIJING"
+        },
+        {
+          "layoutId": 9,
+          "word": "CENTER"
+        },
+        {
+          "layoutId": 12,
+          "word": "VAN"
+        },
+        {
+          "layoutId": 15,
+          "word": "CHOCOLATE"
+        },
+        {
+          "layoutId": 17,
+          "word": "DROP"
+        },
+        {
+          "layoutId": 24,
+          "word": "MAIL"
+        },
+        {
+          "layoutId": 4,
+          "word": "STADIUM"
+        },
+        {
+          "layoutId": 21,
+          "word": "STAR"
+        },
+        {
+          "layoutId": 20,
+          "word": "TAIL"
+        },
+        {
+          "layoutId": 6,
+          "word": "STRING"
+        },
+        {
+          "layoutId": 10,
+          "word": "FIGHTER"
+        },
+        {
+          "layoutId": 7,
+          "word": "WASHER"
+        },
+        {
+          "layoutId": 23,
+          "word": "CONTRACT"
+        },
+        {
+          "layoutId": 19,
+          "word": "PARACHUTE"
+        }
+      ]
+    },
+    {
+      "taskId": "embedding-finalists-v1-fe78aef013b0a245",
+      "clue": "facial",
+      "number": 2,
+      "activeSide": "blue",
+      "words": [
+        {
+          "layoutId": 5,
+          "word": "ROW"
+        },
+        {
+          "layoutId": 6,
+          "word": "CANADA"
+        },
+        {
+          "layoutId": 11,
+          "word": "CHICK"
+        },
+        {
+          "layoutId": 20,
+          "word": "ALPS"
+        },
+        {
+          "layoutId": 24,
+          "word": "DIAMOND"
+        },
+        {
+          "layoutId": 7,
+          "word": "MOUTH"
+        },
+        {
+          "layoutId": 13,
+          "word": "STREAM"
+        },
+        {
+          "layoutId": 22,
+          "word": "LUCK"
+        },
+        {
+          "layoutId": 12,
+          "word": "POISON"
+        },
+        {
+          "layoutId": 8,
+          "word": "SOUND"
+        },
+        {
+          "layoutId": 15,
+          "word": "WITCH"
+        },
+        {
+          "layoutId": 10,
+          "word": "MODEL"
+        },
+        {
+          "layoutId": 4,
+          "word": "ARM"
+        },
+        {
+          "layoutId": 16,
+          "word": "FLY"
+        },
+        {
+          "layoutId": 0,
+          "word": "HOOK"
+        },
+        {
+          "layoutId": 19,
+          "word": "OLIVE"
+        },
+        {
+          "layoutId": 2,
+          "word": "CLOAK"
+        },
+        {
+          "layoutId": 3,
+          "word": "FACE"
+        },
+        {
+          "layoutId": 23,
+          "word": "TRUNK"
+        },
+        {
+          "layoutId": 9,
+          "word": "STRAW"
+        },
+        {
+          "layoutId": 18,
+          "word": "TRIP"
+        },
+        {
+          "layoutId": 1,
+          "word": "ROBOT"
+        },
+        {
+          "layoutId": 21,
+          "word": "WORM"
+        },
+        {
+          "layoutId": 14,
+          "word": "BOTTLE"
+        },
+        {
+          "layoutId": 17,
+          "word": "COTTON"
+        }
+      ]
+    },
+    {
+      "taskId": "embedding-finalists-v1-4efeb94a29d81f7e",
+      "clue": "crane",
+      "number": 3,
+      "activeSide": "blue",
+      "words": [
+        {
+          "layoutId": 3,
+          "word": "SCUBA DIVER"
+        },
+        {
+          "layoutId": 2,
+          "word": "GHOST"
+        },
+        {
+          "layoutId": 4,
+          "word": "HELICOPTER"
+        },
+        {
+          "layoutId": 9,
+          "word": "ROBIN"
+        },
+        {
+          "layoutId": 14,
+          "word": "NIGHT"
+        },
+        {
+          "layoutId": 10,
+          "word": "TOOTH"
+        },
+        {
+          "layoutId": 20,
+          "word": "LION"
+        },
+        {
+          "layoutId": 6,
+          "word": "HEART"
+        },
+        {
+          "layoutId": 12,
+          "word": "WAR"
+        },
+        {
+          "layoutId": 11,
+          "word": "MOUNT"
+        },
+        {
+          "layoutId": 22,
+          "word": "BERRY"
+        },
+        {
+          "layoutId": 24,
+          "word": "PLAY"
+        },
+        {
+          "layoutId": 1,
+          "word": "GROUND"
+        },
+        {
+          "layoutId": 23,
+          "word": "AUSTRALIA"
+        },
+        {
+          "layoutId": 7,
+          "word": "TOWER"
+        },
+        {
+          "layoutId": 8,
+          "word": "LAWYER"
+        },
+        {
+          "layoutId": 19,
+          "word": "DRAFT"
+        },
+        {
+          "layoutId": 18,
+          "word": "BAT"
+        },
+        {
+          "layoutId": 16,
+          "word": "SHOP"
+        },
+        {
+          "layoutId": 0,
+          "word": "DRESS"
+        },
+        {
+          "layoutId": 15,
+          "word": "AIR"
+        },
+        {
+          "layoutId": 17,
+          "word": "EUROPE"
+        },
+        {
+          "layoutId": 13,
+          "word": "BACK"
+        },
+        {
+          "layoutId": 5,
+          "word": "CRASH"
+        },
+        {
+          "layoutId": 21,
+          "word": "KETCHUP"
+        }
+      ]
+    },
+    {
+      "taskId": "embedding-finalists-v1-1840ae57390a1a22",
+      "clue": "backup",
+      "number": 2,
+      "activeSide": "blue",
+      "words": [
+        {
+          "layoutId": 0,
+          "word": "DAY"
+        },
+        {
+          "layoutId": 20,
+          "word": "PISTOL"
+        },
+        {
+          "layoutId": 22,
+          "word": "KNIFE"
+        },
+        {
+          "layoutId": 10,
+          "word": "TEMPLE"
+        },
+        {
+          "layoutId": 15,
+          "word": "FORK"
+        },
+        {
+          "layoutId": 11,
+          "word": "WEB"
+        },
+        {
+          "layoutId": 1,
+          "word": "FIRE"
+        },
+        {
+          "layoutId": 13,
+          "word": "BOOT"
+        },
+        {
+          "layoutId": 17,
+          "word": "GENIUS"
+        },
+        {
+          "layoutId": 5,
+          "word": "DOCTOR"
+        },
+        {
+          "layoutId": 3,
+          "word": "HELICOPTER"
+        },
+        {
+          "layoutId": 9,
+          "word": "MOSCOW"
+        },
+        {
+          "layoutId": 12,
+          "word": "ARM"
+        },
+        {
+          "layoutId": 7,
+          "word": "STAFF"
+        },
+        {
+          "layoutId": 19,
+          "word": "BUCK"
+        },
+        {
+          "layoutId": 2,
+          "word": "FILE"
+        },
+        {
+          "layoutId": 4,
+          "word": "BACK"
+        },
+        {
+          "layoutId": 16,
+          "word": "CROWN"
+        },
+        {
+          "layoutId": 18,
+          "word": "PLATE"
+        },
+        {
+          "layoutId": 21,
+          "word": "PUPIL"
+        },
+        {
+          "layoutId": 24,
+          "word": "LAWYER"
+        },
+        {
+          "layoutId": 6,
+          "word": "FOOT"
+        },
+        {
+          "layoutId": 8,
+          "word": "GRACE"
+        },
+        {
+          "layoutId": 23,
+          "word": "UNDERTAKER"
+        },
+        {
+          "layoutId": 14,
+          "word": "PIRATE"
+        }
+      ]
+    },
+    {
+      "taskId": "embedding-finalists-v1-ac9c6180d1ada8b8",
+      "clue": "barn",
+      "number": 3,
+      "activeSide": "blue",
+      "words": [
+        {
+          "layoutId": 7,
+          "word": "ALIEN"
+        },
+        {
+          "layoutId": 24,
+          "word": "TEACHER"
+        },
+        {
+          "layoutId": 5,
+          "word": "ANGEL"
+        },
+        {
+          "layoutId": 6,
+          "word": "BAR"
+        },
+        {
+          "layoutId": 23,
+          "word": "SOLDIER"
+        },
+        {
+          "layoutId": 12,
+          "word": "VACUUM"
+        },
+        {
+          "layoutId": 22,
+          "word": "EYE"
+        },
+        {
+          "layoutId": 19,
+          "word": "HOOD"
+        },
+        {
+          "layoutId": 8,
+          "word": "CHICK"
+        },
+        {
+          "layoutId": 20,
+          "word": "AMAZON"
+        },
+        {
+          "layoutId": 16,
+          "word": "PORT"
+        },
+        {
+          "layoutId": 3,
+          "word": "ROSE"
+        },
+        {
+          "layoutId": 10,
+          "word": "LION"
+        },
+        {
+          "layoutId": 0,
+          "word": "BAT"
+        },
+        {
+          "layoutId": 1,
+          "word": "MASS"
+        },
+        {
+          "layoutId": 18,
+          "word": "GERMANY"
+        },
+        {
+          "layoutId": 4,
+          "word": "YARD"
+        },
+        {
+          "layoutId": 14,
+          "word": "MINT"
+        },
+        {
+          "layoutId": 21,
+          "word": "MARBLE"
+        },
+        {
+          "layoutId": 11,
+          "word": "KEY"
+        },
+        {
+          "layoutId": 15,
+          "word": "TRIP"
+        },
+        {
+          "layoutId": 17,
+          "word": "VET"
+        },
+        {
+          "layoutId": 9,
+          "word": "SATURN"
+        },
+        {
+          "layoutId": 2,
+          "word": "OCTOPUS"
+        },
+        {
+          "layoutId": 13,
+          "word": "PIRATE"
+        }
+      ]
+    },
+    {
+      "taskId": "embedding-finalists-v1-7b9a9fbb2a62ceba",
+      "clue": "elephant",
+      "number": 3,
+      "activeSide": "blue",
+      "words": [
+        {
+          "layoutId": 11,
+          "word": "BOND"
+        },
+        {
+          "layoutId": 24,
+          "word": "NUT"
+        },
+        {
+          "layoutId": 9,
+          "word": "KNIFE"
+        },
+        {
+          "layoutId": 4,
+          "word": "LITTER"
+        },
+        {
+          "layoutId": 8,
+          "word": "SPINE"
+        },
+        {
+          "layoutId": 19,
+          "word": "OLYMPUS"
+        },
+        {
+          "layoutId": 17,
+          "word": "MUG"
+        },
+        {
+          "layoutId": 10,
+          "word": "STRING"
+        },
+        {
+          "layoutId": 12,
+          "word": "WAR"
+        },
+        {
+          "layoutId": 6,
+          "word": "LION"
+        },
+        {
+          "layoutId": 7,
+          "word": "KANGAROO"
+        },
+        {
+          "layoutId": 3,
+          "word": "COOK"
+        },
+        {
+          "layoutId": 5,
+          "word": "STRAW"
+        },
+        {
+          "layoutId": 13,
+          "word": "CRANE"
+        },
+        {
+          "layoutId": 16,
+          "word": "LOG"
+        },
+        {
+          "layoutId": 20,
+          "word": "CROWN"
+        },
+        {
+          "layoutId": 23,
+          "word": "YARD"
+        },
+        {
+          "layoutId": 21,
+          "word": "CONDUCTOR"
+        },
+        {
+          "layoutId": 0,
+          "word": "GIANT"
+        },
+        {
+          "layoutId": 2,
+          "word": "SPELL"
+        },
+        {
+          "layoutId": 14,
+          "word": "BLOCK"
+        },
+        {
+          "layoutId": 22,
+          "word": "HAM"
+        },
+        {
+          "layoutId": 1,
+          "word": "FLUTE"
+        },
+        {
+          "layoutId": 15,
+          "word": "GAME"
+        },
+        {
+          "layoutId": 18,
+          "word": "PLANE"
+        }
+      ]
+    },
+    {
+      "taskId": "embedding-finalists-v1-9e0edcbbdebf1c40",
+      "clue": "outfit",
+      "number": 2,
+      "activeSide": "blue",
+      "words": [
+        {
+          "layoutId": 4,
+          "word": "GLASS"
+        },
+        {
+          "layoutId": 13,
+          "word": "SINK"
+        },
+        {
+          "layoutId": 1,
+          "word": "SOCK"
+        },
+        {
+          "layoutId": 5,
+          "word": "SUIT"
+        },
+        {
+          "layoutId": 17,
+          "word": "SCALE"
+        },
+        {
+          "layoutId": 0,
+          "word": "OIL"
+        },
+        {
+          "layoutId": 6,
+          "word": "PIT"
+        },
+        {
+          "layoutId": 8,
+          "word": "MODEL"
+        },
+        {
+          "layoutId": 21,
+          "word": "CAP"
+        },
+        {
+          "layoutId": 9,
+          "word": "HONEY"
+        },
+        {
+          "layoutId": 23,
+          "word": "BEAT"
+        },
+        {
+          "layoutId": 24,
+          "word": "MERCURY"
+        },
+        {
+          "layoutId": 10,
+          "word": "WAKE"
+        },
+        {
+          "layoutId": 12,
+          "word": "ROULETTE"
+        },
+        {
+          "layoutId": 2,
+          "word": "CLUB"
+        },
+        {
+          "layoutId": 22,
+          "word": "PIN"
+        },
+        {
+          "layoutId": 11,
+          "word": "CARD"
+        },
+        {
+          "layoutId": 14,
+          "word": "PIE"
+        },
+        {
+          "layoutId": 7,
+          "word": "ATLANTIS"
+        },
+        {
+          "layoutId": 3,
+          "word": "TIME"
+        },
+        {
+          "layoutId": 15,
+          "word": "FENCE"
+        },
+        {
+          "layoutId": 19,
+          "word": "CENTER"
+        },
+        {
+          "layoutId": 16,
+          "word": "GIANT"
+        },
+        {
+          "layoutId": 20,
+          "word": "BAT"
+        },
+        {
+          "layoutId": 18,
+          "word": "SERVER"
+        }
+      ]
+    },
+    {
+      "taskId": "embedding-finalists-v1-54b873ee83d6b6e9",
+      "clue": "rescue",
+      "number": 3,
+      "activeSide": "blue",
+      "words": [
+        {
+          "layoutId": 3,
+          "word": "SCUBA DIVER"
+        },
+        {
+          "layoutId": 2,
+          "word": "GHOST"
+        },
+        {
+          "layoutId": 4,
+          "word": "HELICOPTER"
+        },
+        {
+          "layoutId": 9,
+          "word": "ROBIN"
+        },
+        {
+          "layoutId": 14,
+          "word": "NIGHT"
+        },
+        {
+          "layoutId": 10,
+          "word": "TOOTH"
+        },
+        {
+          "layoutId": 20,
+          "word": "LION"
+        },
+        {
+          "layoutId": 6,
+          "word": "HEART"
+        },
+        {
+          "layoutId": 12,
+          "word": "WAR"
+        },
+        {
+          "layoutId": 11,
+          "word": "MOUNT"
+        },
+        {
+          "layoutId": 22,
+          "word": "BERRY"
+        },
+        {
+          "layoutId": 24,
+          "word": "PLAY"
+        },
+        {
+          "layoutId": 1,
+          "word": "GROUND"
+        },
+        {
+          "layoutId": 23,
+          "word": "AUSTRALIA"
+        },
+        {
+          "layoutId": 7,
+          "word": "TOWER"
+        },
+        {
+          "layoutId": 8,
+          "word": "LAWYER"
+        },
+        {
+          "layoutId": 19,
+          "word": "DRAFT"
+        },
+        {
+          "layoutId": 18,
+          "word": "BAT"
+        },
+        {
+          "layoutId": 16,
+          "word": "SHOP"
+        },
+        {
+          "layoutId": 0,
+          "word": "DRESS"
+        },
+        {
+          "layoutId": 15,
+          "word": "AIR"
+        },
+        {
+          "layoutId": 17,
+          "word": "EUROPE"
+        },
+        {
+          "layoutId": 13,
+          "word": "BACK"
+        },
+        {
+          "layoutId": 5,
+          "word": "CRASH"
+        },
+        {
+          "layoutId": 21,
+          "word": "KETCHUP"
+        }
+      ]
+    },
+    {
+      "taskId": "embedding-finalists-v1-c4510d46f779d124",
+      "clue": "circular",
+      "number": 2,
+      "activeSide": "blue",
+      "words": [
+        {
+          "layoutId": 16,
+          "word": "ENGINE"
+        },
+        {
+          "layoutId": 5,
+          "word": "ROUND"
+        },
+        {
+          "layoutId": 22,
+          "word": "CENTER"
+        },
+        {
+          "layoutId": 23,
+          "word": "DECK"
+        },
+        {
+          "layoutId": 2,
+          "word": "MAIL"
+        },
+        {
+          "layoutId": 1,
+          "word": "UNDERTAKER"
+        },
+        {
+          "layoutId": 17,
+          "word": "WORM"
+        },
+        {
+          "layoutId": 6,
+          "word": "POISON"
+        },
+        {
+          "layoutId": 11,
+          "word": "FIRE"
+        },
+        {
+          "layoutId": 0,
+          "word": "SNOW"
+        },
+        {
+          "layoutId": 8,
+          "word": "ENGLAND"
+        },
+        {
+          "layoutId": 4,
+          "word": "GLASS"
+        },
+        {
+          "layoutId": 19,
+          "word": "CAPITAL"
+        },
+        {
+          "layoutId": 3,
+          "word": "STOCK"
+        },
+        {
+          "layoutId": 12,
+          "word": "GIANT"
+        },
+        {
+          "layoutId": 21,
+          "word": "LONDON"
+        },
+        {
+          "layoutId": 24,
+          "word": "FLY"
+        },
+        {
+          "layoutId": 14,
+          "word": "POOL"
+        },
+        {
+          "layoutId": 20,
+          "word": "BILL"
+        },
+        {
+          "layoutId": 13,
+          "word": "STADIUM"
+        },
+        {
+          "layoutId": 18,
+          "word": "OPERA"
+        },
+        {
+          "layoutId": 10,
+          "word": "ROULETTE"
+        },
+        {
+          "layoutId": 15,
+          "word": "PILOT"
+        },
+        {
+          "layoutId": 7,
+          "word": "CYCLE"
+        },
+        {
+          "layoutId": 9,
+          "word": "EAGLE"
+        }
+      ]
+    },
+    {
+      "taskId": "embedding-finalists-v1-659d21fa3d98255b",
+      "clue": "circular",
+      "number": 2,
+      "activeSide": "blue",
+      "words": [
+        {
+          "layoutId": 16,
+          "word": "ENGINE"
+        },
+        {
+          "layoutId": 5,
+          "word": "ROUND"
+        },
+        {
+          "layoutId": 22,
+          "word": "CENTER"
+        },
+        {
+          "layoutId": 23,
+          "word": "DECK"
+        },
+        {
+          "layoutId": 2,
+          "word": "MAIL"
+        },
+        {
+          "layoutId": 1,
+          "word": "UNDERTAKER"
+        },
+        {
+          "layoutId": 17,
+          "word": "WORM"
+        },
+        {
+          "layoutId": 6,
+          "word": "POISON"
+        },
+        {
+          "layoutId": 11,
+          "word": "FIRE"
+        },
+        {
+          "layoutId": 0,
+          "word": "SNOW"
+        },
+        {
+          "layoutId": 8,
+          "word": "ENGLAND"
+        },
+        {
+          "layoutId": 4,
+          "word": "GLASS"
+        },
+        {
+          "layoutId": 19,
+          "word": "CAPITAL"
+        },
+        {
+          "layoutId": 3,
+          "word": "STOCK"
+        },
+        {
+          "layoutId": 12,
+          "word": "GIANT"
+        },
+        {
+          "layoutId": 21,
+          "word": "LONDON"
+        },
+        {
+          "layoutId": 24,
+          "word": "FLY"
+        },
+        {
+          "layoutId": 14,
+          "word": "POOL"
+        },
+        {
+          "layoutId": 20,
+          "word": "BILL"
+        },
+        {
+          "layoutId": 13,
+          "word": "STADIUM"
+        },
+        {
+          "layoutId": 18,
+          "word": "OPERA"
+        },
+        {
+          "layoutId": 10,
+          "word": "ROULETTE"
+        },
+        {
+          "layoutId": 15,
+          "word": "PILOT"
+        },
+        {
+          "layoutId": 7,
+          "word": "CYCLE"
+        },
+        {
+          "layoutId": 9,
+          "word": "EAGLE"
+        }
+      ]
+    },
+    {
+      "taskId": "embedding-finalists-v1-1846f5d1dc9e27b0",
+      "clue": "golden",
+      "number": 1,
+      "activeSide": "blue",
+      "words": [
+        {
+          "layoutId": 5,
+          "word": "BELT"
+        },
+        {
+          "layoutId": 2,
+          "word": "GLASS"
+        },
+        {
+          "layoutId": 7,
+          "word": "GOLD"
+        },
+        {
+          "layoutId": 23,
+          "word": "BLOCK"
+        },
+        {
+          "layoutId": 19,
+          "word": "CANADA"
+        },
+        {
+          "layoutId": 13,
+          "word": "LIMOUSINE"
+        },
+        {
+          "layoutId": 18,
+          "word": "LOCH NESS"
+        },
+        {
+          "layoutId": 3,
+          "word": "CROSS"
+        },
+        {
+          "layoutId": 15,
+          "word": "LAWYER"
+        },
+        {
+          "layoutId": 11,
+          "word": "MARCH"
+        },
+        {
+          "layoutId": 4,
+          "word": "RULER"
+        },
+        {
+          "layoutId": 20,
+          "word": "STADIUM"
+        },
+        {
+          "layoutId": 9,
+          "word": "CROWN"
+        },
+        {
+          "layoutId": 0,
+          "word": "FIRE"
+        },
+        {
+          "layoutId": 6,
+          "word": "DROP"
+        },
+        {
+          "layoutId": 22,
+          "word": "PIE"
+        },
+        {
+          "layoutId": 8,
+          "word": "TRACK"
+        },
+        {
+          "layoutId": 14,
+          "word": "AMERICA"
+        },
+        {
+          "layoutId": 17,
+          "word": "THIEF"
+        },
+        {
+          "layoutId": 12,
+          "word": "HOOD"
+        },
+        {
+          "layoutId": 1,
+          "word": "PART"
+        },
+        {
+          "layoutId": 24,
+          "word": "HORSESHOE"
+        },
+        {
+          "layoutId": 16,
+          "word": "PENGUIN"
+        },
+        {
+          "layoutId": 21,
+          "word": "GREEN"
+        },
+        {
+          "layoutId": 10,
+          "word": "BOMB"
+        }
+      ]
+    },
+    {
+      "taskId": "embedding-finalists-v1-15b6b278639ba29f",
+      "clue": "barn",
+      "number": 2,
+      "activeSide": "blue",
+      "words": [
+        {
+          "layoutId": 7,
+          "word": "ALIEN"
+        },
+        {
+          "layoutId": 24,
+          "word": "TEACHER"
+        },
+        {
+          "layoutId": 5,
+          "word": "ANGEL"
+        },
+        {
+          "layoutId": 6,
+          "word": "BAR"
+        },
+        {
+          "layoutId": 23,
+          "word": "SOLDIER"
+        },
+        {
+          "layoutId": 12,
+          "word": "VACUUM"
+        },
+        {
+          "layoutId": 22,
+          "word": "EYE"
+        },
+        {
+          "layoutId": 19,
+          "word": "HOOD"
+        },
+        {
+          "layoutId": 8,
+          "word": "CHICK"
+        },
+        {
+          "layoutId": 20,
+          "word": "AMAZON"
+        },
+        {
+          "layoutId": 16,
+          "word": "PORT"
+        },
+        {
+          "layoutId": 3,
+          "word": "ROSE"
+        },
+        {
+          "layoutId": 10,
+          "word": "LION"
+        },
+        {
+          "layoutId": 0,
+          "word": "BAT"
+        },
+        {
+          "layoutId": 1,
+          "word": "MASS"
+        },
+        {
+          "layoutId": 18,
+          "word": "GERMANY"
+        },
+        {
+          "layoutId": 4,
+          "word": "YARD"
+        },
+        {
+          "layoutId": 14,
+          "word": "MINT"
+        },
+        {
+          "layoutId": 21,
+          "word": "MARBLE"
+        },
+        {
+          "layoutId": 11,
+          "word": "KEY"
+        },
+        {
+          "layoutId": 15,
+          "word": "TRIP"
+        },
+        {
+          "layoutId": 17,
+          "word": "VET"
+        },
+        {
+          "layoutId": 9,
+          "word": "SATURN"
+        },
+        {
+          "layoutId": 2,
+          "word": "OCTOPUS"
+        },
+        {
+          "layoutId": 13,
+          "word": "PIRATE"
+        }
+      ]
+    },
+    {
+      "taskId": "embedding-finalists-v1-3cdbb65dc4c7242e",
+      "clue": "circular",
+      "number": 2,
+      "activeSide": "blue",
+      "words": [
+        {
+          "layoutId": 16,
+          "word": "ENGINE"
+        },
+        {
+          "layoutId": 5,
+          "word": "ROUND"
+        },
+        {
+          "layoutId": 22,
+          "word": "CENTER"
+        },
+        {
+          "layoutId": 23,
+          "word": "DECK"
+        },
+        {
+          "layoutId": 2,
+          "word": "MAIL"
+        },
+        {
+          "layoutId": 1,
+          "word": "UNDERTAKER"
+        },
+        {
+          "layoutId": 17,
+          "word": "WORM"
+        },
+        {
+          "layoutId": 6,
+          "word": "POISON"
+        },
+        {
+          "layoutId": 11,
+          "word": "FIRE"
+        },
+        {
+          "layoutId": 0,
+          "word": "SNOW"
+        },
+        {
+          "layoutId": 8,
+          "word": "ENGLAND"
+        },
+        {
+          "layoutId": 4,
+          "word": "GLASS"
+        },
+        {
+          "layoutId": 19,
+          "word": "CAPITAL"
+        },
+        {
+          "layoutId": 3,
+          "word": "STOCK"
+        },
+        {
+          "layoutId": 12,
+          "word": "GIANT"
+        },
+        {
+          "layoutId": 21,
+          "word": "LONDON"
+        },
+        {
+          "layoutId": 24,
+          "word": "FLY"
+        },
+        {
+          "layoutId": 14,
+          "word": "POOL"
+        },
+        {
+          "layoutId": 20,
+          "word": "BILL"
+        },
+        {
+          "layoutId": 13,
+          "word": "STADIUM"
+        },
+        {
+          "layoutId": 18,
+          "word": "OPERA"
+        },
+        {
+          "layoutId": 10,
+          "word": "ROULETTE"
+        },
+        {
+          "layoutId": 15,
+          "word": "PILOT"
+        },
+        {
+          "layoutId": 7,
+          "word": "CYCLE"
+        },
+        {
+          "layoutId": 9,
+          "word": "EAGLE"
+        }
+      ]
+    },
+    {
+      "taskId": "embedding-finalists-v1-e4f8ee4facfd310e",
+      "clue": "insect",
+      "number": 3,
+      "activeSide": "blue",
+      "words": [
+        {
+          "layoutId": 7,
+          "word": "ALIEN"
+        },
+        {
+          "layoutId": 24,
+          "word": "TEACHER"
+        },
+        {
+          "layoutId": 5,
+          "word": "ANGEL"
+        },
+        {
+          "layoutId": 6,
+          "word": "BAR"
+        },
+        {
+          "layoutId": 23,
+          "word": "SOLDIER"
+        },
+        {
+          "layoutId": 12,
+          "word": "VACUUM"
+        },
+        {
+          "layoutId": 22,
+          "word": "EYE"
+        },
+        {
+          "layoutId": 19,
+          "word": "HOOD"
+        },
+        {
+          "layoutId": 8,
+          "word": "CHICK"
+        },
+        {
+          "layoutId": 20,
+          "word": "AMAZON"
+        },
+        {
+          "layoutId": 16,
+          "word": "PORT"
+        },
+        {
+          "layoutId": 3,
+          "word": "ROSE"
+        },
+        {
+          "layoutId": 10,
+          "word": "LION"
+        },
+        {
+          "layoutId": 0,
+          "word": "BAT"
+        },
+        {
+          "layoutId": 1,
+          "word": "MASS"
+        },
+        {
+          "layoutId": 18,
+          "word": "GERMANY"
+        },
+        {
+          "layoutId": 4,
+          "word": "YARD"
+        },
+        {
+          "layoutId": 14,
+          "word": "MINT"
+        },
+        {
+          "layoutId": 21,
+          "word": "MARBLE"
+        },
+        {
+          "layoutId": 11,
+          "word": "KEY"
+        },
+        {
+          "layoutId": 15,
+          "word": "TRIP"
+        },
+        {
+          "layoutId": 17,
+          "word": "VET"
+        },
+        {
+          "layoutId": 9,
+          "word": "SATURN"
+        },
+        {
+          "layoutId": 2,
+          "word": "OCTOPUS"
+        },
+        {
+          "layoutId": 13,
+          "word": "PIRATE"
+        }
+      ]
+    },
+    {
+      "taskId": "embedding-finalists-v1-d2de5d8a78c40658",
+      "clue": "facial",
+      "number": 2,
+      "activeSide": "blue",
+      "words": [
+        {
+          "layoutId": 5,
+          "word": "ROW"
+        },
+        {
+          "layoutId": 6,
+          "word": "CANADA"
+        },
+        {
+          "layoutId": 11,
+          "word": "CHICK"
+        },
+        {
+          "layoutId": 20,
+          "word": "ALPS"
+        },
+        {
+          "layoutId": 24,
+          "word": "DIAMOND"
+        },
+        {
+          "layoutId": 7,
+          "word": "MOUTH"
+        },
+        {
+          "layoutId": 13,
+          "word": "STREAM"
+        },
+        {
+          "layoutId": 22,
+          "word": "LUCK"
+        },
+        {
+          "layoutId": 12,
+          "word": "POISON"
+        },
+        {
+          "layoutId": 8,
+          "word": "SOUND"
+        },
+        {
+          "layoutId": 15,
+          "word": "WITCH"
+        },
+        {
+          "layoutId": 10,
+          "word": "MODEL"
+        },
+        {
+          "layoutId": 4,
+          "word": "ARM"
+        },
+        {
+          "layoutId": 16,
+          "word": "FLY"
+        },
+        {
+          "layoutId": 0,
+          "word": "HOOK"
+        },
+        {
+          "layoutId": 19,
+          "word": "OLIVE"
+        },
+        {
+          "layoutId": 2,
+          "word": "CLOAK"
+        },
+        {
+          "layoutId": 3,
+          "word": "FACE"
+        },
+        {
+          "layoutId": 23,
+          "word": "TRUNK"
+        },
+        {
+          "layoutId": 9,
+          "word": "STRAW"
+        },
+        {
+          "layoutId": 18,
+          "word": "TRIP"
+        },
+        {
+          "layoutId": 1,
+          "word": "ROBOT"
+        },
+        {
+          "layoutId": 21,
+          "word": "WORM"
+        },
+        {
+          "layoutId": 14,
+          "word": "BOTTLE"
+        },
+        {
+          "layoutId": 17,
+          "word": "COTTON"
+        }
+      ]
+    },
+    {
+      "taskId": "embedding-finalists-v1-ee125faf449ff13a",
+      "clue": "gems",
+      "number": 2,
+      "activeSide": "blue",
+      "words": [
+        {
+          "layoutId": 5,
+          "word": "BELT"
+        },
+        {
+          "layoutId": 2,
+          "word": "GLASS"
+        },
+        {
+          "layoutId": 7,
+          "word": "GOLD"
+        },
+        {
+          "layoutId": 23,
+          "word": "BLOCK"
+        },
+        {
+          "layoutId": 19,
+          "word": "CANADA"
+        },
+        {
+          "layoutId": 13,
+          "word": "LIMOUSINE"
+        },
+        {
+          "layoutId": 18,
+          "word": "LOCH NESS"
+        },
+        {
+          "layoutId": 3,
+          "word": "CROSS"
+        },
+        {
+          "layoutId": 15,
+          "word": "LAWYER"
+        },
+        {
+          "layoutId": 11,
+          "word": "MARCH"
+        },
+        {
+          "layoutId": 4,
+          "word": "RULER"
+        },
+        {
+          "layoutId": 20,
+          "word": "STADIUM"
+        },
+        {
+          "layoutId": 9,
+          "word": "CROWN"
+        },
+        {
+          "layoutId": 0,
+          "word": "FIRE"
+        },
+        {
+          "layoutId": 6,
+          "word": "DROP"
+        },
+        {
+          "layoutId": 22,
+          "word": "PIE"
+        },
+        {
+          "layoutId": 8,
+          "word": "TRACK"
+        },
+        {
+          "layoutId": 14,
+          "word": "AMERICA"
+        },
+        {
+          "layoutId": 17,
+          "word": "THIEF"
+        },
+        {
+          "layoutId": 12,
+          "word": "HOOD"
+        },
+        {
+          "layoutId": 1,
+          "word": "PART"
+        },
+        {
+          "layoutId": 24,
+          "word": "HORSESHOE"
+        },
+        {
+          "layoutId": 16,
+          "word": "PENGUIN"
+        },
+        {
+          "layoutId": 21,
+          "word": "GREEN"
+        },
+        {
+          "layoutId": 10,
+          "word": "BOMB"
+        }
+      ]
+    },
+    {
+      "taskId": "embedding-finalists-v1-b5da7f27c86994c1",
+      "clue": "laser",
+      "number": 3,
+      "activeSide": "blue",
+      "words": [
+        {
+          "layoutId": 5,
+          "word": "BELT"
+        },
+        {
+          "layoutId": 2,
+          "word": "GLASS"
+        },
+        {
+          "layoutId": 7,
+          "word": "GOLD"
+        },
+        {
+          "layoutId": 23,
+          "word": "BLOCK"
+        },
+        {
+          "layoutId": 19,
+          "word": "CANADA"
+        },
+        {
+          "layoutId": 13,
+          "word": "LIMOUSINE"
+        },
+        {
+          "layoutId": 18,
+          "word": "LOCH NESS"
+        },
+        {
+          "layoutId": 3,
+          "word": "CROSS"
+        },
+        {
+          "layoutId": 15,
+          "word": "LAWYER"
+        },
+        {
+          "layoutId": 11,
+          "word": "MARCH"
+        },
+        {
+          "layoutId": 4,
+          "word": "RULER"
+        },
+        {
+          "layoutId": 20,
+          "word": "STADIUM"
+        },
+        {
+          "layoutId": 9,
+          "word": "CROWN"
+        },
+        {
+          "layoutId": 0,
+          "word": "FIRE"
+        },
+        {
+          "layoutId": 6,
+          "word": "DROP"
+        },
+        {
+          "layoutId": 22,
+          "word": "PIE"
+        },
+        {
+          "layoutId": 8,
+          "word": "TRACK"
+        },
+        {
+          "layoutId": 14,
+          "word": "AMERICA"
+        },
+        {
+          "layoutId": 17,
+          "word": "THIEF"
+        },
+        {
+          "layoutId": 12,
+          "word": "HOOD"
+        },
+        {
+          "layoutId": 1,
+          "word": "PART"
+        },
+        {
+          "layoutId": 24,
+          "word": "HORSESHOE"
+        },
+        {
+          "layoutId": 16,
+          "word": "PENGUIN"
+        },
+        {
+          "layoutId": 21,
+          "word": "GREEN"
+        },
+        {
+          "layoutId": 10,
+          "word": "BOMB"
+        }
+      ]
+    },
+    {
+      "taskId": "embedding-finalists-v1-1579189cf91eff90",
+      "clue": "facial",
+      "number": 2,
+      "activeSide": "blue",
+      "words": [
+        {
+          "layoutId": 5,
+          "word": "ROW"
+        },
+        {
+          "layoutId": 6,
+          "word": "CANADA"
+        },
+        {
+          "layoutId": 11,
+          "word": "CHICK"
+        },
+        {
+          "layoutId": 20,
+          "word": "ALPS"
+        },
+        {
+          "layoutId": 24,
+          "word": "DIAMOND"
+        },
+        {
+          "layoutId": 7,
+          "word": "MOUTH"
+        },
+        {
+          "layoutId": 13,
+          "word": "STREAM"
+        },
+        {
+          "layoutId": 22,
+          "word": "LUCK"
+        },
+        {
+          "layoutId": 12,
+          "word": "POISON"
+        },
+        {
+          "layoutId": 8,
+          "word": "SOUND"
+        },
+        {
+          "layoutId": 15,
+          "word": "WITCH"
+        },
+        {
+          "layoutId": 10,
+          "word": "MODEL"
+        },
+        {
+          "layoutId": 4,
+          "word": "ARM"
+        },
+        {
+          "layoutId": 16,
+          "word": "FLY"
+        },
+        {
+          "layoutId": 0,
+          "word": "HOOK"
+        },
+        {
+          "layoutId": 19,
+          "word": "OLIVE"
+        },
+        {
+          "layoutId": 2,
+          "word": "CLOAK"
+        },
+        {
+          "layoutId": 3,
+          "word": "FACE"
+        },
+        {
+          "layoutId": 23,
+          "word": "TRUNK"
+        },
+        {
+          "layoutId": 9,
+          "word": "STRAW"
+        },
+        {
+          "layoutId": 18,
+          "word": "TRIP"
+        },
+        {
+          "layoutId": 1,
+          "word": "ROBOT"
+        },
+        {
+          "layoutId": 21,
+          "word": "WORM"
+        },
+        {
+          "layoutId": 14,
+          "word": "BOTTLE"
+        },
+        {
+          "layoutId": 17,
+          "word": "COTTON"
+        }
+      ]
+    },
+    {
+      "taskId": "embedding-finalists-v1-c764bd31c2911a85",
+      "clue": "animals",
+      "number": 2,
+      "activeSide": "blue",
+      "words": [
+        {
+          "layoutId": 11,
+          "word": "BOND"
+        },
+        {
+          "layoutId": 24,
+          "word": "NUT"
+        },
+        {
+          "layoutId": 9,
+          "word": "KNIFE"
+        },
+        {
+          "layoutId": 4,
+          "word": "LITTER"
+        },
+        {
+          "layoutId": 8,
+          "word": "SPINE"
+        },
+        {
+          "layoutId": 19,
+          "word": "OLYMPUS"
+        },
+        {
+          "layoutId": 17,
+          "word": "MUG"
+        },
+        {
+          "layoutId": 10,
+          "word": "STRING"
+        },
+        {
+          "layoutId": 12,
+          "word": "WAR"
+        },
+        {
+          "layoutId": 6,
+          "word": "LION"
+        },
+        {
+          "layoutId": 7,
+          "word": "KANGAROO"
+        },
+        {
+          "layoutId": 3,
+          "word": "COOK"
+        },
+        {
+          "layoutId": 5,
+          "word": "STRAW"
+        },
+        {
+          "layoutId": 13,
+          "word": "CRANE"
+        },
+        {
+          "layoutId": 16,
+          "word": "LOG"
+        },
+        {
+          "layoutId": 20,
+          "word": "CROWN"
+        },
+        {
+          "layoutId": 23,
+          "word": "YARD"
+        },
+        {
+          "layoutId": 21,
+          "word": "CONDUCTOR"
+        },
+        {
+          "layoutId": 0,
+          "word": "GIANT"
+        },
+        {
+          "layoutId": 2,
+          "word": "SPELL"
+        },
+        {
+          "layoutId": 14,
+          "word": "BLOCK"
+        },
+        {
+          "layoutId": 22,
+          "word": "HAM"
+        },
+        {
+          "layoutId": 1,
+          "word": "FLUTE"
+        },
+        {
+          "layoutId": 15,
+          "word": "GAME"
+        },
+        {
+          "layoutId": 18,
+          "word": "PLANE"
+        }
+      ]
+    }
+  ]
+}

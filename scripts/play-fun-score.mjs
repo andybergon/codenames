@@ -21,6 +21,7 @@ export const PLAY_FUN_OBJECTIVE = Object.freeze({
     wrongTeamHitsPerGame: 0.15,
     neutralHitsPerGame: 0.35,
     fallbackClueRate: 0.01,
+    stallRate: 0,
   },
 });
 
