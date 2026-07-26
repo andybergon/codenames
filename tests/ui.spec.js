@@ -2925,6 +2925,70 @@ test("completed Play sessions replay turns and explain intended targets", async 
   await expect(secondClue).toHaveAttribute("aria-pressed", "false");
   await expect(firstClue.locator(".play-history-clue-action")).toHaveText("Viewing");
   await expect(secondClue.locator(".play-history-clue-action")).toHaveText("Review");
+  const initialTurnRows = await page
+    .locator("#play-history-list")
+    .evaluate((list) =>
+      [...list.querySelectorAll(":scope > li")].map((item) => ({
+        turn: item.getAttribute("data-analysis-turn"),
+        selected: item.classList.contains("is-selected"),
+        text: item.textContent.replace(/\s+/g, " ").trim(),
+      })),
+    );
+  expect(initialTurnRows).toEqual([
+    expect.objectContaining({ turn: "0", selected: true }),
+    expect.objectContaining({
+      turn: "0",
+      selected: true,
+      text: expect.stringContaining("Blue guessed WORD0"),
+    }),
+    expect.objectContaining({
+      turn: "0",
+      selected: true,
+      text: expect.stringContaining("Blue passed"),
+    }),
+    expect.objectContaining({ turn: "1", selected: false }),
+    expect.objectContaining({
+      turn: "1",
+      selected: false,
+      text: expect.stringContaining("Red guessed WORD24"),
+    }),
+    expect.objectContaining({
+      turn: "1",
+      selected: false,
+      text: expect.stringContaining("Blue won by assassin"),
+    }),
+  ]);
+  for (const viewport of [
+    { width: 390, height: 844 },
+    { width: 768, height: 1024 },
+    { width: 1440, height: 900 },
+  ]) {
+    await page.setViewportSize(viewport);
+    await secondClue.hover();
+    const hoveredSecondTurnRows = await page
+      .locator("#play-history-list")
+      .evaluate((list) =>
+        [...list.querySelectorAll(":scope > li")].map((item) => ({
+          turn: item.getAttribute("data-analysis-turn"),
+          previewed: item.classList.contains("is-previewed"),
+        })),
+      );
+    expect(
+      hoveredSecondTurnRows,
+      `whole-turn hover at ${viewport.width}px`,
+    ).toEqual([
+      { turn: "0", previewed: false },
+      { turn: "0", previewed: false },
+      { turn: "0", previewed: false },
+      { turn: "1", previewed: true },
+      { turn: "1", previewed: true },
+      { turn: "1", previewed: true },
+    ]);
+    await page.locator("#play-post-game-outcome").hover();
+    await expect(
+      page.locator("#play-history-list > li.is-previewed"),
+    ).toHaveCount(0);
+  }
   await expect(
     page.locator("#play-clue-display .play-clue-pill"),
   ).toHaveText("FIRST");
@@ -3114,6 +3178,22 @@ test("completed Play sessions replay turns and explain intended targets", async 
   await secondClue.click();
   await expect(firstClue).toHaveAttribute("aria-pressed", "false");
   await expect(secondClue).toHaveAttribute("aria-pressed", "true");
+  const selectedSecondTurnRows = await page
+    .locator("#play-history-list")
+    .evaluate((list) =>
+      [...list.querySelectorAll(":scope > li")].map((item) => ({
+        turn: item.getAttribute("data-analysis-turn"),
+        selected: item.classList.contains("is-selected"),
+      })),
+    );
+  expect(selectedSecondTurnRows).toEqual([
+    { turn: "0", selected: false },
+    { turn: "0", selected: false },
+    { turn: "0", selected: false },
+    { turn: "1", selected: true },
+    { turn: "1", selected: true },
+    { turn: "1", selected: true },
+  ]);
   await expect(firstClue.locator(".play-history-clue-action")).toHaveText("Review");
   await expect(secondClue.locator(".play-history-clue-action")).toHaveText("Viewing");
   await expect(

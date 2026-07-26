@@ -3577,7 +3577,8 @@ button.play-card:not(:disabled):hover {
   font-size: 0.72rem;
 }
 
-.play-history li.is-selected {
+.play-history li.is-selected,
+.play-history li.is-previewed {
   border-radius: 0 6px 6px 0;
   background: var(--subtle-fill);
   box-shadow: inset 0 0 0 1px var(--line);
@@ -3628,10 +3629,6 @@ button.play-card:not(:disabled):hover {
 .play-history-clue:focus-visible,
 .play-history-clue[aria-pressed="true"] {
   color: var(--ink);
-}
-
-.play-history-clue:hover {
-  background: var(--subtle-fill);
 }
 
 .play-history-clue:focus-visible {

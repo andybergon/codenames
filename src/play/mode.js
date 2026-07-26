@@ -1909,9 +1909,34 @@ export function createPlayMode(options = {}) {
     }
   }
 
+  function previewHistoryTurn(turnIndex, previewed) {
+    for (const list of [
+      elements.historyList,
+      elements.historyBlueList,
+      elements.historyRedList,
+    ]) {
+      for (const item of list.querySelectorAll(
+        `[data-analysis-turn="${turnIndex}"]`,
+      )) {
+        item.classList.toggle("is-previewed", previewed);
+      }
+    }
+  }
+
   function createHistoryItem(event) {
     const item = document.createElement("li");
+    const turnIndex =
+      game.phase === GAME_PHASE.COMPLETE && Number.isInteger(event.turn)
+        ? postGameTurns.findIndex((turn) => turn.turn === event.turn)
+        : -1;
     item.dataset.side = event.side ?? event.winner ?? "";
+    if (turnIndex >= 0) {
+      item.dataset.analysisTurn = String(turnIndex);
+      item.classList.toggle(
+        "is-selected",
+        turnIndex === selectedPostGameTurn,
+      );
+    }
     if (event.type === "clue-given") {
       const intendedTargets =
         game.phase === GAME_PHASE.COMPLETE && event.intendedLayoutIds?.length
@@ -1922,14 +1947,6 @@ export function createPlayMode(options = {}) {
               .filter(Boolean)
           : [];
       const intendedWords = intendedTargets.map(({ word }) => word);
-      const turnIndex =
-        game.phase === GAME_PHASE.COMPLETE
-          ? postGameTurns.findIndex(
-              (turn) =>
-                turn.turn === event.turn &&
-                turn.side === event.side,
-            )
-          : -1;
       if (turnIndex >= 0) {
         const button = document.createElement("button");
         const clueLabel = document.createElement("span");
@@ -1956,8 +1973,29 @@ export function createPlayMode(options = {}) {
           }),
         );
         button.setAttribute("aria-pressed", String(selected));
-        item.classList.toggle("is-selected", selected);
-        item.dataset.analysisTurn = String(turnIndex);
+        let pointerPreviewed = false;
+        let focusPreviewed = false;
+        const updatePreview = () =>
+          previewHistoryTurn(
+            turnIndex,
+            pointerPreviewed || focusPreviewed,
+          );
+        button.addEventListener("pointerenter", () => {
+          pointerPreviewed = true;
+          updatePreview();
+        });
+        button.addEventListener("pointerleave", () => {
+          pointerPreviewed = false;
+          updatePreview();
+        });
+        button.addEventListener("focus", () => {
+          focusPreviewed = true;
+          updatePreview();
+        });
+        button.addEventListener("blur", () => {
+          focusPreviewed = false;
+          updatePreview();
+        });
         button.addEventListener("click", () => {
           selectedPostGameTurn = turnIndex;
           renderGame();
