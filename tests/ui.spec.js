@@ -5368,7 +5368,7 @@ test("model picker uses the fixed benchmark and shows one time per combination",
     (entry) => entry.modelId === modelId && entry.candidateCount === candidateCount,
   );
   await expect(l6).toContainText(`${result("minilm-l6", 10000).medianMs.toFixed(1)} ms`);
-  await expect(l6).toContainText("49.1%");
+  await expect(l6).toContainText("49.5%");
   await expect(l6.locator("small")).toHaveCount(0);
   await expect(l6.locator(".lab-bar.speed i")).toHaveAttribute(
     "style",

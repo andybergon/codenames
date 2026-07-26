@@ -63,6 +63,12 @@ const coverage = Object.fromEntries(
       scoredTurns: filteredDatasets[name].length,
       totalTurns: turns.length,
       rate: round(filteredDatasets[name].length / turns.length),
+      scoredResponses: responseCount(filteredDatasets[name]),
+      totalResponses: responseCount(turns),
+      responseRate: round(
+        responseCount(filteredDatasets[name]) /
+          Math.max(1, responseCount(turns)),
+      ),
     },
   ]),
 );
@@ -99,18 +105,12 @@ const bgeBaseline = localReport.results.find(
 if (!bgeBaseline) throw new Error("Could not find the centered BGE baseline.");
 const deltas = metricDeltas(centered, bgeBaseline.datasets);
 const guardrails = [
-  {
-    metric: "Cultural Codes turn coverage",
-    passed: coverage.culturalCodes.rate >= 0.95,
-    actual: coverage.culturalCodes.rate,
+  ...Object.entries(coverage).map(([name, result]) => ({
+    metric: `${benchmark.metadata[name].name} task coverage`,
+    passed: result.rate >= 0.95,
+    actual: result.rate,
     minimum: 0.95,
-  },
-  {
-    metric: "Connector turn coverage",
-    passed: coverage.connector.rate >= 0.95,
-    actual: coverage.connector.rate,
-    minimum: 0.95,
-  },
+  })),
   {
     metric: "Cultural Codes target recall",
     passed: deltas.culturalCodes.targetRecallAtCount >= -0.005,
@@ -388,7 +388,20 @@ function summaryRow(model, datasets) {
     "CC avoid": datasets.culturalCodes.avoidWordRate,
     "pair recall": datasets.connector.targetRecallAtCount,
     "exact pair": datasets.connector.exactTargetSetAccuracy,
+    "S&S human": datasets.strategyHumanClues.targetRecallAtCount,
+    "S&S GPT": datasets.strategyGptClues.targetRecallAtCount,
+    "cooccur first": datasets.cooccurrence.firstGuessAccuracy,
+    "cooccur recall": datasets.cooccurrence.guessRecallAtHumanCount,
   };
+}
+
+function responseCount(turns) {
+  return turns.reduce(
+    (total, turn) =>
+      total +
+      (turn.guessSets?.length ?? (turn.guesses?.length > 0 ? 1 : 0)),
+    0,
+  );
 }
 
 function requiredVector(vectors, term) {

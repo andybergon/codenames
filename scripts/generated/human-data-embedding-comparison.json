@@ -1,0 +1,261 @@
+{
+  "generatedAt": "2026-07-26T05:24:28.682Z",
+  "datasets": {
+    "culturalCodes": {
+      "name": "Cultural Codes",
+      "repository": "https://github.com/SALT-NLP/codenames",
+      "commit": "9bf4550e681f7a42ac406439b00b0c717f59f13c",
+      "turns": 7703
+    },
+    "connector": {
+      "name": "Lexical Search and Pragmatics in Connector, Experiment 1",
+      "repository": "https://github.com/hawkrobe/lexical-search-and-pragmatics",
+      "commit": "8d824794d623adf4dd19cbff13d987d539b19c5e",
+      "turns": 2250
+    },
+    "strategyHumanClues": {
+      "name": "Strategy and Structure, human clues",
+      "repository": "https://github.com/NoahPrescott/Codenames-Strategy-and-Structure",
+      "commit": "936b9f412fa0368f84800dd46f66d493d623418c",
+      "boards": 400,
+      "responses": 4009
+    },
+    "strategyGptClues": {
+      "name": "Strategy and Structure, GPT-4o clues",
+      "repository": "https://github.com/NoahPrescott/Codenames-Strategy-and-Structure",
+      "commit": "936b9f412fa0368f84800dd46f66d493d623418c",
+      "boards": 400,
+      "responses": 2327
+    },
+    "cooccurrence": {
+      "name": "Codenames as a Game of Co-occurrence Counting, English",
+      "repository": "https://github.com/xerevity/CodeNamesAgent",
+      "commit": "1902049d9a5e3fa9c7b1b78b4340c648a780b920",
+      "clueBoards": 367,
+      "responses": 443
+    },
+    "licenseNote": "The upstream data repositories do not declare explicit dataset licenses. Raw snapshots are kept in the private codenames-calibration-data Blob store and a gitignored local cache; they are not publicly redistributed.",
+    "storage": {
+      "blobStore": "codenames-calibration-data",
+      "access": "private",
+      "region": "dub1",
+      "fallback": "Pinned upstream source"
+    }
+  },
+  "models": {
+    "bgeSmall": {
+      "model": "Xenova/bge-small-en-v1.5",
+      "runtime": "local-q8",
+      "centered": {
+        "culturalCodes": {
+          "scoredGuessTurns": 7625,
+          "scoredTargetTurns": 7703,
+          "firstGuessAccuracy": 0.5228,
+          "guessRecallAtHumanCount": 0.5191,
+          "goodWordRateAtHumanCount": null,
+          "targetRecallAtCount": 0.5872,
+          "exactTargetSetAccuracy": 0.5273,
+          "avoidWordRate": 0.0917,
+          "pairwiseTargetAccuracy": 0.8533
+        },
+        "connector": {
+          "scoredGuessTurns": 0,
+          "scoredTargetTurns": 2250,
+          "firstGuessAccuracy": null,
+          "guessRecallAtHumanCount": null,
+          "goodWordRateAtHumanCount": null,
+          "targetRecallAtCount": 0.526,
+          "exactTargetSetAccuracy": 0.2364,
+          "avoidWordRate": 0,
+          "pairwiseTargetAccuracy": 0.8234
+        },
+        "strategyHumanClues": {
+          "scoredGuessTurns": 4009,
+          "scoredTargetTurns": 400,
+          "firstGuessAccuracy": 0.4023,
+          "guessRecallAtHumanCount": 0.6133,
+          "goodWordRateAtHumanCount": null,
+          "targetRecallAtCount": 0.6233,
+          "exactTargetSetAccuracy": 0.19,
+          "avoidWordRate": 0,
+          "pairwiseTargetAccuracy": 0.8255
+        },
+        "strategyGptClues": {
+          "scoredGuessTurns": 2327,
+          "scoredTargetTurns": 400,
+          "firstGuessAccuracy": 0.4478,
+          "guessRecallAtHumanCount": 0.6317,
+          "goodWordRateAtHumanCount": null,
+          "targetRecallAtCount": 0.6658,
+          "exactTargetSetAccuracy": 0.2075,
+          "avoidWordRate": 0,
+          "pairwiseTargetAccuracy": 0.8512
+        },
+        "cooccurrence": {
+          "scoredGuessTurns": 443,
+          "scoredTargetTurns": 0,
+          "firstGuessAccuracy": 0.3205,
+          "guessRecallAtHumanCount": 0.4167,
+          "goodWordRateAtHumanCount": 0.7343,
+          "targetRecallAtCount": null,
+          "exactTargetSetAccuracy": null,
+          "avoidWordRate": null,
+          "pairwiseTargetAccuracy": null
+        }
+      }
+    },
+    "voyage4Large": {
+      "model": "voyage/voyage-4-large",
+      "runtime": "vercel-ai-gateway-embeddings",
+      "centered": {
+        "culturalCodes": {
+          "scoredGuessTurns": 7625,
+          "scoredTargetTurns": 7703,
+          "firstGuessAccuracy": 0.5959,
+          "guessRecallAtHumanCount": 0.5895,
+          "goodWordRateAtHumanCount": null,
+          "targetRecallAtCount": 0.6661,
+          "exactTargetSetAccuracy": 0.6068,
+          "avoidWordRate": 0.0792,
+          "pairwiseTargetAccuracy": 0.9026
+        },
+        "connector": {
+          "scoredGuessTurns": 0,
+          "scoredTargetTurns": 2250,
+          "firstGuessAccuracy": null,
+          "guessRecallAtHumanCount": null,
+          "goodWordRateAtHumanCount": null,
+          "targetRecallAtCount": 0.6256,
+          "exactTargetSetAccuracy": 0.3627,
+          "avoidWordRate": 0,
+          "pairwiseTargetAccuracy": 0.8839
+        },
+        "strategyHumanClues": {
+          "scoredGuessTurns": 4009,
+          "scoredTargetTurns": 400,
+          "firstGuessAccuracy": 0.4443,
+          "guessRecallAtHumanCount": 0.6871,
+          "goodWordRateAtHumanCount": null,
+          "targetRecallAtCount": 0.7117,
+          "exactTargetSetAccuracy": 0.335,
+          "avoidWordRate": 0,
+          "pairwiseTargetAccuracy": 0.8812
+        },
+        "strategyGptClues": {
+          "scoredGuessTurns": 2327,
+          "scoredTargetTurns": 400,
+          "firstGuessAccuracy": 0.517,
+          "guessRecallAtHumanCount": 0.694,
+          "goodWordRateAtHumanCount": null,
+          "targetRecallAtCount": 0.735,
+          "exactTargetSetAccuracy": 0.33,
+          "avoidWordRate": 0,
+          "pairwiseTargetAccuracy": 0.896
+        },
+        "cooccurrence": {
+          "scoredGuessTurns": 443,
+          "scoredTargetTurns": 0,
+          "firstGuessAccuracy": 0.395,
+          "guessRecallAtHumanCount": 0.4747,
+          "goodWordRateAtHumanCount": 0.7831,
+          "targetRecallAtCount": null,
+          "exactTargetSetAccuracy": null,
+          "avoidWordRate": null,
+          "pairwiseTargetAccuracy": null
+        }
+      },
+      "coverage": {
+        "culturalCodes": {
+          "scoredTurns": 7703,
+          "totalTurns": 7703,
+          "rate": 1,
+          "scoredResponses": 7625,
+          "totalResponses": 7625,
+          "responseRate": 1
+        },
+        "connector": {
+          "scoredTurns": 2250,
+          "totalTurns": 2250,
+          "rate": 1,
+          "scoredResponses": 0,
+          "totalResponses": 0,
+          "responseRate": 0
+        },
+        "strategyHumanClues": {
+          "scoredTurns": 400,
+          "totalTurns": 400,
+          "rate": 1,
+          "scoredResponses": 4009,
+          "totalResponses": 4009,
+          "responseRate": 1
+        },
+        "strategyGptClues": {
+          "scoredTurns": 400,
+          "totalTurns": 400,
+          "rate": 1,
+          "scoredResponses": 2327,
+          "totalResponses": 2327,
+          "responseRate": 1
+        },
+        "cooccurrence": {
+          "scoredTurns": 367,
+          "totalTurns": 367,
+          "rate": 1,
+          "scoredResponses": 443,
+          "totalResponses": 443,
+          "responseRate": 1
+        }
+      },
+      "cost": {
+        "pricePerMillionTokens": 0.12,
+        "maxCostUsd": 0.07,
+        "estimatedTokens": 484227,
+        "billedTokens": 267452,
+        "billedCostUsd": 0.032094
+      }
+    }
+  },
+  "centeredDeltaVoyageVsBge": {
+    "culturalCodes": {
+      "firstGuessAccuracy": 0.0731,
+      "guessRecallAtHumanCount": 0.0704,
+      "targetRecallAtCount": 0.0789,
+      "exactTargetSetAccuracy": 0.0795,
+      "avoidWordRate": -0.0125,
+      "pairwiseTargetAccuracy": 0.0493
+    },
+    "connector": {
+      "targetRecallAtCount": 0.0996,
+      "exactTargetSetAccuracy": 0.1263,
+      "avoidWordRate": 0,
+      "pairwiseTargetAccuracy": 0.0605
+    },
+    "strategyHumanClues": {
+      "firstGuessAccuracy": 0.042,
+      "guessRecallAtHumanCount": 0.0738,
+      "targetRecallAtCount": 0.0884,
+      "exactTargetSetAccuracy": 0.145,
+      "avoidWordRate": 0,
+      "pairwiseTargetAccuracy": 0.0557
+    },
+    "strategyGptClues": {
+      "firstGuessAccuracy": 0.0692,
+      "guessRecallAtHumanCount": 0.0623,
+      "targetRecallAtCount": 0.0692,
+      "exactTargetSetAccuracy": 0.1225,
+      "avoidWordRate": 0,
+      "pairwiseTargetAccuracy": 0.0448
+    },
+    "cooccurrence": {
+      "firstGuessAccuracy": 0.0745,
+      "guessRecallAtHumanCount": 0.058,
+      "goodWordRateAtHumanCount": 0.0488
+    }
+  },
+  "conclusion": {
+    "humanAlignmentLeader": "voyage/voyage-4-large",
+    "productionEmbedding": "Xenova/bge-small-en-v1.5",
+    "reason": "Voyage leads the expanded human-data benchmark, but it remains ineligible because the checked development cross-model transfer gate failed.",
+    "crossModelReport": "scripts/generated/play-embedding-finalist-development-cross-model.json"
+  }
+}

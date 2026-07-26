@@ -49,7 +49,7 @@ The opening-board ablation uses the same 40 deterministic boards from both team 
 | 📚 MiniLM-L6, 3k | 1.55 | 48.8% | 30.9% | 100.0% |
 | 🧠 MPNet-base, 10k | 1.45 | 42.5% | 22.5% | 97.5% |
 
-BGE-small is the most promising model change because it also has the strongest human Duet target recall among the selectable models, 58.57% versus MiniLM-L6's 57.43%. MiniLM-L3 produces more multi clues but has lower human target recall, so its larger numbers are not automatically better.
+BGE-small is the most promising model change because it also has the strongest human Duet target recall among the selectable models, 58.72% versus MiniLM-L6's 57.86%. MiniLM-L3 produces more multi clues but has lower human target recall, so its larger numbers are not automatically better.
 
 Larger vocabularies improve opening multi-clue availability, but the full-game effect is smaller than the model and policy changes. On the same first 50 boards, moving MiniLM-L6 from 10k to 30k candidates raised the full-game multi rate from 20.0% to 27.3%, an increase of 7.3 percentage points, while roughly tripling scoring work. The deeper tiers also contain less familiar clues: the separate candidate evaluation found that the share of top suggestions matching human-used clues fell from 37.5% at 10k to 16.7% at 30k and 14.6% at 100k.
 

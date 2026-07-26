@@ -297,6 +297,7 @@ Generated Italian clues also receive a pairwise `0.23` similarity penalty for lo
 | ☁️ `npm run evaluate:hosted-reranker` | [`hosted-listwise-reranker-evaluation.json`](evaluations/operative-ranking/hosted-listwise-reranker-evaluation.json) | Capped hosted direct versus WordNet fixtures |
 | 🎮 `npm run benchmark:compare` | [`mixedbread-bridge-reranker-full-game-comparison.json`](evaluations/operative-ranking/mixedbread-bridge-reranker-full-game-comparison.json) | Strongest eligible reranker full-game effects |
 | 🛡️ `npm run benchmark:compare` | [`bridge-reranker-cross-model-comparison.json`](evaluations/operative-ranking/bridge-reranker-cross-model-comparison.json) | Guarded transfer fallback |
+| 👥 `npm run summarize:human-data` | [`human-data-embedding-comparison.json`](../scripts/generated/human-data-embedding-comparison.json) | Local and hosted human alignment |
 | 📚 `npm run evaluate:candidates` | [`candidate-coverage.json`](../scripts/generated/candidate-coverage.json) | Human clue coverage |
 | 💬 `npm run evaluate:explanations -- --max-cost-usd 0.08` | [`recommendation-explanation-evaluation.json`](../scripts/generated/recommendation-explanation-evaluation.json) | Plain-language explanation quality and model cost |
 | ⏱️ `npm run benchmark:picker` | [`model-picker-benchmark.json`](../scripts/generated/model-picker-benchmark.json) | Controlled scoring cost |
@@ -318,7 +319,11 @@ Generated Italian clues also receive a pairwise `0.23` similarity penalty for lo
 | 🇮🇹 `npm run generate:italian` | Italian pool + E5 shards | Pinned language assets |
 | 🔤 `npm run evaluate:italian` | [`italian-embedding-feasibility.json`](../scripts/generated/italian-embedding-feasibility.json) | Semantics + morphology |
 
-Embedding evaluation uses the pinned Cultural Codes and Connector datasets without redistributing their unlicensed source files. Treat embedding-layer recall as one input, not proof that the complete generated ranking is better.
+Embedding evaluation combines four pinned sources: Cultural Codes, Connector, Strategy and Structure, and the English CodeNamesAgent co-occurrence experiment. Together they provide 7,625 Cultural Codes guess turns, 2,250 Connector target tasks, 6,336 Strategy and Structure human responses, and 443 co-occurrence responses. Metrics remain source-specific because the board shapes and game incentives differ.
+
+Raw snapshots live in the private `codenames-calibration-data` Vercel Blob store in `dub1`. The loader checks the gitignored local cache first, then authenticated private Blob, then the pinned upstream source. Blob access uses `BLOB_READ_WRITE_TOKEN`; no raw dataset is shipped to the browser or committed to git because the upstream repositories do not declare explicit dataset licenses.
+
+The expanded comparison is checked in [`human-data-embedding-comparison.json`](../scripts/generated/human-data-embedding-comparison.json). Treat embedding-layer recall and human guess agreement as inputs, not proof that the complete generated ranking is better. Full-game cross-model transfer remains the promotion gate.
 
 The full-game benchmark has frozen smoke, calibration, development, and test board ranges. Use `--comparison-only` for embedding selection, then compare full reports with `npm run benchmark:compare`. Candidate models must first match BGE-small's fixed similarity-probe mean and spread through `--similarity-scale` and `--similarity-offset`. This makes the five-point multi-clue tolerance and absolute operative thresholds comparable across models. Every new result contains the complete canonical behavior configuration, exact asset hashes, a stable configuration fingerprint, and compact derived labels. [Benchmark reporting](benchmark-reporting.md) owns the artifact, uncertainty, and promotion-decision contract.
 

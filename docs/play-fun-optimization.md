@@ -2,7 +2,21 @@
 
 ## 🎯 Recommendation
 
-Keep BGE-small as the production Play embedding. Similarity calibration made Cohere look substantially better in same-model self-play and put Voyage level with BGE, but both failed the primary MiniLM-L6 operative transfer screen. Cohere and Voyage are therefore ineligible for the held-out test. The 30-task human round remains useful as a one-time gross-failure calibration baseline for future model work.
+Keep BGE-small as the production Play embedding. Similarity calibration made Cohere look substantially better in same-model self-play and put Voyage level with BGE, but both failed the primary MiniLM-L6 operative transfer screen. Cohere and Voyage are therefore ineligible for the held-out test. The 30-task human round remains useful for exact-current-clue sanity checks, while the expanded online corpora provide the broader human-alignment benchmark.
+
+## 👥 Expanded human-data comparison
+
+| 🧠 Model | 🚦 Status | 👥 CC target | 🧑 Human clue target | 🤖 GPT clue target | 🎯 Cooccur first | 🔁 Cooccur recall |
+| --- | --- | ---: | ---: | ---: | ---: | ---: |
+| 🟢 BGE-small | ✅ Production | 58.72% | 62.33% | 66.58% | 32.05% | 41.67% |
+| 🚢 Voyage 4 Large | ❌ Transfer | 66.61% | 71.17% | 73.50% | 39.50% | 47.47% |
+| 🧠 MiniLM-L6 | 🟡 Listener | 57.86% | 63.58% | 67.33% | 32.73% | 43.90% |
+
+The expanded benchmark adds 4,009 human responses to human clues, 2,327 human responses to GPT-4o clues, and 443 responses to machine-generated co-occurrence clues. Voyage leads every human-alignment source at full coverage, including a 7.89-point Cultural Codes target-recall gain and an 8.84-point human-clue target-recall gain over BGE-small.
+
+This strengthens Voyage as a human-listener or future ensemble signal, but does not promote it. Its checked development cross-model result still loses 0.206 correct cards per turn and exceeds the wrong-team and assassin guardrails. The compact machine-readable comparison is [`human-data-embedding-comparison.json`](../scripts/generated/human-data-embedding-comparison.json).
+
+The full Voyage refresh embedded 31,294 terms through Vercel AI Gateway for `$0.032094`, below its `$0.07` hard cap. Raw dataset snapshots are stored in the private `codenames-calibration-data` Blob store and are never exposed by the application.
 
 ## 🧪 Calibrated development
 

@@ -17,10 +17,11 @@
   - The WordNet-backed first 88,563 words currently bypass `better_profanity`; only the experimental fallback applies it.
   - Regenerate all affected shards, reports, and the stable-prefix baseline together after reviewing benign false positives.
 
-- 👥 Finish the first human embedding calibration and analyze it.
-  - Current: browser and Neon persistence are verified, with 3 live answers stored. Clears use timestamped deletion records so stale browsers or imports cannot restore removed answers.
-  - Complete all 30 blinded tasks at `?mode=calibrate`, export the corrected answers, then run `npm run calibration:evaluate -- --input <export.json> --answer-key scripts/generated/calibration-answer-keys/embedding-finalists-v1.json`.
-  - Review pass rate, target recall, exact targets, and wrong-team, neutral, and assassin selections per model as a gross-failure screen, not a model ranker.
+- 👥 Validate finalists with exact-current human calibration.
+  - The automatic benchmark covers 14,404 human guess sequences across Cultural Codes, Strategy and Structure, and CodeNamesAgent, plus 2,250 Connector target tasks. Use it as the primary broad human-alignment screen.
+  - Browser and Neon persistence are verified, with 3 live answers stored. Clears use timestamped deletion records so stale browsers or imports cannot restore removed answers.
+  - Use the blinded round only to test current generated clues and competitive danger roles that historical datasets cannot reproduce. Evaluate it with `npm run calibration:evaluate -- --input <export.json> --answer-key scripts/generated/calibration-answer-keys/embedding-finalists-v1.json`.
+  - Treat the manual result as a gross-failure screen, not a model ranker. Prefer targeted disagreement tasks over another broad round when later evidence is needed.
 
 ## 🟡 Medium
 
