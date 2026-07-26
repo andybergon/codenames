@@ -342,7 +342,10 @@ export function createPlayMode(options = {}) {
 
   let active = false;
   let selectedLanguage = initialLanguage;
-  let selectedHumanSeat = randomHumanSeat();
+  let savedGame = loadPlaySession();
+  let selectedHumanSeat = savedGame
+    ? { ...savedGame.humanSeat }
+    : randomHumanSeat();
   let selectedEnglishWordSet = WORD_SET.OFFICIAL;
   let selectedWordSet =
     selectedLanguage === LANGUAGE.ITALIAN
@@ -353,7 +356,6 @@ export function createPlayMode(options = {}) {
     selectedLanguage,
   );
   let wordReuseState = loadWordReuseState();
-  let savedGame = loadPlaySession();
   let game = null;
   let analysis = { [SIDE.BLUE]: null, [SIDE.RED]: null };
   let boardVectors = null;
@@ -737,7 +739,6 @@ export function createPlayMode(options = {}) {
     game = null;
     botActionAfterHistoryMove = false;
     forwardHistory = [];
-    selectedHumanSeat = randomHumanSeat();
     renderSetup();
   }
 
@@ -749,7 +750,6 @@ export function createPlayMode(options = {}) {
     botActionAfterHistoryMove = false;
     forwardHistory = [];
     resetPostGameAnalysis();
-    selectedHumanSeat = randomHumanSeat();
     elements.setup.hidden = false;
     elements.game.hidden = true;
     renderSetup();

@@ -514,6 +514,113 @@ test("Play randomly assigns a seat and keeps all four overrides available", asyn
   }
 });
 
+for (const storageCase of [
+  {
+    name: "no saved session",
+    value: null,
+  },
+  {
+    name: "a stale saved session",
+    value: JSON.stringify({ schemaVersion: 0 }),
+  },
+  {
+    name: "an invalid saved seat",
+    value: JSON.stringify({
+      ...playSessionWithHistory([]),
+      humanSeat: { side: "green", role: "operative" },
+    }),
+  },
+]) {
+  test(`Play assigns a fresh random seat with ${storageCase.name}`, async ({
+    page,
+  }) => {
+    await page.addInitScript((storedSession) => {
+      if (storedSession === null) {
+        localStorage.removeItem("codenames-play-session-v1");
+      } else {
+        localStorage.setItem("codenames-play-session-v1", storedSession);
+      }
+      Math.random = () => 0.9;
+    }, storageCase.value);
+
+    await page.goto("/?mode=play");
+
+    await expect(
+      page.locator('[data-play-seat="red:operative"]'),
+    ).toHaveAttribute("aria-pressed", "true");
+    await expect(page.locator("#saved-play-actions")).toBeHidden();
+
+    await page.getByRole("button", { name: "Start new game", exact: true }).click();
+    const storedSeat = await page.evaluate(
+      () =>
+        JSON.parse(localStorage.getItem("codenames-play-session-v1"))
+          .humanSeat,
+    );
+    expect(storedSeat).toEqual({ side: "red", role: "operative" });
+  });
+}
+
+test("Play reuses the saved seat until Random explicitly changes it", async ({
+  page,
+}) => {
+  const completedSession = {
+    ...playSessionWithHistory([]),
+    phase: "complete",
+    winner: "blue",
+    endReason: "agents",
+    history: [
+      ...playSessionWithHistory([]).history,
+      {
+        type: "game-ended",
+        turn: 7,
+        winner: "blue",
+        reason: "agents",
+      },
+    ],
+  };
+  await page.addInitScript((session) => {
+    localStorage.setItem("codenames-play-session-v1", JSON.stringify(session));
+  }, completedSession);
+
+  await page.goto("/?mode=play");
+  const savedSeat = page.locator('[data-play-seat="blue:spymaster"]');
+  await expect(savedSeat).toHaveAttribute("aria-pressed", "true");
+
+  await page.getByRole("button", { name: "Resume game", exact: true }).click();
+  await expect(page.locator("#play-human-seat .play-seat-identity")).toHaveText(
+    "🔵 Blue 🕵️ Spymaster",
+  );
+
+  await page.getByRole("button", { name: "Start new game", exact: true }).click();
+  await expect(savedSeat).toHaveAttribute("aria-pressed", "true");
+
+  await page.getByRole("button", { name: "Start new game", exact: true }).click();
+  await expect(page.locator("#play-human-seat .play-seat-identity")).toHaveText(
+    "🔵 Blue 🕵️ Spymaster",
+  );
+
+  await page.getByRole("button", { name: "Start new game", exact: true }).click();
+  await expect(savedSeat).toHaveAttribute("aria-pressed", "true");
+
+  await page
+    .getByRole("button", {
+      name: "Pick a different random role",
+      exact: true,
+    })
+    .click();
+  await expect(savedSeat).toHaveAttribute("aria-pressed", "false");
+
+  const randomizedSeat = await page
+    .locator("[data-play-seat][aria-pressed='true']")
+    .getAttribute("data-play-seat");
+  await page.getByRole("button", { name: "Start new game", exact: true }).click();
+  const storedSeat = await page.evaluate(
+    () =>
+      JSON.parse(localStorage.getItem("codenames-play-session-v1")).humanSeat,
+  );
+  expect(`${storedSeat.side}:${storedSeat.role}`).toBe(randomizedSeat);
+});
+
 test("Codenames title returns shared and Train views to Play home", async ({
   page,
 }) => {
