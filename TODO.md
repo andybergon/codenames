@@ -11,6 +11,12 @@
   - Create several compact mockups to test before changing production, including icon-only actions with accessible labels and tooltips, plus placements adjacent to clue and guess pills.
   - Compare the options in completed-game and developer live analysis at 390x844, 768x1024, and 1440x900. Preserve the explicit paid-action boundary and the clue-plus-selected-words network payload.
 
+- 🔗 Add multi-hop concept reasoning to clue-to-card ranking.
+  - Direct embedding similarity misses human association chains that pass through an unstated bridge concept.
+  - Regression example: `JOUST → medieval tournament → MATCH / CROWN / GLOVE / BELT`; `PIANO` was guessed before those stronger human associations.
+  - Prototype a public-information-only reranker that expands the clue into a few bridge concepts, using an LLM, knowledge graph, or lightweight relation model, then reranks the board words against both the clue and those concepts.
+  - Keep hidden roles and intended targets out of operative ranking. Measure latency and verify the reranker improves the regression fixture and human calibration data without weakening cross-model safety.
+
 - 🛡️ Regenerate the clue vocabulary with consistent profanity filtering.
   - The WordNet-backed first 88,563 words currently bypass `better_profanity`; only the experimental fallback applies it.
   - Regenerate all affected shards, reports, and the stable-prefix baseline together after reviewing benign false positives.
