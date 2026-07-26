@@ -20,7 +20,7 @@ Local-first Vite application for embedding-powered Codenames clue recommendation
 - Keep `docs/clue-engine.md` synchronized with model/index selection, legality rules, scoring coefficients, lane thresholds, board metrics, generated assets, and evaluation commands. README remains the compact product and setup entry point.
 - `server/recommendation-explanation-prompt.js` owns Train's semantic explanation contract. Keep the shared-concept opening, explicit relationship for every target, bounded structured output, and current judge-selected model synchronized with `docs/clue-engine.md`.
 - `src/recommendation-explanation.js` owns the local score summary and score-grounded risk sentence. Keep danger roles and margins out of the hosted semantic prompt.
-- Semantic explanations must remain explicit paid actions. Train requests one selected recommendation. Play offers the action after a completed game reveals the clue's intended targets, and during developer-only live turn analysis.
+- Semantic explanations must remain explicit paid actions. Train requests one selected recommendation. Play offers separate clue and guess actions after a completed game reveals the turn analysis, and during developer-only live turn analysis. A guess request sends only its clue and guessed word.
 - Bump the session cache key in `src/recommendation-explanation-client.js` whenever the semantic prompt version or production model changes.
 - Local semantic development uses `npm run dev:semantic`, which narrowly reads `CODENAMES_OPENAI_API_KEY` from Doppler `apps/shared` when `OPENAI_API_KEY` is absent. Production requires the server-side Vercel variable and must never expose it through Vite client environment variables.
 

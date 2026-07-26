@@ -12,12 +12,12 @@ A local-first Codenames clue trainer and one-human game. Train mode ranks clue o
 - 🧠 **Train model** · MiniLM-L6 for English · Multilingual E5 small for Italian · browser-local inference
 - 📚 **Clue index** · balanced 10,000-word default · selectable 3k, 30k, and experimental 100k tiers
 - 🛡️ **Recommendations** · safe clues for one to three targets · stretch clues for four to nine
-- 💬 **Explanations** · shared concept and target relationships · score-based danger stays separate
+- 💬 **Explanations** · clue-to-target and clue-to-guess relationships · score-based danger stays separate
 - 🎴 **Board words** · Official 400-word set · Extended 800-word strict superset
 - 🔁 **New boards** · fully random or avoid words from recent local games
 - 🔗 **Sharing** · board-only `?b=` links · resumable Play `?g=` links
 - 🎨 **Appearance** · system, light, and dark modes
-- 🔒 **Privacy** · local by default · Play links contain the full key and history · explanations send only the selected clue and targets
+- 🔒 **Privacy** · local by default · Play links contain the full key and history · explanations send only the selected clue and words
 
 The first model load is cached by the browser. Italian Train and Play load about 123.6 MB on a cold browser, primarily the 118.3 MB E5 model. Training progress is session-local. Play progress, including language, is saved after every event and can be resumed or discarded from setup. During an active game, history can move backward and forward. Board-only links open Train without Play history. Play links reopen the current phase, revealed cards, and complete history so far. Completed games are also kept in a bounded local archive.
 
@@ -38,7 +38,7 @@ npm install
 npm run dev
 ```
 
-The app makes no semantic explanation request until **Explain** is selected for one recommendation or a completed-game clue. `npm run dev` works without a key; to exercise the paid explanation action, provide `OPENAI_API_KEY` or use the app-scoped key in Doppler:
+The app makes no semantic explanation request until **Explain** is selected for one recommendation, reviewed clue, or reviewed guess. `npm run dev` works without a key; to exercise a paid explanation action, provide `OPENAI_API_KEY` or use the app-scoped key in Doppler:
 
 ```sh
 npm run dev:semantic
@@ -77,11 +77,11 @@ Play settings are grouped by ownership: Game controls the board word set and reu
 
 Retry missed targets controls when the bot spymaster returns to intended friendly words that remain unrevealed after an earlier clue. Late strongly prefers never-targeted words until few remain, Mid-game applies a lighter early bias, and Immediately leaves clue ranking unchanged. Operative aggression controls whether the guessing bot continues through weaker associations. Conservative passes on doubt, Aggressive pursues the declared clue number, and Dynamic adapts using only public remaining-agent counts.
 
-The final Developer settings section enables marked diagnostic games. Unlike other Play settings, enabling Developer mode also applies immediately to a saved game in progress. Once a game is marked, disabling the preference does not remove its developer provenance. Developer games store `developerMode: true` at the game root and on the canonical `game-started` event. They also retain versioned raw clue scores and bot decision traces on the related clue, guess, and pass events. Show live turn analysis reuses the post-game clue review while the game is active, including the reconstructed board, intended targets, guesses, roles, all operative scores, and the explicit paid explanation action. Its Score board order sorts the visible cards by current-turn operative cosine similarity. Turning live analysis off restores the playable current turn and preserved table order. The display resets off for each tab, but the developer provenance and collected data remain in the saved game so archives, review links, and later calibration can include or filter them.
+The final Developer settings section enables marked diagnostic games. Unlike other Play settings, enabling Developer mode also applies immediately to a saved game in progress. Once a game is marked, disabling the preference does not remove its developer provenance. Developer games store `developerMode: true` at the game root and on the canonical `game-started` event. They also retain versioned raw clue scores and bot decision traces on the related clue, guess, and pass events. Show live turn analysis reuses the post-game clue review while the game is active, including the reconstructed board, intended targets, guesses, roles, all operative scores, and explicit paid explanation actions for clues and guesses. Its Score board order sorts the visible cards by current-turn operative cosine similarity. Turning live analysis off restores the playable current turn and preserved table order. The display resets off for each tab, but the developer provenance and collected data remain in the saved game so archives, review links, and later calibration can include or filter them.
 
 New boards remain fully random by default. The optional Avoid recent words policy records the last 32 local Play boards, uses every unseen word in the selected pool before the least-recently-used repeats, and warns when fewer than 25 unseen words remain. Clear history resets board reuse without changing the selected policy. History and policy stay local under `codenames-play-word-reuse-v1`.
 
-After a game ends, select any clue in the Game log to replay that turn from the event history. The review restores which cards were already revealed when the clue was given, marks intended targets and guess outcomes, and shows the configured operative model's cosine-similarity score for every board word. It is completion-gated, so none of these annotations or hidden roles appear during live operative play. The header Share action always copies a `?mode=play&g=` link. Active links preserve the current phase, revealed cards, and turn history; completed links open the full review.
+After a game ends, select any clue in the Game log to replay that turn from the event history. The review restores which cards were already revealed when the clue was given, marks intended targets and guess outcomes, and shows the configured operative model's cosine-similarity score for every board word. Each clue and guess has an explicit paid action for explaining its semantic relationship. The review is completion-gated, so none of these annotations or hidden roles appear during live operative play. The header Share action always copies a `?mode=play&g=` link. Active links preserve the current phase, revealed cards, and turn history; completed links open the full review.
 
 Completed games are deduplicated into a 32-game local archive. The newest completed save keeps its prominent review action, while older records stay in a collapsed Past games section below Play Settings. Each archived game can be reviewed, copied as a link, or removed. Developer records retain raw diagnostics locally, while copied links contain only provenance plus the starting state, settings, and actions needed for replay. The export versions its format, rules, and settings separately; unsupported historical completed-game rules fall back to an action-log review without rewriting the original link. See [Play game sharing](docs/play-game-sharing.md) for the versioned export contract and privacy boundary.
 

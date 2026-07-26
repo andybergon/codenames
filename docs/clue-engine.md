@@ -9,7 +9,7 @@ Back to [README](../README.md).
 - 📦 **Index** · mean-centered, normalized, int8 static vectors
 - 🎯 **Runtime work** · embed active board words · score precomputed clue candidates
 - 🛡️ **Outputs** · safe one-to-three target lane · stretch four-to-nine target lane
-- 🔒 **Network boundary** · scoring and roles stay local · semantic explanations send only clue and targets
+- 🔒 **Network boundary** · scoring and roles stay local · semantic explanations send only the clue and selected words
 
 ## 🔁 Pipeline
 
@@ -82,9 +82,9 @@ expected net = target count × success - miss cost × (1 - success)
 
 Worth is a `0–99` score combining expected net, margin, centroid fit, weakest-target similarity, cohesion, consistency, and clue familiarity. Final ordering also rewards larger useful target sets and safe classifications before diversifying repeated clues and target combinations.
 
-## 💬 Recommendation explanations
+## 💬 Semantic explanations
 
-Train makes no hosted request while rendering recommendations. Selecting **Explain** sends only that clue, its intended targets, and the active English or Italian language through [`api/explain-recommendations.js`](../api/explain-recommendations.js), and GPT-5.4 nano returns one semantic sentence in that language. The browser caches successful results per language for the tab, so revisiting the same clue-target combination does not create another paid request.
+Train makes no hosted request while rendering recommendations. Selecting **Explain** sends only that clue, its intended targets, and the active English or Italian language through [`api/explain-recommendations.js`](../api/explain-recommendations.js), and GPT-5.4 nano returns one semantic sentence in that language. Completed Play reviews offer the same explicit action for each clue and each guess. A guess request contains the clue and that one guessed word. Developer-only live analysis exposes the same actions before completion. The browser caches successful results per language for the tab, so revisiting the same clue-word combination does not create another paid request.
 
 The prompt is owned by [`server/recommendation-explanation-prompt.js`](../server/recommendation-explanation-prompt.js):
 
@@ -107,7 +107,7 @@ Constraints:
 - Return only schema-valid JSON.
 ```
 
-Only the clue and intended target words cross the application boundary. The full board, roles, scores, and closest danger stay in the browser. The server validates bounded inputs, fixes the model and prompt, requests strict structured output, and keeps `OPENAI_API_KEY` server-side.
+Only the clue and selected intended-target or guessed words cross the application boundary. The full board, roles, scores, outcomes, and closest danger stay in the browser. The server validates bounded inputs, fixes the model and prompt, requests strict structured output, and keeps `OPENAI_API_KEY` server-side.
 
 The risk sentence follows the scoring contract:
 

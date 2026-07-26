@@ -2709,9 +2709,10 @@ export function createPlayMode(options = {}) {
       : translate(gameLanguage(), "historyTurnNumber", { turn: turn.turn });
     turnActions.className = "play-history-turn-actions";
     actions.className = "play-history-actions";
+    const clueEvent = turn.events.find((event) => event.type === "clue-given");
     actions.append(
       ...turn.events.map((event) =>
-        createHistoryItem(event, turnIndex, turnActions),
+        createHistoryItem(event, turnIndex, turnActions, clueEvent),
       ),
     );
     heading.append(header, turnActions);
@@ -2719,7 +2720,12 @@ export function createPlayMode(options = {}) {
     return item;
   }
 
-  function createHistoryItem(event, turnIndex = -1, turnActions = null) {
+  function createHistoryItem(
+    event,
+    turnIndex = -1,
+    turnActions = null,
+    clueEvent = null,
+  ) {
     const item = document.createElement("li");
     item.className = "play-history-action";
     item.dataset.action = event.type;
@@ -2810,11 +2816,35 @@ export function createPlayMode(options = {}) {
         item.append(explanation);
       }
     } else if (event.type === "card-guessed") {
-      item.append(
+      const guessSummary = document.createElement("div");
+      guessSummary.className = "play-history-guess-summary";
+      guessSummary.append(
         createHistoryActionLabel("historyGuessAction"),
         " ",
         createHistoryCardPill(event.word, event.team),
       );
+      item.append(guessSummary);
+      if (turnAnalysisEnabled() && clueEvent?.clue) {
+        const guessedCard =
+          game.cards.find((card) => card.layoutId === event.layoutId) ?? event;
+        const explanation = createRecommendationExplanationControl(
+          {
+            clue: clueEvent.clue,
+            targets: [guessedCard],
+          },
+          {
+            wordPills: true,
+            language: gameLanguage(),
+            explanationType: "guess",
+            buttonContainer: guessSummary,
+          },
+        );
+        explanation.classList.add(
+          "play-history-explanation",
+          "play-history-guess-explanation",
+        );
+        item.append(explanation);
+      }
     } else if (event.type === "turn-passed") {
       item.append(createHistoryActionLabel("historyPassAction"));
     } else {

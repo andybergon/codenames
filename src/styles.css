@@ -3705,12 +3705,28 @@ button.play-card:not(:disabled):hover {
   font-weight: 800;
 }
 
+.play-history-guess-summary {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.play-history-guess-summary .explain-recommendation-button {
+  margin-left: 2px;
+}
+
 .play-history-event-summary {
   min-width: 0;
 }
 
 .play-history-explanation {
   margin-top: 6px;
+}
+
+.play-history-guess-explanation {
+  margin-top: 5px;
 }
 
 .play-history-explanation .explanation-targets {

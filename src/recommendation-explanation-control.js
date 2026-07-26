@@ -10,7 +10,10 @@ const pendingExplanations = new Map();
 const COPY = Object.freeze({
   en: {
     generated: "Generated from the clue and intended target words.",
+    generatedGuess: "Generated from the clue and guessed word.",
     explainLabel: (clue, targets) => `Explain why ${clue} connects ${targets}`,
+    explainGuessLabel: (clue, guess) =>
+      `Explain why ${guess} was a plausible guess for ${clue}`,
     explainTitle: "Generate an AI explanation (paid request, cached in this tab)",
     explain: "Explain",
     explaining: "Explaining",
@@ -22,8 +25,11 @@ const COPY = Object.freeze({
   },
   it: {
     generated: "Generata dall'indizio e dalle parole obiettivo.",
+    generatedGuess: "Generata dall'indizio e dalla parola scelta.",
     explainLabel: (clue, targets) =>
       `Spiega perché ${clue} collega ${targets}`,
+    explainGuessLabel: (clue, guess) =>
+      `Spiega perché ${guess} era una scelta plausibile per ${clue}`,
     explainTitle:
       "Genera una spiegazione IA (richiesta a pagamento, memorizzata in questa scheda)",
     explain: "Spiega",
@@ -38,9 +44,15 @@ const COPY = Object.freeze({
 
 export function createRecommendationExplanationControl(
   suggestion,
-  { wordPills = false, language = "en", buttonContainer = null } = {},
+  {
+    wordPills = false,
+    language = "en",
+    buttonContainer = null,
+    explanationType = "clue",
+  } = {},
 ) {
   const copy = COPY[language] ?? COPY.en;
+  const explainsGuess = explanationType === "guess";
   const control = document.createElement("div");
   control.className = "recommendation-explanation-control";
 
@@ -49,7 +61,7 @@ export function createRecommendationExplanationControl(
   const cached = cachedSemanticExplanation(suggestion, language);
   if (cached) {
     renderExplanation(output, cached, suggestion, wordPills);
-    output.title = copy.generated;
+    output.title = explainsGuess ? copy.generatedGuess : copy.generated;
     control.append(output);
     return control;
   }
@@ -59,7 +71,9 @@ export function createRecommendationExplanationControl(
   button.className = "explain-recommendation-button";
   button.type = "button";
   const targetWords = suggestion.targets.map(({ word }) => word).join(", ");
-  const label = copy.explainLabel(suggestion.clue, targetWords);
+  const label = explainsGuess
+    ? copy.explainGuessLabel(suggestion.clue, targetWords)
+    : copy.explainLabel(suggestion.clue, targetWords);
   button.setAttribute("aria-label", label);
   button.title = copy.explainTitle;
   setButtonContent(button, "sparkles", copy.explain);
@@ -73,6 +87,7 @@ export function createRecommendationExplanationControl(
       wordPills,
       language,
       copy,
+      explanationType,
     );
   });
   if (buttonContainer) {
@@ -93,6 +108,7 @@ async function requestExplanation(
   wordPills,
   language,
   copy,
+  explanationType,
 ) {
   const key = recommendationExplanationKey(suggestion, language);
   button.disabled = true;
@@ -118,7 +134,8 @@ async function requestExplanation(
       throw new Error(copy.empty);
     }
     renderExplanation(output, explanation, suggestion, wordPills);
-    output.title = copy.generated;
+    output.title =
+      explanationType === "guess" ? copy.generatedGuess : copy.generated;
     output.hidden = false;
     button.remove();
   } catch (error) {

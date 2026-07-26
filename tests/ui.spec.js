@@ -3655,7 +3655,7 @@ test("long Play logs remain complete and responsive in both views", async ({ pag
   }
 });
 
-test("completed Play sessions replay turns and explain intended targets", async ({
+test("completed Play sessions replay turns and explain clues and guesses", async ({
   page,
 }) => {
   await page.addInitScript(() => {
@@ -3674,6 +3674,8 @@ test("completed Play sessions replay turns and explain intended targets", async 
     const request = route.request().postDataJSON();
     explanationRequests.push(request);
     const recommendation = request.recommendations[0];
+    const [firstTarget] = recommendation.targets;
+    const relation = `${recommendation.clue}:${recommendation.targets.join(",")}`;
     await route.fulfill({
       contentType: "application/json",
       body: JSON.stringify({
@@ -3682,9 +3684,13 @@ test("completed Play sessions replay turns and explain intended targets", async 
           {
             id: recommendation.id,
             explanation:
-              recommendation.clue === "FIRST"
+              relation === "FIRST:WORD0,WORD1"
                 ? "These words connect through sequence: word0 and word1 are the first items in the numbered series."
-                : "These words connect through sequence: word9 is the second item in the numbered series.",
+                : relation === "FIRST:WORD0"
+                  ? "These words connect through sequence: word0 is the first item in the numbered series."
+                  : relation === "SECOND:WORD9"
+                    ? "These words connect through sequence: word9 is the second item in the numbered series."
+                    : `These words connect through numbering: ${firstTarget.toLowerCase()} can represent its numbered position.`,
           },
         ],
       }),
@@ -3811,7 +3817,7 @@ test("completed Play sessions replay turns and explain intended targets", async 
   await expect(page.locator("#play-history-list .play-history-clue")).toHaveCount(2);
   await expect(
     page.locator("#play-history-list .explain-recommendation-button"),
-  ).toHaveCount(2);
+  ).toHaveCount(4);
   const firstClue = page.getByRole("button", {
     name: "Review turn 1: Blue clue FIRST 2",
     exact: true,
@@ -3947,6 +3953,22 @@ test("completed Play sessions replay turns and explain intended targets", async 
     });
   await expect(blueExplainButton).toBeVisible();
   await expect(redExplainButton).toBeVisible();
+  const blueGuessExplainButton = page
+    .locator("#play-history-list")
+    .getByRole("button", {
+      name: "Explain why WORD0 was a plausible guess for FIRST",
+      exact: true,
+    });
+  const redGuessExplainButton = page
+    .locator("#play-history-list")
+    .getByRole("button", {
+      name: "Explain why WORD24 was a plausible guess for SECOND",
+      exact: true,
+    });
+  await expect(blueGuessExplainButton).toBeVisible();
+  await expect(redGuessExplainButton).toBeVisible();
+  await expect(blueGuessExplainButton).toHaveText("Explain");
+  await expect(redGuessExplainButton).toHaveText("Explain");
   expect(explanationRequests).toHaveLength(0);
   for (const viewport of [
     { width: 390, height: 844 },
@@ -4004,6 +4026,40 @@ test("completed Play sessions replay turns and explain intended targets", async 
       actionLayout.actionsAboveClue,
       `turn actions above clue at ${viewport.width}px`,
     ).toBe(true);
+    const guessLayout = await page.evaluate(() => {
+      const rows = [
+        ...document.querySelectorAll(
+          "#play-history-list .play-history-guess-summary",
+        ),
+      ];
+      return {
+        rowsFit: rows.every((row) => row.scrollWidth <= row.clientWidth + 1),
+        buttonsInline: rows.every((row) => {
+          const card = row.querySelector(".play-history-card");
+          const button = row.querySelector(".explain-recommendation-button");
+          if (!card || !button) {
+            return false;
+          }
+          const cardBounds = card.getBoundingClientRect();
+          const buttonBounds = button.getBoundingClientRect();
+          return (
+            Math.abs(
+              cardBounds.top +
+                cardBounds.height / 2 -
+                (buttonBounds.top + buttonBounds.height / 2),
+            ) <= 1
+          );
+        }),
+      };
+    });
+    expect(
+      guessLayout.rowsFit,
+      `guess row clipping at ${viewport.width}px`,
+    ).toBe(true);
+    expect(
+      guessLayout.buttonsInline,
+      `guess action wrapping at ${viewport.width}px`,
+    ).toBe(true);
   }
   const teamsView = page.getByRole("button", { name: "↔️ By team", exact: true });
   const timelineView = page.getByRole("button", { name: "🕒 Timeline", exact: true });
@@ -4055,10 +4111,12 @@ test("completed Play sessions replay turns and explain intended targets", async 
   await timelineView.click();
   await blueExplainButton.click();
   await redExplainButton.click();
+  await blueGuessExplainButton.click();
+  await redGuessExplainButton.click();
   const explanations = page.locator(
     "#play-history-list .play-history-explanation .explanation-targets",
   );
-  await expect(explanations).toHaveCount(2);
+  await expect(explanations).toHaveCount(4);
   await expect(explanations.nth(0)).toContainText(
     "These words connect through sequence",
   );
@@ -4071,16 +4129,36 @@ test("completed Play sessions replay turns and explain intended targets", async 
   await expect(
     explanations.nth(0).locator('.play-history-card[data-team="friendly"]'),
   ).toHaveText(["word0", "word1"]);
-  await expect(explanations.nth(1).locator(".play-clue-pill")).toHaveText(
+  await expect(explanations.nth(1)).toContainText(
+    "word0 is the first item",
+  );
+  await expect(
+    explanations.nth(1).locator('.play-history-card[data-team="friendly"]'),
+  ).toHaveText("word0");
+  await expect(explanations.nth(2).locator(".play-clue-pill")).toHaveText(
     "second",
   );
   await expect(
-    explanations.nth(1).locator('.play-history-card[data-team="enemy"]'),
+    explanations.nth(2).locator('.play-history-card[data-team="enemy"]'),
   ).toHaveText("word9");
-  expect(explanationRequests).toHaveLength(2);
+  await expect(explanations.nth(3)).toContainText(
+    "word24 can represent its numbered position",
+  );
+  await expect(
+    explanations.nth(3).locator('.play-history-card[data-team="assassin"]'),
+  ).toHaveText("word24");
+  expect(explanationRequests).toHaveLength(4);
   expect(
     explanationRequests.every(({ recommendations }) => recommendations.length === 1),
   ).toBe(true);
+  expect(
+    explanationRequests.map(({ recommendations }) => recommendations[0]),
+  ).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({ clue: "FIRST", targets: ["WORD0"] }),
+      expect.objectContaining({ clue: "SECOND", targets: ["WORD24"] }),
+    ]),
+  );
 
   for (const viewport of [
     { width: 390, height: 844 },
@@ -4090,28 +4168,33 @@ test("completed Play sessions replay turns and explain intended targets", async 
     await page.setViewportSize(viewport);
     const layout = await page.evaluate(() => {
       const history = document.querySelector("#play-history-list");
-      const explanation = history.querySelector(
-        ".play-history-explanation .explanation-targets",
-      );
+      const explanations = [
+        ...history.querySelectorAll(
+          ".play-history-explanation .explanation-targets",
+        ),
+      ];
       const summaries = [...history.querySelectorAll(".play-history-event-summary")];
       const historyBounds = history.getBoundingClientRect();
-      const explanationBounds = explanation.getBoundingClientRect();
       const action = history.querySelector(".play-history-clue-action");
       const actionBounds = action.getBoundingClientRect();
-      const pillBounds = [
-        ...explanation.querySelectorAll(".play-clue-pill, .play-history-card"),
-      ].map((pill) => pill.getBoundingClientRect());
+      const pillBounds = explanations.flatMap((explanation) =>
+        [...explanation.querySelectorAll(".play-clue-pill, .play-history-card")].map(
+          (pill) => pill.getBoundingClientRect(),
+        ),
+      );
       return {
         pageOverflows:
           document.documentElement.scrollWidth > document.documentElement.clientWidth,
-        explanationFits:
-          explanationBounds.left >= historyBounds.left - 1 &&
-          explanationBounds.right <= historyBounds.right + 1,
+        explanationsFit: explanations.every((explanation) => {
+          const bounds = explanation.getBoundingClientRect();
+          return (
+            bounds.left >= historyBounds.left - 1 &&
+            bounds.right <= historyBounds.right + 1
+          );
+        }),
         summariesFit: summaries.every(
           (summary) => summary.scrollWidth <= summary.clientWidth + 1,
         ),
-        explanationBelowActions:
-          explanationBounds.top >= actionBounds.bottom - 1,
         pillsOverlapAcrossLines: pillBounds.some((left, leftIndex) =>
           pillBounds.slice(leftIndex + 1).some(
             (right) =>
@@ -4120,15 +4203,19 @@ test("completed Play sessions replay turns and explain intended targets", async 
               right.top < left.bottom,
           ),
         ),
+        explanationsBelowActions: explanations.every(
+          (explanation) =>
+            explanation.getBoundingClientRect().top >= actionBounds.bottom - 1,
+        ),
       };
     });
     expect(layout.pageOverflows, `page overflow at ${viewport.width}px`).toBe(false);
-    expect(layout.explanationFits, `explanation clipping at ${viewport.width}px`).toBe(
+    expect(layout.explanationsFit, `explanation clipping at ${viewport.width}px`).toBe(
       true,
     );
     expect(layout.summariesFit, `summary clipping at ${viewport.width}px`).toBe(true);
     expect(
-      layout.explanationBelowActions,
+      layout.explanationsBelowActions,
       `explanation action overlap at ${viewport.width}px`,
     ).toBe(true);
     expect(
