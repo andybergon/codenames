@@ -43,7 +43,7 @@ A candidate clue is removed when it:
 - Is a conservative plural, past-tense, or participle inflection of a remaining board word, or vice versa.
 - Contains or is contained by recognized compound components.
 
-The morphology filter uses explicit English suffix transformations rather than generic substring matching, so pairs such as `life` / `lives`, `story` / `stories`, and `run` / `running` are rejected without treating unrelated pairs such as `plane` / `planet` as equivalent. Ranked Train and Play suggestions, benchmark fallback clues, and manually entered Play clues share this legality rule. The filter is deterministic and practical, but it does not replace table-specific spymaster rulings.
+The morphology filter uses explicit English suffix transformations rather than generic substring matching, so pairs such as `life` / `lives`, `story` / `stories`, `run` / `running`, and agent-noun derivations such as `teach` / `teacher` are rejected without treating unrelated pairs such as `plane` / `planet` as equivalent. Ranked Train and Play suggestions, benchmark fallback clues, and manually entered Play clues share this legality rule. The filter is deterministic and practical, but it does not replace table-specific spymaster rulings.
 
 Normalization preserves Unicode letters and accents. Italian legality also folds accents for comparison, applies Italian number, gender, and verb-family stems, covers checked irregular pairs, and rejects stem containment such as `abbraccia` against `braccio`. The filter is deterministic and conservative, but it does not replace table-specific spymaster rulings or native review.
 

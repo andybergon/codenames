@@ -18,7 +18,12 @@ import { PLAY_WORD_REUSE_POLICY } from "./word-reuse.js";
 const SHARE_VERSION = 3;
 const COMPLETED_SHARE_VERSION = 2;
 const LEGACY_SHARE_VERSION = 1;
-const PLAY_RULES_VERSION = 1;
+const PLAY_RULES_VERSION = 2;
+const LEGACY_PLAY_RULES_VERSION = 1;
+const REPLAYABLE_RULES_VERSIONS = new Set([
+  LEGACY_PLAY_RULES_VERSION,
+  PLAY_RULES_VERSION,
+]);
 const SETTINGS_VERSION = 1;
 const MAX_SHARE_LENGTH = 12_000;
 const MAX_ACTIONS = 512;
@@ -104,6 +109,11 @@ export function encodePlayGame(
     ? game.botSettings.missedTargetTiming
     : "late";
   const gameId = completedGameIdentity(validated, board);
+  const rulesVersion = REPLAYABLE_RULES_VERSIONS.has(
+    validated.shareMetadata?.rulesVersion,
+  )
+    ? validated.shareMetadata.rulesVersion
+    : PLAY_RULES_VERSION;
   const actions = validated.history.flatMap((event) => {
     if (
       !validated.developerMode &&
@@ -150,7 +160,7 @@ export function encodePlayGame(
   });
   const payload = [
     SHARE_VERSION,
-    PLAY_RULES_VERSION,
+    rulesVersion,
     SETTINGS_VERSION,
     gameId,
     board,
@@ -260,7 +270,7 @@ function decodeParsedCompletedGame(parsed) {
     decodeAction(action, parsed.actionVersion, developerMode),
   );
   if (
-    parsed.rulesVersion !== PLAY_RULES_VERSION ||
+    !REPLAYABLE_RULES_VERSIONS.has(parsed.rulesVersion) ||
     botSettings === null
   ) {
     return reconstructHistoricalGame({
@@ -300,6 +310,8 @@ function decodeParsedCompletedGame(parsed) {
           number: action.number,
           intendedLayoutIds: action.intendedLayoutIds,
           developerDiagnostics: action.developerDiagnostics,
+          useLegacyClueRules:
+            parsed.rulesVersion === LEGACY_PLAY_RULES_VERSION,
           actor: actorForSeat(
             game,
             game.activeSide,
@@ -445,7 +457,7 @@ function parseCompletedPayload(payload) {
   const rawSettings = payload[4 + offset];
   return {
     formatVersion: LEGACY_SHARE_VERSION,
-    rulesVersion: PLAY_RULES_VERSION,
+    rulesVersion: LEGACY_PLAY_RULES_VERSION,
     settingsVersion: rawSettings.length === 7 ? 1 : 0,
     gameId: currentLegacy ? payload[1] : null,
     boardCode: payload[1 + offset],

@@ -141,6 +141,10 @@ assert.equal(isForbiddenClue("running", ["run"]), true);
 assert.equal(isForbiddenClue("stopped", ["stop"]), true);
 assert.equal(isForbiddenClue("making", ["make"]), true);
 assert.equal(isForbiddenClue("carried", ["carry"]), true);
+assert.equal(isForbiddenClue("teach", ["teacher"]), true);
+assert.equal(isForbiddenClue("teacher", ["teach"]), true);
+assert.equal(isForbiddenClue("write", ["writer"]), true);
+assert.equal(isForbiddenClue("run", ["runner"]), true);
 assert.equal(isForbiddenClue("planet", ["plane"]), false);
 
 assert.deepEqual(

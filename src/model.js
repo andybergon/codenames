@@ -207,7 +207,12 @@ export function isForbiddenClue(
   options = {},
 ) {
   const language = options.language ?? LANGUAGE.ENGLISH;
-  return buildClueLegalityFilter(boardWords, language)(
+  const includeDerivations = options.includeDerivations ?? true;
+  return buildClueLegalityFilter(
+    boardWords,
+    language,
+    includeDerivations,
+  )(
     normalizeTerm(clue),
   );
 }
@@ -297,7 +302,11 @@ function adjustItalianOrthographicSimilarity(clueForm, wordForm, similarity) {
     : similarity;
 }
 
-function buildClueLegalityFilter(boardWords, language) {
+function buildClueLegalityFilter(
+  boardWords,
+  language,
+  includeDerivations = true,
+) {
   if (language === LANGUAGE.ENGLISH) {
     const compactBoardWords = boardWords.map((word) =>
       normalizeTerm(word).replaceAll(" ", ""),
@@ -307,6 +316,9 @@ function buildClueLegalityFilter(boardWords, language) {
     const boardInflections = new Set(
       compactBoardWords.flatMap(simpleInflections),
     );
+    const boardDerivations = includeDerivations
+      ? new Set(compactBoardWords.flatMap(simpleAgentNouns))
+      : new Set();
 
     return (clue) => {
       const compactClue = normalizeTerm(clue).replaceAll(" ", "");
@@ -314,9 +326,14 @@ function buildClueLegalityFilter(boardWords, language) {
         boardWordSet.has(compactClue) ||
         boardStemSet.has(simpleStem(compactClue)) ||
         boardInflections.has(compactClue) ||
+        boardDerivations.has(compactClue) ||
         simpleInflections(compactClue).some((form) =>
           boardWordSet.has(form),
-        )
+        ) ||
+        (includeDerivations &&
+          simpleAgentNouns(compactClue).some((form) =>
+            boardWordSet.has(form),
+          ))
       ) {
         return true;
       }
@@ -500,6 +517,23 @@ function simpleInflections(value) {
   if (shouldDoubleFinalConsonant(value)) {
     const final = value.at(-1);
     forms.push(`${value}${final}ed`, `${value}${final}ing`);
+  }
+
+  return forms;
+}
+
+function simpleAgentNouns(value) {
+  if (!/^[a-z]{3,}$/u.test(value)) {
+    return [];
+  }
+
+  const forms = /e$/u.test(value)
+    ? [`${value}r`, `${value}rs`]
+    : [`${value}er`, `${value}ers`];
+
+  if (shouldDoubleFinalConsonant(value)) {
+    const final = value.at(-1);
+    forms.push(`${value}${final}er`, `${value}${final}ers`);
   }
 
   return forms;

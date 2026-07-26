@@ -121,6 +121,7 @@ export function giveClue(
     actor,
     intendedLayoutIds = [],
     developerDiagnostics = null,
+    useLegacyClueRules = false,
   },
 ) {
   assertActive(game, GAME_PHASE.AWAITING_CLUE);
@@ -130,6 +131,7 @@ export function giveClue(
     clue,
     game.cards,
     game.language ?? LANGUAGE.ENGLISH,
+    useLegacyClueRules,
   );
   const normalizedNumber = Number(number);
   const maximum = remainingCardsForSide(game.cards, game.activeSide);
@@ -588,7 +590,12 @@ function completeGame(game, winner, endReason) {
   };
 }
 
-function validateClue(clue, cards, language) {
+function validateClue(
+  clue,
+  cards,
+  language,
+  useLegacyClueRules = false,
+) {
   const normalized = String(clue ?? "").trim();
   if (!normalized || /\s/u.test(normalized)) {
     throw new Error("A clue must be one word.");
@@ -599,6 +606,7 @@ function validateClue(clue, cards, language) {
   if (
     isForbiddenClue(normalizeTerm(normalized), boardWords, {
       language,
+      includeDerivations: !useLegacyClueRules,
     })
   ) {
     throw new Error(

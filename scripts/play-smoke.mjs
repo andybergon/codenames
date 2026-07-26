@@ -422,6 +422,55 @@ assert.throws(
     }),
   /stem or inflection/,
 );
+const derivationGame = createPlayGame({
+  cards: sample.cards.map((card, index) =>
+    index === 0 ? { ...card, word: "TEACHER" } : card,
+  ),
+  humanSeat: { side: SIDE.BLUE, role: PLAYER_ROLE.SPYMASTER },
+  seed: "derivation",
+  wordSet: sample.wordSet,
+});
+assert.throws(
+  () =>
+    giveClue(derivationGame, {
+      clue: "teach",
+      number: 1,
+      actor: "human",
+    }),
+  /stem or inflection/,
+);
+const legacyDerivationGame = giveClue(derivationGame, {
+  clue: "teach",
+  number: 1,
+  actor: "human",
+  useLegacyClueRules: true,
+});
+const legacyDerivationPayload = JSON.parse(
+  Buffer.from(
+    encodePlayGame(legacyDerivationGame),
+    "base64url",
+  ).toString("utf8"),
+);
+legacyDerivationPayload[1] = 1;
+const legacyDerivationCode = Buffer.from(
+  JSON.stringify(legacyDerivationPayload),
+).toString("base64url");
+const restoredLegacyDerivationGame = decodePlayGame(
+  legacyDerivationCode,
+);
+assert.equal(
+  restoredLegacyDerivationGame.currentTurn.clue,
+  "TEACH",
+);
+assert.equal(
+  JSON.parse(
+    Buffer.from(
+      encodePlayGame(restoredLegacyDerivationGame),
+      "base64url",
+    ).toString("utf8"),
+  )[1],
+  1,
+);
 
 game = giveClue(game, {
   clue: "space",
@@ -1387,7 +1436,7 @@ assert.deepEqual(
   },
   {
     formatVersion: 3,
-    rulesVersion: 1,
+    rulesVersion: 2,
     settingsVersion: 1,
     compatibility: "full",
   },
