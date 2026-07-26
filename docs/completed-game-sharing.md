@@ -49,8 +49,10 @@ payloads receive the `late` missed-target timing default. The setting is never
 inferred from history.
 
 This shape keeps ordinary games well below common link limits. The smoke
-fixture requires a completed game code to stay below 2,048 characters, while
-the decoder permits up to 16,384 characters and 512 actions for unusual games.
+fixture requires a completed game code to stay below 2,048 characters. Shared
+exports are capped at 12,000 characters and 512 actions, leaving headroom below
+Vercel's [14 KB URL limit](https://vercel.com/docs/errors/url_too_long) for the
+origin, route, and query syntax.
 
 ## Validation and compatibility
 

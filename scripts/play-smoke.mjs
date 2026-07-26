@@ -1381,6 +1381,61 @@ assert.deepEqual(
   sharedCompletedGame.history.slice(1),
   simulated.history.slice(1),
 );
+let oversizedSharedGame = createPlayGame({
+  cards: sample.cards,
+  humanSeat: { side: SIDE.RED, role: PLAYER_ROLE.SPYMASTER },
+  seed: "oversized-share",
+  wordSet: sample.wordSet,
+});
+for (let turn = 0; turn < 150; turn += 1) {
+  oversizedSharedGame = giveClue(oversizedSharedGame, {
+    clue: `LONGCLUE${String(turn).padStart(12, "X")}`,
+    number: 1,
+    actor: actorForSeat(
+      oversizedSharedGame,
+      oversizedSharedGame.activeSide,
+      PLAYER_ROLE.SPYMASTER,
+    ),
+  });
+  oversizedSharedGame = passTurn(oversizedSharedGame, {
+    actor: actorForSeat(
+      oversizedSharedGame,
+      oversizedSharedGame.activeSide,
+      PLAYER_ROLE.OPERATIVE,
+    ),
+  });
+}
+oversizedSharedGame = giveClue(oversizedSharedGame, {
+  clue: "FINALCLUE",
+  number: 1,
+  actor: actorForSeat(
+    oversizedSharedGame,
+    oversizedSharedGame.activeSide,
+    PLAYER_ROLE.SPYMASTER,
+  ),
+});
+oversizedSharedGame = guessCard(oversizedSharedGame, {
+  layoutId: oversizedSharedGame.cards.find(
+    (card) => !card.done && card.team === "assassin",
+  ).layoutId,
+  actor: actorForSeat(
+    oversizedSharedGame,
+    oversizedSharedGame.activeSide,
+    PLAYER_ROLE.OPERATIVE,
+  ),
+});
+const oversizedCompletedGameCode = encodeCompletedGame(oversizedSharedGame, {
+  maxLength: 30_000,
+});
+assert.ok(oversizedCompletedGameCode.length > 12_000);
+assert.throws(
+  () => encodeCompletedGame(oversizedSharedGame),
+  /too large to share/,
+);
+assert.throws(
+  () => decodeCompletedGame(oversizedCompletedGameCode),
+  /Invalid completed-game code/,
+);
 const currentPayload = JSON.parse(
   Buffer.from(completedGameCode, "base64url").toString("utf8"),
 );

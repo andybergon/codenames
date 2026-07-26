@@ -45,6 +45,7 @@ Local-first Vite application for embedding-powered Codenames clue recommendation
 - Treat completed-game codes as private full-game data. They include the hidden key, intended targets, settings, and complete action history even though they are compact and URL-safe.
 - Completed-game exports preserve `missedTargetTiming` separately from `operativeAggression`. Legacy six-setting v1 payloads default timing to `late`.
 - Developer-game share links preserve `developerMode` on the root and `game-started` event but omit raw diagnostics. The local completed-game archive preserves versioned per-action diagnostics, while copied links use replay state only. Reject diagnostics on a record marked as a normal game.
+- Keep completed-game share codes at or below 12,000 characters so the full URL remains below Vercel's 14 KB request limit. Local developer archives may use their separate, larger storage limit.
 
 ## Play Mode
 
