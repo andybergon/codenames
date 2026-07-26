@@ -2279,6 +2279,9 @@ export function createPlayMode(options = {}) {
     ) {
       return;
     }
+    if (!guessCandidateExecutor && (!boardVectors || !clueIndex)) {
+      return;
+    }
     const key = currentClueDiagnosticsKey();
     const savedScores =
       game.currentTurn.developerDiagnostics?.operativeScores;

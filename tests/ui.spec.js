@@ -1660,6 +1660,66 @@ test("Developer mode can mark and diagnose a saved game in progress", async ({
   expect(externalRequests).toEqual([]);
 });
 
+test("Developer mode resumes a saved opponent guess turn before diagnostics are ready", async ({
+  page,
+}) => {
+  await useTestBotAction(page, 0);
+  const savedGame = playSessionWithHistory([
+    {
+      type: "clue-given",
+      turn: 7,
+      side: "red",
+      actor: "bot",
+      clue: "FIXTURE",
+      number: 2,
+      intendedLayoutIds: [9, 10],
+    },
+    {
+      type: "card-guessed",
+      turn: 7,
+      side: "red",
+      actor: "bot",
+      layoutId: 9,
+      word: "WORD9",
+      team: "enemy",
+    },
+  ]);
+  savedGame.humanSeat = { side: "blue", role: "operative" };
+  savedGame.activeSide = "red";
+  savedGame.phase = "awaiting-guess";
+  savedGame.currentTurn = {
+    side: "red",
+    clue: "FIXTURE",
+    number: 2,
+    actor: "bot",
+    intendedLayoutIds: [9, 10],
+    guesses: [
+      {
+        layoutId: 9,
+        word: "WORD9",
+        team: "enemy",
+        actor: "bot",
+      },
+    ],
+  };
+
+  await page.addInitScript((session) => {
+    localStorage.setItem(
+      "codenames-play-session-v1",
+      JSON.stringify(session),
+    );
+  }, savedGame);
+  await page.goto("/?mode=play");
+
+  const settings = page.locator(".play-settings");
+  await settings.locator("summary").click();
+  await page.locator("#play-developer-mode").check();
+  await page.getByRole("button", { name: "Resume game", exact: true }).click();
+
+  await expect(page.locator("#play-game")).toBeVisible();
+  await expect(page.locator("#play-post-game-outcome")).toBeVisible();
+});
+
 test("Developer live analysis matches post-game role and target review", async ({
   page,
 }) => {
