@@ -59,6 +59,8 @@ const report = {
       "Recall of intended targets within the first declared-number human guesses.",
     safety:
       "Observed wrong-team, neutral, and assassin selections across every human guess.",
+    pass:
+      "A saved task with no guesses is an explicit human pass.",
     blinding:
       "Model attribution, intended targets, and team roles come from a separate answer key that the browser round does not load.",
   },
@@ -86,6 +88,7 @@ function summarize(observations) {
           declaredGuesses.length === targets.size,
       );
       summary.guesses += answer.guessedLayoutIds.length;
+      summary.passes += Number(answer.guessedLayoutIds.length === 0);
       for (const layoutId of answer.guessedLayoutIds) {
         const team = wordById.get(layoutId)?.team;
         summary.assassinHits += Number(team === "assassin");
@@ -102,6 +105,7 @@ function summarize(observations) {
       targetRecall: 0,
       exactTargets: 0,
       guesses: 0,
+      passes: 0,
       wrongTeamHits: 0,
       neutralHits: 0,
       assassinHits: 0,
@@ -115,6 +119,8 @@ function summarize(observations) {
     targetRecallAtDeclaredCount: rounded(totals.targetRecall / totals.tasks),
     exactTargetRate: rounded(totals.exactTargets / totals.tasks),
     guessesPerTask: rounded(totals.guesses / totals.tasks),
+    passes: totals.passes,
+    passRate: rounded(totals.passes / totals.tasks),
     wrongTeamHitsPerTask: rounded(totals.wrongTeamHits / totals.tasks),
     neutralHitsPerTask: rounded(totals.neutralHits / totals.tasks),
     assassinHitRate: rounded(totals.assassinHits / totals.tasks),

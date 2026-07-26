@@ -25,7 +25,13 @@
 
 - 🧠 Evaluate a more game-specific semantic embedding or reranker.
   - Current: calibrated same-model development favored Cohere and tied Voyage with BGE, but both failed the primary MiniLM-L6 transfer gates, so BGE stays in production and the held-out test remains locked.
-  - Next: complete and export the hidden 30-task human round once to establish a gross-failure baseline, then require any future candidate to pass calibrated development, cross-model transfer, and human gates before unlocking the held-out test.
+  - Require any future candidate to pass calibrated development, cross-model transfer, and human gates before unlocking the held-out test.
+
+- 👥 Finish the first human embedding calibration and analyze it.
+  - Current: the first export contained one substantive Cohere answer and four accidental empty passes caused by unclear navigation; clear those passes before continuing.
+  - Connect Neon to the `codenames` Vercel project and configure `CALIBRATION_SYNC_SECRET` to activate the implemented automatic database backup.
+  - Complete all 30 blinded tasks at `?mode=calibrate`, export the corrected answers, then run `npm run calibration:evaluate -- --input <export.json> --answer-key scripts/generated/calibration-answer-keys/embedding-finalists-v1.json`.
+  - Review pass rate, target recall, exact targets, and wrong-team, neutral, and assassin selections per model as a gross-failure screen, not a model ranker.
 
 - 🧪 Remove network dependence from Play suggestion UI tests.
   - Full-suite runs can show `Failed to fetch` while waiting for `.play-suggestion`; the exact tests pass immediately in isolation.

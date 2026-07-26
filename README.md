@@ -48,6 +48,8 @@ npm run dev -- --host 127.0.0.1 --port 3535
 
 Production uses the `OPENAI_API_KEY` Vercel environment variable. The browser never receives the key.
 
+The hidden human-calibration page remains fully usable with browser storage alone. To sync answers between browsers, connect a Neon database to the Vercel project and provide server-side `DATABASE_URL` and `CALIBRATION_SYNC_SECRET` variables. The page asks for the sync key once, exchanges it for an HTTP-only cookie, and then records each correction automatically in both browser storage and Postgres. Copy `.env.example` to `.env.local` to exercise the same flow locally.
+
 ## Verification
 
 ```sh
@@ -86,7 +88,7 @@ Run `npm run benchmark:play` for paired full-game comparisons and `npm run analy
 
 The benchmark also reports a 0-100 Fun Index that balances ambitious multi-card clues, productive guesses, close finishes, and games in the 8 to 12 turn range. Wrong-team hits, assassin losses, neutral hits, and fallbacks remain promotion guardrails rather than sources of points. Use `--operative-model <model-id>` to stress-test whether clues transfer to a different embedding geometry instead of relying only on optimistic same-model self-play.
 
-Embedding selection uses frozen board splits, model-specific similarity calibration, paired bootstrap intervals, cross-model transfer gates, and a one-time blinded human round. Open `?mode=calibrate` directly to complete or correct the local calibration, export answers, or import another versioned round. The tool is intentionally absent from normal Play and Train navigation, and its public round data excludes the separate model answer key.
+Embedding selection uses frozen board splits, model-specific similarity calibration, paired bootstrap intervals, cross-model transfer gates, and a one-time blinded human round. Open `?mode=calibrate` directly to complete or correct the calibration, export answers, or import another versioned round. Choices, ratings, and notes save automatically in browser storage and sync to Postgres when configured; recording a pass remains an explicit action. The tool is intentionally absent from normal Play and Train navigation, and its public round data excludes the separate model answer key.
 
 ## Board word sets
 

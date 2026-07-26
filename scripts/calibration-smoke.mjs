@@ -10,6 +10,7 @@ import {
   saveCalibrationState,
   upsertCalibrationAnswer,
 } from "../src/calibration/store.js";
+import { reconcileCalibrationAnswers } from "../src/calibration/sync.js";
 
 const round = {
   schemaVersion: 1,
@@ -76,6 +77,53 @@ state = mergeCalibrationRound(state, {
   tasks: [{ ...round.tasks[0], clue: "space" }],
 });
 assert.equal(calibrationProgress(state.rounds[0]).answered, 0);
+
+const localNewer = upsertCalibrationAnswer(
+  mergeCalibrationRound(createCalibrationState(), round),
+  "smoke-round",
+  "task-1",
+  { guessedLayoutIds: [1], judgment: "good", note: "Local" },
+  "2026-07-26T12:00:00.000Z",
+);
+const localResult = reconcileCalibrationAnswers(localNewer, [
+  {
+    roundId: "smoke-round",
+    taskId: "task-1",
+    guessedLayoutIds: [2],
+    judgment: "bad",
+    note: "Remote",
+    updatedAt: "2026-07-26T11:00:00.000Z",
+  },
+]);
+assert.deepEqual(localResult.uploads, [
+  {
+    roundId: "smoke-round",
+    taskId: "task-1",
+    answer: localNewer.rounds[0].answers["task-1"],
+  },
+]);
+assert.equal(
+  localResult.state.rounds[0].answers["task-1"].note,
+  "Local",
+);
+
+const remoteResult = reconcileCalibrationAnswers(localNewer, [
+  {
+    roundId: "smoke-round",
+    taskId: "task-1",
+    guessedLayoutIds: [2],
+    judgment: "unsure",
+    note: "Newer remote",
+    updatedAt: "2026-07-26T13:00:00.000Z",
+  },
+]);
+assert.equal(remoteResult.uploads.length, 0);
+assert.deepEqual(remoteResult.state.rounds[0].answers["task-1"], {
+  guessedLayoutIds: [2],
+  judgment: "unsure",
+  note: "Newer remote",
+  updatedAt: "2026-07-26T13:00:00.000Z",
+});
 
 state = clearCalibrationAnswer(state, "smoke-round", "task-1");
 assert.equal(calibrationProgress(state.rounds[0]).answered, 0);

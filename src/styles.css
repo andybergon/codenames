@@ -2060,6 +2060,40 @@ h3 {
   gap: 8px;
 }
 
+.calibration-file-actions {
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.calibration-sync {
+  display: flex;
+  flex: 1 1 100%;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+#calibration-sync-status[data-state="synced"] {
+  color: var(--green);
+}
+
+#calibration-sync-status[data-state="auth_required"] {
+  color: var(--orange);
+}
+
+.calibration-sync input {
+  width: min(190px, 42vw);
+  min-height: 36px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 0 10px;
+  background: var(--panel);
+  color: var(--ink);
+}
+
 .calibration-controls {
   display: flex;
   align-items: end;
@@ -2206,7 +2240,7 @@ h3 {
   align-items: center;
 }
 
-.calibration-actions #calibration-save-next {
+.calibration-actions #calibration-next {
   margin-left: auto;
 }
 
@@ -3981,6 +4015,10 @@ button.play-card:not(:disabled):hover {
     flex-direction: column;
   }
 
+  .calibration-sync {
+    justify-content: flex-start;
+  }
+
   .calibration-file-actions .button {
     flex: 1;
   }
@@ -4088,7 +4126,7 @@ button.play-card:not(:disabled):hover {
     flex: 1 1 calc(50% - 8px);
   }
 
-  .calibration-actions #calibration-save-next {
+  .calibration-actions #calibration-next {
     flex-basis: 100%;
     margin-left: 0;
   }

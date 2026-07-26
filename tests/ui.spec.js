@@ -348,7 +348,7 @@ test("human calibration stays hidden outside its direct URL", async ({ page }) =
   ).toEqual(["Play", "Train"]);
 });
 
-test("human calibration answers can be corrected and survive reloads", async ({
+test("human calibration auto-saves answers and corrections across navigation", async ({
   page,
 }) => {
   await page.goto("/?mode=calibrate");
@@ -365,10 +365,13 @@ test("human calibration answers can be corrected and survive reloads", async ({
   await secondWord.click();
   await page.locator("#calibration-judgment").selectOption("good");
   await page.locator("#calibration-note").fill("First pass");
-  await page.getByRole("button", { name: "Save and next" }).click();
   await expect(page.locator("#calibration-progress")).toHaveText(
     "1/30 answered",
   );
+  await expect(page.locator("#calibration-status")).toHaveText(
+    "Saved automatically in this browser.",
+  );
+  await page.getByRole("button", { name: "Next", exact: true }).click();
 
   await page.reload();
   await expect(page.locator("#calibration-progress")).toHaveText(
@@ -382,7 +385,7 @@ test("human calibration answers can be corrected and survive reloads", async ({
   );
   await secondWord.click();
   await page.locator("#calibration-note").fill("Corrected");
-  await page.getByRole("button", { name: "Save and next" }).click();
+  await page.getByRole("button", { name: "Next", exact: true }).click();
   await page.reload();
   await page
     .getByRole("button", { name: "Open calibration task 1", exact: true })
@@ -391,6 +394,97 @@ test("human calibration answers can be corrected and survive reloads", async ({
     1,
   );
   await expect(page.locator("#calibration-note")).toHaveValue("Corrected");
+});
+
+test("human calibration restores and updates database answers automatically", async ({
+  page,
+}) => {
+  const writes = [];
+  await page.route("**/api/calibration", async (route) => {
+    const method = route.request().method();
+    if (method === "GET") {
+      await route.fulfill({
+        contentType: "application/json",
+        body: JSON.stringify({
+          answers: [
+            {
+              roundId: "embedding-finalists-v1",
+              taskId: "embedding-finalists-v1-f000ee0bab49c800",
+              guessedLayoutIds: [11],
+              judgment: "good",
+              note: "Restored from database",
+              updatedAt: "2026-07-26T12:00:00.000Z",
+            },
+          ],
+        }),
+      });
+      return;
+    }
+    if (method === "PUT") {
+      writes.push(route.request().postDataJSON());
+      await route.fulfill({
+        contentType: "application/json",
+        body: JSON.stringify({ answer: writes.at(-1) }),
+      });
+      return;
+    }
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({}),
+    });
+  });
+
+  await page.goto("/?mode=calibrate");
+
+  await expect(page.locator("#calibration-sync-status")).toHaveText(
+    "Database synced",
+  );
+  await expect(page.locator("#calibration-progress")).toHaveText(
+    "1/30 answered",
+  );
+  await expect(page.locator(".calibration-word[data-selected='true']")).toHaveCount(
+    1,
+  );
+  await expect(page.locator("#calibration-note")).toHaveValue(
+    "Restored from database",
+  );
+
+  await page.locator(".calibration-word").nth(1).click();
+  await expect
+    .poll(() => writes.length)
+    .toBe(1);
+  expect(writes[0]).toMatchObject({
+    roundId: "embedding-finalists-v1",
+    taskId: "embedding-finalists-v1-f000ee0bab49c800",
+    guessedLayoutIds: [11, 24],
+    judgment: "good",
+    note: "Restored from database",
+  });
+});
+
+test("human calibration distinguishes browsing from an explicit pass", async ({
+  page,
+}) => {
+  await page.goto("/?mode=calibrate");
+
+  await expect(page.locator("#calibration-progress")).toHaveText(
+    "0/30 answered",
+  );
+  await page.getByRole("button", { name: "Next", exact: true }).click();
+  await expect(page.locator("#calibration-progress")).toHaveText(
+    "0/30 answered",
+  );
+
+  await page
+    .getByRole("button", { name: "Record pass and next", exact: true })
+    .click();
+  await expect(page.locator("#calibration-progress")).toHaveText(
+    "1/30 answered",
+  );
+  await page.reload();
+  await expect(
+    page.getByRole("button", { name: "Open calibration task 2", exact: true }),
+  ).toHaveAttribute("data-state", "answered");
 });
 
 test("human calibration fits the required responsive viewports", async ({
@@ -448,7 +542,9 @@ test("human calibration imports later rounds and exports answers", async ({
   await expect(page.locator("#calibration-clue")).toHaveText("orbit");
   await expect(page.locator("#calibration-round")).toHaveValue("future-round");
   await page.getByRole("button", { name: "MOON" }).click();
-  await page.getByRole("button", { name: "Save and next" }).click();
+  await expect(page.locator("#calibration-progress")).toHaveText(
+    "1/1 answered",
+  );
   const downloadPromise = page.waitForEvent("download");
   await page.getByRole("button", { name: "Export answers" }).click();
   const stream = await (await downloadPromise).createReadStream();
