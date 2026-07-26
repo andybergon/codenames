@@ -174,22 +174,20 @@ button {
 }
 
 .topbar {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
-  justify-content: space-between;
   gap: 20px;
   margin-bottom: 18px;
 }
 
-.app-identity {
-  display: flex;
-  min-width: 0;
-  align-items: center;
-  gap: 16px;
+#app-title {
+  justify-self: start;
 }
 
 .app-mode-switch {
   display: inline-flex;
+  justify-self: center;
   gap: 2px;
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -216,6 +214,7 @@ button {
 .theme-switcher {
   display: inline-flex;
   flex: 0 0 auto;
+  justify-self: end;
   gap: 2px;
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -3222,14 +3221,7 @@ button.play-card:not(:disabled):hover {
   }
 
   .topbar {
-    align-items: center;
     gap: 12px;
-  }
-
-  .app-identity {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 8px;
   }
 
   h1 {
@@ -3563,6 +3555,25 @@ button.play-card:not(:disabled):hover {
 }
 
 @media (max-width: 520px) {
+  .topbar {
+    grid-template-areas:
+      "title theme"
+      "mode mode";
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  #app-title {
+    grid-area: title;
+  }
+
+  .app-mode-switch {
+    grid-area: mode;
+  }
+
+  .theme-switcher {
+    grid-area: theme;
+  }
+
   .board-metrics {
     width: 100%;
     flex: 1 1 100%;

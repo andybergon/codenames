@@ -364,6 +364,55 @@ test("switching modes keeps shared layout positions stable", async ({ page }) =>
   expect(trainPositions.mainCard).toBeCloseTo(playPositions.mainCard, 1);
 });
 
+test("header centers the mode switch across responsive layouts", async ({ page }) => {
+  await page.goto("/?mode=play");
+
+  for (const viewport of [
+    { width: 390, height: 844, sameRow: false },
+    { width: 768, height: 1024, sameRow: true },
+    { width: 1440, height: 900, sameRow: true },
+  ]) {
+    await page.setViewportSize(viewport);
+    const layout = await page.evaluate(() => {
+      const topbar = document.querySelector(".topbar").getBoundingClientRect();
+      const title = document.querySelector("#app-title").getBoundingClientRect();
+      const mode = document.querySelector(".app-mode-switch").getBoundingClientRect();
+      const theme = document.querySelector(".theme-switcher").getBoundingClientRect();
+      return {
+        pageOverflows:
+          document.documentElement.scrollWidth > document.documentElement.clientWidth,
+        modeCenterOffset:
+          mode.left + mode.width / 2 - (topbar.left + topbar.width / 2),
+        titleThemeCenterOffset:
+          title.top + title.height / 2 - (theme.top + theme.height / 2),
+        modeThemeCenterOffset:
+          mode.top + mode.height / 2 - (theme.top + theme.height / 2),
+        modeBelowTopRow: mode.top >= Math.max(title.bottom, theme.bottom),
+      };
+    });
+
+    expect(layout.pageOverflows, `page overflow at ${viewport.width}px`).toBe(false);
+    expect(
+      Math.abs(layout.modeCenterOffset),
+      `mode centering at ${viewport.width}px`,
+    ).toBeLessThanOrEqual(1);
+    expect(
+      Math.abs(layout.titleThemeCenterOffset),
+      `title and theme alignment at ${viewport.width}px`,
+    ).toBeLessThanOrEqual(1);
+    if (viewport.sameRow) {
+      expect(
+        Math.abs(layout.modeThemeCenterOffset),
+        `mode and theme alignment at ${viewport.width}px`,
+      ).toBeLessThanOrEqual(1);
+    } else {
+      expect(layout.modeBelowTopRow, `mobile wrapping at ${viewport.width}px`).toBe(
+        true,
+      );
+    }
+  }
+});
+
 test("returning to an initialized Train mode reuses its rendered UI", async ({
   page,
 }) => {
