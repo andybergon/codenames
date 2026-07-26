@@ -905,6 +905,46 @@ test("Codenames title returns shared and Train views to Play home", async ({
   }
 });
 
+test("Train sharing keeps its icon and confirms the clipboard copy", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: {
+        writeText(value) {
+          window.__copiedBoard = value;
+          return Promise.resolve();
+        },
+      },
+    });
+  });
+  await page.goto("/?mode=train");
+
+  const shareButton = page.getByRole("button", {
+    name: "Copy board share link",
+    exact: true,
+  });
+  await shareButton.click();
+
+  await expect(shareButton.locator("svg.lucide-share-2")).toHaveCount(1);
+  await expect(shareButton.locator(".copy-feedback-popup")).toHaveText(
+    "Copied to clipboard",
+  );
+  await expect(shareButton.locator(".copy-feedback-popup")).toBeVisible();
+  await expect
+    .poll(() => page.evaluate(() => window.__copiedBoard))
+    .toContain("mode=train");
+
+  await page.getByRole("button", { name: "Use dark theme", exact: true }).click();
+  await expect(shareButton.locator(".copy-feedback-popup")).toBeHidden();
+
+  await shareButton.click();
+  await expect(shareButton.locator(".copy-feedback-popup")).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(shareButton.locator(".copy-feedback-popup")).toBeHidden();
+});
+
 test("select option menus follow the dark theme", async ({ page }) => {
   await page.goto("/?mode=play");
   await page.getByRole("button", { name: "Use dark theme", exact: true }).click();
@@ -4188,10 +4228,17 @@ test("active Play sharing copies progress and turn history", async ({ page }) =>
   );
   await page.getByRole("button", { name: "Share game", exact: true }).click();
 
-  await expect(
-    page.getByRole("button", { name: "Game link copied", exact: true }),
-  ).toBeVisible();
-  await expect(page.locator("#share-play-game svg.lucide-check")).toHaveCount(1);
+  const shareButton = page.getByRole("button", {
+    name: "Share game",
+    exact: true,
+  });
+  await expect(shareButton.locator("svg.lucide-share-2")).toHaveCount(1);
+  await expect(shareButton.locator(".copy-feedback-popup")).toHaveText(
+    "Copied to clipboard",
+  );
+  await expect(shareButton.locator(".copy-feedback-popup")).toBeVisible();
+  await page.locator("#play-human-seat").click();
+  await expect(shareButton.locator(".copy-feedback-popup")).toBeHidden();
   const copied = new URL(await page.evaluate(() => window.__copiedPlayGame));
   expect(copied.searchParams.get("mode")).toBe("play");
   expect(copied.searchParams.has("b")).toBe(false);
@@ -4235,7 +4282,10 @@ test("completed Play links reopen full games and stay in the local archive", asy
     .getByRole("button", { name: "Share game", exact: true })
     .click();
   await expect(
-    page.getByRole("button", { name: "Game link copied", exact: true }),
+    page.locator("#share-play-game .copy-feedback-popup"),
+  ).toHaveText("Copied to clipboard");
+  await expect(
+    page.locator("#share-play-game .copy-feedback-popup"),
   ).toBeVisible();
   const copied = new URL(
     await page.evaluate(() => window.__copiedCompletedGame),

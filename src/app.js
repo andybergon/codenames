@@ -393,6 +393,22 @@ elements.orderGrouped.addEventListener("click", () => {
 elements.shareBoard.addEventListener("click", () => {
   void copyBoardShareLink();
 });
+document.addEventListener("pointerdown", (event) => {
+  if (
+    elements.shareBoard.dataset.state !== "idle" &&
+    !elements.shareBoard.contains(event.target)
+  ) {
+    setShareButtonState("idle");
+  }
+});
+document.addEventListener("keydown", (event) => {
+  if (
+    event.key === "Escape" &&
+    elements.shareBoard.dataset.state !== "idle"
+  ) {
+    setShareButtonState("idle");
+  }
+});
 
 elements.toggleBoard.addEventListener("click", () => {
   boardCollapsed = !boardCollapsed;
@@ -983,28 +999,31 @@ async function writeClipboardText(value) {
 function setShareButtonState(state) {
   window.clearTimeout(shareFeedbackTimer);
   elements.shareBoard.dataset.state = state;
-  const copied = state === "copied";
-  const error = state === "error";
-  const label = copied
-    ? "Board link copied"
-    : error
-      ? "Unable to copy board link"
-      : "Copy board share link";
+  const label = translate(boardLanguage, "copyBoardLink");
   elements.shareBoard.setAttribute("aria-label", label);
   elements.shareBoard.title = label;
 
+  const feedback = elements.shareBoard.querySelector(".copy-feedback-popup");
+  feedback.hidden = state === "idle";
+  feedback.textContent =
+    state === "copied"
+      ? translate(boardLanguage, "copiedToClipboard")
+      : state === "error"
+        ? translate(boardLanguage, "copyFailed")
+        : "";
+
   const icon = document.createElement("i");
-  icon.dataset.lucide = copied ? "check" : "share-2";
+  icon.dataset.lucide = "share-2";
   icon.setAttribute("aria-hidden", "true");
-  elements.shareBoard.replaceChildren(icon);
+  elements.shareBoard.replaceChildren(icon, feedback);
   createIcons({
-    icons: { Check, Share2 },
+    icons: { Share2 },
     attrs: { width: 18, height: 18, "stroke-width": 2 },
     root: elements.shareBoard,
   });
 
   if (state !== "idle") {
-    shareFeedbackTimer = window.setTimeout(() => setShareButtonState("idle"), 5000);
+    shareFeedbackTimer = window.setTimeout(() => setShareButtonState("idle"), 3000);
   }
 }
 

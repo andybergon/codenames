@@ -184,10 +184,18 @@
                   class="icon-button"
                   id="share-board"
                   type="button"
+                  data-state="idle"
                   aria-label="Copy board share link"
                   title="Copy board share link"
                 >
                   <i data-lucide="share-2" aria-hidden="true"></i>
+                  <span
+                    class="copy-feedback-popup"
+                    role="status"
+                    aria-live="polite"
+                    aria-atomic="true"
+                    hidden
+                  ></span>
                 </button>
               </div>
             </div>
@@ -676,12 +684,20 @@
                 id="share-play-game"
                 class="icon-button"
                 type="button"
+                data-state="idle"
                 aria-label="Share game"
                 data-i18n-label="shareGame"
                 data-i18n-title="copyGameLink"
                 title="Copy game link"
               >
                 <i data-lucide="share-2" aria-hidden="true"></i>
+                <span
+                  class="copy-feedback-popup"
+                  role="status"
+                  aria-live="polite"
+                  aria-atomic="true"
+                  hidden
+                ></span>
               </button>
               <button
                 id="leave-play-game"

@@ -1,4 +1,4 @@
-import { Check, Share2, TriangleAlert, createIcons } from "lucide";
+import { Share2, createIcons } from "lucide";
 import { createRandomSeed } from "../board-share.js";
 import PLAY_CLUE_BIAS_ANALYSIS from "../../scripts/generated/play-clue-bias-analysis.json" with { type: "json" };
 import PLAY_MODEL_BENCHMARK from "../../scripts/generated/play-model-benchmark.json" with { type: "json" };
@@ -606,6 +606,22 @@ export function createPlayMode(options = {}) {
   elements.undoAction.addEventListener("click", undoAction);
   elements.forwardAction.addEventListener("click", forwardAction);
   elements.shareGame.addEventListener("click", () => void copyGameLink());
+  document.addEventListener("pointerdown", (event) => {
+    if (
+      elements.shareGame.dataset.state !== "idle" &&
+      !elements.shareGame.contains(event.target)
+    ) {
+      setShareFeedback("idle");
+    }
+  });
+  document.addEventListener("keydown", (event) => {
+    if (
+      event.key === "Escape" &&
+      elements.shareGame.dataset.state !== "idle"
+    ) {
+      setShareFeedback("idle");
+    }
+  });
   elements.toggleSuggestions.addEventListener("click", () => {
     suggestionsExpanded = !suggestionsExpanded;
     renderSuggestionVisibility(true);
@@ -1092,25 +1108,25 @@ export function createPlayMode(options = {}) {
   function setShareFeedback(state) {
     window.clearTimeout(shareFeedbackTimer);
     elements.shareGame.dataset.state = state;
-    const label =
+    const label = translate(gameLanguage(), "shareGame");
+    elements.shareGame.setAttribute("aria-label", label);
+    elements.shareGame.title = translate(gameLanguage(), "copyGameLink");
+
+    const feedback = elements.shareGame.querySelector(".copy-feedback-popup");
+    feedback.hidden = state === "idle";
+    feedback.textContent =
       state === "copied"
-        ? translate(gameLanguage(), "gameCopied")
+        ? translate(gameLanguage(), "copiedToClipboard")
         : state === "error"
           ? translate(gameLanguage(), "copyFailed")
-          : translate(gameLanguage(), "shareGame");
-    const iconName =
-      state === "copied" ? "check" : state === "error" ? "triangle-alert" : "share-2";
-    elements.shareGame.setAttribute("aria-label", label);
-    elements.shareGame.title =
-      state === "idle"
-        ? translate(gameLanguage(), "copyGameLink")
-        : label;
+          : "";
+
     const icon = document.createElement("i");
-    icon.dataset.lucide = iconName;
+    icon.dataset.lucide = "share-2";
     icon.setAttribute("aria-hidden", "true");
-    elements.shareGame.replaceChildren(icon);
+    elements.shareGame.replaceChildren(icon, feedback);
     createIcons({
-      icons: { Check, Share2, TriangleAlert },
+      icons: { Share2 },
       attrs: { width: 18, height: 18, "stroke-width": 2 },
       root: elements.shareGame,
     });

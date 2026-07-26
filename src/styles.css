@@ -443,16 +443,6 @@ h3 {
   outline-offset: 1px;
 }
 
-#share-board[data-state="copied"] {
-  border-color: var(--green);
-  color: var(--green);
-}
-
-#share-board[data-state="error"] {
-  border-color: var(--red);
-  color: var(--red);
-}
-
 .board-source-actions {
   display: inline-flex;
   gap: 4px;
@@ -517,6 +507,7 @@ h3 {
 }
 
 .icon-button {
+  position: relative;
   display: inline-grid;
   flex: 0 0 40px;
   width: 40px;
@@ -530,6 +521,45 @@ h3 {
 
 .icon-button:hover {
   border-color: var(--ink);
+}
+
+.copy-feedback-popup {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 8px);
+  z-index: 20;
+  width: max-content;
+  max-width: min(240px, calc(100vw - 24px));
+  border-radius: 6px;
+  padding: 6px 8px;
+  background: var(--ink);
+  color: var(--on-ink);
+  box-shadow: 0 6px 20px rgb(0 0 0 / 18%);
+  font-size: 0.66rem;
+  font-weight: 800;
+  line-height: 1.2;
+  pointer-events: none;
+}
+
+.copy-feedback-popup::after {
+  position: absolute;
+  top: 100%;
+  right: 13px;
+  border: 5px solid transparent;
+  border-top-color: var(--ink);
+  content: "";
+}
+
+.copy-feedback-popup[hidden] {
+  display: none;
+}
+
+.icon-button[data-state="error"] .copy-feedback-popup {
+  background: var(--red);
+}
+
+.icon-button[data-state="error"] .copy-feedback-popup::after {
+  border-top-color: var(--red);
 }
 
 .chevron {
@@ -2951,16 +2981,6 @@ h3 {
 .play-game-actions .icon-button:disabled {
   cursor: not-allowed;
   opacity: 0.58;
-}
-
-#share-play-game[data-state="copied"] {
-  border-color: var(--green);
-  color: var(--green);
-}
-
-#share-play-game[data-state="error"] {
-  border-color: var(--orange);
-  color: var(--orange);
 }
 
 .button.primary {
