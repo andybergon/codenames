@@ -1377,7 +1377,7 @@ export function createPlayMode(options = {}) {
     elements.humanSeat.replaceChildren(seatContext, seatIdentity);
     elements.undoAction.disabled = !canUndoPlayGame(game) || botBusy;
     elements.forwardAction.disabled = forwardHistory.length === 0 || botBusy;
-    renderScore(view.cards, selectedTurn);
+    renderScore(selectedTurn?.cards ?? game.cards, selectedTurn);
     renderBoardToolbar();
     renderBoard(view, currentActor, currentRole, selectedTurn);
     renderTurnPanel(currentActor, currentRole, selectedTurn);

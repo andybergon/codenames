@@ -54,6 +54,7 @@ Local-first Vite application for embedding-powered Codenames clue recommendation
 - `src/play/mode.js` owns Play DOM rendering, model orchestration, bot pacing, setup, resume, backward/forward history controls, and post-game score overlays. Keep `src/app.js` focused on Train and top-level mode switching.
 - `src/info-control.js` owns the accessible tooltip control and viewport-aware positioning shared by Train and Play.
 - Bot operatives must receive only public clue-to-word similarity candidates. Do not pass hidden roles, intended target IDs, recommendation danger metrics, or the full analysis into `chooseBotGuess`.
+- Public remaining-agent scores are visible to operatives and must use authoritative `game.cards`. Do not derive them from `publicGameView`, which removes unrevealed team identities.
 - Play sessions use versioned local storage key `codenames-play-session-v1` and persist their language. Recent-word history uses `codenames-play-word-reuse-v1` and keeps at most 32 boards. Board share links remain board-only and retain v1-v4 compatibility; avoid-recent boards require explicit links because their words are history-dependent. English stays the first-visit default; Italian Play is an explicit beta.
 - New Play games reuse the current or validated saved human seat. Only the explicit Random control rerolls it; missing, stale, or invalid session data receives a fresh random seat.
 - `scripts/play-smoke.mjs` is the headless Play gate. Keep it in `npm run check` alongside the existing trainer smoke suite.

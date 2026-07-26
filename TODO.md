@@ -23,6 +23,10 @@
 
 ## 🟡 Medium
 
+- 🧪 Isolate embedding-backed UI tests from external model downloads.
+  - `npm test` can fail in Italian Train and completed Play post-game analysis when the browser cannot fetch embedding model assets, including on unchanged `main`.
+  - Add deterministic Train-analysis and post-game-score executors, block external requests, and keep real model coverage in a separate integration check.
+
 - ⚖️ Obtain redistribution terms for the official Italian word list.
   - Request the current second-edition 400-word list and written public-redistribution permission from Cranio Creations or Czech Games Edition.
   - Do not check in a transcription or expose an Official Italian preset without that grant.

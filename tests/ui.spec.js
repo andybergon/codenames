@@ -2252,6 +2252,169 @@ test("Play moves through history and groups fully automated turns", async ({ pag
   await expect(forward).toBeDisabled();
 });
 
+test("Play keeps public remaining scores after operative session restoration", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    window.__codenamesPlayModeOptions = {
+      ...window.__codenamesPlayModeOptions,
+      botActionDelay: 60_000,
+    };
+  });
+  const blueGuess = {
+    layoutId: 0,
+    word: "WORD0",
+    team: "friendly",
+    actor: "human",
+  };
+  const redGuess = {
+    layoutId: 9,
+    word: "WORD9",
+    team: "enemy",
+    actor: "bot",
+  };
+  const session = playSessionWithHistory([
+    {
+      type: "clue-given",
+      turn: 1,
+      side: "blue",
+      actor: "bot",
+      clue: "FIRST",
+      number: 1,
+      intendedLayoutIds: [0],
+    },
+    { type: "card-guessed", turn: 1, side: "blue", ...blueGuess },
+    { type: "turn-passed", turn: 1, side: "blue", actor: "human" },
+    {
+      type: "turn-ended",
+      turn: 1,
+      side: "blue",
+      reason: "pass",
+      clue: "FIRST",
+      number: 1,
+      guesses: [blueGuess],
+    },
+    {
+      type: "clue-given",
+      turn: 2,
+      side: "red",
+      actor: "bot",
+      clue: "SECOND",
+      number: 1,
+      intendedLayoutIds: [9],
+    },
+    { type: "card-guessed", turn: 2, side: "red", ...redGuess },
+    { type: "turn-passed", turn: 2, side: "red", actor: "bot" },
+    {
+      type: "turn-ended",
+      turn: 2,
+      side: "red",
+      reason: "pass",
+      clue: "SECOND",
+      number: 1,
+      guesses: [redGuess],
+    },
+    {
+      type: "clue-given",
+      turn: 3,
+      side: "blue",
+      actor: "bot",
+      clue: "THIRD",
+      number: 1,
+      intendedLayoutIds: [1],
+    },
+  ]);
+  session.humanSeat = { side: "blue", role: "operative" };
+  session.history[0].humanSeat = { ...session.humanSeat };
+  session.cards[0] = {
+    ...session.cards[0],
+    done: true,
+    revealedBy: "blue",
+    revealedTurn: 1,
+  };
+  session.cards[9] = {
+    ...session.cards[9],
+    done: true,
+    revealedBy: "red",
+    revealedTurn: 2,
+  };
+  session.activeSide = "blue";
+  session.phase = "awaiting-guess";
+  session.turnNumber = 3;
+  session.currentTurn = {
+    side: "blue",
+    clue: "THIRD",
+    number: 1,
+    actor: "bot",
+    intendedLayoutIds: [1],
+    guesses: [],
+  };
+
+  await page.addInitScript((savedSession) => {
+    localStorage.setItem(
+      "codenames-play-session-v1",
+      JSON.stringify(savedSession),
+    );
+  }, session);
+  await page.goto("/?mode=play");
+  await page.getByRole("button", { name: "Resume game", exact: true }).click();
+
+  const blueScore = page.locator('.play-score-team[data-side="blue"] strong');
+  const redScore = page.locator('.play-score-team[data-side="red"] strong');
+  const undo = page.getByRole("button", { name: "Undo", exact: true });
+  const forward = page.getByRole("button", { name: "Forward", exact: true });
+
+  await expect(blueScore).toHaveText("8");
+  await expect(redScore).toHaveText("7");
+
+  for (const viewport of [
+    { width: 390, height: 844 },
+    { width: 768, height: 1024 },
+    { width: 1440, height: 900 },
+  ]) {
+    await page.setViewportSize(viewport);
+    const layout = await page.evaluate(() => {
+      const score = document.querySelector("#play-score");
+      const scoreBounds = score.getBoundingClientRect();
+      return {
+        pageOverflows:
+          document.documentElement.scrollWidth >
+          document.documentElement.clientWidth,
+        scoreFits:
+          scoreBounds.left >= 0 &&
+          scoreBounds.right <= document.documentElement.clientWidth,
+      };
+    });
+    expect(layout.pageOverflows, `page overflow at ${viewport.width}px`).toBe(
+      false,
+    );
+    expect(layout.scoreFits, `score clipping at ${viewport.width}px`).toBe(true);
+    await expect(blueScore).toHaveText("8");
+    await expect(redScore).toHaveText("7");
+  }
+
+  await undo.click();
+  await expect(blueScore).toHaveText("8");
+  await expect(redScore).toHaveText("7");
+
+  await undo.click();
+  await expect(blueScore).toHaveText("8");
+  await expect(redScore).toHaveText("8");
+
+  await forward.click();
+  await expect(blueScore).toHaveText("8");
+  await expect(redScore).toHaveText("7");
+
+  await forward.click();
+  await expect(blueScore).toHaveText("8");
+  await expect(redScore).toHaveText("7");
+
+  await page.reload();
+  await page.getByRole("button", { name: "Resume game", exact: true }).click();
+  await expect(blueScore).toHaveText("8");
+  await expect(redScore).toHaveText("7");
+});
+
 test("Play keeps player perspective separate from the current turn", async ({ page }) => {
   await page.goto("/?mode=play");
   await page.locator('[data-play-seat="blue:spymaster"]').click();
