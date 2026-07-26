@@ -53,14 +53,36 @@ const COPY = Object.freeze({
     items: "Items",
     targets: "Targets",
     whyItWorks: "Why it works",
+    whyItWorksInfo:
+      "Explain makes one paid AI request for this clue and its intended targets, then caches the result for this tab. The separate risk sentence remains grounded in the local scores shown under Score details.",
     worthLabel: "Worth",
+    worthInfo:
+      "Overall usefulness from 0-99. It rewards more likely targets, stronger semantic fit, cohesive target words, safety margin, and clue familiarity. Risk is shown separately.",
     net: "Net",
+    netInfo:
+      "Estimated value: items times hit chance, minus the role-weighted cost of a miss. Higher is better.",
     estimatedHit: "Est. hit",
+    estimatedHitInfo:
+      "Estimated chance that teammates get every intended target before hitting another card. This is a model estimate, not a percentage measured from real games.",
     risk: "Risk",
+    riskInfo:
+      "A traffic-light safety label with hard cutoffs. Safe needs 1-3 targets, at least 73% estimated hit, and a 0.11 safety margin. Assassin danger, a margin below 0.025, or hit below 56% is Risky; the rest is Medium.",
     closestDanger: "Closest danger",
+    closestDangerInfo:
+      "The non-friendly card most attracted to the clue after role penalties. The chip shows its word and raw similarity; its color shows the role.",
     margin: "Margin",
+    marginInfo:
+      "Weakest target similarity minus the strongest role-weighted danger. Positive values are safer.",
     fitCohesion: "Fit / cohesion",
+    fitCohesionInfo:
+      "Fit is clue similarity to the target centroid. Cohesion is the average similarity among the target words.",
     apply: "Apply",
+    sortColumn: ({ column }) => `Sort by ${column}`,
+    sortColumnCurrent: ({ column, direction }) =>
+      `Sort by ${column}, currently ${direction}`,
+    ascending: "ascending",
+    descending: "descending",
+    aboutLabel: ({ label }) => `About ${label}`,
     guessed: "Guessed",
     applyClue: ({ clue, number, side, words }) =>
       `Apply ${clue} ${number} for ${side} and mark ${words} guessed`,
@@ -305,14 +327,36 @@ const COPY = Object.freeze({
     items: "Carte",
     targets: "Obiettivi",
     whyItWorks: "Perché funziona",
+    whyItWorksInfo:
+      "Spiega invia una richiesta IA a pagamento solo per questo indizio e i suoi obiettivi, poi memorizza il risultato in questa scheda. La frase sul rischio resta basata sui punteggi locali mostrati in Dettagli punteggi.",
     worthLabel: "Worth",
+    worthInfo:
+      "Utilità complessiva da 0 a 99. Premia obiettivi più probabili, affinità semantica, coesione delle parole obiettivo, margine di sicurezza e familiarità dell'indizio. Il rischio è mostrato separatamente.",
     net: "Netto",
+    netInfo:
+      "Valore stimato: carte per probabilità di successo, meno il costo di un errore pesato per ruolo. Più alto è meglio.",
     estimatedHit: "Successo stim.",
+    estimatedHitInfo:
+      "Probabilità stimata che la squadra trovi tutti gli obiettivi prima di toccare un'altra carta. È una stima del modello, non una percentuale misurata su partite reali.",
     risk: "Rischio",
+    riskInfo:
+      "Indicatore di sicurezza a semaforo con soglie fisse. Sicuro richiede 1-3 obiettivi, almeno il 73% di successo stimato e un margine di 0,11. Il pericolo dell'assassino, un margine sotto 0,025 o un successo sotto il 56% è Rischioso; il resto è Medio.",
     closestDanger: "Pericolo più vicino",
+    closestDangerInfo:
+      "La carta non alleata più vicina all'indizio dopo le penalità di ruolo. Il pill mostra la parola e la similarità grezza; il colore indica il ruolo.",
     margin: "Margine",
+    marginInfo:
+      "Similarità dell'obiettivo più debole meno il pericolo più forte pesato per ruolo. Un valore positivo è più sicuro.",
     fitCohesion: "Fit / coesione",
+    fitCohesionInfo:
+      "Il fit è la similarità tra l'indizio e il centroide degli obiettivi. La coesione è la similarità media tra le parole obiettivo.",
     apply: "Applica",
+    sortColumn: ({ column }) => `Ordina per ${column}`,
+    sortColumnCurrent: ({ column, direction }) =>
+      `Ordina per ${column}, ora ${direction}`,
+    ascending: "crescente",
+    descending: "decrescente",
+    aboutLabel: ({ label }) => `Informazioni su ${label}`,
     guessed: "Indovinate",
     applyClue: ({ clue, number, side, words }) =>
       `Applica ${clue} ${number} per ${side} e segna ${words} come indovinate`,

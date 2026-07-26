@@ -1921,7 +1921,10 @@ export function createPlayMode(options = {}) {
             clue: event.clue,
             targets: intendedTargets,
           },
-          { wordPills: true },
+          {
+            wordPills: true,
+            language: gameLanguage(),
+          },
         );
         explanation.classList.add("play-history-explanation");
         if (turnIndex >= 0) {

@@ -16,7 +16,10 @@ export function createInfoControl(definition, namespace) {
   const button = document.createElement("button");
   button.className = "info-button";
   button.type = "button";
-  button.setAttribute("aria-label", `About ${definition.label}`);
+  button.setAttribute(
+    "aria-label",
+    definition.aboutLabel ?? `About ${definition.label}`,
+  );
   button.setAttribute("aria-controls", tooltipId);
   button.setAttribute("aria-expanded", "false");
   button.addEventListener("click", (event) => {

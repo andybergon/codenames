@@ -84,7 +84,7 @@ Worth is a `0–99` score combining expected net, margin, centroid fit, weakest-
 
 ## 💬 Recommendation explanations
 
-Train makes no hosted request while rendering recommendations. Selecting **Explain** sends only that clue and its intended targets through [`api/explain-recommendations.js`](../api/explain-recommendations.js), and GPT-5.4 nano returns one semantic sentence. The browser caches successful results for the tab, so revisiting the same clue-target combination does not create another paid request.
+Train makes no hosted request while rendering recommendations. Selecting **Explain** sends only that clue, its intended targets, and the active English or Italian language through [`api/explain-recommendations.js`](../api/explain-recommendations.js), and GPT-5.4 nano returns one semantic sentence in that language. The browser caches successful results per language for the tab, so revisiting the same clue-target combination does not create another paid request.
 
 The prompt is owned by [`server/recommendation-explanation-prompt.js`](../server/recommendation-explanation-prompt.js):
 

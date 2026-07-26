@@ -6,20 +6,45 @@ import {
 } from "./recommendation-explanation-client.js";
 
 const pendingExplanations = new Map();
+const COPY = Object.freeze({
+  en: {
+    generated: "Generated from the clue and intended target words.",
+    explainLabel: (clue, targets) => `Explain why ${clue} connects ${targets}`,
+    explainTitle: "Generate an AI explanation (paid request, cached in this tab)",
+    explain: "Explain",
+    explaining: "Explaining",
+    empty: "The explanation response was empty.",
+    error: "Could not generate an explanation. Try again.",
+    retry: "Retry",
+  },
+  it: {
+    generated: "Generata dall'indizio e dalle parole obiettivo.",
+    explainLabel: (clue, targets) =>
+      `Spiega perché ${clue} collega ${targets}`,
+    explainTitle:
+      "Genera una spiegazione IA (richiesta a pagamento, memorizzata in questa scheda)",
+    explain: "Spiega",
+    explaining: "Generazione",
+    empty: "La risposta non contiene una spiegazione.",
+    error: "Impossibile generare una spiegazione. Riprova.",
+    retry: "Riprova",
+  },
+});
 
 export function createRecommendationExplanationControl(
   suggestion,
-  { wordPills = false } = {},
+  { wordPills = false, language = "en" } = {},
 ) {
+  const copy = COPY[language] ?? COPY.en;
   const control = document.createElement("div");
   control.className = "recommendation-explanation-control";
 
   const output = document.createElement("span");
   output.className = "explanation-targets";
-  const cached = cachedSemanticExplanation(suggestion);
+  const cached = cachedSemanticExplanation(suggestion, language);
   if (cached) {
     renderExplanation(output, cached, suggestion, wordPills);
-    output.title = "Generated from the clue and intended target words.";
+    output.title = copy.generated;
     control.append(output);
     return control;
   }
@@ -29,10 +54,10 @@ export function createRecommendationExplanationControl(
   button.className = "explain-recommendation-button";
   button.type = "button";
   const targetWords = suggestion.targets.map(({ word }) => word).join(", ");
-  const label = `Explain why ${suggestion.clue} connects ${targetWords}`;
+  const label = copy.explainLabel(suggestion.clue, targetWords);
   button.setAttribute("aria-label", label);
-  button.title = "Generate an AI explanation (paid request, cached in this tab)";
-  setButtonContent(button, "sparkles", "Explain");
+  button.title = copy.explainTitle;
+  setButtonContent(button, "sparkles", copy.explain);
   button.addEventListener("click", (event) => {
     event.stopPropagation();
     void requestExplanation(
@@ -41,6 +66,8 @@ export function createRecommendationExplanationControl(
       button,
       output,
       wordPills,
+      language,
+      copy,
     );
   });
   control.append(button, output);
@@ -54,19 +81,21 @@ async function requestExplanation(
   button,
   output,
   wordPills,
+  language,
+  copy,
 ) {
-  const key = recommendationExplanationKey(suggestion);
+  const key = recommendationExplanationKey(suggestion, language);
   button.disabled = true;
   button.setAttribute("aria-busy", "true");
   button.classList.add("is-loading");
-  setButtonContent(button, "loader-circle", "Explaining");
+  setButtonContent(button, "loader-circle", copy.explaining);
   renderControlIcons(control);
   output.hidden = true;
   output.classList.remove("is-error");
 
   let pending = pendingExplanations.get(key);
   if (!pending) {
-    pending = loadSemanticExplanations([suggestion]).finally(() => {
+    pending = loadSemanticExplanations([suggestion], { language }).finally(() => {
       pendingExplanations.delete(key);
     });
     pendingExplanations.set(key, pending);
@@ -76,21 +105,21 @@ async function requestExplanation(
     const explanations = await pending;
     const explanation = explanations.get(key);
     if (!explanation) {
-      throw new Error("The explanation response was empty.");
+      throw new Error(copy.empty);
     }
     renderExplanation(output, explanation, suggestion, wordPills);
-    output.title = "Generated from the clue and intended target words.";
+    output.title = copy.generated;
     output.hidden = false;
     button.remove();
   } catch {
-    output.textContent = "Could not generate an explanation. Try again.";
+    output.textContent = copy.error;
     output.title = "";
     output.hidden = false;
     output.classList.add("is-error");
     button.disabled = false;
     button.removeAttribute("aria-busy");
     button.classList.remove("is-loading");
-    setButtonContent(button, "sparkles", "Retry");
+    setButtonContent(button, "sparkles", copy.retry);
     renderControlIcons(control);
   }
 }

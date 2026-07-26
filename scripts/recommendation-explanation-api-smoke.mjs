@@ -68,6 +68,62 @@ assert.equal(requestBody.store, false);
 assert.match(requestBody.input[0].content, /shared concept/);
 assert.match(success.body.explanations[0].explanation, /^These words connect through/);
 
+let italianRequestBody;
+const italian = await handleRecommendationExplanationRequest({
+  method: "POST",
+  body: {
+    language: "it",
+    recommendations: [
+      {
+        id: "medico-2",
+        clue: "CURA",
+        targets: ["MEDICO", "OSPEDALE"],
+      },
+    ],
+  },
+  apiKey: "test-key",
+  fetchImpl: async (_url, init) => {
+    italianRequestBody = JSON.parse(init.body);
+    return Response.json({
+      output: [
+        {
+          content: [
+            {
+              type: "output_text",
+              text: JSON.stringify({
+                explanations: [
+                  {
+                    id: "medico-2",
+                    explanation:
+                      "Queste parole si collegano tramite la salute: il medico cura le persone, mentre l'ospedale organizza l'assistenza sanitaria.",
+                  },
+                ],
+              }),
+            },
+          ],
+        },
+      ],
+    });
+  },
+});
+assert.equal(italian.status, 200);
+assert.match(italianRequestBody.input[0].content, /Queste parole/);
+assert.match(italianRequestBody.input[1].content, /"clue":"cura"/);
+assert.match(
+  italian.body.explanations[0].explanation,
+  /^Queste parole si collegano tramite/,
+);
+assert.equal(
+  (
+    await handleRecommendationExplanationRequest({
+      method: "POST",
+      body: { language: "fr", recommendations },
+      apiKey: "test-key",
+    })
+  ).status,
+  400,
+);
+
 let chunkCalls = 0;
 const chunkedRecommendations = Array.from({ length: 6 }, (_value, index) => ({
   id: `case-${index + 1}`,

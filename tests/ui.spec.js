@@ -305,11 +305,34 @@ test("global language switch creates a versioned Italian Train board and survive
     ["clue", "Indizio"],
     ["items", "Carte"],
     ["targets", "Obiettivi"],
+    ["explanation", "Perché funziona"],
+    ["risk", "Rischio"],
+    ["action", "Applica"],
+  ]) {
+    await expect(
+      page.locator(`.suggestion-table [data-column="${column}"]`),
+    ).toContainText(label);
+  }
+  await expect(
+    page.locator(".explain-recommendation-button").first(),
+  ).toContainText("Spiega");
+  await expect(
+    page.getByRole("button", {
+      name: "Informazioni su Perché funziona",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(page.locator(".explanation-risk").first()).toContainText(
+    /rischio principale|pericolo più vicino/,
+  );
+  await expect(
+    page.locator('.suggestion-table [data-column="worth"]'),
+  ).toHaveCount(0);
+  await page.getByRole("checkbox", { name: "Dettagli punteggi" }).check();
+  for (const [column, label] of [
     ["worth", "Worth"],
     ["hit", "Successo stim."],
-    ["risk", "Rischio"],
     ["danger", "Pericolo più vicino"],
-    ["action", "Applica"],
   ]) {
     await expect(
       page.locator(`.suggestion-table [data-column="${column}"]`),

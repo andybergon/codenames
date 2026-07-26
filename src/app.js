@@ -106,7 +106,7 @@ const SUGGESTION_COLUMNS = [
   {
     id: "explanation",
     label: "Why it works",
-    info: "Explain makes one paid AI request for this clue and its intended targets, then caches the result for this tab. The separate risk sentence remains grounded in the local scores shown under Score details.",
+    infoKey: "whyItWorksInfo",
   },
   {
     id: "worth",
@@ -114,7 +114,7 @@ const SUGGESTION_COLUMNS = [
     key: "worth",
     direction: "desc",
     advanced: true,
-    info: "Overall usefulness from 0-99. It rewards more likely targets, stronger semantic fit, cohesive target words, safety margin, and clue familiarity. Risk is shown separately.",
+    infoKey: "worthInfo",
   },
   {
     id: "net",
@@ -122,7 +122,7 @@ const SUGGESTION_COLUMNS = [
     key: "expectedNet",
     direction: "desc",
     advanced: true,
-    info: "Estimated value: items times hit chance, minus the role-weighted cost of a miss. Higher is better.",
+    infoKey: "netInfo",
   },
   {
     id: "hit",
@@ -130,14 +130,14 @@ const SUGGESTION_COLUMNS = [
     key: "success",
     direction: "desc",
     advanced: true,
-    info: "Estimated chance that teammates get every intended target before hitting another card. This is a model estimate, not a percentage measured from real games.",
+    infoKey: "estimatedHitInfo",
   },
   {
     id: "risk",
     label: "Risk",
     key: "risk",
     direction: "desc",
-    info: "A traffic-light safety label with hard cutoffs. Safe needs 1-3 targets, at least 73% estimated hit, and a 0.11 safety margin. Assassin danger, a margin below 0.025, or hit below 56% is Risky; the rest is Medium.",
+    infoKey: "riskInfo",
   },
   {
     id: "danger",
@@ -145,7 +145,7 @@ const SUGGESTION_COLUMNS = [
     key: "danger",
     direction: "desc",
     advanced: true,
-    info: "The non-friendly card most attracted to the clue after role penalties. The chip shows its word and raw similarity; its color shows the role.",
+    infoKey: "closestDangerInfo",
   },
   {
     id: "margin",
@@ -153,13 +153,13 @@ const SUGGESTION_COLUMNS = [
     key: "margin",
     direction: "desc",
     advanced: true,
-    info: "Weakest target similarity minus the strongest role-weighted danger. Positive values are safer.",
+    infoKey: "marginInfo",
   },
   {
     id: "semantics",
     label: "Fit / cohesion",
     advanced: true,
-    info: "Fit is clue similarity to the target centroid. Cohesion is the average similarity among the target words.",
+    infoKey: "fitCohesionInfo",
   },
   { id: "action", label: "Apply" },
 ];
@@ -167,6 +167,7 @@ const SUGGESTION_COLUMN_COPY_KEYS = Object.freeze({
   clue: "clue",
   items: "items",
   targets: "targets",
+  explanation: "whyItWorks",
   worth: "worthLabel",
   net: "net",
   hit: "estimatedHit",
@@ -1595,8 +1596,18 @@ function renderSuggestions(container, suggestions, emptyMessage) {
       sortButton.setAttribute(
         "aria-label",
         isActive
-          ? `Sort by ${columnLabel}, currently ${suggestionSort.direction === "asc" ? "ascending" : "descending"}`
-          : `Sort by ${columnLabel}`,
+          ? translate(boardLanguage, "sortColumnCurrent", {
+              column: columnLabel,
+              direction: translate(
+                boardLanguage,
+                suggestionSort.direction === "asc"
+                  ? "ascending"
+                  : "descending",
+              ),
+            })
+          : translate(boardLanguage, "sortColumn", {
+              column: columnLabel,
+            }),
       );
       sortButton.addEventListener("click", () => {
         setSuggestionSort(column);
@@ -1616,10 +1627,17 @@ function renderSuggestions(container, suggestions, emptyMessage) {
       content.append(label);
     }
 
-    if (column.info) {
+    if (column.infoKey) {
       content.append(
         createInfoControl(
-          { ...column, label: columnLabel },
+          {
+            ...column,
+            label: columnLabel,
+            aboutLabel: translate(boardLanguage, "aboutLabel", {
+              label: columnLabel,
+            }),
+            info: translate(boardLanguage, column.infoKey),
+          },
           container.id,
         ),
       );
@@ -1812,12 +1830,17 @@ function renderSuggestionRow(suggestion, columns) {
     translate(boardLanguage, "whyItWorks"),
     "explanation-cell",
   );
-  const { riskSummary: riskExplanation } = explainRecommendation(suggestion);
+  const { riskSummary: riskExplanation } = explainRecommendation(
+    suggestion,
+    boardLanguage,
+  );
   const riskSummary = document.createElement("span");
   riskSummary.className = "explanation-risk";
   riskSummary.textContent = riskExplanation;
   explanationCell.append(
-    createRecommendationExplanationControl(suggestion),
+    createRecommendationExplanationControl(suggestion, {
+      language: boardLanguage,
+    }),
     riskSummary,
   );
 

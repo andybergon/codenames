@@ -1,9 +1,10 @@
-const CACHE_STORAGE_KEY = "codenames-semantic-explanations-p4-gpt-5.4-nano";
+const CACHE_STORAGE_KEY = "codenames-semantic-explanations-p5-gpt-5.4-nano";
 const MAX_CACHE_ENTRIES = 128;
 const explanationCache = loadStoredCache();
 
-export function recommendationExplanationKey(suggestion) {
+export function recommendationExplanationKey(suggestion, language = "en") {
   return [
+    language,
     suggestion.clue,
     ...suggestion.targets.map(({ word }) => word),
   ]
@@ -11,19 +12,19 @@ export function recommendationExplanationKey(suggestion) {
     .join("|");
 }
 
-export function cachedSemanticExplanation(suggestion) {
-  return explanationCache.get(recommendationExplanationKey(suggestion)) ?? null;
+export function cachedSemanticExplanation(suggestion, language = "en") {
+  return explanationCache.get(recommendationExplanationKey(suggestion, language)) ?? null;
 }
 
 export async function loadSemanticExplanations(
   suggestions,
-  { fetchImpl = fetch, signal } = {},
+  { fetchImpl = fetch, signal, language = "en" } = {},
 ) {
   const results = new Map();
   const missing = [];
 
   for (const suggestion of suggestions.slice(0, 15)) {
-    const key = recommendationExplanationKey(suggestion);
+    const key = recommendationExplanationKey(suggestion, language);
     const cached = explanationCache.get(key);
     if (cached) {
       results.set(key, cached);
@@ -44,6 +45,7 @@ export async function loadSemanticExplanations(
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
+      language,
       recommendations: missing.map(({ key: _key, ...recommendation }, index) => ({
         id: `recommendation-${index + 1}`,
         ...recommendation,

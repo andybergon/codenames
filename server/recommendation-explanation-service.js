@@ -1,6 +1,6 @@
 import {
   buildSemanticExplanationInput,
-  SEMANTIC_EXPLANATION_DEVELOPER_PROMPT,
+  semanticExplanationDeveloperPrompt,
   semanticExplanationSchema,
 } from "./recommendation-explanation-prompt.js";
 
@@ -32,7 +32,9 @@ export async function handleRecommendationExplanationRequest({
   }
 
   let recommendations;
+  let language;
   try {
+    language = validateLanguage(body?.language);
     recommendations = validateRecommendations(body?.recommendations);
   } catch (error) {
     return {
@@ -45,6 +47,7 @@ export async function handleRecommendationExplanationRequest({
     const explanations = await generateSemanticExplanations(recommendations, {
       apiKey,
       fetchImpl,
+      language,
     });
     return {
       status: 200,
@@ -64,19 +67,28 @@ export async function handleRecommendationExplanationRequest({
 
 export async function generateSemanticExplanations(
   recommendations,
-  { apiKey, fetchImpl = fetch },
+  { apiKey, fetchImpl = fetch, language = "en" },
 ) {
   const chunks = [];
   for (let index = 0; index < recommendations.length; index += REQUEST_CHUNK_SIZE) {
     chunks.push(recommendations.slice(index, index + REQUEST_CHUNK_SIZE));
   }
   const results = await Promise.all(
-    chunks.map((chunk) => requestSemanticExplanationChunk(chunk, { apiKey, fetchImpl })),
+    chunks.map((chunk) =>
+      requestSemanticExplanationChunk(chunk, {
+        apiKey,
+        fetchImpl,
+        language,
+      }),
+    ),
   );
   return results.flat();
 }
 
-async function requestSemanticExplanationChunk(recommendations, { apiKey, fetchImpl }) {
+async function requestSemanticExplanationChunk(
+  recommendations,
+  { apiKey, fetchImpl, language },
+) {
   const response = await fetchImpl("https://api.openai.com/v1/responses", {
     method: "POST",
     headers: {
@@ -88,11 +100,11 @@ async function requestSemanticExplanationChunk(recommendations, { apiKey, fetchI
       input: [
         {
           role: "developer",
-          content: SEMANTIC_EXPLANATION_DEVELOPER_PROMPT,
+          content: semanticExplanationDeveloperPrompt(language),
         },
         {
           role: "user",
-          content: buildSemanticExplanationInput(recommendations),
+          content: buildSemanticExplanationInput(recommendations, language),
         },
       ],
       reasoning: { effort: SEMANTIC_EXPLANATION_REASONING },
@@ -124,6 +136,14 @@ async function requestSemanticExplanationChunk(recommendations, { apiKey, fetchI
 
   const parsed = JSON.parse(outputText);
   return validateExplanations(parsed.explanations, recommendations);
+}
+
+function validateLanguage(value) {
+  const language = value ?? "en";
+  if (language !== "en" && language !== "it") {
+    throw new Error("Language must be en or it.");
+  }
+  return language;
 }
 
 export function validateRecommendations(value) {

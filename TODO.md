@@ -1,9 +1,5 @@
 # TODO
 
-- 🇮🇹 Review the Italian language beta before merging.
-  - Review language selection, official and extended word sources, multilingual embedding tradeoffs, morphology, share compatibility, and responsive Train and Play behavior on `codex/analyze-italian-support`.
-  - Keep the branch separate from `main` until it is explicitly approved.
-
 - 🏆 Support a full match across rotating roles.
   - Design a multi-round match that rotates players through roles and tracks an overall result instead of treating each board as the whole game.
   - Planning only for now; do not implement it as part of the current feedback batch.
