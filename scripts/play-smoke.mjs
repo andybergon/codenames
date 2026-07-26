@@ -1355,29 +1355,127 @@ assert.equal(
   "late",
 );
 assert.deepEqual(
+  {
+    formatVersion: sharedCompletedGame.shareMetadata.formatVersion,
+    rulesVersion: sharedCompletedGame.shareMetadata.rulesVersion,
+    settingsVersion: sharedCompletedGame.shareMetadata.settingsVersion,
+    compatibility: sharedCompletedGame.reviewCompatibility,
+  },
+  {
+    formatVersion: 2,
+    rulesVersion: 1,
+    settingsVersion: 1,
+    compatibility: "full",
+  },
+);
+assert.deepEqual(
   sharedCompletedGame.history.slice(1),
   simulated.history.slice(1),
 );
 const currentPayload = JSON.parse(
   Buffer.from(completedGameCode, "base64url").toString("utf8"),
 );
-const legacySettings = currentPayload[5].filter(
+const legacySettings = currentPayload[7].filter(
   (_value, index) => index !== 4,
 );
+const legacyActions = currentPayload[11].map((action) => {
+  if (action[0] === "c") {
+    return [action[0], action[4], action[5], action[6]];
+  }
+  if (action[0] === "g") {
+    return [action[0], action[4]];
+  }
+  return [action[0]];
+});
 const legacyPayload = [
-  currentPayload[0],
-  currentPayload[2],
-  currentPayload[3],
   currentPayload[4],
-  legacySettings,
+  currentPayload[5],
   currentPayload[6],
+  legacySettings,
   currentPayload[8],
+  legacyActions,
 ];
+legacyPayload.unshift(1);
 const legacyCompletedGame = decodeCompletedGame(
   Buffer.from(JSON.stringify(legacyPayload)).toString("base64url"),
 );
 assert.equal(legacyCompletedGame.botSettings.missedTargetTiming, "late");
 assert.equal(legacyCompletedGame.developerMode, false);
+assert.equal(legacyCompletedGame.shareMetadata.formatVersion, 1);
+const unsupportedRulesPayload = structuredClone(currentPayload);
+unsupportedRulesPayload[1] = 99;
+const historyOnlyGame = decodeCompletedGame(
+  Buffer.from(JSON.stringify(unsupportedRulesPayload)).toString(
+    "base64url",
+  ),
+);
+assert.equal(historyOnlyGame.reviewCompatibility, "history-only");
+assert.equal(historyOnlyGame.winner, simulated.winner);
+assert.deepEqual(
+  historyOnlyGame.history
+    .filter((event) =>
+      ["clue-given", "card-guessed", "turn-passed"].includes(
+        event.type,
+      ),
+    )
+    .map(({ type, turn, side, actor }) => ({
+      type,
+      turn,
+      side,
+      actor,
+    })),
+  simulated.history
+    .filter((event) =>
+      ["clue-given", "card-guessed", "turn-passed"].includes(
+        event.type,
+      ),
+    )
+    .map(({ type, turn, side, actor }) => ({
+      type,
+      turn,
+      side,
+      actor,
+    })),
+);
+const unsupportedSettingsPayload = structuredClone(currentPayload);
+unsupportedSettingsPayload[2] = 99;
+const settingsHistoryOnlyGame = decodeCompletedGame(
+  Buffer.from(JSON.stringify(unsupportedSettingsPayload)).toString(
+    "base64url",
+  ),
+);
+assert.equal(
+  settingsHistoryOnlyGame.reviewCompatibility,
+  "history-only",
+);
+assert.deepEqual(
+  settingsHistoryOnlyGame.shareMetadata.rawSettings,
+  currentPayload[7],
+);
+const mismatchedContextPayload = structuredClone(currentPayload);
+mismatchedContextPayload[11][0][3] =
+  mismatchedContextPayload[11][0][3] === "h" ? "b" : "h";
+assert.throws(
+  () =>
+    decodeCompletedGame(
+      Buffer.from(JSON.stringify(mismatchedContextPayload)).toString(
+        "base64url",
+      ),
+    ),
+  /actions cannot be replayed/,
+);
+const mismatchedOutcomePayload = structuredClone(currentPayload);
+mismatchedOutcomePayload[10][0] =
+  mismatchedOutcomePayload[10][0] === "b" ? "r" : "b";
+assert.throws(
+  () =>
+    decodeCompletedGame(
+      Buffer.from(JSON.stringify(mismatchedOutcomePayload)).toString(
+        "base64url",
+      ),
+    ),
+  /outcome does not match/,
+);
 const developerDiagnostics = {
   diagnosticsVersion: 1,
   modelId: "bge-small",

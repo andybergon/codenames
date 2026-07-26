@@ -376,6 +376,9 @@ export function createPlayMode(options = {}) {
     passTurn: document.querySelector("#pass-play-turn"),
     postGameAnalysis: document.querySelector("#play-post-game-analysis"),
     postGameOutcome: document.querySelector("#play-post-game-outcome"),
+    historicalReviewNote: document.querySelector(
+      "#play-historical-review-note",
+    ),
     historyLabel: document.querySelector("#play-history-heading-label"),
     historyCount: document.querySelector("#play-history-count"),
     historyViewButtons: [...document.querySelectorAll("[data-play-history-view]")],
@@ -425,9 +428,12 @@ export function createPlayMode(options = {}) {
   if (savedGame?.phase === GAME_PHASE.COMPLETE) {
     completedGames = archiveCompletedPlayGame(savedGame);
   }
-  let game = readSharedCompletedGame();
+  const sharedCompletedGame = readSharedCompletedGame();
+  let game = sharedCompletedGame?.game ?? null;
   if (game) {
-    completedGames = archiveCompletedPlayGame(game);
+    completedGames = archiveCompletedPlayGame(game, {
+      sourceCode: sharedCompletedGame.code,
+    });
     selectedLanguage = game.language;
     selectedHumanSeat = { ...game.humanSeat };
     selectedWordSet = game.wordSet;
@@ -836,7 +842,10 @@ export function createPlayMode(options = {}) {
       review.addEventListener("click", () => reviewCompletedGame(entry.code));
       copy.addEventListener("click", async () => {
         try {
-          const shareCode = encodeCompletedGame(completedGame);
+          const shareCode =
+            completedGame.reviewCompatibility === "history-only"
+              ? entry.code
+              : encodeCompletedGame(completedGame);
           await writeClipboardText(completedGameUrl(shareCode));
           copy.textContent = translate(selectedLanguage, "gameCopied");
           window.setTimeout(() => {
@@ -859,6 +868,9 @@ export function createPlayMode(options = {}) {
 
   function reviewCompletedGame(code) {
     const reviewedGame = decodeArchivedCompletedGame(code);
+    if (reviewedGame.reviewCompatibility === "history-only") {
+      reviewedGame.shareMetadata.sourceCode = code;
+    }
     game = reviewedGame;
     selectedLanguage = reviewedGame.language ?? LANGUAGE.ENGLISH;
     onLanguageChange(selectedLanguage);
@@ -873,7 +885,7 @@ export function createPlayMode(options = {}) {
     url.search = "";
     url.searchParams.set("mode", "play");
     try {
-      url.searchParams.set("g", encodeCompletedGame(reviewedGame));
+      url.searchParams.set("g", completedGameShareCode(reviewedGame));
     } catch {
       url.searchParams.delete("g");
     }
@@ -1037,7 +1049,7 @@ export function createPlayMode(options = {}) {
     try {
       const completed = game.phase === GAME_PHASE.COMPLETE;
       const url = completed
-        ? new URL(completedGameUrl(encodeCompletedGame(game)))
+        ? new URL(completedGameUrl(completedGameShareCode(game)))
         : new URL(window.location.href);
       if (!completed) {
         const code = encodeBoardParam({
@@ -1366,6 +1378,7 @@ export function createPlayMode(options = {}) {
       !active ||
       !game ||
       game.phase !== GAME_PHASE.COMPLETE ||
+      game.reviewCompatibility === "history-only" ||
       postGameTurns.length === 0 ||
       postGameAnalysisState !== "idle"
     ) {
@@ -2352,6 +2365,8 @@ export function createPlayMode(options = {}) {
     if (!selectedTurn) {
       return;
     }
+    elements.historicalReviewNote.hidden =
+      game.reviewCompatibility !== "history-only";
 
     elements.postGameOutcome.textContent = `${sideEmoji(game.winner)} ${translate(
       gameLanguage(),
@@ -3125,13 +3140,27 @@ function readSharedCompletedGame() {
     return null;
   }
   try {
-    return decodeCompletedGame(code);
+    const game = decodeCompletedGame(code);
+    if (game.reviewCompatibility === "history-only") {
+      game.shareMetadata.sourceCode = code;
+    }
+    return { code, game };
   } catch (error) {
     console.warn("Ignoring invalid shared completed game.", error);
     url.searchParams.delete("g");
     window.history.replaceState(null, "", url);
     return null;
   }
+}
+
+function completedGameShareCode(game) {
+  if (
+    game.reviewCompatibility === "history-only" &&
+    typeof game.shareMetadata?.sourceCode === "string"
+  ) {
+    return game.shareMetadata.sourceCode;
+  }
+  return encodeCompletedGame(game);
 }
 
 function clearSharedGameUrl() {

@@ -69,13 +69,21 @@ export function loadCompletedPlayGames() {
   }
 }
 
-export function archiveCompletedPlayGame(game) {
+export function archiveCompletedPlayGame(game, { sourceCode = null } = {}) {
   try {
-    const code = encodeCompletedGame(game, {
-      includeDeveloperDiagnostics: true,
-      maxLength: MAX_COMPLETED_GAME_CHARACTERS,
-    });
+    const code =
+      sourceCode ??
+      encodeCompletedGame(game, {
+        includeDeveloperDiagnostics: true,
+        maxLength: MAX_COMPLETED_GAME_CHARACTERS,
+      });
     const id = completedGameIdentity(game);
+    if (
+      sourceCode &&
+      decodeArchivedCompletedGame(sourceCode).gameId !== id
+    ) {
+      throw new Error("Completed-game source code has a different identity.");
+    }
     const loaded = loadCompletedPlayGames();
     const existing = loaded.find((entry) => entry.id === id);
     const entries = loaded.filter((entry) => entry.id !== id);

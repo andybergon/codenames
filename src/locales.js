@@ -137,6 +137,8 @@ const COPY = Object.freeze({
     completedGameCount: ({ count }) => `${count} saved`,
     completedGameSummary: ({ winner, reason, turns }) =>
       `${winner} won by ${reason}, ${turns} ${turns === 1 ? "clue" : "clues"}`,
+    historicalReviewHelp:
+      "Historical replay. Actions remain available, but score analysis from this version is unavailable.",
     developerGame: "Developer game",
     reviewGame: "Review",
     copyGame: "Copy link",
@@ -476,6 +478,8 @@ const COPY = Object.freeze({
       `${winner} ha vinto per ${reason}, ${turns} ${
         turns === 1 ? "indizio" : "indizi"
       }`,
+    historicalReviewHelp:
+      "Replay storico. Le azioni restano disponibili, ma l'analisi dei punteggi di questa versione non è disponibile.",
     developerGame: "Partita sviluppatore",
     reviewGame: "Rivedi",
     copyGame: "Copia link",

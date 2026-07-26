@@ -3839,6 +3839,58 @@ test("completed Play links reopen full games and stay in the local archive", asy
   expect(new URL(page.url()).searchParams.get("g")).toBe(code);
 });
 
+test("unsupported historical rules still open and preserve their original actions", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: {
+        writeText(value) {
+          window.__copiedHistoricalGame = value;
+          return Promise.resolve();
+        },
+      },
+    });
+  });
+  const currentCode = encodeCompletedGame(completedShareGame());
+  const historicalPayload = JSON.parse(
+    Buffer.from(currentCode, "base64url").toString("utf8"),
+  );
+  historicalPayload[1] = 99;
+  const historicalCode = Buffer.from(
+    JSON.stringify(historicalPayload),
+  ).toString("base64url");
+  await page.goto(`/?mode=play&g=${historicalCode}`);
+
+  await expect(page.locator("#play-post-game-outcome")).toContainText(
+    "Red won",
+  );
+  await expect(page.locator("#play-history-list")).toContainText("FIRST");
+  await expect(page.locator("#play-history-list")).toContainText("WORD24");
+  await expect(page.locator("#play-historical-review-note")).toBeVisible();
+  await expect(page.locator("#play-historical-review-note")).toContainText(
+    "Actions remain available",
+  );
+  await page
+    .getByRole("button", { name: "Share completed game", exact: true })
+    .click();
+  expect(
+    new URL(
+      await page.evaluate(() => window.__copiedHistoricalGame),
+    ).searchParams.get("g"),
+  ).toBe(historicalCode);
+
+  await page.getByRole("button", { name: "Start new game", exact: true }).click();
+  await page.locator("#completed-play-games > summary").click();
+  await page.getByRole("button", { name: "Copy link", exact: true }).click();
+  expect(
+    new URL(
+      await page.evaluate(() => window.__copiedHistoricalGame),
+    ).searchParams.get("g"),
+  ).toBe(historicalCode);
+});
+
 test("archiving a completed save keeps its finished-game review entry point", async ({
   page,
 }) => {

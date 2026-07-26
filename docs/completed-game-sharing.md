@@ -10,21 +10,33 @@ to Codenames or another service.
 ## Export contract
 
 [`encodeCompletedGame`](../src/play/game-share.js) writes a compact JSON array
-as UTF-8, then encodes those bytes with unpadded base64url. Version 1 contains:
+as UTF-8, then encodes those bytes with unpadded base64url. Version 2 contains:
 
-1. Format version and stable game ID.
-2. An explicit board code with all 25 words, roles, and table positions.
-3. The original board seed.
-4. The human side and role.
-5. The seven Play bot settings.
-6. The word-reuse policy and developer-mode provenance marker.
-7. Ordered clue, guess, and pass actions.
+1. Separate format, Play-rules, and settings-schema versions.
+2. A stable game ID.
+3. An explicit board code with all 25 words, roles, and table positions.
+4. The original board seed.
+5. The human side and role.
+6. The seven Play bot settings.
+7. The word-reuse policy and developer-mode provenance marker.
+8. The final winner and end reason.
+9. Ordered clue, guess, and pass actions.
 
-Clue actions include the clue, number, and intended layout IDs. Guess actions
-need only a layout ID because the board already owns the word and role. Actors,
-turn endings, winner, and end reason are deterministic consequences of the
-seat and ordered actions, so the decoder rebuilds and validates them instead of
-duplicating them.
+Each action stores its turn, side, and actor. Clue actions also include the
+clue, number, and intended layout IDs. Guess actions need only a layout ID
+because the board already owns the word and role. The decoder normally rebuilds
+turn endings and validates the stored outcome through the matching rules
+adapter.
+
+The three logical versions serve different compatibility needs:
+
+- Format version changes when the envelope or action tuple shape changes.
+- Rules version changes when identical actions could produce a different game.
+- Settings version changes when setting positions or meanings change.
+
+A raw deployment or commit identifier can be stored alongside future feedback
+for debugging, but it is not a migration key. Compatibility must depend on the
+logical contract versions so routine builds do not create new file formats.
 
 Developer-game links retain the `developerMode` provenance marker but omit raw
 diagnostics. Starting state, settings, and ordered actions are sufficient to
@@ -32,8 +44,9 @@ reconstruct the completed game. The local archive adds versioned diagnostics
 to the action that recorded them so exact score and decision traces remain
 available on the originating device. Normal actions omit that slot.
 
-The decoder accepts legacy six-setting version 1 payloads and supplies the
-`late` missed-target timing default. It never infers the setting from history.
+The decoder preserves all existing version 1 shapes. Legacy six-setting
+payloads receive the `late` missed-target timing default. The setting is never
+inferred from history.
 
 This shape keeps ordinary games well below common link limits. The smoke
 fixture requires a completed game code to stay below 2,048 characters, while
@@ -42,14 +55,22 @@ the decoder permits up to 16,384 characters and 512 actions for unusual games.
 ## Validation and compatibility
 
 [`decodeCompletedGame`](../src/play/game-share.js) fails closed on unknown
-versions, malformed base64url or UTF-8, unsupported seats or settings, invalid
-boards, excessive actions, actions that cannot be replayed, and exports that do
-not finish a game.
+format versions, malformed base64url or UTF-8, unsupported seats, invalid
+boards, excessive actions, inconsistent action context, and outcomes that do
+not match replay.
 
 The explicit board code avoids dependence on recent-word history or a future
-random-board result. Keep the version 1 decoder compatible when Play rules,
-word assets, or storage schemas change. Introduce a new completed-game version
-when an old action cannot be replayed under a new contract.
+random-board result. When version 2 recognizes the envelope and actions but no
+longer supports the stored rules or settings version, it creates a
+`history-only` review from the explicit turn, side, actor, board reveal, and
+outcome data. Old analysis may be unavailable, but the action log remains
+reviewable and copyable.
+
+The decoded game retains the original raw settings and actions in
+`shareMetadata`. The local archive preserves the original code for
+history-only records, so reviewing or copying one does not silently rewrite it
+with current defaults. Keep the version 1 decoder and version 2 fallback
+compatible when Play rules, word assets, or storage schemas change.
 
 The code is compact, not encrypted. It includes the hidden key, intended
 targets, player-written clues, settings, and complete history. Anyone who

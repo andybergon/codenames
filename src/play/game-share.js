@@ -15,7 +15,10 @@ import {
 } from "./game-state.js";
 import { PLAY_WORD_REUSE_POLICY } from "./word-reuse.js";
 
-const SHARE_VERSION = 1;
+const SHARE_VERSION = 2;
+const LEGACY_SHARE_VERSION = 1;
+const PLAY_RULES_VERSION = 1;
+const SETTINGS_VERSION = 1;
 const MAX_SHARE_LENGTH = 16_384;
 const MAX_ACTIONS = 512;
 const MAX_DIAGNOSTIC_BYTES = 12_288;
@@ -31,6 +34,20 @@ const ACTION = Object.freeze({
   GUESS: "g",
   PASS: "p",
 });
+const SIDE_CODE = Object.freeze({
+  blue: "b",
+  red: "r",
+});
+const SIDE_FROM_CODE = new Map(
+  Object.entries(SIDE_CODE).map(([side, code]) => [code, side]),
+);
+const ACTOR_CODE = Object.freeze({
+  human: "h",
+  bot: "b",
+});
+const ACTOR_FROM_CODE = new Map(
+  Object.entries(ACTOR_CODE).map(([actor, code]) => [code, actor]),
+);
 const SEAT_CODE = Object.freeze({
   "blue:spymaster": "bs",
   "blue:operative": "bo",
@@ -92,6 +109,9 @@ export function encodeCompletedGame(
     if (event.type === "clue-given") {
       return [[
         ACTION.CLUE,
+        event.turn,
+        SIDE_CODE[event.side],
+        ACTOR_CODE[event.actor],
         event.clue,
         event.number,
         [...(event.intendedLayoutIds ?? [])],
@@ -101,6 +121,9 @@ export function encodeCompletedGame(
     if (event.type === "card-guessed") {
       return [[
         ACTION.GUESS,
+        event.turn,
+        SIDE_CODE[event.side],
+        ACTOR_CODE[event.actor],
         event.layoutId,
         ...(developerDiagnostics ? [developerDiagnostics] : []),
       ]];
@@ -108,6 +131,9 @@ export function encodeCompletedGame(
     if (event.type === "turn-passed") {
       return [[
         ACTION.PASS,
+        event.turn,
+        SIDE_CODE[event.side],
+        ACTOR_CODE[event.actor],
         ...(developerDiagnostics ? [developerDiagnostics] : []),
       ]];
     }
@@ -115,6 +141,8 @@ export function encodeCompletedGame(
   });
   const payload = [
     SHARE_VERSION,
+    PLAY_RULES_VERSION,
+    SETTINGS_VERSION,
     gameId,
     board,
     validated.seed,
@@ -130,6 +158,7 @@ export function encodeCompletedGame(
     ],
     WORD_REUSE_CODE[validated.wordReusePolicy],
     validated.developerMode === true ? 1 : 0,
+    [SIDE_CODE[validated.winner], validated.endReason],
     actions,
   ];
   const code = bytesToBase64Url(
@@ -165,28 +194,21 @@ export function decodeCompletedGame(
     throw new Error("Invalid completed-game code.");
   }
 
-  if (
-    !Array.isArray(payload) ||
-    ![7, 8, 9].includes(payload.length) ||
-    payload[0] !== SHARE_VERSION ||
-    !validPayloadShape(payload)
-  ) {
-    throw new Error("Unsupported completed-game code.");
-  }
+  return decodeParsedCompletedGame(parseCompletedPayload(payload));
+}
 
-  const current = payload.length === 9;
-  const hasDeveloperMode = payload.length >= 8;
-  const gameId = current ? payload[1] : null;
-  const offset = current ? 1 : 0;
-  const boardCode = payload[1 + offset];
-  const seed = payload[2 + offset];
-  const seatCode = payload[3 + offset];
-  const rawSettings = payload[4 + offset];
-  const reuseCode = payload[5 + offset];
-  const developerMode = hasDeveloperMode
-    ? payload[6 + offset] === 1
-    : false;
-  const actions = payload[hasDeveloperMode ? 7 + offset : 6 + offset];
+function decodeParsedCompletedGame(parsed) {
+  const {
+    actions: rawActions,
+    boardCode,
+    developerMode,
+    gameId,
+    outcome,
+    rawSettings,
+    reuseCode,
+    seed,
+    seatCode,
+  } = parsed;
   const seatValue = SEAT_FROM_CODE.get(seatCode);
   const wordReusePolicy = WORD_REUSE_FROM_CODE.get(reuseCode);
   if (!seatValue || !wordReusePolicy) {
@@ -201,15 +223,6 @@ export function decodeCompletedGame(
   if (gameId !== null && gameId !== resolvedGameId) {
     throw new Error("Completed game identity does not match its board.");
   }
-  const hasMissedTargetTiming = rawSettings.length === 7;
-  const missedTargetTiming = hasMissedTargetTiming
-    ? rawSettings[4]
-    : "late";
-  if (!MISSED_TARGET_TIMINGS.has(missedTargetTiming)) {
-    throw new Error("Completed game contains unsupported settings.");
-  }
-  const operativeIndex = hasMissedTargetTiming ? 5 : 4;
-  const bonusIndex = hasMissedTargetTiming ? 6 : 5;
   const positions = new Map(
     board.randomLayoutOrder.map((layoutId, index) => [layoutId, index]),
   );
@@ -217,6 +230,30 @@ export function decodeCompletedGame(
     (left, right) =>
       positions.get(left.layoutId) - positions.get(right.layoutId),
   );
+  const botSettings = decodeSettings(
+    rawSettings,
+    parsed.settingsVersion,
+  );
+  const actions = rawActions.map((action) =>
+    decodeAction(action, parsed.actionVersion, developerMode),
+  );
+  if (
+    parsed.rulesVersion !== PLAY_RULES_VERSION ||
+    botSettings === null
+  ) {
+    return reconstructHistoricalGame({
+      actions,
+      board,
+      botSettings,
+      cards,
+      parsed,
+      resolvedGameId,
+      role,
+      side,
+      wordReusePolicy,
+    });
+  }
+
   let game = createPlayGame({
     cards,
     developerMode,
@@ -225,60 +262,51 @@ export function decodeCompletedGame(
     seed,
     wordSet: board.wordSet,
     wordReusePolicy,
-    botSettings: {
-      modelId: rawSettings[0],
-      candidateCount: rawSettings[1],
-      cluePolicy: rawSettings[2],
-      multiTolerance: rawSettings[3],
-      missedTargetTiming,
-      operativeAggression: rawSettings[operativeIndex],
-      bonusGuesses: rawSettings[bonusIndex],
-    },
+    botSettings,
   });
 
   try {
     for (const action of actions) {
-      if (!Array.isArray(action) || action.length === 0) {
-        throw new Error("Invalid completed-game action.");
-      }
-      const developerDiagnostics = actionDeveloperDiagnostics(
-        action,
-        developerMode,
-      );
-      if (
-        action[0] === ACTION.CLUE &&
-        [4, 5].includes(action.length)
-      ) {
+      if (action.type === ACTION.CLUE) {
+        validateReplayContext(
+          action,
+          game,
+          PLAYER_ROLE.SPYMASTER,
+        );
         game = giveClue(game, {
-          clue: action[1],
-          number: action[2],
-          intendedLayoutIds: action[3],
-          developerDiagnostics,
+          clue: action.clue,
+          number: action.number,
+          intendedLayoutIds: action.intendedLayoutIds,
+          developerDiagnostics: action.developerDiagnostics,
           actor: actorForSeat(
             game,
             game.activeSide,
             PLAYER_ROLE.SPYMASTER,
           ),
         });
-      } else if (
-        action[0] === ACTION.GUESS &&
-        [2, 3].includes(action.length)
-      ) {
+      } else if (action.type === ACTION.GUESS) {
+        validateReplayContext(
+          action,
+          game,
+          PLAYER_ROLE.OPERATIVE,
+        );
         game = guessCard(game, {
-          layoutId: action[1],
-          developerDiagnostics,
+          layoutId: action.layoutId,
+          developerDiagnostics: action.developerDiagnostics,
           actor: actorForSeat(
             game,
             game.activeSide,
             PLAYER_ROLE.OPERATIVE,
           ),
         });
-      } else if (
-        action[0] === ACTION.PASS &&
-        [1, 2].includes(action.length)
-      ) {
+      } else if (action.type === ACTION.PASS) {
+        validateReplayContext(
+          action,
+          game,
+          PLAYER_ROLE.OPERATIVE,
+        );
         game = passTurn(game, {
-          developerDiagnostics,
+          developerDiagnostics: action.developerDiagnostics,
           actor: actorForSeat(
             game,
             game.activeSide,
@@ -296,10 +324,17 @@ export function decodeCompletedGame(
   if (game.phase !== GAME_PHASE.COMPLETE) {
     throw new Error("Shared Play game is not complete.");
   }
+  if (
+    outcome &&
+    (game.winner !== outcome.winner ||
+      game.endReason !== outcome.endReason)
+  ) {
+    throw new Error("Completed-game outcome does not match its actions.");
+  }
   const validated = validateStoredGame(game);
-  const botSettings = {
+  const normalizedBotSettings = {
     ...validated.botSettings,
-    missedTargetTiming,
+    missedTargetTiming: botSettings.missedTargetTiming,
   };
   const history = restoreDeveloperDiagnostics(
     validated.history,
@@ -318,17 +353,448 @@ export function decodeCompletedGame(
     ...validated,
     gameId: resolvedGameId,
     developerMode,
-    botSettings,
+    botSettings: normalizedBotSettings,
+    reviewCompatibility: "full",
+    shareMetadata: completedGameMetadata(parsed, "full"),
     currentTurn,
     history: history.map((event) =>
       event.type === "game-started"
         ? {
             ...event,
             developerMode,
-            botSettings,
+            botSettings: normalizedBotSettings,
           }
         : event,
     ),
+  };
+}
+
+function parseCompletedPayload(payload) {
+  if (!Array.isArray(payload)) {
+    throw new Error("Unsupported completed-game code.");
+  }
+  if (payload[0] === SHARE_VERSION) {
+    if (!validCurrentPayloadShape(payload)) {
+      throw new Error("Unsupported completed-game code.");
+    }
+    return {
+      formatVersion: SHARE_VERSION,
+      rulesVersion: payload[1],
+      settingsVersion: payload[2],
+      gameId: payload[3],
+      boardCode: payload[4],
+      seed: payload[5],
+      seatCode: payload[6],
+      rawSettings: payload[7],
+      reuseCode: payload[8],
+      developerMode: payload[9] === 1,
+      outcome: {
+        winner: SIDE_FROM_CODE.get(payload[10][0]),
+        endReason: payload[10][1],
+      },
+      actions: payload[11],
+      actionVersion: 2,
+    };
+  }
+  if (
+    payload[0] !== LEGACY_SHARE_VERSION ||
+    !validLegacyPayloadShape(payload)
+  ) {
+    throw new Error("Unsupported completed-game code.");
+  }
+  const currentLegacy = payload.length === 9;
+  const hasDeveloperMode = payload.length >= 8;
+  const offset = currentLegacy ? 1 : 0;
+  const rawSettings = payload[4 + offset];
+  return {
+    formatVersion: LEGACY_SHARE_VERSION,
+    rulesVersion: PLAY_RULES_VERSION,
+    settingsVersion: rawSettings.length === 7 ? 1 : 0,
+    gameId: currentLegacy ? payload[1] : null,
+    boardCode: payload[1 + offset],
+    seed: payload[2 + offset],
+    seatCode: payload[3 + offset],
+    rawSettings,
+    reuseCode: payload[5 + offset],
+    developerMode: hasDeveloperMode
+      ? payload[6 + offset] === 1
+      : false,
+    outcome: null,
+    actions: payload[hasDeveloperMode ? 7 + offset : 6 + offset],
+    actionVersion: 1,
+  };
+}
+
+function validCurrentPayloadShape(payload) {
+  return (
+    payload.length === 12 &&
+    Number.isInteger(payload[1]) &&
+    payload[1] >= 1 &&
+    Number.isInteger(payload[2]) &&
+    payload[2] >= 1 &&
+    typeof payload[3] === "string" &&
+    typeof payload[4] === "string" &&
+    typeof payload[5] === "string" &&
+    typeof payload[6] === "string" &&
+    Array.isArray(payload[7]) &&
+    payload[7].length <= 32 &&
+    typeof payload[8] === "string" &&
+    (payload[9] === 0 || payload[9] === 1) &&
+    Array.isArray(payload[10]) &&
+    payload[10].length === 2 &&
+    SIDE_FROM_CODE.has(payload[10][0]) &&
+    ["agents", "assassin"].includes(payload[10][1]) &&
+    Array.isArray(payload[11]) &&
+    payload[11].length <= MAX_ACTIONS
+  );
+}
+
+function validLegacyPayloadShape(payload) {
+  if (![7, 8, 9].includes(payload.length)) {
+    return false;
+  }
+  const current = payload.length === 9;
+  const hasDeveloperMode = payload.length >= 8;
+  const offset = current ? 1 : 0;
+  const rawSettings = payload[4 + offset];
+  const actions = payload[hasDeveloperMode ? 7 + offset : 6 + offset];
+  return (
+    typeof payload[2 + offset] === "string" &&
+    Array.isArray(rawSettings) &&
+    [6, 7].includes(rawSettings.length) &&
+    Array.isArray(actions) &&
+    actions.length <= MAX_ACTIONS &&
+    (!hasDeveloperMode ||
+      payload[6 + offset] === 0 ||
+      payload[6 + offset] === 1)
+  );
+}
+
+function decodeSettings(rawSettings, settingsVersion) {
+  const hasMissedTargetTiming =
+    settingsVersion === SETTINGS_VERSION && rawSettings.length === 7;
+  const legacySettings =
+    settingsVersion === 0 && [6, 7].includes(rawSettings.length);
+  if (!hasMissedTargetTiming && !legacySettings) {
+    return null;
+  }
+  const includesTiming = rawSettings.length === 7;
+  const missedTargetTiming = includesTiming
+    ? rawSettings[4]
+    : "late";
+  if (!MISSED_TARGET_TIMINGS.has(missedTargetTiming)) {
+    throw new Error("Completed game contains unsupported settings.");
+  }
+  return {
+    modelId: rawSettings[0],
+    candidateCount: rawSettings[1],
+    cluePolicy: rawSettings[2],
+    multiTolerance: rawSettings[3],
+    missedTargetTiming,
+    operativeAggression: rawSettings[includesTiming ? 5 : 4],
+    bonusGuesses: rawSettings[includesTiming ? 6 : 5],
+  };
+}
+
+function decodeAction(action, actionVersion, developerMode) {
+  if (!Array.isArray(action) || action.length === 0) {
+    throw new Error("Invalid completed-game action.");
+  }
+  if (actionVersion === 1) {
+    return decodeLegacyAction(action, developerMode);
+  }
+  const context = decodeActionContext(action);
+  if (
+    action[0] === ACTION.CLUE &&
+    [7, 8].includes(action.length) &&
+    typeof action[4] === "string" &&
+    Number.isInteger(action[5]) &&
+    Array.isArray(action[6])
+  ) {
+    return {
+      ...context,
+      type: ACTION.CLUE,
+      clue: action[4],
+      number: action[5],
+      intendedLayoutIds: action[6],
+      developerDiagnostics: decodeActionDiagnostics(
+        action[7],
+        developerMode,
+      ),
+    };
+  }
+  if (
+    action[0] === ACTION.GUESS &&
+    [5, 6].includes(action.length) &&
+    Number.isInteger(action[4])
+  ) {
+    return {
+      ...context,
+      type: ACTION.GUESS,
+      layoutId: action[4],
+      developerDiagnostics: decodeActionDiagnostics(
+        action[5],
+        developerMode,
+      ),
+    };
+  }
+  if (
+    action[0] === ACTION.PASS &&
+    [4, 5].includes(action.length)
+  ) {
+    return {
+      ...context,
+      type: ACTION.PASS,
+      developerDiagnostics: decodeActionDiagnostics(
+        action[4],
+        developerMode,
+      ),
+    };
+  }
+  throw new Error("Invalid completed-game action.");
+}
+
+function decodeActionContext(action) {
+  const side = SIDE_FROM_CODE.get(action[2]);
+  const actor = ACTOR_FROM_CODE.get(action[3]);
+  if (
+    !Number.isInteger(action[1]) ||
+    action[1] < 1 ||
+    !side ||
+    !actor
+  ) {
+    throw new Error("Invalid completed-game action context.");
+  }
+  return { turn: action[1], side, actor };
+}
+
+function decodeLegacyAction(action, developerMode) {
+  if (
+    action[0] === ACTION.CLUE &&
+    [4, 5].includes(action.length)
+  ) {
+    return {
+      type: ACTION.CLUE,
+      clue: action[1],
+      number: action[2],
+      intendedLayoutIds: action[3],
+      developerDiagnostics: decodeActionDiagnostics(
+        action[4],
+        developerMode,
+      ),
+    };
+  }
+  if (
+    action[0] === ACTION.GUESS &&
+    [2, 3].includes(action.length)
+  ) {
+    return {
+      type: ACTION.GUESS,
+      layoutId: action[1],
+      developerDiagnostics: decodeActionDiagnostics(
+        action[2],
+        developerMode,
+      ),
+    };
+  }
+  if (
+    action[0] === ACTION.PASS &&
+    [1, 2].includes(action.length)
+  ) {
+    return {
+      type: ACTION.PASS,
+      developerDiagnostics: decodeActionDiagnostics(
+        action[1],
+        developerMode,
+      ),
+    };
+  }
+  throw new Error("Invalid completed-game action.");
+}
+
+function decodeActionDiagnostics(value, developerMode) {
+  if (value === undefined) {
+    return null;
+  }
+  if (!developerMode) {
+    throw new Error("Normal game contains developer diagnostics.");
+  }
+  return validatedDeveloperDiagnostics(value);
+}
+
+function validateReplayContext(action, game, role) {
+  if (action.turn === undefined) {
+    return;
+  }
+  const expectedActor = actorForSeat(game, game.activeSide, role);
+  if (
+    action.turn !== game.turnNumber ||
+    action.side !== game.activeSide ||
+    action.actor !== expectedActor
+  ) {
+    throw new Error("Completed-game action context cannot be replayed.");
+  }
+}
+
+function reconstructHistoricalGame({
+  actions,
+  board,
+  botSettings,
+  cards,
+  parsed,
+  resolvedGameId,
+  role,
+  side,
+  wordReusePolicy,
+}) {
+  if (!parsed.outcome) {
+    throw new Error("Historical completed game has no explicit outcome.");
+  }
+  const base = createPlayGame({
+    cards,
+    developerMode: parsed.developerMode,
+    humanSeat: { side, role },
+    language: board.language,
+    seed: parsed.seed,
+    wordSet: board.wordSet,
+    wordReusePolicy,
+    botSettings: botSettings ?? {},
+  });
+  const restoredCards = base.cards.map((card) => ({ ...card }));
+  const history = [
+    {
+      ...base.history[0],
+      developerMode: parsed.developerMode,
+    },
+  ];
+  for (const action of actions) {
+    if (action.type === ACTION.CLUE) {
+      history.push({
+        type: "clue-given",
+        turn: action.turn,
+        side: action.side,
+        actor: action.actor,
+        clue: action.clue,
+        number: action.number,
+        intendedLayoutIds: [...action.intendedLayoutIds],
+        ...(action.developerDiagnostics
+          ? { developerDiagnostics: action.developerDiagnostics }
+          : {}),
+      });
+      continue;
+    }
+    if (action.type === ACTION.GUESS) {
+      const card = restoredCards.find(
+        (candidate) => candidate.layoutId === action.layoutId,
+      );
+      if (!card || card.done) {
+        throw new Error("Historical completed game contains an invalid guess.");
+      }
+      card.done = true;
+      card.revealedBy = action.side;
+      card.revealedTurn = action.turn;
+      history.push({
+        type: "card-guessed",
+        turn: action.turn,
+        side: action.side,
+        actor: action.actor,
+        layoutId: action.layoutId,
+        word: card.word,
+        team: card.team,
+        ...(action.developerDiagnostics
+          ? { developerDiagnostics: action.developerDiagnostics }
+          : {}),
+      });
+      continue;
+    }
+    history.push({
+      type: "turn-passed",
+      turn: action.turn,
+      side: action.side,
+      actor: action.actor,
+      ...(action.developerDiagnostics
+        ? { developerDiagnostics: action.developerDiagnostics }
+        : {}),
+    });
+  }
+  const finalAction = actions.at(-1);
+  const turnNumber = Math.max(
+    1,
+    ...actions.map((action) => action.turn ?? 1),
+  );
+  history.push({
+    type: "game-ended",
+    turn: turnNumber,
+    winner: parsed.outcome.winner,
+    reason: parsed.outcome.endReason,
+  });
+  const historical = validateStoredGame({
+    ...base,
+    cards: restoredCards,
+    activeSide: finalAction?.side ?? "blue",
+    phase: GAME_PHASE.COMPLETE,
+    turnNumber,
+    currentTurn: reconstructHistoricalCurrentTurn(
+      history,
+      turnNumber,
+      finalAction?.side,
+    ),
+    winner: parsed.outcome.winner,
+    endReason: parsed.outcome.endReason,
+    history,
+  });
+  return {
+    ...historical,
+    gameId: resolvedGameId,
+    developerMode: parsed.developerMode,
+    reviewCompatibility: "history-only",
+    shareMetadata: completedGameMetadata(parsed, "history-only"),
+  };
+}
+
+function reconstructHistoricalCurrentTurn(history, turn, side) {
+  const clue = history
+    .filter(
+      (event) =>
+        event.type === "clue-given" &&
+        event.turn === turn &&
+        event.side === side,
+    )
+    .at(-1);
+  if (!clue) {
+    return null;
+  }
+  return {
+    side,
+    clue: clue.clue,
+    number: clue.number,
+    actor: clue.actor,
+    intendedLayoutIds: [...clue.intendedLayoutIds],
+    guesses: history
+      .filter(
+        (event) =>
+          event.type === "card-guessed" &&
+          event.turn === turn &&
+          event.side === side,
+      )
+      .map((event) => ({
+        layoutId: event.layoutId,
+        word: event.word,
+        team: event.team,
+        actor: event.actor,
+      })),
+  };
+}
+
+function completedGameMetadata(parsed, compatibility) {
+  return {
+    formatVersion: parsed.formatVersion,
+    rulesVersion: parsed.rulesVersion,
+    settingsVersion: parsed.settingsVersion,
+    compatibility,
+    rawSettings: structuredClone(parsed.rawSettings),
+    actions: structuredClone(parsed.actions),
+    outcome: parsed.outcome ? { ...parsed.outcome } : null,
   };
 }
 
@@ -348,40 +814,6 @@ export function completedGameIdentity(game, boardCode) {
   return `g_${stableHash(identity)}${stableHash(
     [...identity].reverse().join(""),
   )}`;
-}
-
-function validPayloadShape(payload) {
-  const current = payload.length === 9;
-  const hasDeveloperMode = payload.length >= 8;
-  const offset = current ? 1 : 0;
-  const rawSettings = payload[4 + offset];
-  const actions = payload[hasDeveloperMode ? 7 + offset : 6 + offset];
-  return (
-    typeof payload[2 + offset] === "string" &&
-    Array.isArray(rawSettings) &&
-    [6, 7].includes(rawSettings.length) &&
-    Array.isArray(actions) &&
-    actions.length <= MAX_ACTIONS &&
-    (!hasDeveloperMode ||
-      payload[6 + offset] === 0 ||
-      payload[6 + offset] === 1)
-  );
-}
-
-function actionDeveloperDiagnostics(action, developerMode) {
-  const diagnosticIndex = {
-    [ACTION.CLUE]: 4,
-    [ACTION.GUESS]: 2,
-    [ACTION.PASS]: 1,
-  }[action[0]];
-  const diagnostics = action[diagnosticIndex];
-  if (diagnostics === undefined) {
-    return null;
-  }
-  if (!developerMode) {
-    throw new Error("Normal game contains developer diagnostics.");
-  }
-  return validatedDeveloperDiagnostics(diagnostics);
 }
 
 function validatedDeveloperDiagnostics(value) {
@@ -472,7 +904,7 @@ function restoreDeveloperDiagnostics(history, actions, developerMode) {
     }
     const action = actions[actionIndex];
     actionIndex += 1;
-    const diagnostics = actionDeveloperDiagnostics(action, true);
+    const diagnostics = action?.developerDiagnostics;
     return diagnostics
       ? { ...event, developerDiagnostics: diagnostics }
       : event;

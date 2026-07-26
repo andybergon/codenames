@@ -3607,6 +3607,13 @@ button.play-card:not(:disabled):hover {
   display: none;
 }
 
+.play-historical-review-note {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 0.72rem;
+  line-height: 1.4;
+}
+
 .play-history {
   min-width: 0;
   grid-column: 1 / -1;
