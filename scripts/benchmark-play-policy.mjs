@@ -26,11 +26,13 @@ import {
   chooseBotClue,
   chooseBotGuess,
   createSeededRandom,
+  scoreMissedTargetPreference,
   scorePlayClue,
 } from "../src/play/bots.js";
 import {
   DEFAULT_PLAY_BOT_SETTINGS,
   PLAY_BONUS_POLICY,
+  PLAY_MISSED_TARGET_TIMING,
   PLAY_OPERATIVE_AGGRESSION,
 } from "../src/play/settings.js";
 import {
@@ -41,6 +43,7 @@ import {
   giveClue,
   guessCard,
   passTurn,
+  unresolvedIntendedTargetIds,
 } from "../src/play/game-state.js";
 import {
   LANGUAGE,
@@ -59,6 +62,7 @@ const RESULTS_PER_SIZE = 6;
 const DEFAULT_MAX_ACTIONS_PER_GAME = 100;
 const POLICIES = [PLAY_CLUE_POLICY.CURRENT, PLAY_CLUE_POLICY.HYBRID];
 const OPERATIVE_AGGRESSIONS = Object.values(PLAY_OPERATIVE_AGGRESSION);
+const MISSED_TARGET_TIMINGS = Object.values(PLAY_MISSED_TARGET_TIMING);
 const BENCHMARK_SPLITS = Object.freeze({
   smoke: { boardOffset: 0, boards: 20 },
   calibration: { boardOffset: 20, boards: 100 },
@@ -185,6 +189,7 @@ for (let boardIndex = 0; boardIndex < options.boards; boardIndex += 1) {
       seed,
       clueSelection: options.clueSelection,
       multiTolerance: options.multiTolerance,
+      missedTargetTiming: options.missedTargetTiming,
       bonusGuesses: options.bonusGuesses,
       operativeAggression: options.operativeAggression,
       language: options.language,
@@ -214,6 +219,7 @@ for (let boardIndex = 0; boardIndex < options.boards; boardIndex += 1) {
         seed,
         clueSelection: options.clueSelection,
         multiTolerance: options.multiTolerance,
+        missedTargetTiming: options.missedTargetTiming,
         bonusGuesses: options.bonusGuesses,
         operativeAggression,
         language: options.language,
@@ -295,6 +301,8 @@ const report = {
       `The bot guesser sees only centered clue-to-unrevealed-word similarities from ${operativeContext.model}.`,
     operativeAggression:
       `Policy comparison uses ${options.operativeAggression} for the clue-policy rows and holds hybrid clue scoring fixed across all three operative modes.`,
+    missedTargetTiming:
+      `Clue ranking uses ${options.missedTargetTiming} missed-target timing. The fresh-target bias is based on unresolved intended targets from prior clues and fades as never-targeted friendly cards run out.`,
     stalledGameResolution:
       "After two consecutive passes, the next operative takes its highest-similarity available guess. This keeps cross-model simulations bounded and is counted separately.",
     operativeAggressionModes: {
@@ -379,6 +387,7 @@ async function simulateGame({
   seed,
   clueSelection,
   multiTolerance,
+  missedTargetTiming,
   bonusGuesses: bonusGuessPolicy,
   operativeAggression,
   language,
@@ -392,6 +401,7 @@ async function simulateGame({
       candidateCount: options.candidates,
       cluePolicy: policy,
       multiTolerance,
+      missedTargetTiming,
       operativeAggression,
       bonusGuesses: bonusGuessPolicy,
     },
@@ -428,14 +438,26 @@ async function simulateGame({
         game.cards,
         otherSide(game.activeSide),
       );
+      const missedTargetLayoutIds = unresolvedIntendedTargetIds(
+        game,
+        game.activeSide,
+      );
+      const freshTargetCount =
+        ownRemaining - missedTargetLayoutIds.length;
       const scoredSuggestions = analysis.suggestions
         .map((candidate) => ({
           candidate,
-          score: scorePlayClue(candidate, {
-            ownRemaining,
-            opponentRemaining,
-            policy,
-          }),
+          score:
+            scorePlayClue(candidate, {
+              ownRemaining,
+              opponentRemaining,
+              policy,
+            }) +
+            scoreMissedTargetPreference(candidate, {
+              freshTargetCount,
+              missedTargetLayoutIds,
+              missedTargetTiming,
+            }),
         }))
         .sort((left, right) => right.score - left.score);
       const bestSingle = scoredSuggestions.find(
@@ -457,6 +479,9 @@ async function simulateGame({
           ownRemaining,
           opponentRemaining,
           policy,
+          freshTargetCount,
+          missedTargetLayoutIds,
+          missedTargetTiming,
           random: clueSelection === "top" ? () => 0 : random,
         });
       }
@@ -469,6 +494,9 @@ async function simulateGame({
         );
         fallbackClues += 1;
       }
+      const intendedLayoutIds = suggestion.targets.map(
+        ({ layoutId }) => layoutId,
+      );
       clueDecisions.push({
         turn: game.turnNumber,
         side: game.activeSide,
@@ -489,12 +517,15 @@ async function simulateGame({
           bestSingle && bestMulti
             ? rounded(bestMulti.score - bestSingle.score)
             : null,
+        freshTargetCount,
+        missedTargetCount: missedTargetLayoutIds.length,
+        retriedMissedTargetCount: intendedLayoutIds.filter((layoutId) =>
+          missedTargetLayoutIds.includes(layoutId),
+        ).length,
         words: game.cards
           .filter((card) => !card.done)
           .map(({ layoutId, word, team }) => ({ layoutId, word, team })),
-        intendedLayoutIds: suggestion.targets.map(
-          ({ layoutId }) => layoutId,
-        ),
+        intendedLayoutIds,
       });
       game = giveClue(game, {
         clue: suggestion.clue,
@@ -839,6 +870,9 @@ function summarizePolicy(gameResults) {
       totals.bonusGuesses,
     ),
     operativeGuessQuality: summarizeGuessDecisions(totals.guessDecisions),
+    missedTargetRecovery: summarizeMissedTargetDecisions(
+      totals.clueDecisions,
+    ),
     clueNumberByOwnRemaining: summarizeClueDecisions(totals.clueDecisions),
     wins: {
       blue: totals.blueWins,
@@ -861,6 +895,32 @@ function summarizePolicy(gameResults) {
   return {
     ...policy,
     fun: scorePlayFun(policy),
+  };
+}
+
+function summarizeMissedTargetDecisions(decisions) {
+  const opportunities = decisions.filter(
+    ({ missedTargetCount }) => missedTargetCount > 0,
+  );
+  const retries = opportunities.filter(
+    ({ retriedMissedTargetCount }) => retriedMissedTargetCount > 0,
+  );
+  const earlyOpportunities = opportunities.filter(
+    ({ freshTargetCount }) => freshTargetCount >= 4,
+  );
+  const earlyRetries = earlyOpportunities.filter(
+    ({ retriedMissedTargetCount }) => retriedMissedTargetCount > 0,
+  );
+  return {
+    opportunities: opportunities.length,
+    retries: retries.length,
+    retryRate: ratio(retries.length, opportunities.length),
+    earlyOpportunities: earlyOpportunities.length,
+    earlyRetries: earlyRetries.length,
+    earlyRetryRate: ratio(
+      earlyRetries.length,
+      earlyOpportunities.length,
+    ),
   };
 }
 
@@ -1018,6 +1078,7 @@ function parseOptions(args) {
     wordSet: WORD_SET.OFFICIAL,
     clueSelection: "tempo",
     multiTolerance: DEFAULT_PLAY_BOT_SETTINGS.multiTolerance,
+    missedTargetTiming: DEFAULT_PLAY_BOT_SETTINGS.missedTargetTiming,
     bonusGuesses: PLAY_BONUS_POLICY.PASS,
     operativeAggression: DEFAULT_PLAY_BOT_SETTINGS.operativeAggression,
     reportDetail: "full",
@@ -1073,6 +1134,13 @@ function parseOptions(args) {
       values.clueSelection = value;
     } else if (option === "--multi-tolerance") {
       values.multiTolerance = nonNegativeNumber(value, option);
+    } else if (option === "--missed-target-timing") {
+      if (!MISSED_TARGET_TIMINGS.includes(value)) {
+        throw new Error(
+          `${option} must be late, balanced, or immediate.`,
+        );
+      }
+      values.missedTargetTiming = value;
     } else if (option === "--similarity-scale") {
       values.similarityScale = positiveNumber(value, option);
     } else if (option === "--similarity-offset") {

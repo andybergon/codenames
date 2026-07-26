@@ -22,11 +22,18 @@ export const PLAY_OPERATIVE_AGGRESSION = Object.freeze({
   DYNAMIC: "dynamic",
 });
 
+export const PLAY_MISSED_TARGET_TIMING = Object.freeze({
+  LATE: "late",
+  BALANCED: "balanced",
+  IMMEDIATE: "immediate",
+});
+
 export const DEFAULT_PLAY_BOT_SETTINGS = Object.freeze({
   modelId: "bge-small",
   candidateCount: 10_000,
   cluePolicy: PLAY_CLUE_POLICY.HYBRID,
   multiTolerance: 5,
+  missedTargetTiming: PLAY_MISSED_TARGET_TIMING.LATE,
   operativeAggression: PLAY_OPERATIVE_AGGRESSION.DYNAMIC,
   bonusGuesses: PLAY_BONUS_POLICY.PASS,
 });
@@ -40,6 +47,9 @@ const CLUE_POLICIES = new Set(Object.values(PLAY_CLUE_POLICY));
 const BONUS_POLICIES = new Set(Object.values(PLAY_BONUS_POLICY));
 const OPERATIVE_AGGRESSIONS = new Set(
   Object.values(PLAY_OPERATIVE_AGGRESSION),
+);
+const MISSED_TARGET_TIMINGS = new Set(
+  Object.values(PLAY_MISSED_TARGET_TIMING),
 );
 
 export function normalizePlayBotSettings(
@@ -69,6 +79,9 @@ export function normalizePlayBotSettings(
     multiTolerance: Number.isFinite(multiTolerance)
       ? Math.min(20, Math.max(0, multiTolerance))
       : DEFAULT_PLAY_BOT_SETTINGS.multiTolerance,
+    missedTargetTiming: MISSED_TARGET_TIMINGS.has(value.missedTargetTiming)
+      ? value.missedTargetTiming
+      : DEFAULT_PLAY_BOT_SETTINGS.missedTargetTiming,
     operativeAggression: OPERATIVE_AGGRESSIONS.has(value.operativeAggression)
       ? value.operativeAggression
       : DEFAULT_PLAY_BOT_SETTINGS.operativeAggression,

@@ -106,6 +106,7 @@ ${remainingCounts
 
 - 🧪 ${report.methodology.boardCount} identical boards, ${current.gameCount + hybrid.gameCount} clue-policy results, ${conservative.gameCount + aggressive.gameCount + dynamic.gameCount} aggression-mode results, and ${report.methodology.candidateCount.toLocaleString("en-US")} clue candidates per turn. Dynamic Hybrid is shared by both comparisons.
 ${modelLine}- 🎉 Fun Index: ${decimal(current.fun.score)} current and ${decimal(hybrid.fun.score)} hybrid. It balances ambition, momentum, suspense, and flow; human agreement remains a separate guardrail.
+- 🌱 Hybrid retried a missed target on ${percent(hybrid.missedTargetRecovery.retryRate)} of eligible clues and ${percent(hybrid.missedTargetRecovery.earlyRetryRate)} while at least four fresh targets remained.
 - 🔎 Dynamic accepted ${percent(dynamic.operativeGuessQuality.weakDeclaredFillRate)} low-sim clue-number-filling guesses and passed early on ${percent(dynamic.operativeGuessQuality.preDeclaredPassRate)} of pre-number decisions.
 - 🛟 Bounded-simulation guesses after a complete pass round: ${decimal(dynamic.forcedProgressGuessesPerGame)} Dynamic, ${decimal(conservative.forcedProgressGuessesPerGame)} Conservative, and ${decimal(aggressive.forcedProgressGuessesPerGame)} Aggressive per game.
 - 🛡️ Conservative changed low-sim clue-number fills by ${signedPercentagePoints(conservative.operativeGuessQuality.weakDeclaredFillRate - dynamic.operativeGuessQuality.weakDeclaredFillRate)} and early passes by ${signedPercentagePoints(conservative.operativeGuessQuality.preDeclaredPassRate - dynamic.operativeGuessQuality.preDeclaredPassRate)} versus Dynamic.
@@ -118,7 +119,7 @@ ${modelLine}- 🎉 Fun Index: ${decimal(current.fun.score)} current and ${decima
 - ➕ Bonus guesses: ${decimal(current.bonusGuessesPerGame)} per current game at ${percent(current.correctBonusGuessRate)} correct, and ${decimal(hybrid.bonusGuessesPerGame)} per hybrid game at ${percent(hybrid.correctBonusGuessRate)} correct.
 - 🛟 Analyzer fallback clues: ${current.fallbackClues} current and ${hybrid.fallbackClues} hybrid.
 
-The full per-game data and methodology are in [${reportFile}](./${reportFile}). Live Play defaults to hybrid clue scoring and Dynamic operative aggression; setup persists every benchmarked parameter. Same-model self-play is a regression and game-shape signal, not evidence of human realism.
+The full per-game data and methodology are in [${reportFile}](./${reportFile}). Live Play defaults to hybrid clue scoring, late missed-target recovery, and Dynamic operative aggression; setup persists every benchmarked parameter. Same-model self-play is a regression and game-shape signal, not evidence of human realism.
 `;
 }
 

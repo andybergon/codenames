@@ -150,6 +150,18 @@ edge       = Blue ease - Red ease
 
 Four safe options provide full breadth credit. Edge values within three points are displayed as even.
 
+## 🕵️ Play missed-target policy
+
+The bot spymaster reconstructs unresolved intended targets from its own prior `clue-given` events. A target remains missed only while that friendly card is unrevealed. The policy adjusts recommendation scores without changing clue legality, target membership, or the information available to the operative.
+
+- 🌱 **Late** is the default. Each missed target in a candidate loses six points for every never-targeted friendly card beyond the final one. The penalty reaches zero when only one fresh target remains.
+- ⚖️ **Mid-game** applies three penalty points for every fresh target beyond the final three. It starts mixing old and new targets earlier.
+- 🔁 **Immediately** applies no missed-target penalty, so the normal clue score can retry an unresolved target on the next turn.
+
+The penalty is applied before the multi-card tolerance comparison. `npm run benchmark:play` uses the same policy and accepts `--missed-target-timing late|balanced|immediate`.
+
+In the checked 100-board default run, 142 Hybrid clue turns had an unresolved prior target. Late recovery retried one on 31.0% of those eligible turns overall, but on 0 of 43 turns where at least four never-targeted friendly cards remained. The same run kept 0 wrong-team hits per game, a 0% assassin rate, 1.53 correct cards per turn, and 10.19 turns per game.
+
 ## 🔎 Play operative policy
 
 The bot operative ranks only centered clue-to-unrevealed-word cosine similarities, with deterministic noise in the range `-0.0275` to `+0.0275` to avoid identical play. It never receives hidden roles, intended target IDs, spymaster danger metrics, or the full recommendation analysis.
@@ -168,9 +180,9 @@ The checked 100-board same-model run measures deterministic production regressio
 
 | 🔎 Mode | 🧩 Low-sim fill | 🛑 Early pass | ✅ Correct per turn | 🔴 Wrong per game | ☠️ Assassin | ⏱️ Turns |
 |---|---:|---:|---:|---:|---:|---:|
-| ⚖️ Dynamic | 1.1% | 4.4% | 1.48 | 0.00 | 0.0% | 10.43 |
-| 🛡️ Conservative | 0.0% | 17.1% | 1.23 | 0.00 | 0.0% | 12.73 |
-| 🚀 Aggressive | 3.9% | 0.0% | 1.58 | 0.00 | 0.0% | 9.85 |
+| ⚖️ Dynamic | 1.5% | 3.4% | 1.53 | 0.00 | 0.0% | 10.19 |
+| 🛡️ Conservative | 0.0% | 16.2% | 1.24 | 0.00 | 0.0% | 12.50 |
+| 🚀 Aggressive | 3.4% | 0.0% | 1.61 | 0.00 | 0.0% | 9.62 |
 
 The [MiniLM-L6 operative stress run](../scripts/generated/play-operative-aggression-cross-model.md) holds BGE-small spymaster clues fixed while changing the guesser's embedding geometry:
 

@@ -49,6 +49,7 @@ import {
   randomHumanSeat,
   replayCompletedClueTurns,
   restorePlayGame,
+  unresolvedIntendedTargetIds,
   undoPlayGame,
 } from "./game-state.js";
 import {
@@ -58,6 +59,7 @@ import {
 } from "./session-store.js";
 import {
   PLAY_BONUS_POLICY,
+  PLAY_MISSED_TARGET_TIMING,
   PLAY_OPERATIVE_AGGRESSION,
   normalizePlayBotSettings,
 } from "./settings.js";
@@ -196,6 +198,19 @@ const BOT_SETTING_INFO = Object.freeze({
     },
     note: "The bot compares its best clue overall with its best clue for 2+ cards. Allowing more points means accepting a lower-scoring 2+ clue more often. The score combines safety and expected progress. *50.4% comes from 100 paired games using all recommended defaults, so it is not the effect of this setting alone.",
   },
+  missedTargetTiming: {
+    id: "missed-target-timing",
+    label: "Retry missed targets",
+    table: {
+      headers: ["🕵️ Timing", "🆕 Early game", "🔁 Retry"],
+      rows: [
+        ["🌱 Late", "Fresh first", "Late game"],
+        ["⚖️ Mid-game", "Light bias", "Mid-game"],
+        ["🔁 Immediately", "No bias", "Next turn"],
+      ],
+    },
+    note: "A missed target is an intended friendly word that remains unrevealed after an earlier clue. The fresh-target bias fades as fewer never-targeted friendly words remain. It changes clue ranking, not clue legality or operative information.",
+  },
   operativeAggression: {
     id: "operative-aggression",
     label: "Operative aggression",
@@ -207,7 +222,7 @@ const BOT_SETTING_INFO = Object.freeze({
         ["⚖️ Dynamic", "Adaptive", "Public score"],
       ],
     },
-    note: "Dynamic becomes bolder when the team can win this turn or is trailing an opponent near victory, and more selective with a comfortable lead. It uses only clue similarities, revealed-card counts, and the public score.",
+    note: "Aggressive is more willing than Conservative to continue from a direct France match to a looser Revolution match. Dynamic becomes bolder when the team can win this turn or is trailing an opponent near victory, and more selective with a comfortable lead. It uses only clue similarities, revealed-card counts, and the public score.",
   },
   bonusGuesses: {
     id: "extra-guess",
@@ -278,6 +293,12 @@ export function createPlayMode(options = {}) {
     cluePolicyInfo: document.querySelector("#play-clue-policy-info"),
     multiTolerance: document.querySelector("#play-multi-tolerance"),
     multiToleranceInfo: document.querySelector("#play-multi-tolerance-info"),
+    missedTargetTiming: document.querySelector(
+      "#play-missed-target-timing",
+    ),
+    missedTargetTimingInfo: document.querySelector(
+      "#play-missed-target-timing-info",
+    ),
     operativeAggression: document.querySelector("#play-operative-aggression"),
     operativeAggressionInfo: document.querySelector(
       "#play-operative-aggression-info",
@@ -331,6 +352,10 @@ export function createPlayMode(options = {}) {
     [elements.botCandidatesInfo, BOT_SETTING_INFO.candidates],
     [elements.cluePolicyInfo, BOT_SETTING_INFO.cluePolicy],
     [elements.multiToleranceInfo, BOT_SETTING_INFO.multiTolerance],
+    [
+      elements.missedTargetTimingInfo,
+      BOT_SETTING_INFO.missedTargetTiming,
+    ],
     [
       elements.operativeAggressionInfo,
       BOT_SETTING_INFO.operativeAggression,
@@ -428,6 +453,7 @@ export function createPlayMode(options = {}) {
     [elements.botCandidates, "candidateCount", Number],
     [elements.cluePolicy, "cluePolicy", String],
     [elements.multiTolerance, "multiTolerance", Number],
+    [elements.missedTargetTiming, "missedTargetTiming", String],
     [elements.operativeAggression, "operativeAggression", String],
     [elements.bonusGuesses, "bonusGuesses", String],
   ]) {
@@ -567,6 +593,8 @@ export function createPlayMode(options = {}) {
     elements.botCandidates.value = String(selectedBotSettings.candidateCount);
     elements.cluePolicy.value = selectedBotSettings.cluePolicy;
     elements.multiTolerance.value = String(selectedBotSettings.multiTolerance);
+    elements.missedTargetTiming.value =
+      selectedBotSettings.missedTargetTiming;
     elements.operativeAggression.value =
       selectedBotSettings.operativeAggression;
     elements.bonusGuesses.value = selectedBotSettings.bonusGuesses;
@@ -1176,9 +1204,20 @@ export function createPlayMode(options = {}) {
         const decisionRandom = createSeededRandom(
           `${game.seed}:${game.turnNumber}:${game.history.length}`,
         );
+        const missedTargetLayoutIds = unresolvedIntendedTargetIds(
+          game,
+          game.activeSide,
+        );
+        const ownRemaining = remainingCardsForSide(
+          game.cards,
+          game.activeSide,
+        );
         const clue = chooseBotClue({
           analysis: analysis[game.activeSide],
-          ownRemaining: remainingCardsForSide(game.cards, game.activeSide),
+          freshTargetCount: ownRemaining - missedTargetLayoutIds.length,
+          missedTargetLayoutIds,
+          missedTargetTiming: game.botSettings.missedTargetTiming,
+          ownRemaining,
           opponentRemaining: remainingCardsForSide(
             game.cards,
             game.activeSide === SIDE.BLUE ? SIDE.RED : SIDE.BLUE,
@@ -2182,6 +2221,14 @@ function settingsLabel(
       [PLAY_OPERATIVE_AGGRESSION.DYNAMIC]: "dynamicOperative",
     }[settings.operativeAggression],
   ).toLocaleLowerCase(language);
+  const missedTargets = translate(
+    language,
+    {
+      [PLAY_MISSED_TARGET_TIMING.LATE]: "freshTargetsFirst",
+      [PLAY_MISSED_TARGET_TIMING.BALANCED]: "missedTargetsMidGame",
+      [PLAY_MISSED_TARGET_TIMING.IMMEDIATE]: "missedTargetsImmediate",
+    }[settings.missedTargetTiming],
+  ).toLocaleLowerCase(language);
   const bonus =
     settings.bonusGuesses === PLAY_BONUS_POLICY.PASS
       ? translate(language, "stopAtNumber").toLocaleLowerCase(language)
@@ -2194,7 +2241,7 @@ function settingsLabel(
     wordReusePolicy === PLAY_WORD_REUSE_POLICY.AVOID_RECENT
       ? translate(language, "avoidRecent").toLocaleLowerCase(language)
       : translate(language, "fullyRandom").toLocaleLowerCase(language);
-  return `${words}, ${reuse}, ${model.label}, ${settings.candidateCount / 1000}k, ${style}, ${aggression}, ${bonus}`;
+  return `${words}, ${reuse}, ${model.label}, ${settings.candidateCount / 1000}k, ${style}, ${missedTargets}, ${aggression}, ${bonus}`;
 }
 
 function localizePlayError(message, language) {

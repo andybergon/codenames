@@ -12,7 +12,7 @@ Play's single-clue bias is primarily a scoring and policy problem. The standard 
 | 📚 Candidate count | 🟡 Secondary | 30k adds 7.3 percentage points |
 | 🗂️ Board word set | 🟢 Not causal | Official and Extended differ by 5 points at opening |
 
-The implemented Play default is BGE-small, the hybrid score, a five-point multi-clue tolerance, Dynamic operative aggression, and passing after the declared clue number. Across 100 deterministic games, that combination produced a 1.57 mean clue number and 49.7% multi-card clues. Opening clues averaged 2.18, the chronological first half averaged 1.90, and late-game singles remained available.
+The implemented Play default is BGE-small, the hybrid score, a five-point multi-clue tolerance, late missed-target recovery, Dynamic operative aggression, and passing after the declared clue number. Across 100 deterministic games, that combination produced a 1.59 mean clue number and 51.8% multi-card clues. Opening clues averaged 2.20, the chronological first half averaged 1.92, and late-game singles remained available.
 
 BGE-small is `Xenova/bge-small-en-v1.5`. Its quantized model is 34.0 MB versus 23.0 MB for the previous MiniLM-L6 model. With the same 5.3 MB 10k clue index, the total download is about 39.3 MB versus 28.2 MB.
 
@@ -89,8 +89,8 @@ The bot operative also takes an automatic number-plus-one guess using the curren
 
 | 🎛️ Policy | 📈 Full mean | ⏩ First-half mean | 🔢 Multi clues | ✅ Correct per turn | 🔴 Wrong hits | ☠️ Assassin | ⏱️ Turns |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| 🧪 BGE hybrid, Dynamic, pass | 1.57 | 1.90 | 49.7% | 1.48 | 0.00 | 0.0% | 10.43 |
-| 📍 BGE current, Dynamic, pass | 1.17 | 1.19 | 15.6% | 1.16 | 0.00 | 0.0% | 13.42 |
+| 🧪 BGE hybrid, Dynamic, pass | 1.59 | 1.92 | 51.8% | 1.53 | 0.00 | 0.0% | 10.19 |
+| 📍 BGE current, Dynamic, pass | 1.20 | 1.25 | 18.8% | 1.19 | 0.00 | 0.0% | 13.13 |
 | 🧠 BGE hybrid, random, bonus | 1.42 | N/A | 37.7% | 1.49 | 0.57 | 3.0% | 9.74 |
 | 🧱 MiniLM hybrid, random, bonus | 1.26 | N/A | 22.8% | 1.31 | 0.50 | 7.0% | 10.83 |
 
@@ -98,14 +98,14 @@ The first-half mean takes the first `ceiling(total clue turns / 2)` clue turns f
 
 | 🕵️ Own agents left | 📈 Mean number | 🔢 Multi clues |
 | --- | ---: | ---: |
-| 🔵 9 | 2.18 | 98.0% |
-| 🔵 8 | 2.25 | 95.1% |
-| 🔵 7 | 1.94 | 85.5% |
-| 🔵 6 | 1.78 | 68.7% |
-| 🔵 5 | 1.62 | 58.1% |
-| 🔵 4 | 1.36 | 36.1% |
-| 🔵 3 | 1.20 | 19.6% |
-| 🔵 2 | 1.14 | 14.2% |
+| 🔵 9 | 2.20 | 100.0% |
+| 🔵 8 | 2.26 | 95.1% |
+| 🔵 7 | 1.95 | 87.1% |
+| 🔵 6 | 1.76 | 66.7% |
+| 🔵 5 | 1.70 | 64.3% |
+| 🔵 4 | 1.39 | 38.5% |
+| 🔵 3 | 1.18 | 17.8% |
+| 🔵 2 | 1.16 | 16.4% |
 | 🔵 1 | 1.00 | 0.0% |
 
 The zero-error self-play result must not be treated as a human safety estimate. A real validation should replay human operative choices or collect Play sessions where the human guesses bot clues.
@@ -114,11 +114,12 @@ The zero-error self-play result must not be treated as a human safety estimate. 
 
 1. Play bot turns use BGE-small while Train keeps its independent default.
 2. The hybrid score prefers a multi clue within five points of the best clue.
-3. Bot operatives use Dynamic aggression and adapt only to public remaining-agent counts.
-4. Bot operatives pass after the declared clue number.
-5. The default candidate vocabulary remains 10,000.
-6. Official remains the default 400-word board set.
-7. Play setup can override and persist every bot parameter.
+3. Bot spymasters prefer never-targeted friendly cards until late game.
+4. Bot operatives use Dynamic aggression and adapt only to public remaining-agent counts.
+5. Bot operatives pass after the declared clue number.
+6. The default candidate vocabulary remains 10,000.
+7. Official remains the default 400-word board set.
+8. Play setup can override and persist every bot parameter.
 
 The product target should be stage-dependent rather than a forced full-game mean of two. Aim for an opening mean around two, frequent pairs while five or more agents remain, and justified singles near the end.
 

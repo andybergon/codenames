@@ -1,11 +1,13 @@
 import {
   PLAY_BONUS_POLICY,
   PLAY_CLUE_POLICY,
+  PLAY_MISSED_TARGET_TIMING,
   PLAY_OPERATIVE_AGGRESSION,
 } from "./settings.js";
 
 export {
   PLAY_CLUE_POLICY,
+  PLAY_MISSED_TARGET_TIMING,
   PLAY_OPERATIVE_AGGRESSION,
 } from "./settings.js";
 
@@ -21,8 +23,26 @@ const HYBRID_RISK_VALUE = Object.freeze({
   risky: -18,
 });
 
+const MISSED_TARGET_PREFERENCE = Object.freeze({
+  [PLAY_MISSED_TARGET_TIMING.LATE]: {
+    freshTargetGrace: 1,
+    penaltyPerFreshTarget: 6,
+  },
+  [PLAY_MISSED_TARGET_TIMING.BALANCED]: {
+    freshTargetGrace: 3,
+    penaltyPerFreshTarget: 3,
+  },
+  [PLAY_MISSED_TARGET_TIMING.IMMEDIATE]: {
+    freshTargetGrace: Number.POSITIVE_INFINITY,
+    penaltyPerFreshTarget: 0,
+  },
+});
+
 export function chooseBotClue({
   analysis,
+  freshTargetCount = 0,
+  missedTargetLayoutIds = [],
+  missedTargetTiming = PLAY_MISSED_TARGET_TIMING.LATE,
   ownRemaining,
   opponentRemaining,
   random,
@@ -37,7 +57,17 @@ export function chooseBotClue({
   const ranked = suggestions
     .map((suggestion) => ({
       suggestion,
-      score: scorePlayClue(suggestion, { ownRemaining, opponentRemaining, policy }),
+      score:
+        scorePlayClue(suggestion, {
+          ownRemaining,
+          opponentRemaining,
+          policy,
+        }) +
+        scoreMissedTargetPreference(suggestion, {
+          freshTargetCount,
+          missedTargetLayoutIds,
+          missedTargetTiming,
+        }),
     }))
     .sort((left, right) => right.score - left.score);
 
@@ -52,6 +82,40 @@ export function chooseBotClue({
   const shortlist = ranked.slice(0, Math.min(4, ranked.length));
   const pick = Math.min(shortlist.length - 1, Math.floor(random() * shortlist.length));
   return shortlist[pick].suggestion;
+}
+
+export function scoreMissedTargetPreference(
+  suggestion,
+  {
+    freshTargetCount = 0,
+    missedTargetLayoutIds = [],
+    missedTargetTiming = PLAY_MISSED_TARGET_TIMING.LATE,
+  } = {},
+) {
+  const preference = MISSED_TARGET_PREFERENCE[missedTargetTiming];
+  if (!preference) {
+    throw new Error(
+      `Unknown missed-target timing: ${missedTargetTiming}`,
+    );
+  }
+
+  const missedTargets = new Set(missedTargetLayoutIds);
+  const repeatedTargetCount = (suggestion?.targets ?? []).filter(({ layoutId }) =>
+    missedTargets.has(layoutId),
+  ).length;
+  if (repeatedTargetCount === 0) {
+    return 0;
+  }
+
+  const remainingFreshTargets = Number.isFinite(freshTargetCount)
+    ? Math.max(0, freshTargetCount)
+    : 0;
+  const penaltyPerRepeatedTarget =
+    Math.max(
+      0,
+      remainingFreshTargets - preference.freshTargetGrace,
+    ) * preference.penaltyPerFreshTarget;
+  return -repeatedTargetCount * penaltyPerRepeatedTarget;
 }
 
 export function scorePlayClue(

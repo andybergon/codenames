@@ -1236,7 +1236,7 @@ test("Play exposes and saves bot policy settings", async ({ page }) => {
 
   const settings = page.locator(".play-settings");
   await expect(settings).toContainText(
-    "Official, fully random, BGE-small, 10k, human-like, dynamic operative, stop at number",
+    "Official, fully random, BGE-small, 10k, human-like, fresh targets first, dynamic operative, stop at number",
   );
   await expect(settings).not.toHaveAttribute("open", "");
   await expect(settings.locator(".play-settings-toggle")).toContainText("Edit");
@@ -1272,27 +1272,29 @@ test("Play exposes and saves bot policy settings", async ({ page }) => {
     0,
   );
   await expect(allBotSettings.locator("#play-bot-model")).toHaveCount(1);
-  await expect(spymasterSettings.locator("select")).toHaveCount(3);
+  await expect(spymasterSettings.locator("select")).toHaveCount(4);
   await expect(operativeSettings.locator("select")).toHaveCount(2);
 
   await expect(page.locator("#play-bot-model")).toHaveValue("bge-small");
   await expect(page.locator("#play-bot-candidates")).toHaveValue("10000");
   await expect(page.locator("#play-clue-policy")).toHaveValue("hybrid");
   await expect(page.locator("#play-multi-tolerance")).toHaveValue("5");
+  await expect(page.locator("#play-missed-target-timing")).toHaveValue("late");
   await expect(page.locator("#play-operative-aggression")).toHaveValue(
     "dynamic",
   );
   await expect(page.locator("#play-bonus-guesses")).toHaveValue("pass");
-  await expect(settings.locator(".play-setting-label .info-button")).toHaveCount(7);
+  await expect(settings.locator(".play-setting-label .info-button")).toHaveCount(8);
 
   await page.getByRole("button", { name: "Extended 800", exact: true }).click();
   await expect(settings).toContainText(
-    "Extended, fully random, BGE-small, 10k, human-like, dynamic operative, stop at number",
+    "Extended, fully random, BGE-small, 10k, human-like, fresh targets first, dynamic operative, stop at number",
   );
   await page.locator("#play-bot-model").selectOption("minilm-l6");
   await page.locator("#play-bot-candidates").selectOption("30000");
   await page.locator("#play-clue-policy").selectOption("current");
   await page.locator("#play-multi-tolerance").selectOption("10");
+  await page.locator("#play-missed-target-timing").selectOption("balanced");
   await page.locator("#play-operative-aggression").selectOption("conservative");
   await page.locator("#play-bonus-guesses").selectOption("allow");
   await page.locator('[data-play-seat="blue:spymaster"]').click();
@@ -1308,6 +1310,7 @@ test("Play exposes and saves bot policy settings", async ({ page }) => {
     candidateCount: 30000,
     cluePolicy: "current",
     multiTolerance: 10,
+    missedTargetTiming: "balanced",
     operativeAggression: "conservative",
     bonusGuesses: "allow",
   });
@@ -1522,6 +1525,7 @@ test("Play bot setting help explains measured tradeoffs and stays on-screen", as
     ["Clue vocabulary", 4, "85.47%"],
     ["Clue scoring", 2, "50.4%"],
     ["Prefer multi-card clues", 3, "best clue for 2+ cards"],
+    ["Retry missed targets", 3, "fresh-target bias fades"],
     ["Operative aggression", 3, "revealed-card counts"],
     ["Extra guess", 2, "26.4% correct"],
   ];

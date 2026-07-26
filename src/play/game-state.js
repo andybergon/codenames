@@ -1,4 +1,9 @@
-import { SIDE, otherSide, remainingCardsForSide } from "../gameplay.js";
+import {
+  SIDE,
+  otherSide,
+  remainingCardsForSide,
+  teamForSide,
+} from "../gameplay.js";
 import { isForbiddenClue, normalizeTerm } from "../model.js";
 import { LANGUAGE } from "../word-data.js";
 import { normalizePlayBotSettings } from "./settings.js";
@@ -307,6 +312,25 @@ export function publicGameView(game) {
       return publicEvent;
     }),
   };
+}
+
+export function unresolvedIntendedTargetIds(game, side) {
+  validateSide(side);
+  const ownTeam = teamForSide(side);
+  const availableOwnTargets = new Set(
+    game.cards
+      .filter((card) => !card.done && card.team === ownTeam)
+      .map(({ layoutId }) => layoutId),
+  );
+  return [
+    ...new Set(
+      game.history
+        .filter(
+          (event) => event.type === "clue-given" && event.side === side,
+        )
+        .flatMap((event) => event.intendedLayoutIds ?? []),
+    ),
+  ].filter((layoutId) => availableOwnTargets.has(layoutId));
 }
 
 export function replayCompletedClueTurns(game) {

@@ -18,6 +18,7 @@ import {
   chooseBotClue,
   chooseBotGuess,
   createSeededRandom,
+  scoreMissedTargetPreference,
   scorePlayClue,
   shouldBotTakeAnotherGuess,
 } from "../src/play/bots.js";
@@ -36,12 +37,14 @@ import {
   randomHumanSeat,
   restorePlayGame,
   undoPlayGame,
+  unresolvedIntendedTargetIds,
   replayCompletedClueTurns,
   validateStoredGame,
 } from "../src/play/game-state.js";
 import {
   DEFAULT_PLAY_BOT_SETTINGS,
   PLAY_BONUS_POLICY,
+  PLAY_MISSED_TARGET_TIMING,
   PLAY_OPERATIVE_AGGRESSION,
   normalizePlayBotSettings,
 } from "../src/play/settings.js";
@@ -123,6 +126,14 @@ assert.equal(
 assert.match(playPolicySummary, /^\# Play policy benchmark/m);
 assert.ok(playPolicySummary.includes(playPolicyBenchmark.generatedAt));
 assert.match(playPolicySummary, /Operative aggression/);
+assert.match(playPolicySummary, /retried a missed target/);
+assert.equal(
+  playPolicyBenchmark.policies.hybrid.missedTargetRecovery.earlyRetryRate,
+  0,
+);
+assert.ok(
+  playPolicyBenchmark.policies.hybrid.missedTargetRecovery.opportunities > 0,
+);
 assert.match(
   playPolicySummary,
   /\| 🎯 Policy \| 🎉 Fun \| 🔢 Multi clues \| ⏩ First-half mean \| ✅ Correct per turn \| 🤝 Close finishes \| ☠️ Assassin rate \| ⏱️ Turns per game \|/,
@@ -525,6 +536,34 @@ assert.equal(
   false,
 );
 
+let missedTargetGame = createPlayGame({
+  cards: sample.cards,
+  humanSeat: { side: SIDE.BLUE, role: PLAYER_ROLE.OPERATIVE },
+  seed: "missed-target",
+  wordSet: sample.wordSet,
+});
+const missedBlueTarget = missedTargetGame.cards.find(
+  (card) => card.team === "friendly",
+);
+missedTargetGame = giveClue(missedTargetGame, {
+  clue: "missed",
+  number: 1,
+  actor: "bot",
+  intendedLayoutIds: [missedBlueTarget.layoutId],
+});
+assert.deepEqual(
+  unresolvedIntendedTargetIds(missedTargetGame, SIDE.BLUE),
+  [missedBlueTarget.layoutId],
+);
+missedTargetGame = guessCard(missedTargetGame, {
+  layoutId: missedBlueTarget.layoutId,
+  actor: "human",
+});
+assert.deepEqual(
+  unresolvedIntendedTargetIds(missedTargetGame, SIDE.BLUE),
+  [],
+);
+
 const spyView = publicGameView(
   createPlayGame({
     cards: sample.cards,
@@ -622,6 +661,75 @@ const tempoSuggestion = chooseBotClue({
   random: () => 0,
 });
 assert.equal(tempoSuggestion.clue, "pair");
+const missedTargetSuggestions = {
+  suggestions: [
+    {
+      clue: "retry",
+      worth: 80,
+      risk: "medium",
+      number: 1,
+      margin: 0,
+      expectedNet: 0,
+      success: 0,
+      targets: [{ layoutId: 4 }],
+    },
+    {
+      clue: "fresh",
+      worth: 70,
+      risk: "medium",
+      number: 1,
+      margin: 0,
+      expectedNet: 0,
+      success: 0,
+      targets: [{ layoutId: 8 }],
+    },
+  ],
+};
+assert.equal(
+  chooseBotClue({
+    analysis: missedTargetSuggestions,
+    freshTargetCount: 8,
+    missedTargetLayoutIds: [4],
+    missedTargetTiming: PLAY_MISSED_TARGET_TIMING.LATE,
+    ownRemaining: 9,
+    opponentRemaining: 8,
+    random: () => 0,
+  }).clue,
+  "fresh",
+);
+assert.equal(
+  chooseBotClue({
+    analysis: missedTargetSuggestions,
+    freshTargetCount: 8,
+    missedTargetLayoutIds: [4],
+    missedTargetTiming: PLAY_MISSED_TARGET_TIMING.IMMEDIATE,
+    ownRemaining: 9,
+    opponentRemaining: 8,
+    random: () => 0,
+  }).clue,
+  "retry",
+);
+assert.equal(
+  chooseBotClue({
+    analysis: missedTargetSuggestions,
+    freshTargetCount: 1,
+    missedTargetLayoutIds: [4],
+    missedTargetTiming: PLAY_MISSED_TARGET_TIMING.LATE,
+    ownRemaining: 2,
+    opponentRemaining: 3,
+    random: () => 0,
+  }).clue,
+  "retry",
+);
+assert.throws(
+  () =>
+    scoreMissedTargetPreference(missedTargetSuggestions.suggestions[0], {
+      freshTargetCount: 8,
+      missedTargetLayoutIds: [4],
+      missedTargetTiming: "unknown",
+    }),
+  /Unknown missed-target timing/,
+);
 assert.ok(
   scorePlayClue(
     {
@@ -812,6 +920,22 @@ assert.equal(upgradedStoredGame.botSettings.modelId, "bge-small");
 assert.equal(
   upgradedStoredGame.botSettings.operativeAggression,
   PLAY_OPERATIVE_AGGRESSION.DYNAMIC,
+);
+assert.equal(
+  upgradedStoredGame.botSettings.missedTargetTiming,
+  PLAY_MISSED_TARGET_TIMING.LATE,
+);
+assert.equal(
+  normalizePlayBotSettings({
+    missedTargetTiming: "unknown",
+  }).missedTargetTiming,
+  PLAY_MISSED_TARGET_TIMING.LATE,
+);
+assert.equal(
+  normalizePlayBotSettings({
+    missedTargetTiming: PLAY_MISSED_TARGET_TIMING.IMMEDIATE,
+  }).missedTargetTiming,
+  PLAY_MISSED_TARGET_TIMING.IMMEDIATE,
 );
 assert.equal(upgradedStoredGame.botSettings.bonusGuesses, PLAY_BONUS_POLICY.PASS);
 assert.equal(
