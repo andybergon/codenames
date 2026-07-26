@@ -1,29 +1,50 @@
-const jsonPromises = new Map();
+import { createSingleFlightRetryLoader } from "./load-retry.js";
 
-export async function loadShardedClueIndex(manifestUrl, candidateCount) {
-  const manifest = await loadClueIndexManifest(manifestUrl);
+const fetchJson = createJsonLoader();
+
+export async function loadShardedClueIndex(
+  manifestUrl,
+  candidateCount,
+  options = {},
+) {
+  const manifest = await loadClueIndexManifest(manifestUrl, options);
   const selectedShards = manifest.shards.filter((shard) => shard.start < candidateCount);
   const shardResponses = await Promise.all(selectedShards.map((shard) =>
-    fetchJson(new URL(shard.file, new URL(manifestUrl, location.origin)).href, "clue shard"),
+    fetchJson(
+      new URL(shard.file, new URL(manifestUrl, location.origin)).href,
+      { ...options, label: "clue shard" },
+    ),
   ));
   return hydrateClueShards(manifest, shardResponses, candidateCount);
 }
 
-export function loadClueIndexManifest(manifestUrl) {
-  return fetchJson(manifestUrl, "clue manifest");
+export function loadClueIndexManifest(manifestUrl, options = {}) {
+  return fetchJson(manifestUrl, { ...options, label: "clue manifest" });
 }
 
-function fetchJson(url, label) {
-  if (!jsonPromises.has(url)) {
-    jsonPromises.set(url, fetch(url).then((response) => {
-      if (!response.ok) throw new Error(`Could not load ${label} (${response.status})`);
+export function createJsonLoader(fetchImplementation = fetch, retryOptions = {}) {
+  const loadJson = createSingleFlightRetryLoader(
+    async (url, options) => {
+      const response = await fetchImplementation(url);
+      if (!response.ok) {
+        const error = new Error(
+          `Could not load ${options.label} (${response.status})`,
+        );
+        error.status = response.status;
+        throw error;
+      }
       return response.json();
-    }).catch((error) => {
-      jsonPromises.delete(url);
-      throw error;
-    }));
-  }
-  return jsonPromises.get(url);
+    },
+    retryOptions,
+  );
+
+  return (url, options = {}) =>
+    loadJson(url, {
+      ...options,
+      onRetry: options.onRetry
+        ? (event) => options.onRetry({ ...event, resource: "index" })
+        : undefined,
+    });
 }
 
 export function hydrateClueShards(manifest, shardResponses, candidateCount) {

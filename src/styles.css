@@ -3575,6 +3575,21 @@ button.play-card:not(:disabled):hover {
   line-height: 1.4;
 }
 
+.play-post-game-analysis-status {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 750;
+  margin: 8px 0 0;
+}
+
+.play-post-game-analysis-status.is-error {
+  color: var(--danger);
+}
+
+.play-post-game-analysis-status[hidden] {
+  display: none;
+}
+
 .play-history {
   min-width: 0;
   grid-column: 1 / -1;

@@ -208,6 +208,8 @@ Selectable indexes use incremental `0–3k`, `3k–10k`, `10k–30k`, and `30k�
 
 The picker exposes MiniLM-L3, MiniLM-L6, and BGE-small because each offers a distinct size, speed, or quality tradeoff. A model and compatible index load only after selection.
 
+Local model initialization and clue-index JSON requests are single-flight per configuration or URL. An actual transient rejection receives at most three total attempts with short bounded backoff and jitter. Rejected promises are removed before another attempt, while HTTP 4xx responses other than 408 and 429, corrupt JSON or index data, incompatible dimensions, validation failures, and unsupported configurations fail without retrying. Slow unresolved loads never start a parallel initialization.
+
 Italian assets live under `public/data/model-lab/it/multilingual-e5-small/`. The 3k and 10k tiers use the same mean over 30,000 Italian candidates. The manifest pins `it:extended-v1`, the Leipzig archive checksum and CC BY 4.0 attribution, the E5 repository revision and model checksum, Unicode filters, the `query: ` task prefix, and every shard byte count. English assets retain their existing paths and cache keys.
 
 The Italian board pool is original project data in [`scripts/italian/extended-words.txt`](../scripts/italian/extended-words.txt). It is intentionally independent from the official Italian game list. `npm run generate:italian` verifies exactly 800 unique single-word entries, downloads or reuses the pinned Leipzig archive, prioritizes the authored pool as game-friendly clue seeds, rebuilds the 30,000-word center, and writes both selectable shards.
@@ -264,6 +266,7 @@ The first 1,024-dimensional `text-embedding-3-large` experiment improved human c
 - [`api/explain-recommendations.js`](../api/explain-recommendations.js) · Vercel function adapter
 - [`src/embeddings.js`](../src/embeddings.js) · browser embedding pipeline and vector transforms
 - [`src/clue-index.js`](../src/clue-index.js) · manifest and incremental shard loading
+- [`src/load-retry.js`](../src/load-retry.js) · classified bounded retries and single-flight load caching
 - [`src/model-lab.js`](../src/model-lab.js) · model-picker configurations and measurements
 - [`src/locales.js`](../src/locales.js) · English and Italian Train and Play interface copy
 - [`src/app.js`](../src/app.js) · board lifecycle, team perspectives, and rendered recommendations

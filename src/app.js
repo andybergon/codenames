@@ -1333,6 +1333,9 @@ async function runAnalysis() {
       const clueIndexPromise = loadShardedClueIndex(
         indexManifestUrl(selectedModelId, boardLanguage),
         selectedCandidateCount,
+        {
+          onRetry: (event) => renderLoadRetry(event, runId),
+        },
       )
         .catch((error) => {
           clueIndexPromises.delete(configuration);
@@ -1414,6 +1417,11 @@ function renderModelProgress(event, runId) {
     return;
   }
 
+  if (event.status === "retry") {
+    renderLoadRetry(event, runId);
+    return;
+  }
+
   if (event.status === "progress" && typeof event.progress === "number") {
     elements.analysisStatus.textContent = translate(
       boardLanguage,
@@ -1429,6 +1437,19 @@ function renderModelProgress(event, runId) {
       "scoringCandidates",
     );
   }
+}
+
+function renderLoadRetry(event, runId) {
+  if (runId !== analysisRun) {
+    return;
+  }
+  elements.analysisStatus.textContent = translate(
+    boardLanguage,
+    event.resource === "model"
+      ? "retryingModelLoad"
+      : "retryingIndexLoad",
+    event,
+  );
 }
 
 function setAnalysisBusy(isBusy) {

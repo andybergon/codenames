@@ -3787,6 +3787,7 @@ test("completed Play sessions replay turns and explain intended targets", async 
   await expect(
     page.locator(".play-card[data-operative-score]"),
   ).toHaveCount(25, { timeout: 45_000 });
+  await expect(page.locator("#play-post-game-analysis-status")).toBeHidden();
 
   for (const viewport of [
     { width: 390, height: 844 },

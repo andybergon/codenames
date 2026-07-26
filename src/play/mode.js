@@ -374,6 +374,9 @@ export function createPlayMode(options = {}) {
     historicalReviewNote: document.querySelector(
       "#play-historical-review-note",
     ),
+    postGameAnalysisStatus: document.querySelector(
+      "#play-post-game-analysis-status",
+    ),
     historyLabel: document.querySelector("#play-history-heading-label"),
     historyCount: document.querySelector("#play-history-count"),
     historyViewButtons: [...document.querySelectorAll("[data-play-history-view]")],
@@ -462,6 +465,7 @@ export function createPlayMode(options = {}) {
   let selectedPostGameTurn = 0;
   let postGameScores = [];
   let postGameAnalysisState = "idle";
+  let postGameAnalysisMessage = "";
   let liveDiagnosticsVisible = false;
   let liveDiagnosticsRun = 0;
   let liveDiagnosticsState = {
@@ -1189,6 +1193,7 @@ export function createPlayMode(options = {}) {
     selectedPostGameTurn = 0;
     postGameScores = [];
     postGameAnalysisState = "idle";
+    postGameAnalysisMessage = "";
   }
 
   function resetLiveDiagnostics() {
@@ -1300,10 +1305,19 @@ export function createPlayMode(options = {}) {
         return;
       }
       const configuration = `${language}:${modelId}:${candidateCount}`;
+      const onLoadRetry = (event) => {
+        if (runId !== analysisRun || game !== gameAtStart) {
+          return;
+        }
+        statusMessage = retryLoadMessage(event);
+        statusMessageIsError = false;
+        renderGame();
+      };
       if (!clueIndexPromises.has(configuration)) {
         const promise = loadShardedClueIndex(
           indexManifestUrl(modelId, language),
           candidateCount,
+          { onRetry: onLoadRetry },
         ).catch((error) => {
           clueIndexPromises.delete(configuration);
           throw error;
@@ -1319,6 +1333,7 @@ export function createPlayMode(options = {}) {
             model: model.model,
             revision: model.revision,
             inputPrefix: model.inputPrefix,
+            onRetry: onLoadRetry,
           },
         ),
       ]);
@@ -1430,6 +1445,10 @@ export function createPlayMode(options = {}) {
     const gameAtStart = game;
     const turnsAtStart = postGameTurns;
     postGameAnalysisState = "loading";
+    postGameAnalysisMessage = translate(
+      gameLanguage(),
+      "loadingOperativeScores",
+    );
     renderGame();
 
     try {
@@ -1459,17 +1478,25 @@ export function createPlayMode(options = {}) {
           ),
         );
         postGameAnalysisState = "ready";
+        postGameAnalysisMessage = "";
         renderGame();
         return;
       }
       const { modelId } = gameAtStart.botSettings;
+      const onLoadRetry = (event) => {
+        if (runId !== postGameAnalysisRun || game !== gameAtStart) {
+          return;
+        }
+        postGameAnalysisMessage = retryLoadMessage(event);
+        renderGame();
+      };
       if (!manifestPromises.has(modelId)) {
-        const promise = loadClueIndexManifest(indexManifestUrl(modelId)).catch(
-          (error) => {
-            manifestPromises.delete(modelId);
-            throw error;
-          },
-        );
+        const promise = loadClueIndexManifest(indexManifestUrl(modelId), {
+          onRetry: onLoadRetry,
+        }).catch((error) => {
+          manifestPromises.delete(modelId);
+          throw error;
+        });
         manifestPromises.set(modelId, promise);
       }
       const model = modelOption(modelId);
@@ -1479,7 +1506,12 @@ export function createPlayMode(options = {}) {
       ];
       const [manifest, vectors] = await Promise.all([
         manifestPromises.get(modelId),
-        embedTerms(terms, { model: model.model }),
+        embedTerms(terms, {
+          model: model.model,
+          revision: model.revision,
+          inputPrefix: model.inputPrefix,
+          onRetry: onLoadRetry,
+        }),
       ]);
       if (runId !== postGameAnalysisRun || game !== gameAtStart) {
         return;
@@ -1497,11 +1529,14 @@ export function createPlayMode(options = {}) {
         ),
       );
       postGameAnalysisState = "ready";
-    } catch {
+      postGameAnalysisMessage = "";
+    } catch (error) {
       if (runId !== postGameAnalysisRun) {
         return;
       }
       postGameAnalysisState = "error";
+      postGameAnalysisMessage =
+        error instanceof Error ? error.message : String(error);
     }
     renderGame();
   }
@@ -2050,7 +2085,7 @@ export function createPlayMode(options = {}) {
     const botWaitDetail =
       currentActor === "bot"
         ? currentRole === PLAYER_ROLE.SPYMASTER
-          ? translate(gameLanguage(), "botStudying")
+          ? statusMessage || translate(gameLanguage(), "botStudying")
           : translate(gameLanguage(), "botChoosingCard")
         : "";
     const waitDetailVisible = syncBotWaitDetail(
@@ -2322,6 +2357,14 @@ export function createPlayMode(options = {}) {
     }
     elements.historicalReviewNote.hidden =
       game.reviewCompatibility !== "history-only";
+    elements.postGameAnalysisStatus.hidden =
+      postGameAnalysisState === "ready" ||
+      postGameAnalysisState === "idle";
+    elements.postGameAnalysisStatus.classList.toggle(
+      "is-error",
+      postGameAnalysisState === "error",
+    );
+    elements.postGameAnalysisStatus.textContent = postGameAnalysisMessage;
 
     elements.postGameOutcome.textContent =
       game.phase === GAME_PHASE.COMPLETE
@@ -2345,6 +2388,16 @@ export function createPlayMode(options = {}) {
     return (
       game?.phase === GAME_PHASE.COMPLETE ||
       (game?.developerMode === true && liveDiagnosticsVisible)
+    );
+  }
+
+  function retryLoadMessage(event) {
+    return translate(
+      gameLanguage(),
+      event.resource === "model"
+        ? "retryingModelLoad"
+        : "retryingIndexLoad",
+      event,
     );
   }
 

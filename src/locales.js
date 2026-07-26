@@ -289,6 +289,10 @@ const COPY = Object.freeze({
     loadingClues: ({ count, megabytes }) =>
       `Loading ${count} clues (${megabytes} MB index)`,
     loadingModel: ({ progress }) => `Loading local model ${progress}%`,
+    retryingModelLoad: ({ attempt, maxAttempts }) =>
+      `Retrying local model, attempt ${attempt} of ${maxAttempts}`,
+    retryingIndexLoad: ({ attempt, maxAttempts }) =>
+      `Retrying clue index, attempt ${attempt} of ${maxAttempts}`,
     scoringCandidates: "Scoring candidates",
     analysisSummary: ({ count, milliseconds }) =>
       `${count} candidates | ${milliseconds} ms score`,
@@ -610,6 +614,10 @@ const COPY = Object.freeze({
     loadingClues: ({ count, megabytes }) =>
       `Caricamento di ${count} indizi (${megabytes} MB)`,
     loadingModel: ({ progress }) => `Caricamento modello locale ${progress}%`,
+    retryingModelLoad: ({ attempt, maxAttempts }) =>
+      `Nuovo tentativo per il modello locale, ${attempt} di ${maxAttempts}`,
+    retryingIndexLoad: ({ attempt, maxAttempts }) =>
+      `Nuovo tentativo per l'indice degli indizi, ${attempt} di ${maxAttempts}`,
     scoringCandidates: "Calcolo suggerimenti",
     analysisSummary: ({ count, milliseconds }) =>
       `${count} candidati | ${milliseconds} ms`,

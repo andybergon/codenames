@@ -4,13 +4,6 @@
   - Design a multi-round match that rotates players through roles and tracks an overall result instead of treating each board as the whole game.
   - Planning only for now; do not implement it as part of the current feedback batch.
 
-- 🔄 Retry transient local model loads safely.
-  - Use three total attempts (the initial load plus two short backoff retries) only after an actual rejected model or index load.
-  - Clear rejected extractor and index promises before retrying so one failure cannot poison that configuration until reload.
-  - Keep initialization single-flight and do not launch a parallel model load merely because the first attempt is slow.
-  - Retry transient network, 408, 429, and 5xx failures, but fail immediately for corrupt indexes, incompatible dimensions, and other deterministic errors.
-  - Add deterministic recovery coverage and a readable loading or retry state for model-backed UI paths.
-
 ## 🔴 High
 
 - 🧠 Prevent the bot spymaster from repeating the previous clue.
@@ -32,7 +25,9 @@
 
 - 🧪 Isolate embedding-backed UI tests from external model downloads.
   - `npm test` can fail in Italian Train and completed Play post-game analysis when the browser cannot fetch embedding model assets, including on unchanged `main`.
-  - Add deterministic Train-analysis and post-game-score executors, block external requests, and keep real model coverage in a separate integration check.
+  - A repeated post-game run captured `Failed to fetch dynamically imported module` for jsDelivr's `ort-wasm-simd-threaded.jsep.mjs`; the next isolated Italian run passed in 5.1 seconds.
+  - Completed Play post-game coverage now uses the deterministic `guessCandidateExecutor`; Italian Train still performs a real external model load.
+  - Next: add a deterministic Train-analysis executor, block external requests in the general UI suite, and keep real model coverage in a separate integration check.
 
 - ⚖️ Obtain redistribution terms for the official Italian word list.
   - Request the current second-edition 400-word list and written public-redistribution permission from Cranio Creations or Czech Games Edition.

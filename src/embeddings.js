@@ -1,9 +1,10 @@
 import { pipeline } from "@huggingface/transformers";
+import { createSingleFlightRetryLoader } from "./load-retry.js";
 
 export const EMBEDDING_MODEL = "Xenova/all-MiniLM-L6-v2";
 
 const vectorCaches = new Map();
-const extractorPromises = new Map();
+const getExtractor = createExtractorLoader();
 
 export async function embedTerms(terms, options = {}) {
   const model = options.model ?? EMBEDDING_MODEL;
@@ -16,10 +17,16 @@ export async function embedTerms(terms, options = {}) {
 
   if (missingTerms.length > 0) {
     const extractor = await getExtractor(
-      model,
-      revision,
       configuration,
-      options.onProgress,
+      {
+        model,
+        revision,
+        onProgress: options.onProgress,
+        onRetry(event) {
+          options.onRetry?.({ ...event, resource: "model" });
+          options.onProgress?.({ ...event, status: "retry", resource: "model" });
+        },
+      },
     );
     const output = await extractor(
       missingTerms.map((term) => `${inputPrefix}${term}`),
@@ -60,19 +67,19 @@ export function centerEmbeddings(vectors, mean) {
   });
 }
 
-function getExtractor(model, revision, configuration, onProgress) {
-  if (!extractorPromises.has(configuration)) {
-    extractorPromises.set(
-      configuration,
-      pipeline("feature-extraction", model, {
+export function createExtractorLoader(
+  loadPipeline = pipeline,
+  retryOptions = {},
+) {
+  return createSingleFlightRetryLoader(
+    (_configuration, options) =>
+      loadPipeline("feature-extraction", options.model, {
         dtype: "q8",
-        revision,
-        progress_callback: onProgress,
+        revision: options.revision,
+        progress_callback: options.onProgress,
       }),
-    );
-  }
-
-  return extractorPromises.get(configuration);
+    retryOptions,
+  );
 }
 
 function getVectorCache(configuration) {
