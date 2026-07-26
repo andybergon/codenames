@@ -9,6 +9,7 @@ const SHARED_BOARD = "/?mode=train&b=2sw7fIwN9dL7Yos";
 async function useTestBotAction(page, delay) {
   await page.addInitScript((botActionDelay) => {
     window.__codenamesPlayModeOptions = {
+      ...window.__codenamesPlayModeOptions,
       botActionDelay,
       botActionExecutor(game) {
         return {
@@ -23,6 +24,67 @@ async function useTestBotAction(page, delay) {
       },
     };
   }, delay);
+}
+
+async function useTestPlayAnalysis(page) {
+  const externalRequests = [];
+  await page.route(/^https?:\/\//, async (route) => {
+    const url = new URL(route.request().url());
+    if (url.hostname === "127.0.0.1") {
+      await route.continue();
+      return;
+    }
+    externalRequests.push(route.request().url());
+    await route.abort();
+  });
+  await page.addInitScript(() => {
+    window.__codenamesPlayModeOptions = {
+      ...window.__codenamesPlayModeOptions,
+      analysisExecutor({ cards }) {
+        const targets = cards
+          .filter((card) => card.team === "friendly" && !card.done)
+          .slice(0, 2)
+          .map((card, index) => ({
+            layoutId: card.layoutId,
+            word: card.word,
+            sim: 0.82 - index * 0.04,
+          }));
+        return {
+          safe: [],
+          stretch: [],
+          suggestions: targets.length
+            ? [
+                {
+                  clue: "fixture",
+                  number: targets.length,
+                  targets,
+                  worth: 78,
+                  expectedNet: 1.6,
+                  success: 0.88,
+                  margin: 0.24,
+                  risk: "safe",
+                },
+              ]
+            : [],
+          summary: {
+            friendlyTotal: targets.length,
+            candidateTotal: 1,
+            bestMargin: 0.24,
+            bestNet: 1.6,
+          },
+        };
+      },
+      guessCandidateExecutor({ cards }) {
+        return cards
+          .filter((card) => !card.done)
+          .map((card, index) => ({
+            layoutId: card.layoutId,
+            similarity: 0.9 - index * 0.02,
+          }));
+      },
+    };
+  });
+  return externalRequests;
 }
 
 function playSessionWithHistory(history) {
@@ -1393,6 +1455,7 @@ test("Play uses one fresh-game icon and accessible label at every viewport", asy
 });
 
 test("Play enforces operative and spymaster information views", async ({ page }) => {
+  const externalRequests = await useTestPlayAnalysis(page);
   await page.goto("/?mode=play");
 
   await expect(page.locator('[data-play-seat="blue:spymaster"] strong')).toHaveText(
@@ -1461,6 +1524,7 @@ test("Play enforces operative and spymaster information views", async ({ page })
   await expect(page.locator('.play-card[data-team="enemy"]')).toHaveCount(8);
   await expect(page.locator('.play-card[data-team="neutral"]')).toHaveCount(7);
   await expect(page.locator('.play-card[data-team="assassin"]')).toHaveCount(1);
+  expect(externalRequests).toEqual([]);
 });
 
 test("Play keeps brief bot turns neutral and delays readable wait detail", async ({
@@ -1753,6 +1817,7 @@ test("Play starts a new game in the selected language despite another saved game
 test("starting a second Play game clears the previous clue and analysis", async ({
   page,
 }) => {
+  const externalRequests = await useTestPlayAnalysis(page);
   await page.goto("/?mode=play");
   await page.locator('[data-play-seat="blue:spymaster"]').click();
   await page.locator(".play-settings summary").click();
@@ -1787,6 +1852,7 @@ test("starting a second Play game clears the previous clue and analysis", async 
   await expect(page.locator("#play-history-count")).toHaveText("0 events");
   await expect(page.locator("#play-history-list")).toHaveText("No game actions yet.");
   await expect(page.locator("#play-suggestion-list")).toBeEmpty();
+  expect(externalRequests).toEqual([]);
 });
 
 test("Play rejects a clue inflection of an unrevealed board word", async ({ page }) => {

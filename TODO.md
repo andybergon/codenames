@@ -16,6 +16,11 @@
   - The WordNet-backed first 88,563 words currently bypass `better_profanity`; only the experimental fallback applies it.
   - Regenerate all affected shards, reports, and the stable-prefix baseline together after reviewing benign false positives.
 
+- 👥 Finish the first human embedding calibration and analyze it.
+  - Current: browser and Neon persistence are verified, with 3 live answers stored. Clears use timestamped deletion records so stale browsers or imports cannot restore removed answers.
+  - Complete all 30 blinded tasks at `?mode=calibrate`, export the corrected answers, then run `npm run calibration:evaluate -- --input <export.json> --answer-key scripts/generated/calibration-answer-keys/embedding-finalists-v1.json`.
+  - Review pass rate, target recall, exact targets, and wrong-team, neutral, and assassin selections per model as a gross-failure screen, not a model ranker.
+
 ## 🟡 Medium
 
 - ⚖️ Obtain redistribution terms for the official Italian word list.
@@ -37,15 +42,6 @@
 - 🧠 Evaluate a more game-specific semantic embedding or reranker.
   - Current: calibrated same-model development favored Cohere and tied Voyage with BGE, but both failed the primary MiniLM-L6 transfer gates, so BGE stays in production and the held-out test remains locked.
   - Require any future candidate to pass calibrated development, cross-model transfer, and human gates before unlocking the held-out test.
-
-- 👥 Finish the first human embedding calibration and analyze it.
-  - Current: browser and Neon persistence are verified, with 3 live answers stored. Clears use timestamped deletion records so stale browsers or imports cannot restore removed answers.
-  - Complete all 30 blinded tasks at `?mode=calibrate`, export the corrected answers, then run `npm run calibration:evaluate -- --input <export.json> --answer-key scripts/generated/calibration-answer-keys/embedding-finalists-v1.json`.
-  - Review pass rate, target recall, exact targets, and wrong-team, neutral, and assassin selections per model as a gross-failure screen, not a model ranker.
-
-- 🧪 Remove network dependence from Play suggestion UI tests.
-  - Full-suite runs can show `Failed to fetch` while waiting for `.play-suggestion`; the exact tests pass immediately in isolation.
-  - Preload the model fixture or route embedding fetches to deterministic local test assets so UI verification does not depend on transient model downloads.
 
 - 🧹 Bound Model picker caches so exploration cannot retain every loaded model and index.
   - Index promises, parsed shards, model pipelines, and term vectors currently remain cached for the page lifetime.

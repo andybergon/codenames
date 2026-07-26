@@ -251,6 +251,14 @@ export function createPlayMode(options = {}) {
     import.meta.env.DEV && typeof options.botActionExecutor === "function"
       ? options.botActionExecutor
       : null;
+  const analysisExecutor =
+    import.meta.env.DEV && typeof options.analysisExecutor === "function"
+      ? options.analysisExecutor
+      : null;
+  const guessCandidateExecutor =
+    import.meta.env.DEV && typeof options.guessCandidateExecutor === "function"
+      ? options.guessCandidateExecutor
+      : null;
   const elements = {
     setup: document.querySelector("#play-setup"),
     game: document.querySelector("#play-game"),
@@ -939,6 +947,36 @@ export function createPlayMode(options = {}) {
     try {
       const { modelId, candidateCount } = gameAtStart.botSettings;
       const language = gameAtStart.language ?? LANGUAGE.ENGLISH;
+      const cards = gameAtStart.cards.map((card) => ({ ...card }));
+      if (analysisExecutor) {
+        const activeCards =
+          gameAtStart.activeSide === SIDE.BLUE
+            ? cards
+            : boardForSide(cards, SIDE.RED);
+        const nextAnalysis = await analysisExecutor({
+          cards: activeCards,
+          language,
+          modelId,
+          candidateCount,
+          side: gameAtStart.activeSide,
+        });
+        if (runId !== analysisRun || game !== gameAtStart) {
+          return;
+        }
+        if (!Array.isArray(nextAnalysis?.suggestions)) {
+          throw new Error("The analysis executor did not return suggestions.");
+        }
+        analysis = {
+          ...analysis,
+          [gameAtStart.activeSide]: nextAnalysis,
+        };
+        activeModelId = modelId;
+        statusMessage = "";
+        statusMessageIsError = false;
+        renderGame();
+        queueBotAction();
+        return;
+      }
       const configuration = `${language}:${modelId}:${candidateCount}`;
       if (!clueIndexPromises.has(configuration)) {
         const promise = loadShardedClueIndex(
@@ -951,7 +989,6 @@ export function createPlayMode(options = {}) {
         clueIndexPromises.set(configuration, promise);
       }
       const model = modelOption(modelId);
-      const cards = gameAtStart.cards.map((card) => ({ ...card }));
       const [loadedIndex, vectors] = await Promise.all([
         clueIndexPromises.get(configuration),
         embedTerms(
@@ -1224,6 +1261,17 @@ export function createPlayMode(options = {}) {
   }
 
   async function buildBotGuessCandidates(clue) {
+    if (game && guessCandidateExecutor) {
+      return guessCandidateExecutor({
+        cards: game.cards.map(({ layoutId, word, done }) => ({
+          layoutId,
+          word,
+          done,
+        })),
+        clue,
+        language: gameLanguage(),
+      });
+    }
     if (!game || !boardVectors || !clueIndex) {
       return [];
     }
