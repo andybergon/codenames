@@ -97,6 +97,7 @@ const BOT_ACTION_AFTER_UNDO_DELAY = 5000;
 const PLAY_BOARD_ORDER = Object.freeze({
   TABLE: "table",
   TEAMS: "teams",
+  SCORE: "score",
 });
 const PLAY_HISTORY_VIEW = Object.freeze({
   TIMELINE: "timeline",
@@ -350,6 +351,9 @@ export function createPlayMode(options = {}) {
     score: document.querySelector("#play-score"),
     boardToolbar: document.querySelector("#play-board-toolbar"),
     boardOrderButtons: [...document.querySelectorAll("[data-play-board-order]")],
+    developerBoardOrder: document.querySelector(
+      "[data-developer-board-order]",
+    ),
     boardGrid: document.querySelector("#play-board-grid"),
     clueDisplay: document.querySelector("#play-clue-display"),
     liveDiagnosticsToggle: document.querySelector(
@@ -538,6 +542,12 @@ export function createPlayMode(options = {}) {
 
   elements.liveDiagnostics.addEventListener("change", () => {
     liveDiagnosticsVisible = elements.liveDiagnostics.checked;
+    if (
+      !liveDiagnosticsVisible &&
+      playBoardOrder === PLAY_BOARD_ORDER.SCORE
+    ) {
+      playBoardOrder = PLAY_BOARD_ORDER.TABLE;
+    }
     resetPostGameAnalysis();
     renderGame();
     ensurePostGameAnalysis();
@@ -1865,7 +1875,7 @@ export function createPlayMode(options = {}) {
     elements.undoAction.disabled = !canUndoPlayGame(game) || botBusy;
     elements.forwardAction.disabled = forwardHistory.length === 0 || botBusy;
     renderScore(selectedTurn?.cards ?? game.cards, selectedTurn);
-    renderBoardToolbar();
+    renderBoardToolbar(selectedTurn);
     renderBoard(view, currentActor, currentRole, selectedTurn);
     renderTurnPanel(currentActor, currentRole, selectedTurn);
     renderLiveDiagnosticsToggle();
@@ -1902,9 +1912,21 @@ export function createPlayMode(options = {}) {
     elements.score.replaceChildren(...scores);
   }
 
-  function renderBoardToolbar() {
+  function renderBoardToolbar(selectedTurn) {
     const showOrderControls = game.humanSeat.role === PLAYER_ROLE.SPYMASTER;
+    const showScoreOrder =
+      showOrderControls &&
+      game.developerMode &&
+      liveDiagnosticsVisible &&
+      Boolean(selectedTurn);
+    const turnScores = postGameScores[selectedPostGameTurn] ?? {};
+    const scoreOrderReady = Object.values(turnScores).some(Number.isFinite);
+    if (!showScoreOrder && playBoardOrder === PLAY_BOARD_ORDER.SCORE) {
+      playBoardOrder = PLAY_BOARD_ORDER.TABLE;
+    }
     elements.boardToolbar.hidden = !showOrderControls;
+    elements.developerBoardOrder.hidden = !showScoreOrder;
+    elements.developerBoardOrder.disabled = !scoreOrderReady;
     for (const button of elements.boardOrderButtons) {
       button.setAttribute(
         "aria-pressed",
@@ -1920,6 +1942,9 @@ export function createPlayMode(options = {}) {
       currentActor === "human" &&
       currentRole === PLAYER_ROLE.OPERATIVE &&
       !botBusy;
+    const turnScores = selectedTurn
+      ? postGameScores[selectedPostGameTurn] ?? {}
+      : {};
     const visibleCards =
       playBoardOrder === PLAY_BOARD_ORDER.TEAMS &&
       game.humanSeat.role === PLAYER_ROLE.SPYMASTER
@@ -1928,10 +1953,15 @@ export function createPlayMode(options = {}) {
               TEAM_ORDER[left.team] - TEAM_ORDER[right.team] ||
               left.layoutId - right.layoutId,
           )
-        : view.cards;
-    const turnScores = selectedTurn
-      ? postGameScores[selectedPostGameTurn] ?? {}
-      : {};
+        : playBoardOrder === PLAY_BOARD_ORDER.SCORE
+          ? [...view.cards].sort(
+              (left, right) =>
+                compareScoreDescending(
+                  turnScores[left.layoutId],
+                  turnScores[right.layoutId],
+                ) || left.layoutId - right.layoutId,
+            )
+          : view.cards;
     const intended = new Set(selectedTurn?.intendedLayoutIds ?? []);
     const guesses = new Map(
       (selectedTurn?.guesses ?? []).map((guess, index) => [
@@ -2977,6 +3007,21 @@ function formatPercent(value) {
     return "N/A";
   }
   return `${(value * 100).toFixed(2)}%`;
+}
+
+function compareScoreDescending(leftScore, rightScore) {
+  const leftIsFinite = Number.isFinite(leftScore);
+  const rightIsFinite = Number.isFinite(rightScore);
+  if (leftIsFinite && rightIsFinite) {
+    return rightScore - leftScore;
+  }
+  if (leftIsFinite) {
+    return -1;
+  }
+  if (rightIsFinite) {
+    return 1;
+  }
+  return 0;
 }
 
 function formatMegabytes(bytes) {

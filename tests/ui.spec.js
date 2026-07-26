@@ -1917,6 +1917,137 @@ test("Developer live analysis matches post-game role and target review", async (
   await expect(page.locator("#play-operative-controls")).toBeVisible();
 });
 
+test("Developer live analysis orders the board by operative score", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    window.__codenamesPlayModeOptions = {
+      ...window.__codenamesPlayModeOptions,
+      botActionDelay: 5000,
+    };
+  });
+  const operativeScores = Array.from({ length: 25 }, (_, layoutId) => ({
+    layoutId,
+    similarity: ((layoutId * 7) % 25 - 12) / 20,
+  }));
+  const session = playSessionWithHistory([
+    {
+      type: "clue-given",
+      turn: 7,
+      side: "blue",
+      actor: "human",
+      clue: "FIXTURE",
+      number: 2,
+      intendedLayoutIds: [0, 1],
+      developerDiagnostics: {
+        diagnosticsVersion: 1,
+        modelId: "bge-small",
+        operativeScores,
+      },
+    },
+  ]);
+  session.developerMode = true;
+  session.humanSeat = { side: "blue", role: "spymaster" };
+  session.phase = "awaiting-guess";
+  session.currentTurn = {
+    side: "blue",
+    clue: "FIXTURE",
+    number: 2,
+    actor: "human",
+    intendedLayoutIds: [0, 1],
+    guesses: [],
+    developerDiagnostics:
+      session.history.at(-1).developerDiagnostics,
+  };
+  session.history[0].developerMode = true;
+  await page.addInitScript((saved) => {
+    localStorage.setItem("codenames-play-session-v1", JSON.stringify(saved));
+  }, session);
+  await page.goto("/?mode=play");
+  await page.getByRole("button", { name: "Resume game", exact: true }).click();
+
+  const cards = page.locator(".play-card");
+  const scoreOrder = page.getByRole("button", {
+    name: "📊 Score",
+    exact: true,
+  });
+  const tableOrder = page.getByRole("button", {
+    name: "🎲 Table",
+    exact: true,
+  });
+  const originalOrder = await cards.evaluateAll((items) =>
+    items.map((item) => Number(item.dataset.layoutId)),
+  );
+  await expect(scoreOrder).toBeHidden();
+
+  await page.locator("#play-live-diagnostics").check();
+  await expect(scoreOrder).toBeVisible();
+  await expect(scoreOrder).toBeEnabled();
+  await scoreOrder.click();
+  await expect(scoreOrder).toHaveAttribute("aria-pressed", "true");
+
+  const expectedOrder = [...operativeScores]
+    .sort(
+      (left, right) =>
+        right.similarity - left.similarity ||
+        left.layoutId - right.layoutId,
+    )
+    .map(({ layoutId }) => layoutId);
+  expect(
+    await cards.evaluateAll((items) =>
+      items.map((item) => Number(item.dataset.layoutId)),
+    ),
+  ).toEqual(expectedOrder);
+  expect(
+    await cards.evaluateAll((items) =>
+      items.map((item) => Number(item.dataset.operativeScore)),
+    ),
+  ).toEqual(
+    [...operativeScores]
+      .sort(
+        (left, right) =>
+          right.similarity - left.similarity ||
+          left.layoutId - right.layoutId,
+      )
+      .map(({ similarity }) => Number(similarity.toFixed(3))),
+  );
+
+  for (const viewport of [
+    { width: 390, height: 844 },
+    { width: 768, height: 1024 },
+    { width: 860, height: 998 },
+    { width: 1440, height: 900 },
+  ]) {
+    await page.setViewportSize(viewport);
+    const layout = await page.locator("#play-board-toolbar").evaluate(
+      (toolbar) => {
+        const controls = toolbar.querySelector(".play-board-order");
+        const toolbarBounds = toolbar.getBoundingClientRect();
+        const controlsBounds = controls.getBoundingClientRect();
+        return {
+          pageOverflows:
+            document.documentElement.scrollWidth >
+            document.documentElement.clientWidth,
+          controlsFit:
+            controlsBounds.left >= toolbarBounds.left - 1 &&
+            controlsBounds.right <= toolbarBounds.right + 1,
+        };
+      },
+    );
+    expect(layout.pageOverflows).toBe(false);
+    expect(layout.controlsFit).toBe(true);
+  }
+
+  await page.locator("#play-live-diagnostics").uncheck();
+  await expect(scoreOrder).toBeHidden();
+  await expect(tableOrder).toHaveAttribute("aria-pressed", "true");
+  expect(
+    await cards.evaluateAll((items) =>
+      items.map((item) => Number(item.dataset.layoutId)),
+    ),
+  ).toEqual(originalOrder);
+});
+
 test("Play avoids recent words across pools and persists policy", async ({
   page,
 }) => {
