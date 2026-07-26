@@ -2722,9 +2722,15 @@ test("Play validates human clues and resumes the saved seat", async ({ page }) =
   await page.locator('[data-play-seat="blue:spymaster"]').click();
   await page.getByRole("button", { name: "Start new game", exact: true }).click();
 
-  await page.getByRole("textbox", { name: "Clue", exact: true }).fill("two words");
+  const clueInput = page.getByRole("textbox", { name: "Clue", exact: true });
+  await clueInput.fill("two words");
   await page.getByRole("button", { name: "Give clue", exact: true }).click();
   await expect(page.locator("#play-clue-error")).toHaveText("A clue must be one word.");
+  await expect(clueInput).toHaveValue("two words");
+
+  await clueInput.fill("clearme");
+  await page.getByRole("button", { name: "Give clue", exact: true }).click();
+  await expect(clueInput).toHaveValue("");
 
   await page.getByRole("button", { name: "Start new game", exact: true }).click();
   await expect(page.getByRole("button", { name: "Resume game", exact: true })).toBeVisible();

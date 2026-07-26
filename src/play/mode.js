@@ -627,7 +627,7 @@ export function createPlayMode(options = {}) {
   );
   elements.clueForm.addEventListener("submit", (event) => {
     event.preventDefault();
-    runHumanAction((current) =>
+    const clueGiven = runHumanAction((current) =>
       giveClue(current, {
         clue: elements.clueInput.value,
         number: Number(elements.clueNumber.value),
@@ -645,6 +645,10 @@ export function createPlayMode(options = {}) {
             : null,
       }),
     );
+    if (clueGiven) {
+      elements.clueInput.value = "";
+      renderClearClueButton();
+    }
   });
 
   renderSetup();
@@ -1117,7 +1121,7 @@ export function createPlayMode(options = {}) {
 
   function runHumanAction(action) {
     if (!game) {
-      return;
+      return false;
     }
     try {
       game = action(game);
@@ -1128,6 +1132,7 @@ export function createPlayMode(options = {}) {
       statusMessageIsError = false;
       elements.clueError.textContent = "";
       commitGame();
+      return true;
     } catch (error) {
       const message = localizePlayError(
         error instanceof Error ? error.message : String(error),
@@ -1137,6 +1142,7 @@ export function createPlayMode(options = {}) {
       statusMessage = message;
       statusMessageIsError = true;
       renderGame();
+      return false;
     }
   }
 
