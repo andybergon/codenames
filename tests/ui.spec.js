@@ -2257,6 +2257,7 @@ test("Play keeps game creation actions prominent across responsive states", asyn
     { width: 430, height: 998, setupActionBelow: true },
     { width: 625, height: 998, setupActionBelow: false },
     { width: 768, height: 1024, setupActionBelow: false },
+    { width: 846, height: 998, setupActionBelow: false },
     { width: 1440, height: 900, setupActionBelow: false },
     { width: 1920, height: 1080, setupActionBelow: false },
   ]) {
