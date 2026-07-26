@@ -2420,9 +2420,9 @@ test("starting a second Play game clears the previous clue and analysis", async 
   await page.getByRole("textbox", { name: "Clue", exact: true }).fill("hibernation");
   await page.getByRole("button", { name: "Give clue", exact: true }).click();
   await expect(page.locator("#play-history-list")).toContainText(
-    "Blue clue: HIBERNATION 2",
+    "Clue: HIBERNATION 2",
   );
-  await expect(page.locator("#play-history-list")).toContainText("Blue guessed", {
+  await expect(page.locator("#play-history-list")).toContainText("Guessed", {
     timeout: 15_000,
   });
 
@@ -2972,15 +2972,19 @@ test("Play game log color-codes each guessed card as a word pill", async ({ page
   await expect(pills.nth(1)).toHaveAttribute("aria-label", "WORD1, Red card");
   await expect(pills.nth(2)).toHaveAttribute("aria-label", "WORD2, Neutral card");
   await expect(pills.nth(3)).toHaveAttribute("aria-label", "WORD3, Assassin card");
-  expect(await page.locator("#play-history-list li").allTextContents()).toEqual([
-    "Blue guessed WORD0",
-    "Blue guessed WORD1",
-    "Blue guessed WORD2",
-    "Blue guessed WORD3",
+  expect(
+    await page
+      .locator("#play-history-list .play-history-action")
+      .allTextContents(),
+  ).toEqual([
+    "Guessed WORD0",
+    "Guessed WORD1",
+    "Guessed WORD2",
+    "Guessed WORD3",
   ]);
 });
 
-test("Play game log switches between chronological and separated team views", async ({
+test("Play game log groups actions by turn and switches between views", async ({
   page,
 }) => {
   await resumePlaySession(page, [
@@ -3025,14 +3029,36 @@ test("Play game log switches between chronological and separated team views", as
 
   await expect(timelineView).toHaveAttribute("aria-pressed", "true");
   await expect(page.locator("#play-history-count")).toHaveText("4 events");
-  await expect(timeline.locator("li")).toHaveCount(4);
+  await expect(timeline.locator(".play-history-turn")).toHaveCount(2);
+  await expect(timeline.locator(".play-history-action")).toHaveCount(4);
   await expect(timeline.locator(".explain-recommendation-button")).toHaveCount(0);
-  expect(await timeline.locator("li").allTextContents()).toEqual([
-    "Blue clue: OCEAN 2",
-    "Blue guessed WORD0",
-    "Red clue: FIRE 1",
-    "Red passed",
+  expect(
+    await timeline.locator(".play-history-turn-header").allTextContents(),
+  ).toEqual(["🔵 Blue · Turn 1", "🔴 Red · Turn 2"]);
+  expect(
+    await timeline.locator(".play-history-action").allTextContents(),
+  ).toEqual([
+    "Clue: OCEAN 2",
+    "Guessed WORD0",
+    "Clue: FIRE 1",
+    "Passed",
   ]);
+  const firstTurn = timeline.locator('.play-history-turn[data-turn="1"]');
+  await expect(firstTurn.locator(".play-history-action")).toHaveCount(2);
+  const firstTurnHierarchy = await firstTurn.evaluate((turn) => {
+    const clue = turn.querySelector('[data-action="clue-given"]');
+    const guess = turn.querySelector('[data-action="card-guessed"]');
+    const clueBounds = clue.getBoundingClientRect();
+    const guessBounds = guess.getBoundingClientRect();
+    return {
+      teamMentions: (turn.innerText.match(/blue/gi) ?? []).length,
+      guessIndented: guessBounds.left > clueBounds.left,
+      turnBorder: getComputedStyle(turn).borderTopWidth,
+    };
+  });
+  expect(firstTurnHierarchy.teamMentions).toBe(1);
+  expect(firstTurnHierarchy.guessIndented).toBe(true);
+  expect(firstTurnHierarchy.turnBorder).toBe("1px");
   const timelineClues = timeline.locator(".play-clue-pill");
   await expect(timelineClues).toHaveCount(2);
   expect(await timelineClues.allTextContents()).toEqual(["OCEAN", "FIRE"]);
@@ -3045,20 +3071,28 @@ test("Play game log switches between chronological and separated team views", as
 
   await expect(teamsView).toHaveAttribute("aria-pressed", "true");
   await expect(timeline).toBeHidden();
-  expect(await page.locator("#play-history-blue-list li").allTextContents()).toEqual([
-    "Blue clue: OCEAN 2",
-    "Blue guessed WORD0",
-  ]);
+  await expect(
+    page.locator("#play-history-blue-list .play-history-turn-header"),
+  ).toHaveText("Turn 1");
+  expect(
+    await page
+      .locator("#play-history-blue-list .play-history-action")
+      .allTextContents(),
+  ).toEqual(["Clue: OCEAN 2", "Guessed WORD0"]);
   await expect(
     page.locator("#play-history-blue-list .play-clue-pill"),
   ).toHaveText("OCEAN");
   await expect(
     page.locator("#play-history-blue-list .play-history-card"),
   ).toHaveAttribute("data-team", "friendly");
-  expect(await page.locator("#play-history-red-list li").allTextContents()).toEqual([
-    "Red clue: FIRE 1",
-    "Red passed",
-  ]);
+  await expect(
+    page.locator("#play-history-red-list .play-history-turn-header"),
+  ).toHaveText("Turn 2");
+  expect(
+    await page
+      .locator("#play-history-red-list .play-history-action")
+      .allTextContents(),
+  ).toEqual(["Clue: FIRE 1", "Passed"]);
 
   await timelineView.click();
   await expect(timelineView).toHaveAttribute("aria-pressed", "true");
@@ -3107,7 +3141,8 @@ test("long Play logs remain complete and responsive in both views", async ({ pag
   await resumePlaySession(page, history);
 
   await expect(page.locator("#play-history-count")).toHaveText("24 events");
-  await expect(page.locator("#play-history-list li")).toHaveCount(24);
+  await expect(page.locator("#play-history-list .play-history-turn")).toHaveCount(12);
+  await expect(page.locator("#play-history-list .play-history-action")).toHaveCount(24);
   expect(
     await page.locator("#play-history-list").evaluate(
       (list) => list.scrollHeight > list.clientHeight,
@@ -3115,8 +3150,18 @@ test("long Play logs remain complete and responsive in both views", async ({ pag
   ).toBe(true);
 
   await page.getByRole("button", { name: "↔️ By team", exact: true }).click();
-  await expect(page.locator("#play-history-blue-list li")).toHaveCount(12);
-  await expect(page.locator("#play-history-red-list li")).toHaveCount(12);
+  await expect(
+    page.locator("#play-history-blue-list .play-history-turn"),
+  ).toHaveCount(6);
+  await expect(
+    page.locator("#play-history-red-list .play-history-turn"),
+  ).toHaveCount(6);
+  await expect(
+    page.locator("#play-history-blue-list .play-history-action"),
+  ).toHaveCount(12);
+  await expect(
+    page.locator("#play-history-red-list .play-history-action"),
+  ).toHaveCount(12);
 
   for (const viewport of [
     { width: 390, height: 844, columns: 1 },
@@ -3302,8 +3347,8 @@ test("completed Play sessions replay turns and explain intended targets", async 
   });
   await expect(firstClue).toHaveAttribute("aria-pressed", "true");
   await expect(secondClue).toHaveAttribute("aria-pressed", "false");
-  await expect(firstClue.locator(".play-history-clue-action")).toHaveText("Viewing");
-  await expect(secondClue.locator(".play-history-clue-action")).toHaveText("Review");
+  await expect(firstClue).toHaveText("Viewing");
+  await expect(secondClue).toHaveText("Review");
   const initialTurnRows = await page
     .locator("#play-history-list")
     .evaluate((list) =>
@@ -3314,29 +3359,19 @@ test("completed Play sessions replay turns and explain intended targets", async 
       })),
     );
   expect(initialTurnRows).toEqual([
-    expect.objectContaining({ turn: "0", selected: true }),
     expect.objectContaining({
       turn: "0",
       selected: true,
-      text: expect.stringContaining("Blue guessed WORD0"),
-    }),
-    expect.objectContaining({
-      turn: "0",
-      selected: true,
-      text: expect.stringContaining("Blue passed"),
-    }),
-    expect.objectContaining({ turn: "1", selected: false }),
-    expect.objectContaining({
-      turn: "1",
-      selected: false,
-      text: expect.stringContaining("Red guessed WORD24"),
+      text: expect.stringContaining("Guessed WORD0"),
     }),
     expect.objectContaining({
       turn: "1",
       selected: false,
-      text: expect.stringContaining("Blue won by assassin"),
+      text: expect.stringContaining("Guessed WORD24"),
     }),
   ]);
+  expect(initialTurnRows[0].text).toContain("Passed");
+  expect(initialTurnRows[1].text).toContain("Blue won by assassin");
   for (const viewport of [
     { width: 390, height: 844 },
     { width: 768, height: 1024 },
@@ -3357,10 +3392,6 @@ test("completed Play sessions replay turns and explain intended targets", async 
       `whole-turn hover at ${viewport.width}px`,
     ).toEqual([
       { turn: "0", previewed: false },
-      { turn: "0", previewed: false },
-      { turn: "0", previewed: false },
-      { turn: "1", previewed: true },
-      { turn: "1", previewed: true },
       { turn: "1", previewed: true },
     ]);
     await page.locator("#play-post-game-outcome").hover();
@@ -3393,19 +3424,23 @@ test("completed Play sessions replay turns and explain intended targets", async 
     /is-done/,
   );
   await expect(page.locator("#play-history-list")).toContainText(
-    "Blue clue: FIRST 2, intended WORD0 + WORD1",
+    "Clue: FIRST 2, intended WORD0 + WORD1",
   );
   await expect(page.locator("#play-history-list")).toContainText(
-    "Blue guessed WORD0",
+    "Guessed WORD0",
   );
   await expect(page.locator("#play-history-list")).toContainText(
-    "Red clue: SECOND 1, intended WORD9",
+    "Clue: SECOND 1, intended WORD9",
   );
   const blueSummary = page
-    .locator('#play-history-list li[data-side="blue"] .play-history-event-summary')
+    .locator(
+      '#play-history-list .play-history-turn[data-side="blue"] .play-history-event-summary',
+    )
     .first();
   const redSummary = page
-    .locator('#play-history-list li[data-side="red"] .play-history-event-summary')
+    .locator(
+      '#play-history-list .play-history-turn[data-side="red"] .play-history-event-summary',
+    )
     .first();
   await expect(blueSummary.locator(".play-history-clue-number")).toHaveText("2");
   await expect(blueSummary.locator(".play-history-clue-number")).toHaveCSS(
@@ -3446,11 +3481,15 @@ test("completed Play sessions replay turns and explain intended targets", async 
     await page.setViewportSize(viewport);
     const actionLayout = await redSummary.evaluate((summary) => {
       const item = summary.closest("li");
-      const review = item.querySelector(".play-history-clue-action");
-      const explain = item.querySelector(".explain-recommendation-button");
+      const turn = item.closest(".play-history-turn");
+      const heading = turn.querySelector(".play-history-turn-heading");
+      const review = heading.querySelector(".play-history-clue-action");
+      const explain = heading.querySelector(".explain-recommendation-button");
       const reviewBounds = review.getBoundingClientRect();
       const explainBounds = explain.getBoundingClientRect();
-      const itemBounds = item.getBoundingClientRect();
+      const headingBounds = heading.getBoundingClientRect();
+      const summaryBounds = summary.getBoundingClientRect();
+      const turnBounds = turn.getBoundingClientRect();
       const reviewStyle = getComputedStyle(review);
       const explainStyle = getComputedStyle(explain);
       return {
@@ -3466,8 +3505,14 @@ test("completed Play sessions replay turns and explain intended targets", async 
           reviewStyle.backgroundColor === explainStyle.backgroundColor &&
           reviewStyle.fontSize === explainStyle.fontSize,
         actionsFit:
-          reviewBounds.left >= itemBounds.left - 1 &&
-          explainBounds.right <= itemBounds.right + 1,
+          reviewBounds.left >= turnBounds.left - 1 &&
+          explainBounds.right <= turnBounds.right + 1,
+        actionsInHeading:
+          reviewBounds.top >= headingBounds.top - 1 &&
+          explainBounds.bottom <= headingBounds.bottom + 1,
+        actionsAboveClue:
+          reviewBounds.bottom <= summaryBounds.top + 1 &&
+          explainBounds.bottom <= summaryBounds.top + 1,
       };
     });
     expect(actionLayout.sameRow, `action row at ${viewport.width}px`).toBe(true);
@@ -3476,7 +3521,63 @@ test("completed Play sessions replay turns and explain intended targets", async 
     expect(actionLayout.actionsFit, `action clipping at ${viewport.width}px`).toBe(
       true,
     );
+    expect(
+      actionLayout.actionsInHeading,
+      `turn action alignment at ${viewport.width}px`,
+    ).toBe(true);
+    expect(
+      actionLayout.actionsAboveClue,
+      `turn actions above clue at ${viewport.width}px`,
+    ).toBe(true);
   }
+  const teamsView = page.getByRole("button", { name: "↔️ By team", exact: true });
+  const timelineView = page.getByRole("button", { name: "🕒 Timeline", exact: true });
+  await teamsView.click();
+  for (const viewport of [
+    { width: 390, height: 844, columns: 1 },
+    { width: 768, height: 1024, columns: 2 },
+    { width: 1440, height: 900, columns: 2 },
+  ]) {
+    await page.setViewportSize(viewport);
+    const teamLayout = await page.evaluate(() => {
+      const teamLists = document.querySelector("#play-history-team-lists");
+      const turn = document.querySelector(
+        '#play-history-blue-list .play-history-turn[data-analysis-turn="0"]',
+      );
+      const heading = turn.querySelector(".play-history-turn-heading");
+      const summary = turn.querySelector(".play-history-event-summary");
+      const controls = turn.querySelector(".play-history-turn-actions");
+      const headingBounds = heading.getBoundingClientRect();
+      const summaryBounds = summary.getBoundingClientRect();
+      const controlsBounds = controls.getBoundingClientRect();
+      const turnBounds = turn.getBoundingClientRect();
+      return {
+        columns: getComputedStyle(teamLists).gridTemplateColumns.split(" ").length,
+        controlsFit:
+          controlsBounds.left >= turnBounds.left - 1 &&
+          controlsBounds.right <= turnBounds.right + 1,
+        controlsInHeading:
+          controlsBounds.top >= headingBounds.top - 1 &&
+          controlsBounds.bottom <= headingBounds.bottom + 1,
+        controlsAboveClue: controlsBounds.bottom <= summaryBounds.top + 1,
+      };
+    });
+    expect(teamLayout.columns, `analysis columns at ${viewport.width}px`).toBe(
+      viewport.columns,
+    );
+    expect(teamLayout.controlsFit, `team actions fit at ${viewport.width}px`).toBe(
+      true,
+    );
+    expect(
+      teamLayout.controlsInHeading,
+      `team action alignment at ${viewport.width}px`,
+    ).toBe(true);
+    expect(
+      teamLayout.controlsAboveClue,
+      `team actions above clue at ${viewport.width}px`,
+    ).toBe(true);
+  }
+  await timelineView.click();
   await blueExplainButton.click();
   await redExplainButton.click();
   const explanations = page.locator(
@@ -3567,14 +3668,10 @@ test("completed Play sessions replay turns and explain intended targets", async 
     );
   expect(selectedSecondTurnRows).toEqual([
     { turn: "0", selected: false },
-    { turn: "0", selected: false },
-    { turn: "0", selected: false },
-    { turn: "1", selected: true },
-    { turn: "1", selected: true },
     { turn: "1", selected: true },
   ]);
-  await expect(firstClue.locator(".play-history-clue-action")).toHaveText("Review");
-  await expect(secondClue.locator(".play-history-clue-action")).toHaveText("Viewing");
+  await expect(firstClue).toHaveText("Review");
+  await expect(secondClue).toHaveText("Viewing");
   await expect(
     page.locator("#play-clue-display .play-clue-pill"),
   ).toHaveText("SECOND");

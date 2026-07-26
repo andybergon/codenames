@@ -2527,6 +2527,7 @@ export function createPlayMode(options = {}) {
       elements.historyList,
       visible,
       translate(gameLanguage(), "noGameActions"),
+      { showSide: true },
     );
     renderHistoryList(
       elements.historyBlueList,
@@ -2534,6 +2535,7 @@ export function createPlayMode(options = {}) {
       translate(gameLanguage(), "noSideActions", {
         side: localizedSideLabel(SIDE.BLUE),
       }),
+      { showSide: false },
     );
     renderHistoryList(
       elements.historyRedList,
@@ -2541,20 +2543,24 @@ export function createPlayMode(options = {}) {
       translate(gameLanguage(), "noSideActions", {
         side: localizedSideLabel(SIDE.RED),
       }),
+      { showSide: false },
     );
   }
 
-  function renderHistoryList(list, events, emptyMessage) {
+  function renderHistoryList(list, events, emptyMessage, { showSide }) {
     const items = events.length
-      ? events.map(createHistoryItem)
+      ? groupHistoryEvents(events).map((turn) =>
+          createHistoryTurn(turn, { showSide }),
+        )
       : [createEmptyHistoryItem(emptyMessage)];
     list.replaceChildren(...items);
     if (game.phase === GAME_PHASE.COMPLETE) {
       const selectedItem = list.querySelector(
         `[data-analysis-turn="${selectedPostGameTurn}"]`,
       );
-      list.scrollTop = selectedItem
-        ? selectedItem.offsetTop - list.offsetTop
+      const selectedTurn = selectedItem?.closest(".play-history-turn");
+      list.scrollTop = selectedTurn
+        ? selectedTurn.offsetTop - list.offsetTop
         : list.scrollHeight;
     } else {
       list.scrollTop = list.scrollHeight;
@@ -2575,13 +2581,45 @@ export function createPlayMode(options = {}) {
     }
   }
 
-  function createHistoryItem(event) {
+  function groupHistoryEvents(events) {
+    const turns = [];
+    for (const event of events) {
+      const side = event.side ?? event.winner ?? "";
+      const currentTurn = turns.at(-1);
+      const continuesCurrentTurn =
+        currentTurn &&
+        event.type !== "clue-given" &&
+        currentTurn.turn === event.turn &&
+        (event.type === "game-ended" || currentTurn.side === side);
+      if (continuesCurrentTurn) {
+        currentTurn.events.push(event);
+      } else {
+        turns.push({
+          turn: event.turn,
+          side,
+          events: [event],
+        });
+      }
+    }
+    return turns;
+  }
+
+  function createHistoryTurn(turn, { showSide }) {
     const item = document.createElement("li");
+    const heading = document.createElement("div");
+    const header = document.createElement("div");
+    const turnActions = document.createElement("div");
+    const actions = document.createElement("ol");
     const turnIndex =
-      game.phase === GAME_PHASE.COMPLETE && Number.isInteger(event.turn)
-        ? postGameTurns.findIndex((turn) => turn.turn === event.turn)
+      game.phase === GAME_PHASE.COMPLETE && Number.isInteger(turn.turn)
+        ? postGameTurns.findIndex(
+            (candidate) =>
+              candidate.turn === turn.turn && candidate.side === turn.side,
+          )
         : -1;
-    item.dataset.side = event.side ?? event.winner ?? "";
+    item.className = "play-history-turn";
+    item.dataset.side = turn.side;
+    item.dataset.turn = String(turn.turn);
     if (turnIndex >= 0) {
       item.dataset.analysisTurn = String(turnIndex);
       item.classList.toggle(
@@ -2589,6 +2627,31 @@ export function createPlayMode(options = {}) {
         turnIndex === selectedPostGameTurn,
       );
     }
+    heading.className = "play-history-turn-heading";
+    header.className = "play-history-turn-header";
+    header.textContent = showSide
+      ? `${sideEmoji(turn.side)} ${localizedSideLabel(turn.side)} · ${translate(
+          gameLanguage(),
+          "historyTurnNumber",
+          { turn: turn.turn },
+        )}`
+      : translate(gameLanguage(), "historyTurnNumber", { turn: turn.turn });
+    turnActions.className = "play-history-turn-actions";
+    actions.className = "play-history-actions";
+    actions.append(
+      ...turn.events.map((event) =>
+        createHistoryItem(event, turnIndex, turnActions),
+      ),
+    );
+    heading.append(header, turnActions);
+    item.append(heading, actions);
+    return item;
+  }
+
+  function createHistoryItem(event, turnIndex = -1, turnActions = null) {
+    const item = document.createElement("li");
+    item.className = "play-history-action";
+    item.dataset.action = event.type;
     if (event.type === "clue-given") {
       const intendedTargets =
         game.phase === GAME_PHASE.COMPLETE && event.intendedLayoutIds?.length
@@ -2601,20 +2664,16 @@ export function createPlayMode(options = {}) {
       const intendedWords = intendedTargets.map(({ word }) => word);
       if (turnIndex >= 0) {
         const button = document.createElement("button");
-        const clueLabel = document.createElement("span");
-        const actionLabel = document.createElement("span");
+        const summary = document.createElement("div");
         const selected = turnIndex === selectedPostGameTurn;
         button.type = "button";
-        button.className = "play-history-clue";
-        clueLabel.className =
-          "play-history-clue-label play-history-event-summary";
-        appendHistoryClueSummary(clueLabel, event, intendedTargets);
-        actionLabel.className = "play-history-clue-action";
-        actionLabel.textContent = translate(
+        button.className = "play-history-clue play-history-clue-action";
+        button.textContent = translate(
           gameLanguage(),
           selected ? "viewing" : "review",
         );
-        actionLabel.setAttribute("aria-hidden", "true");
+        summary.className = "play-history-event-summary";
+        appendHistoryClueSummary(summary, event, intendedTargets);
         button.setAttribute(
           "aria-label",
           translate(gameLanguage(), "reviewTurn", {
@@ -2652,8 +2711,8 @@ export function createPlayMode(options = {}) {
           selectedPostGameTurn = turnIndex;
           renderGame();
         });
-        button.append(clueLabel, actionLabel);
-        item.append(button);
+        turnActions?.append(button);
+        item.append(summary);
       } else {
         const summary = document.createElement("div");
         summary.className = "play-history-event-summary";
@@ -2669,6 +2728,7 @@ export function createPlayMode(options = {}) {
           {
             wordPills: true,
             language: gameLanguage(),
+            buttonContainer: turnIndex >= 0 ? turnActions : null,
           },
         );
         explanation.classList.add("play-history-explanation");
@@ -2679,15 +2739,12 @@ export function createPlayMode(options = {}) {
       }
     } else if (event.type === "card-guessed") {
       item.append(
-        translate(gameLanguage(), "historyGuessLead", {
-          side: localizedSideLabel(event.side),
-        }),
+        createHistoryActionLabel("historyGuessAction"),
+        " ",
         createHistoryCardPill(event.word, event.team),
       );
     } else if (event.type === "turn-passed") {
-      item.textContent = translate(gameLanguage(), "historyPass", {
-        side: localizedSideLabel(event.side),
-      });
+      item.append(createHistoryActionLabel("historyPassAction"));
     } else {
       item.textContent = `🏁 ${translate(gameLanguage(), "historyWin", {
         side: localizedSideLabel(event.winner),
@@ -2723,9 +2780,8 @@ export function createPlayMode(options = {}) {
 
   function appendHistoryClueSummary(container, event, intendedTargets) {
     container.append(
-      translate(gameLanguage(), "historyClueLead", {
-        side: localizedSideLabel(event.side),
-      }),
+      createHistoryActionLabel("historyClueAction"),
+      ": ",
       createCluePill(event.clue),
       " ",
       createClueNumberPill(event.number),
@@ -2741,6 +2797,13 @@ export function createPlayMode(options = {}) {
         container.append(createHistoryCardPill(target.word, target.team));
       });
     }
+  }
+
+  function createHistoryActionLabel(key) {
+    const label = document.createElement("strong");
+    label.className = "play-history-action-label";
+    label.textContent = translate(gameLanguage(), key);
+    return label;
   }
 
   function createHistoryCardPill(word, team) {

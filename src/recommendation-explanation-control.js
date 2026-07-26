@@ -38,7 +38,7 @@ const COPY = Object.freeze({
 
 export function createRecommendationExplanationControl(
   suggestion,
-  { wordPills = false, language = "en" } = {},
+  { wordPills = false, language = "en", buttonContainer = null } = {},
 ) {
   const copy = COPY[language] ?? COPY.en;
   const control = document.createElement("div");
@@ -75,8 +75,13 @@ export function createRecommendationExplanationControl(
       copy,
     );
   });
-  control.append(button, output);
-  renderControlIcons(control);
+  if (buttonContainer) {
+    buttonContainer.append(button);
+    control.append(output);
+  } else {
+    control.append(button, output);
+  }
+  renderControlIcons(button);
   return control;
 }
 
@@ -94,7 +99,7 @@ async function requestExplanation(
   button.setAttribute("aria-busy", "true");
   button.classList.add("is-loading");
   setButtonContent(button, "loader-circle", copy.explaining);
-  renderControlIcons(control);
+  renderControlIcons(button);
   output.hidden = true;
   output.classList.remove("is-error");
 
@@ -131,7 +136,7 @@ async function requestExplanation(
     button.removeAttribute("aria-busy");
     button.classList.remove("is-loading");
     setButtonContent(button, "sparkles", copy.retry);
-    renderControlIcons(control);
+    renderControlIcons(button);
   }
 }
 

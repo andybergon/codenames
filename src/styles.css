@@ -3472,6 +3472,7 @@ button.play-card:not(:disabled):hover {
   .play-clue-actions .primary {
     flex: 1 1 auto;
   }
+
 }
 
 .play-section-heading {
@@ -3633,19 +3634,76 @@ button.play-card:not(:disabled):hover {
 .play-history-list {
   display: grid;
   max-height: 270px;
-  gap: 6px;
+  gap: 10px;
   overflow-y: auto;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-.play-history-list li {
+.play-history-turn {
+  min-width: 0;
+  border: 1px solid var(--line);
   border-left: 3px solid var(--line);
-  padding: 4px 0 4px 9px;
+  border-radius: 7px;
+  padding: 7px 9px 8px;
+  background: var(--surface);
+}
+
+.play-history-turn-heading {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 6px 8px;
+  min-width: 0;
+  margin-bottom: 5px;
+}
+
+.play-history-turn-header {
+  color: var(--ink);
+  font-size: 0.66rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  line-height: 1.25;
+  text-transform: uppercase;
+}
+
+.play-history-turn-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.play-history-actions {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.play-history-action {
+  min-width: 0;
+  padding: 3px 0;
   color: var(--muted);
   font-size: 0.78rem;
   line-height: 1.35;
+}
+
+.play-history-action[data-action="card-guessed"],
+.play-history-action[data-action="turn-passed"],
+.play-history-action[data-action="game-ended"] {
+  margin-left: 12px;
+  border-left: 1px solid var(--line);
+  padding-left: 10px;
+}
+
+.play-history-action-label {
+  color: var(--ink);
+  font-weight: 800;
 }
 
 .play-history-event-summary {
@@ -3670,47 +3728,17 @@ button.play-card:not(:disabled):hover {
   line-height: 1.35;
 }
 
-.play-history-list li.has-clue-actions {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  column-gap: 6px;
-  row-gap: 6px;
-}
-
-.play-history-list li.has-clue-actions > .play-history-clue {
-  grid-column: 1;
-  grid-row: 1;
-  min-width: 0;
-}
-
-.play-history-list li.has-clue-actions > .play-history-explanation {
-  display: contents;
-}
-
-.play-history-list
-  li.has-clue-actions
-  > .play-history-explanation
-  .explain-recommendation-button {
-  grid-column: 2;
-  grid-row: 1;
-  align-self: center;
-}
-
-.play-history-list
-  li.has-clue-actions
+.play-history-action.has-clue-actions
   > .play-history-explanation
   .explanation-targets {
-  grid-column: 1 / -1;
-  grid-row: 2;
   margin-top: 0;
 }
 
-.play-history-list li[data-side="blue"] {
+.play-history-turn[data-side="blue"] {
   border-left-color: var(--blue);
 }
 
-.play-history-list li[data-side="red"] {
+.play-history-turn[data-side="red"] {
   border-left-color: var(--red);
 }
 
@@ -3778,16 +3806,25 @@ button.play-card:not(:disabled):hover {
   color: #171717;
 }
 
-.play-history-list .play-history-empty {
-  border-left-color: var(--line);
+.play-history-list > .play-history-empty {
+  border-left: 3px solid var(--line);
+  padding: 4px 0 4px 9px;
   color: var(--muted);
+  font-size: 0.7rem;
   font-style: italic;
+  line-height: 1.35;
 }
 
 .play-history-team-lists {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
+}
+
+@container play-turn (max-width: 560px) {
+  .play-history-team-lists {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 .play-history-team-lists[hidden],
@@ -3809,39 +3846,19 @@ button.play-card:not(:disabled):hover {
   font-size: 0.78rem;
 }
 
-.play-history li.is-selected,
-.play-history li.is-previewed {
-  border-radius: 0 6px 6px 0;
+.play-history-turn.is-selected,
+.play-history-turn.is-previewed {
+  border-radius: 7px;
   background: var(--subtle-fill);
   box-shadow: inset 0 0 0 1px var(--line);
 }
 
 .play-history-clue {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  border: 0;
-  border-radius: 5px;
-  padding: 2px 5px 2px 0;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  line-height: inherit;
-  text-align: left;
   cursor: pointer;
 }
 
-.play-history-clue-label {
-  min-width: 0;
-}
-
 .play-history-clue-action,
-.play-history-list
-  li.has-clue-actions
-  > .play-history-explanation
-  .explain-recommendation-button {
+.play-history-turn-actions .explain-recommendation-button {
   display: inline-flex;
   align-items: center;
   min-height: 26px;
@@ -3857,20 +3874,14 @@ button.play-card:not(:disabled):hover {
   text-transform: none;
 }
 
-.play-history-clue:hover,
-.play-history-clue:focus-visible,
-.play-history-clue[aria-pressed="true"] {
-  color: var(--ink);
-}
-
 .play-history-clue:focus-visible {
   outline: 2px solid var(--ink);
   outline-offset: 2px;
 }
 
-.play-history-clue:hover .play-history-clue-action,
-.play-history-clue:focus-visible .play-history-clue-action,
-.play-history-clue[aria-pressed="true"] .play-history-clue-action {
+.play-history-clue:hover,
+.play-history-clue:focus-visible,
+.play-history-clue[aria-pressed="true"] {
   border-color: var(--blue);
   background: var(--blue-soft);
   color: var(--blue-text);
