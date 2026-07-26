@@ -579,6 +579,7 @@ export function createPlayMode(options = {}) {
     const savedLanguage = savedGame?.language ?? LANGUAGE.ENGLISH;
     const savedLanguageDiffers =
       Boolean(savedGame) && savedLanguage !== selectedLanguage;
+    const savedGameIsComplete = savedGame?.phase === GAME_PHASE.COMPLETE;
     elements.savedTitle.textContent = translate(
       selectedLanguage,
       savedLanguageDiffers
@@ -595,7 +596,13 @@ export function createPlayMode(options = {}) {
     );
     elements.resumeSessionLabel.textContent = translate(
       selectedLanguage,
-      savedLanguageDiffers ? "resumeOtherLanguageGame" : "resumeGame",
+      savedGameIsComplete
+        ? savedLanguageDiffers
+          ? "reviewFinishedOtherLanguageGame"
+          : "reviewFinishedGame"
+        : savedLanguageDiffers
+          ? "resumeOtherLanguageGame"
+          : "resumeGame",
       { language: savedLanguage },
     );
     elements.startGameLabel.textContent = translate(

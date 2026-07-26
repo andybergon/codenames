@@ -123,6 +123,7 @@ const COPY = Object.freeze({
     extended: "Extended",
     discardSaved: "Discard saved",
     resumeGame: "Resume game",
+    reviewFinishedGame: "Review finished game",
     startNewGame: "Start new game",
     savedGameAvailable: "Saved game available",
     savedGameHelp: "Continue where you left off or clear it.",
@@ -132,6 +133,8 @@ const COPY = Object.freeze({
       `Resume to switch to ${language === LANGUAGE.ITALIAN ? "Italian" : "English"}, or start a new game in ${selectedLanguage === LANGUAGE.ITALIAN ? "Italian" : "English"}.`,
     resumeOtherLanguageGame: ({ language }) =>
       `Resume ${language === LANGUAGE.ITALIAN ? "Italian" : "English"} game`,
+    reviewFinishedOtherLanguageGame: ({ language }) =>
+      `Review finished ${language === LANGUAGE.ITALIAN ? "Italian" : "English"} game`,
     startNewLanguageGame: ({ language }) =>
       `Start new ${language === LANGUAGE.ITALIAN ? "Italian" : "English"} game`,
     settings: "Settings",
@@ -397,6 +400,7 @@ const COPY = Object.freeze({
     extended: "Esteso",
     discardSaved: "Elimina salvataggio",
     resumeGame: "Riprendi partita",
+    reviewFinishedGame: "Esamina partita conclusa",
     startNewGame: "Nuova partita",
     savedGameAvailable: "Partita salvata disponibile",
     savedGameHelp: "Riprendi da dove eri arrivato o elimina il salvataggio.",
@@ -406,6 +410,8 @@ const COPY = Object.freeze({
       `Riprendi per passare all'${language === LANGUAGE.ITALIAN ? "italiano" : "inglese"}, oppure inizia una nuova partita in ${selectedLanguage === LANGUAGE.ITALIAN ? "italiano" : "inglese"}.`,
     resumeOtherLanguageGame: ({ language }) =>
       `Riprendi partita in ${language === LANGUAGE.ITALIAN ? "italiano" : "inglese"}`,
+    reviewFinishedOtherLanguageGame: ({ language }) =>
+      `Esamina partita conclusa in ${language === LANGUAGE.ITALIAN ? "italiano" : "inglese"}`,
     startNewLanguageGame: ({ language }) =>
       `Nuova partita in ${language === LANGUAGE.ITALIAN ? "italiano" : "inglese"}`,
     settings: "Impostazioni",

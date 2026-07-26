@@ -132,6 +132,72 @@ async function resumePlaySession(page, history) {
   await page.getByRole("button", { name: "Resume game", exact: true }).click();
 }
 
+test("saved Play CTA distinguishes active games from finished reviews", async ({
+  page,
+}) => {
+  const activeGame = playSessionWithHistory([]);
+  await page.goto("/");
+  await page.evaluate((session) => {
+    localStorage.setItem("codenames-play-session-v1", JSON.stringify(session));
+  }, activeGame);
+  await page.reload();
+
+  const resumeGame = page.getByRole("button", {
+    name: "Resume game",
+    exact: true,
+  });
+  await expect(resumeGame).toBeVisible();
+  await resumeGame.click();
+  expect(new URL(page.url()).search).toBe("");
+  await expect(page.locator("#play-game")).toBeVisible();
+  await expect(page.locator("#play-post-game-outcome")).toBeHidden();
+
+  const completedGame = {
+    ...activeGame,
+    phase: "complete",
+    winner: "blue",
+    endReason: "agents",
+    history: [
+      ...activeGame.history,
+      {
+        type: "game-ended",
+        turn: activeGame.turnNumber,
+        winner: "blue",
+        reason: "agents",
+      },
+    ],
+  };
+  await page.evaluate((session) => {
+    localStorage.setItem("codenames-play-session-v1", JSON.stringify(session));
+  }, completedGame);
+  await page.reload();
+
+  const reviewFinishedGame = page.getByRole("button", {
+    name: "Review finished game",
+    exact: true,
+  });
+  const savedBeforeReview = await page.evaluate(() =>
+    localStorage.getItem("codenames-play-session-v1"),
+  );
+  await expect(reviewFinishedGame).toBeVisible();
+  await reviewFinishedGame.click();
+  expect(new URL(page.url()).search).toBe("");
+  await expect(page.locator("#play-game")).toBeVisible();
+  await expect(page.locator("#play-clue-display")).toContainText(
+    "Game complete",
+  );
+  await expect(page.locator("#play-history-heading-label")).toHaveText(
+    "Post-game analysis",
+  );
+  await expect
+    .poll(() =>
+      page.evaluate(() =>
+        localStorage.getItem("codenames-play-session-v1"),
+      ),
+    )
+    .toBe(savedBeforeReview);
+});
+
 test("mobile board and metric help remain fully usable", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 844 });
   await page.goto(SHARED_BOARD);
@@ -2634,7 +2700,9 @@ test("completed Play sessions replay turns and explain intended targets", async 
     localStorage.setItem("codenames-play-session-v1", JSON.stringify(session));
   }, savedGame);
   await page.goto("/?mode=play");
-  await page.getByRole("button", { name: "Resume game", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Review finished game", exact: true })
+    .click();
 
   await expect(page.locator("#play-post-game-outcome")).toContainText("Blue won");
   await expect(page.locator("#play-history-heading-label")).toHaveText(
