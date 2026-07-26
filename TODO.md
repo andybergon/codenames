@@ -4,6 +4,13 @@
   - Design a multi-round match that rotates players through roles and tracks an overall result instead of treating each board as the whole game.
   - Planning only for now; do not implement it as part of the current feedback batch.
 
+- 🔄 Retry transient local model loads safely.
+  - Use three total attempts (the initial load plus two short backoff retries) only after an actual rejected model or index load.
+  - Clear rejected extractor and index promises before retrying so one failure cannot poison that configuration until reload.
+  - Keep initialization single-flight and do not launch a parallel model load merely because the first attempt is slow.
+  - Retry transient network, 408, 429, and 5xx failures, but fail immediately for corrupt indexes, incompatible dimensions, and other deterministic errors.
+  - Add deterministic recovery coverage and a readable loading or retry state for model-backed UI paths.
+
 ## 🔴 High
 
 - 🧠 Prevent the bot spymaster from repeating the previous clue.
