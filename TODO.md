@@ -10,11 +10,6 @@
 
 ## 🔴 High
 
-- 🧪 Complete Cohere Embed v4 and Voyage 4 Large evaluations.
-  - Vercel AI Gateway allows isolated free-tier probes but returns model-level 429s during sustained generation; OIDC, a capped API key, and Cohere/Bedrock routing produced the same limit.
-  - Next: try a paced Vercel run or another low-cost provider with an explicit $0.10-per-model ceiling, then run the human, same-model Fun, and MiniLM transfer gates.
-  - Store the results in `docs/play-fun-optimization.md` and `scripts/generated/play-embedding-candidate-experiments.json`.
-
 - 🛡️ Regenerate the clue vocabulary with consistent profanity filtering.
   - The WordNet-backed first 88,563 words currently bypass `better_profanity`; only the experimental fallback applies it.
   - Regenerate all affected shards, reports, and the stable-prefix baseline together after reviewing benign false positives.
@@ -29,7 +24,7 @@
   - Aggregate archived outcome summaries and fit bot confidence, multi tolerance, and Worth coefficients against actual play.
 
 - 🧠 Evaluate a more game-specific semantic embedding or reranker.
-  - Current: Gemini Embedding 2 reached 72.9% human target recall, and Qwen3 Embedding 0.6B reached 88.19 Fun, but no tested model passes the human-data, Fun Index, and cross-model transfer gates together. See `docs/play-fun-optimization.md`.
+  - Current: Gemini Embedding 2 reached 72.9% human target recall, Qwen3 Embedding 0.6B reached 88.19 Fun, and Voyage 4 Large reached 66.6% human target recall but failed bounded MiniLM transfer completion. No tested model passes all promotion gates. See `docs/play-fun-optimization.md`.
   - Next: test Gemini or ConceptNet as a secondary human-alignment feature, then validate the best ensemble against human ratings of generated clues and recorded gameplay outcomes before changing the default.
 
 - 🧹 Bound Model picker caches so exploration cannot retain every loaded model and index.

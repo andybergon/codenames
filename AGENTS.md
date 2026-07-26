@@ -29,6 +29,7 @@ Local-first Vite application for embedding-powered Codenames clue recommendation
 - The July 2026 external sweep keeps BGE-small in production. Qwen3 Embedding 0.6B improved same-model Fun but failed cross-model safety. Gemini Embedding 2 produced the strongest human clue recovery but much lower full-game Fun. ConceptNet and Gemini are future ensemble signals rather than standalone replacements.
 - Use `npm run embed:gateway-candidate` for resumable OpenRouter or Vercel AI Gateway runs. Keep an explicit cost cap, tune batch size before a full run, and preserve the fixed task prefix across clue and board terms.
 - Before relying on Vercel free credits for an embedding benchmark, verify sustained multi-request throughput. A visible balance and one successful probe do not prove that model-level free-tier limits permit corpus generation.
+- When a paid credit top-up is required, report the credit purchase, fees, and tax separately from measured model usage. Keep the generation resumable and retain the original per-model cost cap.
 - Jina v5 text-small is CC BY-NC 4.0, and ConceptNet Numberbatch is CC BY-SA 4.0. Do not distribute their models or derived indexes without reviewing those licenses.
 
 ## Share Compatibility

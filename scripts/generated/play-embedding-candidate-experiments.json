@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-25T05:17:27.037Z",
+  "generatedAt": "2026-07-26T01:14:43.299Z",
   "sample": {
     "boards": 20,
     "candidates": 10000,
@@ -70,6 +70,7 @@
       "assassinRate": 0.2
     }
   },
+  "baselineGeneralBenchmark": "62.17 MTEB",
   "baselineHuman": {
     "culturalCodes": {
       "scoredGuessTurns": 7625,
@@ -162,7 +163,9 @@
         "correctCardsPerTurn": 1.018519,
         "wrongTeamHitsPerGame": 1.85,
         "assassinRate": 0.2,
-        "meanTurnsPerGame": 10.8
+        "meanTurnsPerGame": 10.8,
+        "boundedCompletion": true,
+        "status": "completed"
       },
       "toleranceZero": {
         "selfPlay": {
@@ -198,6 +201,12 @@
           "requirement": ">= 86.3699"
         },
         {
+          "gate": "Cross-model bounded completion",
+          "passed": true,
+          "candidate": "Complete",
+          "requirement": "Complete"
+        },
+        {
           "gate": "Cross-model correct per turn",
           "passed": false,
           "candidate": 1.018519,
@@ -216,7 +225,9 @@
           "requirement": "<= 25.0%"
         }
       ],
-      "promote": false
+      "promote": false,
+      "modelSize": "0.6B params",
+      "generalBenchmark": "70.70 MTEB v2"
     },
     {
       "id": "gemini-embedding-2",
@@ -294,7 +305,9 @@
         "correctCardsPerTurn": 1.031008,
         "wrongTeamHitsPerGame": 0.95,
         "assassinRate": 0.15,
-        "meanTurnsPerGame": 12.9
+        "meanTurnsPerGame": 12.9,
+        "boundedCompletion": true,
+        "status": "completed"
       },
       "promotionGates": [
         {
@@ -308,6 +321,12 @@
           "passed": false,
           "candidate": 51.2951,
           "requirement": ">= 86.3699"
+        },
+        {
+          "gate": "Cross-model bounded completion",
+          "passed": true,
+          "candidate": "Complete",
+          "requirement": "Complete"
         },
         {
           "gate": "Cross-model correct per turn",
@@ -325,6 +344,129 @@
           "gate": "Cross-model assassin rate",
           "passed": true,
           "candidate": 0.15,
+          "requirement": "<= 25.0%"
+        }
+      ],
+      "promote": false,
+      "modelSize": "Undisclosed",
+      "generalBenchmark": "N/A"
+    },
+    {
+      "id": "voyage-4-large",
+      "label": "Voyage 4 Large",
+      "icon": "🚢",
+      "rating": "🟡 3.5",
+      "generalBenchmark": "#1 RTEB",
+      "decision": "❌ Transfer",
+      "directory": "voyage-4-large-1024",
+      "configuration": "Vercel AI Gateway, 1,024 dimensions, symmetric retrieval task prefix",
+      "hosted": true,
+      "testCost": "$0.0321",
+      "cost": {
+        "pricePerMillionTokens": 0.12,
+        "maxCostUsd": 0.1,
+        "estimatedTokens": 483607,
+        "billedTokens": 267084,
+        "billedCostUsd": 0.03205
+      },
+      "human": {
+        "guardrailsPassed": true,
+        "coverage": {
+          "availableTerms": 31253,
+          "totalTerms": 31253,
+          "rate": 1,
+          "centeringWords": 30000,
+          "candidatePoolScanned": 10000,
+          "humanTurns": {
+            "culturalCodes": {
+              "scoredTurns": 7703,
+              "totalTurns": 7703,
+              "rate": 1
+            },
+            "connector": {
+              "scoredTurns": 2250,
+              "totalTurns": 2250,
+              "rate": 1
+            }
+          }
+        },
+        "culturalCodes": {
+          "scoredGuessTurns": 7625,
+          "scoredTargetTurns": 7703,
+          "firstGuessAccuracy": 0.5959,
+          "guessRecallAtHumanCount": 0.5895,
+          "targetRecallAtCount": 0.6661,
+          "exactTargetSetAccuracy": 0.6068,
+          "avoidWordRate": 0.0792,
+          "pairwiseTargetAccuracy": 0.9026
+        },
+        "connector": {
+          "scoredGuessTurns": 0,
+          "scoredTargetTurns": 2250,
+          "firstGuessAccuracy": null,
+          "guessRecallAtHumanCount": null,
+          "targetRecallAtCount": 0.6256,
+          "exactTargetSetAccuracy": 0.3627,
+          "avoidWordRate": 0,
+          "pairwiseTargetAccuracy": 0.8839
+        }
+      },
+      "selfPlay": {
+        "fun": 68.4567,
+        "multiClueRate": 0.372197,
+        "firstHalfMeanClueNumber": 1.661017,
+        "correctCardsPerTurn": 1.408072,
+        "wrongTeamHitsPerGame": 0,
+        "assassinRate": 0,
+        "meanTurnsPerGame": 11.15
+      },
+      "crossModel": {
+        "status": "failed",
+        "boundedCompletion": false,
+        "operativeModel": "Xenova/all-MiniLM-L6-v2",
+        "failure": {
+          "reason": "bounded-completion",
+          "policy": "hybrid",
+          "board": 11,
+          "maxActions": 500,
+          "message": "hybrid game on board 11 exceeded 500 actions."
+        }
+      },
+      "promotionGates": [
+        {
+          "gate": "Human validity",
+          "passed": true,
+          "candidate": "Pass",
+          "requirement": "Pass"
+        },
+        {
+          "gate": "Default Fun Index",
+          "passed": false,
+          "candidate": 68.4567,
+          "requirement": ">= 86.3699"
+        },
+        {
+          "gate": "Cross-model bounded completion",
+          "passed": false,
+          "candidate": "Exceeded 500 actions",
+          "requirement": "Complete"
+        },
+        {
+          "gate": "Cross-model correct per turn",
+          "passed": false,
+          "candidate": "No result",
+          "requirement": ">= 1.2467"
+        },
+        {
+          "gate": "Cross-model wrong per game",
+          "passed": false,
+          "candidate": "No result",
+          "requirement": "<= 0.65"
+        },
+        {
+          "gate": "Cross-model assassin rate",
+          "passed": false,
+          "candidate": "No result",
           "requirement": "<= 25.0%"
         }
       ],
@@ -399,7 +541,9 @@
         "correctCardsPerTurn": 1.126582,
         "wrongTeamHitsPerGame": 1.1,
         "assassinRate": 0.15,
-        "meanTurnsPerGame": 11.85
+        "meanTurnsPerGame": 11.85,
+        "boundedCompletion": true,
+        "status": "completed"
       },
       "promotionGates": [
         {
@@ -413,6 +557,12 @@
           "passed": false,
           "candidate": 63.2875,
           "requirement": ">= 86.3699"
+        },
+        {
+          "gate": "Cross-model bounded completion",
+          "passed": true,
+          "candidate": "Complete",
+          "requirement": "Complete"
         },
         {
           "gate": "Cross-model correct per turn",
@@ -433,7 +583,9 @@
           "requirement": "<= 25.0%"
         }
       ],
-      "promote": false
+      "promote": false,
+      "modelSize": "300d vectors",
+      "generalBenchmark": "N/A"
     },
     {
       "id": "qwen3-embedding-8b",
@@ -511,7 +663,9 @@
         "correctCardsPerTurn": 1.050209,
         "wrongTeamHitsPerGame": 1.3,
         "assassinRate": 0.25,
-        "meanTurnsPerGame": 11.95
+        "meanTurnsPerGame": 11.95,
+        "boundedCompletion": true,
+        "status": "completed"
       },
       "promotionGates": [
         {
@@ -525,6 +679,12 @@
           "passed": false,
           "candidate": 57.7963,
           "requirement": ">= 86.3699"
+        },
+        {
+          "gate": "Cross-model bounded completion",
+          "passed": true,
+          "candidate": "Complete",
+          "requirement": "Complete"
         },
         {
           "gate": "Cross-model correct per turn",
@@ -545,7 +705,9 @@
           "requirement": "<= 25.0%"
         }
       ],
-      "promote": false
+      "promote": false,
+      "modelSize": "8B params",
+      "generalBenchmark": "75.22 MTEB v2"
     },
     {
       "id": "jina-v5-text-small",
@@ -616,7 +778,9 @@
         "correctCardsPerTurn": 0.856502,
         "wrongTeamHitsPerGame": 1.6,
         "assassinRate": 0.5,
-        "meanTurnsPerGame": 11.15
+        "meanTurnsPerGame": 11.15,
+        "boundedCompletion": true,
+        "status": "completed"
       },
       "promotionGates": [
         {
@@ -630,6 +794,12 @@
           "passed": false,
           "candidate": 52.3966,
           "requirement": ">= 86.3699"
+        },
+        {
+          "gate": "Cross-model bounded completion",
+          "passed": true,
+          "candidate": "Complete",
+          "requirement": "Complete"
         },
         {
           "gate": "Cross-model correct per turn",
@@ -650,43 +820,175 @@
           "requirement": "<= 25.0%"
         }
       ],
+      "promote": false,
+      "modelSize": "677M params",
+      "generalBenchmark": "71.7 MTEB v2"
+    },
+    {
+      "id": "cohere-embed-v4",
+      "label": "Cohere Embed v4",
+      "icon": "🪸",
+      "rating": "🔴 2",
+      "generalBenchmark": "N/A",
+      "decision": "❌ Low Fun",
+      "directory": "cohere-embed-v4-1536",
+      "configuration": "Vercel AI Gateway, 1,536 dimensions, symmetric retrieval task prefix",
+      "hosted": true,
+      "testCost": "$0.0319",
+      "cost": {
+        "pricePerMillionTokens": 0.12,
+        "maxCostUsd": 0.1,
+        "estimatedTokens": 483607,
+        "billedTokens": 266150,
+        "billedCostUsd": 0.031938
+      },
+      "human": {
+        "guardrailsPassed": true,
+        "coverage": {
+          "availableTerms": 31253,
+          "totalTerms": 31253,
+          "rate": 1,
+          "centeringWords": 30000,
+          "candidatePoolScanned": 10000,
+          "humanTurns": {
+            "culturalCodes": {
+              "scoredTurns": 7703,
+              "totalTurns": 7703,
+              "rate": 1
+            },
+            "connector": {
+              "scoredTurns": 2250,
+              "totalTurns": 2250,
+              "rate": 1
+            }
+          }
+        },
+        "culturalCodes": {
+          "scoredGuessTurns": 7625,
+          "scoredTargetTurns": 7703,
+          "firstGuessAccuracy": 0.5416,
+          "guessRecallAtHumanCount": 0.5358,
+          "targetRecallAtCount": 0.6123,
+          "exactTargetSetAccuracy": 0.5508,
+          "avoidWordRate": 0.0983,
+          "pairwiseTargetAccuracy": 0.8738
+        },
+        "connector": {
+          "scoredGuessTurns": 0,
+          "scoredTargetTurns": 2250,
+          "firstGuessAccuracy": null,
+          "guessRecallAtHumanCount": null,
+          "targetRecallAtCount": 0.5227,
+          "exactTargetSetAccuracy": 0.2404,
+          "avoidWordRate": 0,
+          "pairwiseTargetAccuracy": 0.8308
+        }
+      },
+      "selfPlay": {
+        "fun": 37.3623,
+        "multiClueRate": 0.113475,
+        "firstHalfMeanClueNumber": 1.184932,
+        "correctCardsPerTurn": 1.113475,
+        "wrongTeamHitsPerGame": 0,
+        "assassinRate": 0,
+        "meanTurnsPerGame": 14.1
+      },
+      "crossModel": {
+        "status": "failed",
+        "boundedCompletion": false,
+        "operativeModel": "Xenova/all-MiniLM-L6-v2",
+        "failure": {
+          "reason": "bounded-completion",
+          "policy": "hybrid",
+          "board": 8,
+          "maxActions": 500,
+          "message": "hybrid game on board 8 exceeded 500 actions."
+        }
+      },
+      "promotionGates": [
+        {
+          "gate": "Human validity",
+          "passed": true,
+          "candidate": "Pass",
+          "requirement": "Pass"
+        },
+        {
+          "gate": "Default Fun Index",
+          "passed": false,
+          "candidate": 37.3623,
+          "requirement": ">= 86.3699"
+        },
+        {
+          "gate": "Cross-model bounded completion",
+          "passed": false,
+          "candidate": "Exceeded 500 actions",
+          "requirement": "Complete"
+        },
+        {
+          "gate": "Cross-model correct per turn",
+          "passed": false,
+          "candidate": "No result",
+          "requirement": ">= 1.2467"
+        },
+        {
+          "gate": "Cross-model wrong per game",
+          "passed": false,
+          "candidate": "No result",
+          "requirement": "<= 0.65"
+        },
+        {
+          "gate": "Cross-model assassin rate",
+          "passed": false,
+          "candidate": "No result",
+          "requirement": "<= 25.0%"
+        }
+      ],
       "promote": false
     }
   ],
   "vercelFreeTier": {
-    "observedCreditBalanceUsd": 3.13,
-    "projectBudgetUsd": 1,
-    "apiKeyBudgetUsd": 1,
+    "observedCreditBalanceBeforeUsd": 2.56,
+    "freeTierTermsBeforeThrottle": 480,
+    "topUpCreditUsd": 10,
+    "paymentProcessingFeeUsd": 0.59,
+    "estimatedTaxUsd": 2.44,
+    "totalChargedUsd": 13.03,
+    "observedCreditBalanceAfterUsd": 12.55,
+    "paidModelCostUsd": 0.063988,
     "credentialsTested": [
-      "project OIDC token",
-      "project API key"
+      "project OIDC token"
     ],
     "models": [
       {
         "id": "cohere/embed-v4.0",
         "probeSucceeded": true,
         "dimensions": 1536,
+        "termCount": 31253,
         "routesTested": [
-          "cohere",
-          "bedrock"
+          "cohere"
         ],
-        "sustainedStatus": 429
+        "freeTierStatus": 429,
+        "paidStatus": "completed",
+        "billedCostUsd": 0.031938
       },
       {
         "id": "voyage/voyage-4-large",
         "probeSucceeded": true,
         "dimensions": 1024,
+        "termCount": 31253,
         "routesTested": [
           "voyage"
         ],
-        "sustainedStatus": 429,
-        "rateLimitResetObserved": true
+        "freeTierStatus": 429,
+        "paidStatus": "completed",
+        "billedCostUsd": 0.03205
       }
     ],
-    "conclusion": "Free credits remain visible, but model-level anti-abuse limits allow isolated probes rather than sustained embedding generation. Authentication method and provider routing do not remove the limit."
+    "conclusion": "Free-tier probes did not establish sustained throughput. Paid credits removed the model-level throttle and completed both resumable 31,253-term generations within the per-model cost caps."
   },
   "priorOpenAiExperiment": {
     "model": "text-embedding-3-large",
+    "generalBenchmark": "64.6 MTEB",
     "human": {
       "culturalCodes": {
         "scoredGuessTurns": 7625,
@@ -776,6 +1078,6 @@
   "verdict": {
     "promote": false,
     "productionModel": "Xenova/bge-small-en-v1.5",
-    "recommendation": "Keep BGE-small. Qwen 0.6B is the only candidate to improve same-model Fun, but it fails cross-model safety. Gemini produces the strongest human clue recovery but much lower Fun. Use the stronger human-alignment models as future ensemble signals rather than production replacements."
+    "recommendation": "Keep BGE-small. Voyage 4 Large substantially improves human clue recovery but lowers same-model Fun and fails bounded MiniLM transfer completion. Cohere Embed v4 also lowers Fun and fails the transfer bound. Use Voyage, Gemini, or ConceptNet as future ensemble signals rather than standalone replacements."
   }
 }
