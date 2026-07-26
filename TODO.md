@@ -10,6 +10,11 @@
 
 ## 🔴 High
 
+- 🧬 Suppress Italian orthographic false-friend clues.
+  - Reproduce `MONOLOGO → MONGOLFIERA` and `PARTONO → PANTERA + BURATTINO` as fixed regression cases. The pinned centered E5 index ranks these spelling-related pairs above plausible semantic relationships.
+  - Evaluate a conservative character-overlap penalty or veto and a second-model or human-alignment reranker. Keep this separate from lemma and inflection legality.
+  - Re-run the Italian semantic fixture, same-model games, MiniLM transfer games, and native review before changing the live clue policy.
+
 - 🧠 Prevent the bot spymaster from repeating the previous clue.
   - A human operative remembers an immediately repeated clue, so giving it again adds no useful information even when it remains the highest-ranked option.
   - Select the next-best legal clue instead. Its intended cards may overlap with zero, some, or all of the previous clue's intended cards.

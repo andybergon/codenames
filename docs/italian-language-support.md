@@ -142,6 +142,22 @@ The [same-model report](../scripts/generated/italian-play-policy-benchmark.md) c
 
 Promotion beyond beta still requires at least 100 native-reviewed turns and human operative guesses. A higher self-play Fun score alone is insufficient.
 
+### Observed orthographic false friends
+
+Completed-game review exposed two spelling-driven clue failures that the aggregate fixture did not catch:
+
+- `MONOLOGO 1` targeted `MONGOLFIERA`.
+- `PARTONO 2` targeted `PANTERA` and `BURATTINO`.
+
+The exact pinned E5 model, `query: ` prefix, 30,000-term production mean, and quantized clue vectors reproduce the spymaster scores:
+
+- `MONOLOGO → MONGOLFIERA` scores `0.4211`, above `DISCORSO` at `0.1933`, `SOLILOQUIO` at `0.1380`, and `TEATRO` at `0.0809`.
+- `PARTONO → PANTERA` scores `0.3568` and `PARTONO → BURATTINO` scores `0.3161`, both above `PARTONO → PARTIRE` at `0.2561` and `PARTONO → VIAGGIO` at `0.0295`.
+
+The tokenizer splits `monologo` into `mono + logo` and `mongolfiera` into `mon + golf + iera`. It also gives `partono` and `burattino` the shared `no` subword. These examples show that centered E5 geometry can amplify orthographic and subword overlap beyond human semantic association. They also show why same-model self-play is insufficient: the spymaster selects the false friend and the operative ranks it highly using the same geometry.
+
+Treat these pairs as named regression fixtures. A fix should evaluate a conservative character-overlap penalty or veto, plus a second-model or human-alignment reranker, without confusing accidental form similarity with the existing lemma and inflection legality rules.
+
 ## Italian morphology and clue legality
 
 Runtime normalization preserves Unicode letters, numbers, and Italian accents through NFKC. Legality comparisons additionally fold accents and apply conservative Italian stem families, while display and embedding terms keep their original letters.
