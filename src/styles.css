@@ -3281,33 +3281,12 @@ button.play-card:not(:disabled):hover {
 }
 
 .play-post-game-analysis {
-  display: grid;
-  gap: 9px;
   border-top: 1px solid var(--hairline);
   padding-top: 12px;
 }
 
 .play-post-game-analysis[hidden] {
   display: none;
-}
-
-.play-analysis-summary,
-.play-analysis-status {
-  color: var(--muted);
-  font-size: 0.7rem;
-  line-height: 1.4;
-}
-
-.play-analysis-status {
-  min-height: 1.4em;
-}
-
-.play-analysis-status[data-state="ready"] {
-  color: var(--green);
-}
-
-.play-analysis-status[data-state="error"] {
-  color: var(--orange);
 }
 
 .play-history {
@@ -3370,10 +3349,40 @@ button.play-card:not(:disabled):hover {
   line-height: 1.35;
 }
 
-.play-history-explanation .explain-recommendation-button {
-  min-height: 26px;
-  padding: 3px 8px;
-  font-size: 0.68rem;
+.play-history-list li.has-clue-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 6px;
+  row-gap: 6px;
+}
+
+.play-history-list li.has-clue-actions > .play-history-clue {
+  grid-column: 1;
+  grid-row: 1;
+  min-width: 0;
+}
+
+.play-history-list li.has-clue-actions > .play-history-explanation {
+  display: contents;
+}
+
+.play-history-list
+  li.has-clue-actions
+  > .play-history-explanation
+  .explain-recommendation-button {
+  grid-column: 2;
+  grid-row: 1;
+  align-self: center;
+}
+
+.play-history-list
+  li.has-clue-actions
+  > .play-history-explanation
+  .explanation-targets {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  margin-top: 0;
 }
 
 .play-history-list li[data-side="blue"] {
@@ -3506,20 +3515,24 @@ button.play-card:not(:disabled):hover {
   min-width: 0;
 }
 
-.play-history-clue-action {
+.play-history-clue-action,
+.play-history-list
+  li.has-clue-actions
+  > .play-history-explanation
+  .explain-recommendation-button {
   display: inline-flex;
   align-items: center;
-  min-height: 20px;
-  border: 1px solid var(--line);
+  min-height: 26px;
+  border: 1px solid var(--input-line);
   border-radius: 999px;
-  padding: 1px 7px;
-  background: var(--surface);
-  color: var(--muted);
-  font-size: 0.56rem;
+  padding: 3px 8px;
+  background: var(--subtle-fill-soft);
+  color: var(--ink);
+  font-size: 0.68rem;
   font-weight: 900;
-  letter-spacing: 0.04em;
+  letter-spacing: 0;
   line-height: 1;
-  text-transform: uppercase;
+  text-transform: none;
 }
 
 .play-history-clue:hover,
@@ -3540,8 +3553,9 @@ button.play-card:not(:disabled):hover {
 .play-history-clue:hover .play-history-clue-action,
 .play-history-clue:focus-visible .play-history-clue-action,
 .play-history-clue[aria-pressed="true"] .play-history-clue-action {
-  border-color: currentColor;
-  color: var(--ink);
+  border-color: var(--blue);
+  background: var(--blue-soft);
+  color: var(--blue-text);
 }
 
 @media (max-width: 1120px) {

@@ -293,8 +293,6 @@ export function createPlayMode(options = {}) {
     passTurn: document.querySelector("#pass-play-turn"),
     postGameAnalysis: document.querySelector("#play-post-game-analysis"),
     postGameOutcome: document.querySelector("#play-post-game-outcome"),
-    analysisSummary: document.querySelector("#play-analysis-summary"),
-    analysisStatus: document.querySelector("#play-analysis-status"),
     historyLabel: document.querySelector("#play-history-heading-label"),
     historyCount: document.querySelector("#play-history-count"),
     historyViewButtons: [...document.querySelectorAll("[data-play-history-view]")],
@@ -350,7 +348,6 @@ export function createPlayMode(options = {}) {
   let selectedPostGameTurn = 0;
   let postGameScores = [];
   let postGameAnalysisState = "idle";
-  let postGameAnalysisMessage = "";
   const clueIndexPromises = new Map();
   const manifestPromises = new Map();
 
@@ -737,7 +734,6 @@ export function createPlayMode(options = {}) {
     selectedPostGameTurn = 0;
     postGameScores = [];
     postGameAnalysisState = "idle";
-    postGameAnalysisMessage = "";
   }
 
   function commitGame() {
@@ -878,7 +874,6 @@ export function createPlayMode(options = {}) {
     const gameAtStart = game;
     const turnsAtStart = postGameTurns;
     postGameAnalysisState = "loading";
-    postGameAnalysisMessage = "Loading operative scores...";
     renderGame();
 
     try {
@@ -917,14 +912,11 @@ export function createPlayMode(options = {}) {
         ),
       );
       postGameAnalysisState = "ready";
-      postGameAnalysisMessage = `${model.label} cosine similarity. Higher scores mean a closer operative match.`;
-    } catch (error) {
+    } catch {
       if (runId !== analysisRun) {
         return;
       }
       postGameAnalysisState = "error";
-      postGameAnalysisMessage =
-        error instanceof Error ? error.message : String(error);
     }
     renderGame();
   }
@@ -1439,25 +1431,6 @@ export function createPlayMode(options = {}) {
     elements.postGameOutcome.textContent = `${sideEmoji(game.winner)} ${sideLabel(game.winner)} won · ${
       game.endReason === GAME_END_REASON.ASSASSIN ? "assassin" : "all agents"
     }`;
-    elements.analysisSummary.textContent = turnReviewSummary(selectedTurn);
-    elements.analysisStatus.dataset.state = postGameAnalysisState;
-    elements.analysisStatus.textContent = postGameAnalysisMessage;
-  }
-
-  function turnReviewSummary(turn) {
-    const wordsByLayout = new Map(
-      game.cards.map((card) => [card.layoutId, card.word]),
-    );
-    const intendedWords = turn.intendedLayoutIds
-      .map((layoutId) => wordsByLayout.get(layoutId))
-      .filter(Boolean);
-    const guessSummary = turn.guesses.map((guess, index) => {
-      const correct = sideForTeam(guess.team) === turn.side;
-      return `${index + 1}. ${guess.word} ${correct ? "✓" : "✕"}`;
-    });
-    return `Intended: ${
-      intendedWords.length ? intendedWords.join(" + ") : "not recorded"
-    } · Guesses: ${guessSummary.length ? guessSummary.join(", ") : "none"}`;
   }
 
   function renderSuggestionVisibility(humanSpymaster) {
@@ -1661,6 +1634,9 @@ export function createPlayMode(options = {}) {
           { wordPills: true },
         );
         explanation.classList.add("play-history-explanation");
+        if (turnIndex >= 0) {
+          item.classList.add("has-clue-actions");
+        }
         item.append(explanation);
       }
     } else if (event.type === "card-guessed") {
