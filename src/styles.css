@@ -3028,6 +3028,14 @@ button.play-card:not(:disabled):hover {
   font-size: 0.72rem;
 }
 
+.play-history-explanation .play-clue-pill,
+.play-history-explanation .play-history-card {
+  margin: 0 2px;
+  padding: 0 6px;
+  font-size: 0.68rem;
+  line-height: 1.35;
+}
+
 .play-history-explanation .explain-recommendation-button {
   min-height: 26px;
   padding: 3px 8px;
@@ -3043,7 +3051,8 @@ button.play-card:not(:disabled):hover {
 }
 
 .play-clue-pill,
-.play-history-card {
+.play-history-card,
+.play-history-clue-number {
   display: inline-flex;
   align-items: center;
   border: 1px solid currentColor;
@@ -3096,6 +3105,12 @@ button.play-card:not(:disabled):hover {
   border-color: var(--assassin);
   background: var(--assassin);
   color: #fff;
+}
+
+.play-history-clue-number {
+  border-color: var(--input-line);
+  background: #fff;
+  color: #171717;
 }
 
 .play-history-list .play-history-empty {

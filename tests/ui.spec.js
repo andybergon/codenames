@@ -1763,15 +1763,18 @@ test("completed Play sessions reveal the key and intended targets", async ({ pag
   await page.route("**/api/explain-recommendations", async (route) => {
     const request = route.request().postDataJSON();
     explanationRequests.push(request);
+    const recommendation = request.recommendations[0];
     await route.fulfill({
       contentType: "application/json",
       body: JSON.stringify({
         model: "gpt-5.4-nano",
         explanations: [
           {
-            id: request.recommendations[0].id,
+            id: recommendation.id,
             explanation:
-              "These words connect through sequence: word0 is the first item in the numbered series.",
+              recommendation.clue === "FIRST"
+                ? "These words connect through sequence: word0 is the first item in the numbered series."
+                : "These words connect through sequence: word9 is the second item in the numbered series.",
           },
         ],
       }),
@@ -1826,7 +1829,16 @@ test("completed Play sessions reveal the key and intended targets", async ({ pag
         team: "friendly",
         actor: "human",
       },
-      { type: "game-ended", turn: 1, winner: "blue", reason: "agents" },
+      {
+        type: "clue-given",
+        turn: 2,
+        side: "red",
+        actor: "bot",
+        clue: "SECOND",
+        number: 1,
+        intendedLayoutIds: [9],
+      },
+      { type: "game-ended", turn: 2, winner: "blue", reason: "agents" },
     ],
   };
   await page.addInitScript((session) => {
@@ -1847,20 +1859,69 @@ test("completed Play sessions reveal the key and intended targets", async ({ pag
   await expect(page.locator("#play-history-list")).toContainText(
     "Blue guessed WORD0",
   );
-  const explainButton = page
+  await expect(page.locator("#play-history-list")).toContainText(
+    "Red clue: SECOND 1, intended WORD9",
+  );
+  const blueSummary = page
+    .locator('#play-history-list li[data-side="blue"] .play-history-event-summary')
+    .first();
+  const redSummary = page
+    .locator('#play-history-list li[data-side="red"] .play-history-event-summary')
+    .first();
+  await expect(blueSummary.locator(".play-history-clue-number")).toHaveText("1");
+  await expect(blueSummary.locator(".play-history-clue-number")).toHaveCSS(
+    "background-color",
+    "rgb(255, 255, 255)",
+  );
+  await expect(
+    blueSummary.locator('.play-history-card[data-team="friendly"]'),
+  ).toHaveText("WORD0");
+  await expect(redSummary.locator(".play-history-clue-number")).toHaveText("1");
+  await expect(redSummary.locator(".play-history-clue-number")).toHaveCSS(
+    "background-color",
+    "rgb(255, 255, 255)",
+  );
+  await expect(
+    redSummary.locator('.play-history-card[data-team="enemy"]'),
+  ).toHaveText("WORD9");
+  const blueExplainButton = page
     .locator("#play-history-list")
     .getByRole("button", {
       name: "Explain why FIRST connects WORD0",
       exact: true,
     });
-  await expect(explainButton).toBeVisible();
+  const redExplainButton = page
+    .locator("#play-history-list")
+    .getByRole("button", {
+      name: "Explain why SECOND connects WORD9",
+      exact: true,
+    });
+  await expect(blueExplainButton).toBeVisible();
+  await expect(redExplainButton).toBeVisible();
   expect(explanationRequests).toHaveLength(0);
-  await explainButton.click();
+  await blueExplainButton.click();
+  await redExplainButton.click();
+  const explanations = page.locator(
+    "#play-history-list .play-history-explanation .explanation-targets",
+  );
+  await expect(explanations).toHaveCount(2);
+  await expect(explanations.nth(0)).toContainText(
+    "These words connect through sequence",
+  );
+  await expect(explanations.nth(0).locator(".play-clue-pill")).toHaveText("first");
   await expect(
-    page.locator("#play-history-list .play-history-explanation .explanation-targets"),
-  ).toContainText("These words connect through sequence");
-  expect(explanationRequests).toHaveLength(1);
-  expect(explanationRequests[0].recommendations).toHaveLength(1);
+    explanations.nth(0).locator('.play-history-card[data-team="friendly"]'),
+  ).toHaveText("word0");
+  await expect(explanations.nth(1).locator(".play-clue-pill")).toHaveText(
+    "second",
+  );
+  await expect(
+    explanations.nth(1).locator('.play-history-card[data-team="enemy"]'),
+  ).toHaveText("word9");
+  expect(explanationRequests).toHaveLength(2);
+  expect(
+    explanationRequests.every(({ recommendations }) => recommendations.length === 1),
+  ).toBe(true);
 
   for (const viewport of [
     { width: 390, height: 844 },
@@ -1871,6 +1932,7 @@ test("completed Play sessions reveal the key and intended targets", async ({ pag
     const layout = await page.evaluate(() => {
       const history = document.querySelector("#play-history-list");
       const explanation = history.querySelector(".play-history-explanation");
+      const summaries = [...history.querySelectorAll(".play-history-event-summary")];
       const historyBounds = history.getBoundingClientRect();
       const explanationBounds = explanation.getBoundingClientRect();
       return {
@@ -1879,12 +1941,16 @@ test("completed Play sessions reveal the key and intended targets", async ({ pag
         explanationFits:
           explanationBounds.left >= historyBounds.left - 1 &&
           explanationBounds.right <= historyBounds.right + 1,
+        summariesFit: summaries.every(
+          (summary) => summary.scrollWidth <= summary.clientWidth + 1,
+        ),
       };
     });
     expect(layout.pageOverflows, `page overflow at ${viewport.width}px`).toBe(false);
     expect(layout.explanationFits, `explanation clipping at ${viewport.width}px`).toBe(
       true,
     );
+    expect(layout.summariesFit, `summary clipping at ${viewport.width}px`).toBe(true);
   }
   const finishedNewGame = page.getByRole("button", {
     name: "Start new game",

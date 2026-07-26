@@ -7,7 +7,10 @@ import {
 
 const pendingExplanations = new Map();
 
-export function createRecommendationExplanationControl(suggestion) {
+export function createRecommendationExplanationControl(
+  suggestion,
+  { wordPills = false } = {},
+) {
   const control = document.createElement("div");
   control.className = "recommendation-explanation-control";
 
@@ -15,7 +18,7 @@ export function createRecommendationExplanationControl(suggestion) {
   output.className = "explanation-targets";
   const cached = cachedSemanticExplanation(suggestion);
   if (cached) {
-    output.textContent = cached;
+    renderExplanation(output, cached, suggestion, wordPills);
     output.title = "Generated from the clue and intended target words.";
     control.append(output);
     return control;
@@ -32,14 +35,26 @@ export function createRecommendationExplanationControl(suggestion) {
   setButtonContent(button, "sparkles", "Explain");
   button.addEventListener("click", (event) => {
     event.stopPropagation();
-    void requestExplanation(suggestion, control, button, output);
+    void requestExplanation(
+      suggestion,
+      control,
+      button,
+      output,
+      wordPills,
+    );
   });
   control.append(button, output);
   renderControlIcons(control);
   return control;
 }
 
-async function requestExplanation(suggestion, control, button, output) {
+async function requestExplanation(
+  suggestion,
+  control,
+  button,
+  output,
+  wordPills,
+) {
   const key = recommendationExplanationKey(suggestion);
   button.disabled = true;
   button.setAttribute("aria-busy", "true");
@@ -63,7 +78,7 @@ async function requestExplanation(suggestion, control, button, output) {
     if (!explanation) {
       throw new Error("The explanation response was empty.");
     }
-    output.textContent = explanation;
+    renderExplanation(output, explanation, suggestion, wordPills);
     output.title = "Generated from the clue and intended target words.";
     output.hidden = false;
     button.remove();
@@ -78,6 +93,59 @@ async function requestExplanation(suggestion, control, button, output) {
     setButtonContent(button, "sparkles", "Retry");
     renderControlIcons(control);
   }
+}
+
+function renderExplanation(output, explanation, suggestion, wordPills) {
+  if (!wordPills) {
+    output.textContent = explanation;
+    return;
+  }
+
+  const terms = [
+    { word: suggestion.clue, type: "clue" },
+    ...suggestion.targets.map(({ word, team }) => ({
+      word,
+      type: "target",
+      team,
+    })),
+  ].filter(({ word }) => word?.trim());
+  const termByWord = new Map(
+    terms.map((term) => [term.word.trim().toUpperCase(), term]),
+  );
+  const alternatives = [...termByWord.keys()]
+    .sort((left, right) => right.length - left.length)
+    .map(escapeRegex);
+  if (alternatives.length === 0) {
+    output.textContent = explanation;
+    return;
+  }
+
+  const pattern = new RegExp(`\\b(?:${alternatives.join("|")})\\b`, "gi");
+  const children = [];
+  let cursor = 0;
+  for (const match of explanation.matchAll(pattern)) {
+    if (match.index > cursor) {
+      children.push(document.createTextNode(explanation.slice(cursor, match.index)));
+    }
+    const term = termByWord.get(match[0].toUpperCase());
+    const pill = document.createElement("span");
+    pill.className =
+      term.type === "clue" ? "play-clue-pill" : "play-history-card";
+    if (term.type === "target" && term.team) {
+      pill.dataset.team = term.team;
+    }
+    pill.textContent = match[0];
+    children.push(pill);
+    cursor = match.index + match[0].length;
+  }
+  if (cursor < explanation.length) {
+    children.push(document.createTextNode(explanation.slice(cursor)));
+  }
+  output.replaceChildren(...children);
+}
+
+function escapeRegex(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 function setButtonContent(button, iconName, label) {

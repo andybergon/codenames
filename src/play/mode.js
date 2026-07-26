@@ -1354,40 +1354,48 @@ export function createPlayMode(options = {}) {
     const item = document.createElement("li");
     item.dataset.side = event.side ?? event.winner ?? "";
     if (event.type === "clue-given") {
-      const intendedWords =
+      const intendedTargets =
         game.phase === GAME_PHASE.COMPLETE && event.intendedLayoutIds?.length
           ? event.intendedLayoutIds
-              .map((layoutId) => game.cards.find((card) => card.layoutId === layoutId)?.word)
+              .map((layoutId) =>
+                game.cards.find((card) => card.layoutId === layoutId),
+              )
               .filter(Boolean)
           : [];
+      const intendedWords = intendedTargets.map(({ word }) => word);
       const summary = document.createElement("div");
       summary.className = "play-history-event-summary";
       summary.append(
         `${sideLabel(event.side)} clue: `,
         createCluePill(event.clue),
-        ` ${event.number}${
-          intendedWords.length ? `, intended ${intendedWords.join(" + ")}` : ""
-        }`,
+        " ",
+        createClueNumberPill(event.number),
       );
+      if (intendedWords.length) {
+        summary.append(", intended ");
+        intendedTargets.forEach((target, index) => {
+          if (index > 0) {
+            summary.append(" + ");
+          }
+          summary.append(createHistoryCardPill(target.word, target.team));
+        });
+      }
       item.append(summary);
       if (intendedWords.length) {
-        const explanation = createRecommendationExplanationControl({
-          clue: event.clue,
-          targets: intendedWords.map((word) => ({ word })),
-        });
+        const explanation = createRecommendationExplanationControl(
+          {
+            clue: event.clue,
+            targets: intendedTargets,
+          },
+          { wordPills: true },
+        );
         explanation.classList.add("play-history-explanation");
         item.append(explanation);
       }
     } else if (event.type === "card-guessed") {
-      const card = document.createElement("span");
-      card.className = "play-history-card";
-      card.dataset.team = event.team;
-      card.textContent = event.word;
-      card.setAttribute("aria-label", `${event.word}, ${teamLabel(event.team)} card`);
-      card.title = `${teamLabel(event.team)} card`;
       item.append(
         `${sideLabel(event.side)} guessed `,
-        card,
+        createHistoryCardPill(event.word, event.team),
       );
     } else if (event.type === "turn-passed") {
       item.textContent = `${sideLabel(event.side)} passed`;
@@ -1403,6 +1411,25 @@ export function createPlayMode(options = {}) {
     const pill = document.createElement("span");
     pill.className = "play-clue-pill";
     pill.textContent = clue;
+    return pill;
+  }
+
+  function createClueNumberPill(number) {
+    const pill = document.createElement("span");
+    pill.className = "play-history-clue-number";
+    pill.textContent = String(number);
+    pill.setAttribute("aria-label", `Clue number ${number}`);
+    pill.title = "Clue number";
+    return pill;
+  }
+
+  function createHistoryCardPill(word, team) {
+    const pill = document.createElement("span");
+    pill.className = "play-history-card";
+    pill.dataset.team = team;
+    pill.textContent = word;
+    pill.setAttribute("aria-label", `${word}, ${teamLabel(team)} card`);
+    pill.title = `${teamLabel(team)} card`;
     return pill;
   }
 
