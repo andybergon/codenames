@@ -36,10 +36,6 @@
   - Same-model and MiniLM operative runs now cover 100 paired boards each. The MiniLM stress run is intentionally harsh and reached a 61% hybrid assassin rate after the spelling-artifact guard, so do not treat E5 self-play as human safety evidence.
   - Next: expand the original fixture to at least 100 reviewed turns and collect native-player guesses before removing the beta label.
 
-- 📝 Keep completed Play game action records for calibration.
-  - Current session history contains clues, intended targets, guesses, passes, outcomes, and bot settings, but starting another game replaces it.
-  - Store a bounded local archive with export and clear controls so benchmarks can replay real human decisions.
-
 - 📊 Calibrate Play bots and Worth from recorded outcomes.
   - Aggregate archived outcome summaries and fit bot confidence, multi tolerance, and Worth coefficients against actual play.
 

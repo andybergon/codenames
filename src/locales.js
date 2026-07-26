@@ -17,6 +17,9 @@ const COPY = Object.freeze({
     shareBoard: "Share board",
     copyBoardLink: "Copy board share link",
     boardCopied: "Board copied",
+    shareGame: "Share completed game",
+    copyGameLink: "Copy completed game link",
+    gameCopied: "Game link copied",
     copyFailed: "Copy failed",
     newGame: "New game",
     spymasterBoardOrder: "Spymaster board order",
@@ -127,6 +130,20 @@ const COPY = Object.freeze({
     startNewGame: "Start new game",
     savedGameAvailable: "Saved game available",
     savedGameHelp: "Continue where you left off or clear it.",
+    completedGames: "Completed games",
+    pastGames: "Past games",
+    completedGamesHelp:
+      "Older completed games stay on this device for review and sharing.",
+    completedGameCount: ({ count }) => `${count} saved`,
+    completedGameSummary: ({ winner, reason, turns }) =>
+      `${winner} won by ${reason}, ${turns} ${turns === 1 ? "clue" : "clues"}`,
+    developerGame: "Developer game",
+    reviewGame: "Review",
+    copyGame: "Copy link",
+    removeGame: "Remove",
+    clearArchive: "Clear archive",
+    clearArchiveConfirm:
+      "Remove every completed game stored on this device?",
     savedGameOtherLanguage: ({ language }) =>
       `Saved ${language === LANGUAGE.ITALIAN ? "Italian" : "English"} game available`,
     savedGameOtherLanguageHelp: ({ language, selectedLanguage }) =>
@@ -333,6 +350,9 @@ const COPY = Object.freeze({
     shareBoard: "Condividi tabellone",
     copyBoardLink: "Copia link del tabellone",
     boardCopied: "Tabellone copiato",
+    shareGame: "Condividi partita conclusa",
+    copyGameLink: "Copia link della partita conclusa",
+    gameCopied: "Link partita copiato",
     copyFailed: "Copia non riuscita",
     newGame: "Nuova partita",
     spymasterBoardOrder: "Ordine tabellone del capo agenzia",
@@ -443,6 +463,22 @@ const COPY = Object.freeze({
     startNewGame: "Nuova partita",
     savedGameAvailable: "Partita salvata disponibile",
     savedGameHelp: "Riprendi da dove eri arrivato o elimina il salvataggio.",
+    completedGames: "Partite concluse",
+    pastGames: "Partite precedenti",
+    completedGamesHelp:
+      "Le partite concluse precedenti restano su questo dispositivo per revisione e condivisione.",
+    completedGameCount: ({ count }) => `${count} salvate`,
+    completedGameSummary: ({ winner, reason, turns }) =>
+      `${winner} ha vinto per ${reason}, ${turns} ${
+        turns === 1 ? "indizio" : "indizi"
+      }`,
+    developerGame: "Partita sviluppatore",
+    reviewGame: "Rivedi",
+    copyGame: "Copia link",
+    removeGame: "Rimuovi",
+    clearArchive: "Svuota archivio",
+    clearArchiveConfirm:
+      "Rimuovere tutte le partite concluse salvate su questo dispositivo?",
     savedGameOtherLanguage: ({ language }) =>
       `Partita salvata in ${language === LANGUAGE.ITALIAN ? "italiano" : "inglese"} disponibile`,
     savedGameOtherLanguageHelp: ({ language, selectedLanguage }) =>

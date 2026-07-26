@@ -60,8 +60,18 @@ import {
   undoPlayGame,
 } from "./game-state.js";
 import {
+  completedGameIdentity,
+  decodeCompletedGame,
+  encodeCompletedGame,
+} from "./game-share.js";
+import {
+  archiveCompletedPlayGame,
+  clearCompletedPlayGames,
   clearPlaySession,
+  decodeArchivedCompletedGame,
+  loadCompletedPlayGames,
   loadPlaySession,
+  removeCompletedPlayGame,
   savePlaySession,
 } from "./session-store.js";
 import {
@@ -322,6 +332,16 @@ export function createPlayMode(options = {}) {
     resumeSession: document.querySelector("#resume-play-session"),
     resumeSessionLabel: document.querySelector("#resume-play-session-label"),
     discardSession: document.querySelector("#discard-play-session"),
+    completedGames: document.querySelector("#completed-play-games"),
+    completedGamesCount: document.querySelector(
+      "#completed-play-games-count",
+    ),
+    completedGamesList: document.querySelector(
+      "#completed-play-games-list",
+    ),
+    clearCompletedGames: document.querySelector(
+      "#clear-completed-play-games",
+    ),
     leaveGame: document.querySelector("#leave-play-game"),
     undoAction: document.querySelector("#undo-play-action"),
     forwardAction: document.querySelector("#forward-play-action"),
@@ -400,7 +420,21 @@ export function createPlayMode(options = {}) {
   );
   let wordReuseState = loadWordReuseState();
   let developerSettings = loadDeveloperSettings();
-  let game = null;
+  let completedGames = loadCompletedPlayGames();
+  if (savedGame?.phase === GAME_PHASE.COMPLETE) {
+    completedGames = archiveCompletedPlayGame(savedGame);
+  }
+  let game = readSharedCompletedGame();
+  if (game) {
+    completedGames = archiveCompletedPlayGame(game);
+    selectedLanguage = game.language;
+    selectedHumanSeat = { ...game.humanSeat };
+    selectedWordSet = game.wordSet;
+    selectedBotSettings = normalizePlayBotSettings(
+      game.botSettings,
+      game.language,
+    );
+  }
   let analysis = { [SIDE.BLUE]: null, [SIDE.RED]: null };
   let boardVectors = null;
   let clueIndex = null;
@@ -526,6 +560,17 @@ export function createPlayMode(options = {}) {
   elements.startGame.addEventListener("click", startNewGame);
   elements.resumeSession.addEventListener("click", resumeSavedGame);
   elements.discardSession.addEventListener("click", discardSavedGame);
+  elements.clearCompletedGames.addEventListener("click", () => {
+    if (
+      !window.confirm(
+        translate(selectedLanguage, "clearArchiveConfirm"),
+      )
+    ) {
+      return;
+    }
+    completedGames = clearCompletedPlayGames();
+    renderSetup();
+  });
   elements.leaveGame.addEventListener("click", showSetup);
   elements.undoAction.addEventListener("click", undoAction);
   elements.forwardAction.addEventListener("click", forwardAction);
@@ -582,9 +627,10 @@ export function createPlayMode(options = {}) {
         return;
       }
       if (game) {
+        onLanguageChange(game.language ?? LANGUAGE.ENGLISH);
         analysis = { [SIDE.BLUE]: null, [SIDE.RED]: null };
         boardVectors = null;
-        renderGame();
+        showActiveGame();
         ensureAnalysis();
       } else {
         renderSetup();
@@ -702,6 +748,127 @@ export function createPlayMode(options = {}) {
     elements.wordReuseStatus.textContent = reuseStatus.text;
     elements.wordReuseStatus.dataset.tone = reuseStatus.tone;
     elements.wordReuseStatus.hidden = reuseStatus.tone !== "warning";
+    renderCompletedGames();
+  }
+
+  function renderCompletedGames() {
+    const currentCompletedId =
+      savedGame?.phase === GAME_PHASE.COMPLETE
+        ? completedGameIdentity(savedGame)
+        : null;
+    const pastGames = completedGames.filter(
+      (entry) => entry.id !== currentCompletedId,
+    );
+    elements.completedGames.hidden = pastGames.length === 0;
+    elements.completedGamesCount.textContent = translate(
+      selectedLanguage,
+      "completedGameCount",
+      { count: pastGames.length },
+    );
+    elements.clearCompletedGames.disabled = pastGames.length === 0;
+    const items = pastGames.flatMap((entry) => {
+      let completedGame;
+      try {
+        completedGame = decodeArchivedCompletedGame(entry.code);
+      } catch {
+        return [];
+      }
+      const item = document.createElement("li");
+      const summary = document.createElement("span");
+      const summaryLabel = document.createElement("strong");
+      const savedAt = document.createElement("time");
+      const actions = document.createElement("span");
+      const review = document.createElement("button");
+      const copy = document.createElement("button");
+      const remove = document.createElement("button");
+      const clueCount = completedGame.history.filter(
+        (event) => event.type === "clue-given",
+      ).length;
+
+      item.className = "completed-play-game";
+      summary.className = "completed-play-game-summary";
+      const provenance = completedGame.developerMode
+        ? `🛠️ ${translate(selectedLanguage, "developerGame")} · `
+        : "";
+      summaryLabel.textContent = `${provenance}${sideEmoji(
+        completedGame.winner,
+      )} ${translate(selectedLanguage, "completedGameSummary", {
+        winner: localizedSideLabelForLanguage(
+          completedGame.winner,
+          selectedLanguage,
+        ),
+        reason: translate(
+          selectedLanguage,
+          completedGame.endReason === GAME_END_REASON.ASSASSIN
+            ? "assassin"
+            : "everyAgent",
+        ),
+        turns: clueCount,
+      })}`;
+      savedAt.dateTime = entry.savedAt;
+      savedAt.textContent = new Intl.DateTimeFormat(selectedLanguage, {
+        dateStyle: "medium",
+        timeStyle: "short",
+      }).format(new Date(entry.savedAt));
+      summary.append(summaryLabel, savedAt);
+
+      actions.className = "completed-play-game-actions";
+      for (const [button, label] of [
+        [review, "reviewGame"],
+        [copy, "copyGame"],
+        [remove, "removeGame"],
+      ]) {
+        button.type = "button";
+        button.className = "button ghost";
+        button.textContent = translate(selectedLanguage, label);
+      }
+      review.addEventListener("click", () => reviewCompletedGame(entry.code));
+      copy.addEventListener("click", async () => {
+        try {
+          const shareCode = encodeCompletedGame(completedGame);
+          await writeClipboardText(completedGameUrl(shareCode));
+          copy.textContent = translate(selectedLanguage, "gameCopied");
+          window.setTimeout(() => {
+            copy.textContent = translate(selectedLanguage, "copyGame");
+          }, 3000);
+        } catch {
+          copy.textContent = translate(selectedLanguage, "copyFailed");
+        }
+      });
+      remove.addEventListener("click", () => {
+        completedGames = removeCompletedPlayGame(entry.id);
+        renderSetup();
+      });
+      actions.append(review, copy, remove);
+      item.append(summary, actions);
+      return [item];
+    });
+    elements.completedGamesList.replaceChildren(...items);
+  }
+
+  function reviewCompletedGame(code) {
+    const reviewedGame = decodeArchivedCompletedGame(code);
+    game = reviewedGame;
+    selectedLanguage = reviewedGame.language ?? LANGUAGE.ENGLISH;
+    onLanguageChange(selectedLanguage);
+    selectedHumanSeat = { ...reviewedGame.humanSeat };
+    selectedWordSet = reviewedGame.wordSet;
+    selectedBotSettings = normalizePlayBotSettings(
+      reviewedGame.botSettings,
+      selectedLanguage,
+    );
+    resetRuntimeState("");
+    const url = new URL(window.location.href);
+    url.search = "";
+    url.searchParams.set("mode", "play");
+    try {
+      url.searchParams.set("g", encodeCompletedGame(reviewedGame));
+    } catch {
+      url.searchParams.delete("g");
+    }
+    window.history.replaceState(null, "", url);
+    showActiveGame();
+    ensurePostGameAnalysis();
   }
 
   function renderModelSettings() {
@@ -738,6 +905,7 @@ export function createPlayMode(options = {}) {
 
   function startNewGame() {
     window.clearTimeout(botTimer);
+    clearSharedGameUrl();
     const seed = createRandomSeed();
     const { board: generated } = createPlayBoardWithWordReuse({
       language: selectedLanguage,
@@ -839,6 +1007,7 @@ export function createPlayMode(options = {}) {
     forwardHistory = [];
     resetPostGameAnalysis();
     resetLiveDiagnostics();
+    clearSharedGameUrl();
     elements.setup.hidden = false;
     elements.game.hidden = true;
     renderSetup();
@@ -854,22 +1023,27 @@ export function createPlayMode(options = {}) {
     if (!game) {
       return;
     }
-    const code = encodeBoardParam({
-      cards: game.cards.map((card) => ({ ...card, done: false })),
-      randomLayoutOrder: game.cards.map((card) => card.layoutId),
-      order: BOARD_ORDER.RANDOM,
-      language: game.language ?? LANGUAGE.ENGLISH,
-      wordSet: game.wordSet,
-      source:
-        game.wordReusePolicy === PLAY_WORD_REUSE_POLICY.AVOID_RECENT
-          ? { type: "explicit" }
-          : { type: "seed", seed: game.seed, version: "3" },
-    });
-    const url = new URL(window.location.href);
-    url.search = "";
-    url.searchParams.set("mode", "train");
-    url.searchParams.set("b", code);
     try {
+      const completed = game.phase === GAME_PHASE.COMPLETE;
+      const url = completed
+        ? new URL(completedGameUrl(encodeCompletedGame(game)))
+        : new URL(window.location.href);
+      if (!completed) {
+        const code = encodeBoardParam({
+          cards: game.cards.map((card) => ({ ...card, done: false })),
+          randomLayoutOrder: game.cards.map((card) => card.layoutId),
+          order: BOARD_ORDER.RANDOM,
+          language: game.language ?? LANGUAGE.ENGLISH,
+          wordSet: game.wordSet,
+          source:
+            game.wordReusePolicy === PLAY_WORD_REUSE_POLICY.AVOID_RECENT
+              ? { type: "explicit" }
+              : { type: "seed", seed: game.seed, version: "3" },
+        });
+        url.search = "";
+        url.searchParams.set("mode", "train");
+        url.searchParams.set("b", code);
+      }
       await writeClipboardText(url.href);
       setShareFeedback("copied");
     } catch {
@@ -882,16 +1056,31 @@ export function createPlayMode(options = {}) {
     elements.shareBoard.dataset.state = state;
     const label =
       state === "copied"
-        ? translate(gameLanguage(), "boardCopied")
+        ? translate(
+            gameLanguage(),
+            game?.phase === GAME_PHASE.COMPLETE
+              ? "gameCopied"
+              : "boardCopied",
+          )
         : state === "error"
           ? translate(gameLanguage(), "copyFailed")
-          : translate(gameLanguage(), "shareBoard");
+          : translate(
+              gameLanguage(),
+              game?.phase === GAME_PHASE.COMPLETE
+                ? "shareGame"
+                : "shareBoard",
+            );
     const iconName =
       state === "copied" ? "check" : state === "error" ? "triangle-alert" : "share-2";
     elements.shareBoard.setAttribute("aria-label", label);
     elements.shareBoard.title =
       state === "idle"
-        ? translate(gameLanguage(), "copyBoardLink")
+        ? translate(
+            gameLanguage(),
+            game?.phase === GAME_PHASE.COMPLETE
+              ? "copyGameLink"
+              : "copyBoardLink",
+          )
         : label;
     const icon = document.createElement("i");
     icon.dataset.lucide = iconName;
@@ -1001,6 +1190,9 @@ export function createPlayMode(options = {}) {
   function commitGame() {
     savedGame = game;
     savePlaySession(game);
+    if (game.phase === GAME_PHASE.COMPLETE) {
+      completedGames = archiveCompletedPlayGame(game);
+    }
     renderGame();
     if (game.phase === GAME_PHASE.COMPLETE) {
       ensurePostGameAnalysis();
@@ -1509,6 +1701,12 @@ export function createPlayMode(options = {}) {
   function renderGame() {
     if (!game) {
       return;
+    }
+    const shareKind =
+      game.phase === GAME_PHASE.COMPLETE ? "game" : "board";
+    if (elements.shareBoard.dataset.shareKind !== shareKind) {
+      elements.shareBoard.dataset.shareKind = shareKind;
+      setShareFeedback("idle");
     }
     preparePostGameTurns();
     const selectedTurn =
@@ -2704,6 +2902,10 @@ function roleEmoji(role) {
   return role === PLAYER_ROLE.SPYMASTER ? "🕵️" : "🔎";
 }
 
+function localizedSideLabelForLanguage(side, language) {
+  return translate(language, side === SIDE.RED ? "red" : "blue");
+}
+
 function sideForTeam(team) {
   if (team === "friendly") {
     return SIDE.BLUE;
@@ -2832,4 +3034,37 @@ async function writeClipboardText(value) {
   if (!copied) {
     throw new Error("Clipboard copy failed.");
   }
+}
+
+function completedGameUrl(code) {
+  const url = new URL(window.location.href);
+  url.search = "";
+  url.searchParams.set("mode", "play");
+  url.searchParams.set("g", code);
+  return url.href;
+}
+
+function readSharedCompletedGame() {
+  const url = new URL(window.location.href);
+  const code = url.searchParams.get("g");
+  if (!code) {
+    return null;
+  }
+  try {
+    return decodeCompletedGame(code);
+  } catch (error) {
+    console.warn("Ignoring invalid shared completed game.", error);
+    url.searchParams.delete("g");
+    window.history.replaceState(null, "", url);
+    return null;
+  }
+}
+
+function clearSharedGameUrl() {
+  const url = new URL(window.location.href);
+  if (!url.searchParams.has("g")) {
+    return;
+  }
+  url.searchParams.delete("g");
+  window.history.replaceState(null, "", url);
 }

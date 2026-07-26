@@ -2814,6 +2814,116 @@ h3 {
   background: var(--subtle-fill-soft);
 }
 
+.completed-play-games {
+  margin-top: 14px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--subtle-fill-soft);
+}
+
+.completed-play-games[hidden] {
+  display: none;
+}
+
+.completed-play-games > summary,
+.completed-play-games-heading,
+.completed-play-game,
+.completed-play-game-actions {
+  display: flex;
+  align-items: center;
+}
+
+.completed-play-games > summary {
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 48px;
+  padding: 9px 12px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.completed-play-games > summary::-webkit-details-marker {
+  display: none;
+}
+
+.completed-play-games > summary > span:first-child {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+}
+
+.completed-play-games-chevron {
+  color: var(--muted);
+  font-size: 1.25rem;
+  transition: transform 140ms ease;
+}
+
+.completed-play-games[open] .completed-play-games-chevron {
+  transform: rotate(90deg);
+}
+
+.completed-play-games-content {
+  display: grid;
+  gap: 8px;
+  border-top: 1px solid var(--hairline);
+  padding: 10px 12px 12px;
+}
+
+.completed-play-games-heading,
+.completed-play-game {
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.completed-play-games > summary strong {
+  font-size: 0.78rem;
+}
+
+.completed-play-games > summary span span,
+.completed-play-games-heading > p,
+.completed-play-game-summary time {
+  color: var(--muted);
+  font-size: 0.67rem;
+}
+
+.completed-play-games-heading > p {
+  margin: 0;
+}
+
+.completed-play-games ol {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.completed-play-game {
+  border-top: 1px solid var(--hairline);
+  padding-top: 7px;
+}
+
+.completed-play-game-summary {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.completed-play-game-summary strong {
+  font-size: 0.72rem;
+}
+
+.completed-play-game-actions {
+  flex: none;
+  gap: 5px;
+}
+
+.completed-play-games .button {
+  min-height: 30px;
+  padding: 0 9px;
+  font-size: 0.66rem;
+}
+
 .saved-play-copy {
   display: grid;
   gap: 2px;
@@ -3930,6 +4040,17 @@ button.play-card:not(:disabled):hover {
   .saved-play-actions {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .completed-play-games-heading,
+  .completed-play-game {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .completed-play-game-actions {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .saved-play-buttons {

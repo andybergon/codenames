@@ -2,6 +2,10 @@ import { expect, test } from "@playwright/test";
 import pickerBenchmark from "../scripts/generated/model-picker-benchmark.json" with { type: "json" };
 import calibrationRound from "../public/data/calibration/embedding-finalists-v1.json" with { type: "json" };
 import { decodeBoardParam } from "../src/board-share.js";
+import {
+  decodeCompletedGame,
+  encodeCompletedGame,
+} from "../src/play/game-share.js";
 import { OFFICIAL_WORDS } from "../src/word-data.js";
 
 const SHARED_BOARD = "/?mode=train&b=2sw7fIwN9dL7Yos";
@@ -120,6 +124,101 @@ function playSessionWithHistory(history) {
         activeSide: "blue",
       },
       ...history,
+    ],
+  };
+}
+
+function completedShareGame() {
+  const teams = [
+    ...Array(9).fill("friendly"),
+    ...Array(8).fill("enemy"),
+    ...Array(7).fill("neutral"),
+    "assassin",
+  ];
+  const cards = teams.map((team, layoutId) => ({
+    word: `WORD${layoutId}`,
+    team,
+    layoutId,
+    done: layoutId === 24,
+    revealedBy: layoutId === 24 ? "blue" : null,
+    revealedTurn: layoutId === 24 ? 1 : null,
+  }));
+  const humanSeat = { side: "blue", role: "spymaster" };
+  return {
+    schemaVersion: 1,
+    seed: "shared-complete",
+    language: "en",
+    wordSet: "official",
+    wordReusePolicy: "fully-random",
+    botSettings: {
+      modelId: "bge-small",
+      candidateCount: 10_000,
+      cluePolicy: "hybrid",
+      multiTolerance: 5,
+      operativeAggression: "dynamic",
+      bonusGuesses: "pass",
+    },
+    humanSeat,
+    cards,
+    activeSide: "blue",
+    phase: "complete",
+    turnNumber: 1,
+    currentTurn: {
+      side: "blue",
+      clue: "FIRST",
+      number: 1,
+      actor: "human",
+      intendedLayoutIds: [0],
+      guesses: [
+        {
+          layoutId: 24,
+          word: "WORD24",
+          team: "assassin",
+          actor: "bot",
+        },
+      ],
+    },
+    winner: "red",
+    endReason: "assassin",
+    history: [
+      {
+        type: "game-started",
+        humanSeat,
+        language: "en",
+        botSettings: {
+          modelId: "bge-small",
+          candidateCount: 10_000,
+          cluePolicy: "hybrid",
+          multiTolerance: 5,
+          operativeAggression: "dynamic",
+          bonusGuesses: "pass",
+        },
+        activeSide: "blue",
+      },
+      {
+        type: "clue-given",
+        turn: 1,
+        side: "blue",
+        actor: "human",
+        clue: "FIRST",
+        number: 1,
+        intendedLayoutIds: [0],
+      },
+      {
+        type: "card-guessed",
+        turn: 1,
+        side: "blue",
+        actor: "bot",
+        layoutId: 24,
+        word: "WORD24",
+        team: "assassin",
+      },
+      {
+        type: "game-ended",
+        turn: 1,
+        winner: "red",
+        reason: "assassin",
+      },
     ],
   };
 }
@@ -3469,6 +3568,188 @@ test("Play sharing copies a board-only link", async ({ page }) => {
   const copied = new URL(await page.evaluate(() => window.__copiedBoardLink));
   expect(copied.searchParams.has("b")).toBe(true);
   expect(copied.searchParams.get("mode")).toBe("train");
+});
+
+test("completed Play links reopen full games and stay in the local archive", async ({
+  page,
+}) => {
+  await useTestPlayAnalysis(page);
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: {
+        writeText(value) {
+          window.__copiedCompletedGame = value;
+          return Promise.resolve();
+        },
+      },
+    });
+  });
+  const code = encodeCompletedGame(completedShareGame());
+  expect(code.length).toBeLessThan(2_048);
+  await page.goto(`/?mode=play&g=${code}`);
+
+  await expect(page.locator("#play-post-game-outcome")).toContainText("Red won");
+  await expect(page.locator("#play-history-list")).toContainText("FIRST");
+  await expect(page.locator("#play-history-list")).toContainText("WORD24");
+  await expect(
+    page.getByRole("button", { name: "Share completed game", exact: true }),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "Share completed game", exact: true })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "Game link copied", exact: true }),
+  ).toBeVisible();
+  const copied = new URL(
+    await page.evaluate(() => window.__copiedCompletedGame),
+  );
+  expect(copied.searchParams.get("mode")).toBe("play");
+  expect(copied.searchParams.get("g")).toBe(code);
+  expect(copied.searchParams.has("b")).toBe(false);
+  for (const viewport of [
+    { width: 390, height: 844 },
+    { width: 768, height: 1024 },
+    { width: 1440, height: 900 },
+  ]) {
+    await page.setViewportSize(viewport);
+    await expect(page.locator("#play-board-grid")).toBeVisible();
+    expect(
+      await page.evaluate(
+        () =>
+          document.documentElement.scrollWidth <=
+          document.documentElement.clientWidth,
+      ),
+      `page overflow at ${viewport.width}px`,
+    ).toBe(true);
+  }
+
+  await page.getByRole("button", { name: "Start new game", exact: true }).click();
+  await expect(page.locator("#completed-play-games")).toBeVisible();
+  await expect(page.locator("#completed-play-games-count")).toHaveText("1 saved");
+  await expect(page.locator("#completed-play-games")).not.toHaveAttribute(
+    "open",
+    "",
+  );
+  expect(
+    await page.evaluate(
+      () =>
+        document.querySelector(".play-settings").compareDocumentPosition(
+          document.querySelector("#completed-play-games"),
+        ) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ),
+  ).toBeTruthy();
+  await page.locator("#completed-play-games > summary").click();
+  await expect(page.locator("#completed-play-games-list")).toContainText(
+    "Red won by assassin, 1 clue",
+  );
+  expect(
+    await page.evaluate(() =>
+      JSON.parse(localStorage.getItem("codenames-play-completed-v1")),
+    ),
+  ).toHaveLength(1);
+
+  await page.getByRole("button", { name: "Review", exact: true }).click();
+  await expect(page.locator("#play-post-game-outcome")).toContainText("Red won");
+  expect(new URL(page.url()).searchParams.get("g")).toBe(code);
+});
+
+test("archiving a completed save keeps its finished-game review entry point", async ({
+  page,
+}) => {
+  await useTestPlayAnalysis(page);
+  await page.addInitScript((savedGame) => {
+    localStorage.setItem(
+      "codenames-play-session-v1",
+      JSON.stringify(savedGame),
+    );
+  }, completedShareGame());
+  await page.goto("/?mode=play");
+
+  await expect(page.locator("#completed-play-games")).toBeHidden();
+  await expect(page.locator("#resume-play-session")).toBeVisible();
+  expect(
+    await page.evaluate(() =>
+      localStorage.getItem("codenames-play-session-v1"),
+    ),
+  ).not.toBeNull();
+
+  await page.locator("#resume-play-session").click();
+  await expect(page.locator("#play-post-game-outcome")).toContainText(
+    "Red won",
+  );
+});
+
+test("developer archives keep diagnostics local when copying a replay link", async ({
+  page,
+}) => {
+  const developerGame = completedShareGame();
+  developerGame.developerMode = true;
+  developerGame.history = developerGame.history.map((event) => {
+    if (event.type === "game-started") {
+      return { ...event, developerMode: true };
+    }
+    if (event.type === "clue-given") {
+      return {
+        ...event,
+        developerDiagnostics: {
+          diagnosticsVersion: 1,
+          spymasterDecision: { clue: "FIRST", score: 0.82 },
+        },
+      };
+    }
+    return event;
+  });
+  const archivedCode = encodeCompletedGame(developerGame, {
+    includeDeveloperDiagnostics: true,
+    maxLength: 262_144,
+  });
+  const archivedGame = decodeCompletedGame(archivedCode, {
+    maxLength: 262_144,
+  });
+  await page.addInitScript(({ code, id }) => {
+    localStorage.setItem(
+      "codenames-play-completed-v1",
+      JSON.stringify([
+        {
+          id,
+          savedAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          code,
+        },
+      ]),
+    );
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: {
+        writeText(value) {
+          window.__copiedDeveloperGame = value;
+          return Promise.resolve();
+        },
+      },
+    });
+  }, { code: archivedCode, id: archivedGame.gameId });
+  await page.goto("/?mode=play");
+
+  await page.locator("#completed-play-games > summary").click();
+  await page.getByRole("button", { name: "Copy link", exact: true }).click();
+  const copied = new URL(
+    await page.evaluate(() => window.__copiedDeveloperGame),
+  );
+  const shared = decodeCompletedGame(copied.searchParams.get("g"));
+  expect(shared.developerMode).toBe(true);
+  expect(shared.history[1].developerDiagnostics).toBeUndefined();
+
+  const [archived] = await page.evaluate(() =>
+    JSON.parse(localStorage.getItem("codenames-play-completed-v1")),
+  );
+  const fullRecord = decodeCompletedGame(archived.code, {
+    maxLength: 262_144,
+  });
+  expect(fullRecord.history[1].developerDiagnostics).toEqual({
+    diagnosticsVersion: 1,
+    spymasterDecision: { clue: "FIRST", score: 0.82 },
+  });
 });
 
 test("Italian Play uses E5, persists its session, and shares a v4 board", async ({

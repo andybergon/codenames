@@ -610,6 +610,27 @@
               </fieldset>
             </div>
           </details>
+
+          <details id="completed-play-games" class="completed-play-games" hidden>
+            <summary>
+              <span>
+                <strong data-i18n="pastGames">Past games</strong>
+                <span id="completed-play-games-count"></span>
+              </span>
+              <span class="completed-play-games-chevron" aria-hidden="true">›</span>
+            </summary>
+            <div class="completed-play-games-content">
+              <div class="completed-play-games-heading">
+                <p data-i18n="completedGamesHelp">
+                  Full games are kept on this device for review and sharing.
+                </p>
+                <button id="clear-completed-play-games" class="button ghost" type="button">
+                  <span data-i18n="clearArchive">Clear archive</span>
+                </button>
+              </div>
+              <ol id="completed-play-games-list"></ol>
+            </div>
+          </details>
         </section>
 
         <section id="play-game" class="play-game" hidden>

@@ -45,6 +45,10 @@ import {
   validateStoredGame,
 } from "../src/play/game-state.js";
 import {
+  decodeCompletedGame,
+  encodeCompletedGame,
+} from "../src/play/game-share.js";
+import {
   DEFAULT_PLAY_BOT_SETTINGS,
   PLAY_BONUS_POLICY,
   PLAY_MISSED_TARGET_TIMING,
@@ -1293,6 +1297,146 @@ assert.equal(simulated.phase, GAME_PHASE.COMPLETE);
 assert.ok(
   remainingCardsForSide(simulated.cards, SIDE.BLUE) === 0 ||
     remainingCardsForSide(simulated.cards, SIDE.RED) === 0,
+);
+const completedGameCode = encodeCompletedGame(simulated);
+const sharedCompletedGame = decodeCompletedGame(completedGameCode);
+assert.ok(completedGameCode.length < 2_048);
+assert.equal(sharedCompletedGame.phase, GAME_PHASE.COMPLETE);
+assert.equal(sharedCompletedGame.winner, simulated.winner);
+assert.equal(sharedCompletedGame.endReason, simulated.endReason);
+assert.deepEqual(
+  sharedCompletedGame.cards.map(
+    ({ word, team, layoutId, done, revealedBy, revealedTurn }) => ({
+      word,
+      team,
+      layoutId,
+      done,
+      revealedBy,
+      revealedTurn,
+    }),
+  ),
+  simulated.cards.map(
+    ({ word, team, layoutId, done, revealedBy, revealedTurn }) => ({
+      word,
+      team,
+      layoutId,
+      done,
+      revealedBy,
+      revealedTurn,
+    }),
+  ),
+);
+assert.equal(
+  sharedCompletedGame.botSettings.missedTargetTiming,
+  "late",
+);
+assert.equal(sharedCompletedGame.developerMode, false);
+assert.equal(
+  sharedCompletedGame.history[0].developerMode,
+  false,
+);
+assert.equal(
+  sharedCompletedGame.history[0].botSettings.missedTargetTiming,
+  "late",
+);
+assert.deepEqual(
+  sharedCompletedGame.history.slice(1),
+  simulated.history.slice(1),
+);
+const currentPayload = JSON.parse(
+  Buffer.from(completedGameCode, "base64url").toString("utf8"),
+);
+const legacySettings = currentPayload[5].filter(
+  (_value, index) => index !== 4,
+);
+const legacyPayload = [
+  currentPayload[0],
+  currentPayload[2],
+  currentPayload[3],
+  currentPayload[4],
+  legacySettings,
+  currentPayload[6],
+  currentPayload[8],
+];
+const legacyCompletedGame = decodeCompletedGame(
+  Buffer.from(JSON.stringify(legacyPayload)).toString("base64url"),
+);
+assert.equal(legacyCompletedGame.botSettings.missedTargetTiming, "late");
+assert.equal(legacyCompletedGame.developerMode, false);
+const developerDiagnostics = {
+  diagnosticsVersion: 1,
+  modelId: "bge-small",
+  operativeScores: simulated.cards.map(({ layoutId }, index) => ({
+    layoutId,
+    similarity: Number((0.9 - index * 0.025).toFixed(3)),
+  })),
+};
+const completedDeveloperGame = {
+  ...simulated,
+  developerMode: true,
+  botSettings: {
+    ...simulated.botSettings,
+    missedTargetTiming: "immediate",
+  },
+  history: simulated.history.map((event, index) => {
+    if (event.type === "game-started") {
+      return {
+        ...event,
+        developerMode: true,
+        botSettings: {
+          ...event.botSettings,
+          missedTargetTiming: "immediate",
+        },
+      };
+    }
+    if (
+      index === 1 &&
+      event.type === "clue-given"
+    ) {
+      return { ...event, developerDiagnostics };
+    }
+    return event;
+  }),
+};
+const developerGameCode = encodeCompletedGame(completedDeveloperGame);
+const sharedDeveloperGame = decodeCompletedGame(developerGameCode);
+assert.equal(sharedDeveloperGame.developerMode, true);
+assert.equal(sharedDeveloperGame.history[0].developerMode, true);
+assert.equal(
+  sharedDeveloperGame.botSettings.missedTargetTiming,
+  "immediate",
+);
+assert.equal(
+  sharedDeveloperGame.history[1].developerDiagnostics,
+  undefined,
+);
+const archivedDeveloperGameCode = encodeCompletedGame(completedDeveloperGame, {
+  includeDeveloperDiagnostics: true,
+  maxLength: 262_144,
+});
+const archivedDeveloperGame = decodeCompletedGame(
+  archivedDeveloperGameCode,
+  { maxLength: 262_144 },
+);
+assert.deepEqual(
+  archivedDeveloperGame.history[1].developerDiagnostics,
+  developerDiagnostics,
+);
+assert.throws(
+  () =>
+    encodeCompletedGame({
+      ...completedDeveloperGame,
+      developerMode: false,
+    }),
+  /Normal game contains developer diagnostics/,
+);
+assert.throws(
+  () => encodeCompletedGame(italianGame),
+  /Only completed Play games/,
+);
+assert.throws(
+  () => decodeCompletedGame("not-a-completed-game"),
+  /completed-game code/,
 );
 
 console.log("Play smoke passed.");
