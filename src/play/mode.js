@@ -2704,10 +2704,7 @@ export function createPlayMode(options = {}) {
         appendHistoryClueSummary(summary, event, intendedTargets);
         item.append(summary);
       }
-      if (
-        game.phase === GAME_PHASE.COMPLETE &&
-        intendedWords.length
-      ) {
+      if (analysisEnabled && intendedWords.length) {
         const explanation = createRecommendationExplanationControl(
           {
             clue: event.clue,

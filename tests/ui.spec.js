@@ -1430,6 +1430,24 @@ test("Developer mode reuses turn analysis and retains score diagnostics", async 
   page,
 }) => {
   const externalRequests = await useTestPlayAnalysis(page);
+  const explanationRequests = [];
+  await page.route("**/api/explain-recommendations", async (route) => {
+    const request = route.request().postDataJSON();
+    explanationRequests.push(request);
+    const recommendation = request.recommendations[0];
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        model: "gpt-5.4-nano",
+        explanations: [
+          {
+            id: recommendation.id,
+            explanation: "Developer review explanation.",
+          },
+        ],
+      }),
+    });
+  });
   await page.addInitScript(() => {
     window.__codenamesPlayModeOptions = {
       ...window.__codenamesPlayModeOptions,
@@ -1490,7 +1508,18 @@ test("Developer mode reuses turn analysis and retains score diagnostics", async 
   ).toHaveCount(1);
   await expect(
     page.locator("#play-history-list .explain-recommendation-button"),
-  ).toHaveCount(0);
+  ).toHaveCount(1);
+  expect(explanationRequests).toHaveLength(0);
+  await page
+    .locator("#play-history-list .explain-recommendation-button")
+    .click();
+  await expect(
+    page.locator(
+      "#play-history-list .play-history-explanation .explanation-targets",
+    ),
+  ).toContainText("Developer review explanation.");
+  expect(explanationRequests).toHaveLength(1);
+  expect(explanationRequests[0].recommendations).toHaveLength(1);
   await expect(page.locator("#play-live-diagnostics-panel")).toHaveCount(0);
   for (const viewport of [
     { width: 390, height: 844 },
