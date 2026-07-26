@@ -592,6 +592,22 @@
                   </label>
                 </div>
               </fieldset>
+
+              <fieldset
+                class="play-settings-section play-settings-section-wide"
+                data-play-settings-section="developer"
+              >
+                <legend><span aria-hidden="true">🧪</span> <span data-i18n="developer">Developer</span></legend>
+                <div class="play-settings-fields">
+                  <label class="play-setting play-setting-checkbox">
+                    <input id="play-developer-mode" type="checkbox" />
+                    <span>
+                      <strong data-i18n="enableDeveloperMode">Enable developer mode</strong>
+                      <small data-i18n="developerModeHelp">Marks new games as developer data and enables live diagnostics.</small>
+                    </span>
+                  </label>
+                </div>
+              </fieldset>
             </div>
           </details>
         </section>
@@ -676,6 +692,13 @@
             <aside class="play-turn-panel" aria-label="Current Play turn" data-i18n-label="currentPlayTurn">
               <div id="play-clue-display" class="play-clue-display"></div>
 
+              <label id="play-live-diagnostics-toggle" class="play-live-diagnostics-toggle" hidden>
+                <input id="play-live-diagnostics" type="checkbox" />
+                <span aria-hidden="true">🧪</span>
+                <span data-i18n="showLiveDiagnostics">Show live diagnostics</span>
+                <small data-i18n="liveDiagnosticsSpoiler">Spoils active games</small>
+              </label>
+
               <form id="play-clue-form" class="play-clue-form" hidden>
                 <div class="play-clue-field">
                   <label for="play-clue-input" data-i18n="clue">Clue</label>
@@ -742,6 +765,14 @@
                   <span aria-hidden="true">🔎</span> <span data-i18n="passTurn">Pass turn</span>
                 </button>
               </div>
+
+              <section id="play-live-diagnostics-panel" class="play-live-diagnostics" hidden>
+                <div class="play-section-heading">
+                  <strong data-i18n="liveDiagnostics">Live diagnostics</strong>
+                  <span data-i18n="developerGame">Developer game</span>
+                </div>
+                <div id="play-live-diagnostics-content"></div>
+              </section>
 
               <section id="play-post-game-analysis" class="play-post-game-analysis" hidden>
                 <div class="play-section-heading">

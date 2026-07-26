@@ -49,15 +49,39 @@ export function chooseBotClue({
   policy = PLAY_CLUE_POLICY.CURRENT,
   multiTolerance = null,
 }) {
+  return evaluateBotClue({
+    analysis,
+    freshTargetCount,
+    missedTargetLayoutIds,
+    missedTargetTiming,
+    ownRemaining,
+    opponentRemaining,
+    random,
+    policy,
+    multiTolerance,
+  }).selected;
+}
+
+export function evaluateBotClue({
+  analysis,
+  freshTargetCount = 0,
+  missedTargetLayoutIds = [],
+  missedTargetTiming = PLAY_MISSED_TARGET_TIMING.LATE,
+  ownRemaining,
+  opponentRemaining,
+  random,
+  policy = PLAY_CLUE_POLICY.CURRENT,
+  multiTolerance = null,
+}) {
   const suggestions = analysis?.suggestions ?? [];
   if (suggestions.length === 0) {
-    return null;
+    return { ranked: [], selected: null, selection: "none" };
   }
 
   const ranked = suggestions
     .map((suggestion) => ({
       suggestion,
-      score:
+      playScore:
         scorePlayClue(suggestion, {
           ownRemaining,
           opponentRemaining,
@@ -69,19 +93,29 @@ export function chooseBotClue({
           missedTargetTiming,
         }),
     }))
-    .sort((left, right) => right.score - left.score);
+    .sort((left, right) => right.playScore - left.playScore);
 
   if (Number.isFinite(multiTolerance)) {
     const best = ranked[0];
     const bestMulti = ranked.find(({ suggestion }) => suggestion.number >= 2);
-    return bestMulti && bestMulti.score >= best.score - multiTolerance
-      ? bestMulti.suggestion
-      : best.suggestion;
+    const usedMultiTolerance =
+      bestMulti &&
+      bestMulti.playScore >= best.playScore - multiTolerance &&
+      bestMulti !== best;
+    return {
+      ranked,
+      selected: (usedMultiTolerance ? bestMulti : best).suggestion,
+      selection: usedMultiTolerance ? "multi-tolerance" : "best-score",
+    };
   }
 
   const shortlist = ranked.slice(0, Math.min(4, ranked.length));
   const pick = Math.min(shortlist.length - 1, Math.floor(random() * shortlist.length));
-  return shortlist[pick].suggestion;
+  return {
+    ranked,
+    selected: shortlist[pick].suggestion,
+    selection: "shortlist-random",
+  };
 }
 
 export function scoreMissedTargetPreference(
@@ -154,8 +188,40 @@ export function chooseBotGuess({
   ownRemaining,
   random,
 }) {
+  return evaluateBotGuess({
+    aggression,
+    candidates,
+    clueNumber,
+    guessesMade,
+    opponentRemaining,
+    ownRemaining,
+    random,
+  }).layoutId;
+}
+
+export function evaluateBotGuess({
+  aggression = PLAY_OPERATIVE_AGGRESSION.DYNAMIC,
+  candidates,
+  clueNumber,
+  guessesMade,
+  opponentRemaining,
+  ownRemaining,
+  random,
+}) {
   if (!Array.isArray(candidates) || candidates.length === 0) {
-    return null;
+    return {
+      gap: null,
+      layoutId: null,
+      ranked: [],
+      reason: "no-candidates",
+      thresholds: operativeGuessThresholds({
+        aggression,
+        clueNumber,
+        guessesMade,
+        opponentRemaining,
+        ownRemaining,
+      }),
+    };
   }
 
   const ranked = candidates
@@ -166,18 +232,34 @@ export function chooseBotGuess({
     .sort((left, right) => right.botScore - left.botScore);
   const best = ranked[0];
   const gap = best.botScore - (ranked[1]?.botScore ?? -1);
-  const { minimumGap, minimumSimilarity } = operativeGuessThresholds({
+  const thresholds = operativeGuessThresholds({
     aggression,
     clueNumber,
     guessesMade,
     opponentRemaining,
     ownRemaining,
   });
+  const { minimumGap, minimumSimilarity } = thresholds;
 
   if (best.botScore < minimumSimilarity || gap < minimumGap) {
-    return null;
+    return {
+      gap,
+      layoutId: null,
+      ranked,
+      reason:
+        best.botScore < minimumSimilarity
+          ? "minimum-similarity"
+          : "minimum-gap",
+      thresholds,
+    };
   }
-  return best.layoutId;
+  return {
+    gap,
+    layoutId: best.layoutId,
+    ranked,
+    reason: "guess",
+    thresholds,
+  };
 }
 
 export function operativeGuessThresholds({

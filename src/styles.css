@@ -2626,6 +2626,39 @@ h3 {
   text-transform: uppercase;
 }
 
+.play-setting-checkbox {
+  display: flex;
+  align-items: flex-start;
+  grid-column: 1 / -1;
+  flex-direction: row;
+  text-transform: none;
+}
+
+.play-setting-checkbox input,
+.play-live-diagnostics-toggle input {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  margin: 0;
+  accent-color: var(--blue);
+}
+
+.play-setting-checkbox span {
+  display: grid;
+  gap: 3px;
+}
+
+.play-setting-checkbox strong {
+  color: var(--ink);
+  font-size: 0.72rem;
+}
+
+.play-setting-checkbox small {
+  color: var(--muted);
+  font-size: 0.65rem;
+  font-weight: 700;
+}
+
 .play-setting-label {
   display: flex;
   min-width: 0;
@@ -3113,6 +3146,33 @@ button.play-card:not(:disabled):hover {
   gap: 14px;
 }
 
+.play-live-diagnostics-toggle {
+  display: flex;
+  min-height: 38px;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid var(--orange);
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: var(--orange-soft);
+  color: var(--ink);
+  font-size: 0.72rem;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.play-live-diagnostics-toggle[hidden] {
+  display: none;
+}
+
+.play-live-diagnostics-toggle small {
+  margin-left: auto;
+  color: var(--orange);
+  font-size: 0.62rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
 .play-clue-display {
   min-height: 92px;
   border-left: 5px solid var(--blue);
@@ -3332,6 +3392,18 @@ button.play-card:not(:disabled):hover {
   text-align: left;
 }
 
+.play-suggestion.is-developer {
+  grid-template-columns: minmax(0, 1fr) repeat(3, auto);
+}
+
+.play-suggestion-debug {
+  grid-column: 1 / -1;
+  color: var(--muted);
+  font-size: 0.64rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 750;
+}
+
 .play-suggestion:hover {
   border-color: var(--blue);
 }
@@ -3374,6 +3446,45 @@ button.play-card:not(:disabled):hover {
   color: var(--muted);
   font-size: 0.82rem;
   font-weight: 800;
+}
+
+.play-live-diagnostics {
+  border: 1px solid var(--orange);
+  border-radius: 8px;
+  padding: 10px;
+  background: color-mix(in srgb, var(--orange-soft) 45%, var(--surface));
+}
+
+.play-live-diagnostics[hidden] {
+  display: none;
+}
+
+.play-live-diagnostics-content,
+.play-live-diagnostics-list {
+  display: grid;
+  gap: 6px;
+}
+
+.play-live-diagnostics-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 0.68rem;
+  line-height: 1.35;
+}
+
+.play-live-diagnostics-row strong {
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.play-live-diagnostics-note {
+  color: var(--muted);
+  font-size: 0.66rem;
+  line-height: 1.4;
 }
 
 .play-post-game-analysis {

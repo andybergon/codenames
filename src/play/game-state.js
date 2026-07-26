@@ -58,6 +58,7 @@ export function differentRandomHumanSeat(currentSeat, random = Math.random) {
 export function createPlayGame({
   botSettings,
   cards,
+  developerMode = false,
   humanSeat,
   language = LANGUAGE.ENGLISH,
   seed,
@@ -71,8 +72,10 @@ export function createPlayGame({
   }
 
   const normalizedBotSettings = normalizePlayBotSettings(botSettings, language);
+  const normalizedDeveloperMode = developerMode === true;
   return {
     schemaVersion: 1,
+    developerMode: normalizedDeveloperMode,
     seed: String(seed ?? ""),
     language,
     wordSet,
@@ -96,6 +99,7 @@ export function createPlayGame({
         type: "game-started",
         humanSeat: { ...humanSeat },
         language,
+        developerMode: normalizedDeveloperMode,
         botSettings: normalizedBotSettings,
         activeSide: SIDE.BLUE,
       },
@@ -109,7 +113,16 @@ export function actorForSeat(game, side, role) {
   return game.humanSeat.side === side && game.humanSeat.role === role ? "human" : "bot";
 }
 
-export function giveClue(game, { clue, number, actor, intendedLayoutIds = [] }) {
+export function giveClue(
+  game,
+  {
+    clue,
+    number,
+    actor,
+    intendedLayoutIds = [],
+    developerDiagnostics = null,
+  },
+) {
   assertActive(game, GAME_PHASE.AWAITING_CLUE);
   assertActor(game, PLAYER_ROLE.SPYMASTER, actor);
 
@@ -135,6 +148,9 @@ export function giveClue(game, { clue, number, actor, intendedLayoutIds = [] }) 
     clue: normalizedClue,
     number: normalizedNumber,
     intendedLayoutIds: intended,
+    ...(game.developerMode && developerDiagnostics
+      ? { developerDiagnostics: structuredClone(developerDiagnostics) }
+      : {}),
   };
 
   return {
@@ -147,12 +163,18 @@ export function giveClue(game, { clue, number, actor, intendedLayoutIds = [] }) 
       actor,
       intendedLayoutIds: intended,
       guesses: [],
+      ...(game.developerMode && developerDiagnostics
+        ? { developerDiagnostics: structuredClone(developerDiagnostics) }
+        : {}),
     },
     history: [...game.history, event],
   };
 }
 
-export function guessCard(game, { layoutId, actor }) {
+export function guessCard(
+  game,
+  { layoutId, actor, developerDiagnostics = null },
+) {
   assertActive(game, GAME_PHASE.AWAITING_GUESS);
   assertActor(game, PLAYER_ROLE.OPERATIVE, actor);
 
@@ -177,6 +199,9 @@ export function guessCard(game, { layoutId, actor }) {
     word: guessedCard.word,
     team: guessedCard.team,
     actor,
+    ...(game.developerMode && developerDiagnostics
+      ? { developerDiagnostics: structuredClone(developerDiagnostics) }
+      : {}),
   };
   const currentTurn = {
     ...game.currentTurn,
@@ -212,7 +237,7 @@ export function guessCard(game, { layoutId, actor }) {
   return afterGuess;
 }
 
-export function passTurn(game, { actor }) {
+export function passTurn(game, { actor, developerDiagnostics = null }) {
   assertActive(game, GAME_PHASE.AWAITING_GUESS);
   assertActor(game, PLAYER_ROLE.OPERATIVE, actor);
   return endTurn(
@@ -225,11 +250,53 @@ export function passTurn(game, { actor }) {
           turn: game.turnNumber,
           side: game.activeSide,
           actor,
+          ...(game.developerMode && developerDiagnostics
+            ? { developerDiagnostics: structuredClone(developerDiagnostics) }
+            : {}),
         },
       ],
     },
     "pass",
   );
+}
+
+export function recordCurrentClueDeveloperDiagnostics(game, diagnostics) {
+  if (
+    !game.developerMode ||
+    game.phase !== GAME_PHASE.AWAITING_GUESS ||
+    !game.currentTurn ||
+    !diagnostics
+  ) {
+    return game;
+  }
+  const merged = {
+    ...(game.currentTurn.developerDiagnostics ?? {}),
+    ...structuredClone(diagnostics),
+  };
+  let updated = false;
+  const history = game.history.map((event) => {
+    if (
+      updated ||
+      event.type !== "clue-given" ||
+      event.turn !== game.turnNumber ||
+      event.side !== game.activeSide
+    ) {
+      return event;
+    }
+    updated = true;
+    return {
+      ...event,
+      developerDiagnostics: merged,
+    };
+  });
+  return {
+    ...game,
+    currentTurn: {
+      ...game.currentTurn,
+      developerDiagnostics: merged,
+    },
+    history,
+  };
 }
 
 export function canUndoPlayGame(game) {
@@ -263,9 +330,12 @@ function replayPlayActions(game, actions) {
   let restored = createPlayGame({
     botSettings: game.botSettings,
     cards: game.cards,
+    developerMode: game.developerMode,
     humanSeat: game.humanSeat,
+    language: game.language,
     seed: game.seed,
     wordSet: game.wordSet,
+    wordReusePolicy: game.wordReusePolicy,
   });
 
   for (const event of actions) {
@@ -275,14 +345,19 @@ function replayPlayActions(game, actions) {
         number: event.number,
         actor: event.actor,
         intendedLayoutIds: event.intendedLayoutIds,
+        developerDiagnostics: event.developerDiagnostics,
       });
     } else if (event.type === "card-guessed") {
       restored = guessCard(restored, {
         layoutId: event.layoutId,
         actor: event.actor,
+        developerDiagnostics: event.developerDiagnostics,
       });
     } else {
-      restored = passTurn(restored, { actor: event.actor });
+      restored = passTurn(restored, {
+        actor: event.actor,
+        developerDiagnostics: event.developerDiagnostics,
+      });
     }
   }
 
@@ -299,16 +374,19 @@ export function publicGameView(game) {
       team: showKey || card.done ? card.team : null,
     })),
     currentTurn: game.currentTurn
-      ? {
-          ...game.currentTurn,
-          intendedLayoutIds: [],
-        }
+      ? publicCurrentTurn(game.currentTurn)
       : null,
     history: game.history.map((event) => {
       if (showKey || !Object.hasOwn(event, "intendedLayoutIds")) {
-        return { ...event };
+        const { developerDiagnostics: _developerDiagnostics, ...publicEvent } =
+          event;
+        return publicEvent;
       }
-      const { intendedLayoutIds: _privateTargets, ...publicEvent } = event;
+      const {
+        intendedLayoutIds: _privateTargets,
+        developerDiagnostics: _developerDiagnostics,
+        ...publicEvent
+      } = event;
       return publicEvent;
     }),
   };
@@ -331,6 +409,18 @@ export function unresolvedIntendedTargetIds(game, side) {
         .flatMap((event) => event.intendedLayoutIds ?? []),
     ),
   ].filter((layoutId) => availableOwnTargets.has(layoutId));
+}
+
+function publicCurrentTurn(currentTurn) {
+  const {
+    developerDiagnostics: _developerDiagnostics,
+    intendedLayoutIds: _intendedLayoutIds,
+    ...publicTurn
+  } = currentTurn;
+  return {
+    ...publicTurn,
+    intendedLayoutIds: [],
+  };
 }
 
 export function replayCompletedClueTurns(game) {
@@ -395,6 +485,7 @@ export function validateStoredGame(value) {
     value.schemaVersion !== 1 ||
     !Array.isArray(value.cards) ||
     value.cards.length !== 25 ||
+    !Array.isArray(value.history) ||
     !SIDES.has(value.activeSide) ||
     !Object.values(GAME_PHASE).includes(value.phase)
   ) {
@@ -406,6 +497,15 @@ export function validateStoredGame(value) {
     : LANGUAGE.ENGLISH;
   return {
     ...value,
+    developerMode: value.developerMode === true,
+    history: value.history.map((event) =>
+      event.type === "game-started"
+        ? {
+            ...event,
+            developerMode: value.developerMode === true,
+          }
+        : event,
+    ),
     language,
     botSettings: normalizePlayBotSettings(value.botSettings, language),
     wordReusePolicy: normalizeWordReusePolicy(

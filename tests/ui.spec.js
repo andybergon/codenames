@@ -1260,10 +1260,17 @@ test("Play exposes and saves bot policy settings", async ({ page }) => {
   const operativeSettings = settings.locator(
     '[data-play-settings-section="operative"]',
   );
+  const developerSettings = settings.locator(
+    '[data-play-settings-section="developer"]',
+  );
   await expect(gameSettings.locator("legend")).toHaveText("🎮 Game");
   await expect(allBotSettings.locator("legend")).toHaveText("🤖 All bots");
   await expect(spymasterSettings.locator("legend")).toHaveText("🕵️ Spymaster");
   await expect(operativeSettings.locator("legend")).toHaveText("🔎 Operative");
+  await expect(developerSettings.locator("legend")).toHaveText("🧪 Developer");
+  await expect(
+    settings.locator(".play-settings-section").last(),
+  ).toHaveAttribute("data-play-settings-section", "developer");
   await expect(gameSettings.locator("[data-play-word-set]")).toHaveCount(2);
   await expect(
     gameSettings.locator(".play-settings-fields > #play-word-reuse-setting"),
@@ -1274,6 +1281,7 @@ test("Play exposes and saves bot policy settings", async ({ page }) => {
   await expect(allBotSettings.locator("#play-bot-model")).toHaveCount(1);
   await expect(spymasterSettings.locator("select")).toHaveCount(4);
   await expect(operativeSettings.locator("select")).toHaveCount(2);
+  await expect(developerSettings.locator("#play-developer-mode")).not.toBeChecked();
 
   await expect(page.locator("#play-bot-model")).toHaveValue("bge-small");
   await expect(page.locator("#play-bot-candidates")).toHaveValue("10000");
@@ -1315,6 +1323,140 @@ test("Play exposes and saves bot policy settings", async ({ page }) => {
     bonusGuesses: "allow",
   });
   expect(storedGame.botSettings).not.toHaveProperty("wordReusePolicy");
+  expect(storedGame.developerMode).toBe(false);
+  expect(storedGame.history[0].developerMode).toBe(false);
+});
+
+test("Developer mode marks games and retains live score diagnostics", async ({
+  page,
+}) => {
+  const externalRequests = await useTestPlayAnalysis(page);
+  await page.addInitScript(() => {
+    window.__codenamesPlayModeOptions = {
+      ...window.__codenamesPlayModeOptions,
+      botActionDelay: 5000,
+    };
+  });
+  await page.goto("/?mode=play");
+
+  const settings = page.locator(".play-settings");
+  await settings.locator("summary").click();
+  const developerMode = page.locator("#play-developer-mode");
+  await developerMode.check();
+  await expect
+    .poll(() =>
+      page.evaluate(() =>
+        JSON.parse(
+          localStorage.getItem("codenames-developer-settings-v1"),
+        ),
+      ),
+    )
+    .toEqual({ enabled: true });
+
+  await page.locator('[data-play-seat="blue:spymaster"]').click();
+  await page.getByRole("button", { name: "Start new game", exact: true }).click();
+
+  const liveToggle = page.locator("#play-live-diagnostics-toggle");
+  const liveCheckbox = page.locator("#play-live-diagnostics");
+  await expect(liveToggle).toBeVisible();
+  await expect(liveCheckbox).not.toBeChecked();
+  await expect(page.locator(".play-card[data-operative-score]")).toHaveCount(0);
+
+  await liveCheckbox.check();
+  await page.getByRole("button", {
+    name: "Show clue suggestions",
+    exact: true,
+  }).click();
+  const suggestion = page.locator(".play-suggestion").first();
+  await expect(suggestion).toBeVisible({ timeout: 15_000 });
+  await expect(
+    suggestion.locator('[data-developer-score="true"]'),
+  ).toContainText(/Play \d+\.\d{2}/);
+  await suggestion.click();
+  await page.getByRole("button", { name: "Give clue", exact: true }).click();
+
+  await expect(page.locator(".play-card[data-operative-score]")).toHaveCount(
+    25,
+  );
+  await expect(page.locator("#play-live-diagnostics-panel")).toContainText(
+    "Raw model scores",
+  );
+  await expect(page.locator("#play-live-diagnostics-panel")).toContainText(
+    "Operative policy",
+  );
+
+  const storedGame = await page.evaluate(() =>
+    JSON.parse(localStorage.getItem("codenames-play-session-v1")),
+  );
+  expect(storedGame.developerMode).toBe(true);
+  expect(storedGame.history[0].developerMode).toBe(true);
+  const clueEvent = storedGame.history.find(
+    (event) => event.type === "clue-given",
+  );
+  expect(clueEvent.developerDiagnostics.diagnosticsVersion).toBe(1);
+  expect(clueEvent.developerDiagnostics.spymasterDecision.kind).toBe(
+    "spymaster",
+  );
+  expect(clueEvent.developerDiagnostics.operativeScores).toHaveLength(25);
+
+  await page.reload();
+  await page.getByRole("button", { name: "Resume game", exact: true }).click();
+  await expect(liveToggle).toBeVisible();
+  await expect(liveCheckbox).not.toBeChecked();
+  await expect(page.locator(".play-card[data-operative-score]")).toHaveCount(0);
+  await liveCheckbox.check();
+  await expect(page.locator(".play-card[data-operative-score]")).toHaveCount(
+    25,
+  );
+  expect(externalRequests).toEqual([]);
+});
+
+test("Developer scores do not reveal operative card roles", async ({ page }) => {
+  const session = playSessionWithHistory([
+    {
+      type: "clue-given",
+      turn: 7,
+      side: "blue",
+      actor: "bot",
+      clue: "FIXTURE",
+      number: 2,
+      intendedLayoutIds: [0, 1],
+      developerDiagnostics: {
+        diagnosticsVersion: 1,
+        modelId: "bge-small",
+        operativeScores: Array.from({ length: 25 }, (_, layoutId) => ({
+          layoutId,
+          similarity: 0.9 - layoutId * 0.02,
+        })),
+      },
+    },
+  ]);
+  session.developerMode = true;
+  session.humanSeat = { side: "blue", role: "operative" };
+  session.phase = "awaiting-guess";
+  session.currentTurn = {
+    side: "blue",
+    clue: "FIXTURE",
+    number: 2,
+    actor: "bot",
+    intendedLayoutIds: [0, 1],
+    guesses: [],
+    developerDiagnostics:
+      session.history.at(-1).developerDiagnostics,
+  };
+  session.history[0].developerMode = true;
+  await page.addInitScript((saved) => {
+    localStorage.setItem("codenames-play-session-v1", JSON.stringify(saved));
+  }, session);
+  await page.goto("/?mode=play");
+  await page.getByRole("button", { name: "Resume game", exact: true }).click();
+  await page.locator("#play-live-diagnostics").check();
+
+  await expect(page.locator(".play-card[data-operative-score]")).toHaveCount(
+    25,
+  );
+  await expect(page.locator('.play-card[data-team="hidden"]')).toHaveCount(25);
+  await expect(page.locator(".play-card[data-intended='true']")).toHaveCount(0);
 });
 
 test("Play avoids recent words across pools and persists policy", async ({

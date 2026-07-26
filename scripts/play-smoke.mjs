@@ -19,6 +19,8 @@ import {
   chooseBotGuess,
   createSeededRandom,
   scoreMissedTargetPreference,
+  evaluateBotClue,
+  evaluateBotGuess,
   scorePlayClue,
   shouldBotTakeAnotherGuess,
 } from "../src/play/bots.js";
@@ -35,6 +37,7 @@ import {
   passTurn,
   publicGameView,
   randomHumanSeat,
+  recordCurrentClueDeveloperDiagnostics,
   restorePlayGame,
   undoPlayGame,
   unresolvedIntendedTargetIds,
@@ -313,6 +316,73 @@ const morphologyGame = createPlayGame({
   seed: "morphology",
   wordSet: sample.wordSet,
 });
+
+let developerGame = createPlayGame({
+  cards: sample.cards,
+  developerMode: true,
+  humanSeat: { side: SIDE.BLUE, role: PLAYER_ROLE.OPERATIVE },
+  seed: "developer-mode",
+  wordSet: sample.wordSet,
+});
+assert.equal(developerGame.developerMode, true);
+assert.equal(developerGame.history[0].developerMode, true);
+developerGame = giveClue(developerGame, {
+  actor: "bot",
+  clue: "orbit",
+  developerDiagnostics: {
+    diagnosticsVersion: 1,
+    spymasterDecision: {
+      kind: "spymaster",
+      selected: { clue: "orbit", number: 1, playScore: 72 },
+    },
+  },
+  intendedLayoutIds: [0],
+  number: 1,
+});
+developerGame = recordCurrentClueDeveloperDiagnostics(developerGame, {
+  diagnosticsVersion: 1,
+  modelId: "bge-small",
+  operativeScores: [
+    { layoutId: 0, similarity: 0.81 },
+    { layoutId: 1, similarity: 0.62 },
+  ],
+});
+developerGame = guessCard(developerGame, {
+  actor: "human",
+  developerDiagnostics: {
+    diagnosticsVersion: 1,
+    operativeDecision: {
+      kind: "operative",
+      layoutId: 0,
+      reason: "guess",
+    },
+  },
+  layoutId: 0,
+});
+assert.equal(
+  developerGame.history.find((event) => event.type === "clue-given")
+    .developerDiagnostics.operativeScores[0].similarity,
+  0.81,
+);
+assert.equal(
+  developerGame.history.find((event) => event.type === "card-guessed")
+    .developerDiagnostics.operativeDecision.reason,
+  "guess",
+);
+const developerPublicView = publicGameView(developerGame);
+assert.equal(
+  developerPublicView.history.some((event) =>
+    Object.hasOwn(event, "developerDiagnostics"),
+  ),
+  false,
+);
+const restoredDeveloperGame = restorePlayGame(developerGame);
+assert.equal(restoredDeveloperGame.developerMode, true);
+assert.equal(
+  restoredDeveloperGame.history.find((event) => event.type === "clue-given")
+    .developerDiagnostics.operativeScores.length,
+  2,
+);
 assert.throws(
   () =>
     giveClue(morphologyGame, {
@@ -730,6 +800,38 @@ assert.throws(
     }),
   /Unknown missed-target timing/,
 );
+const clueDecision = evaluateBotClue({
+  analysis: {
+    suggestions: [
+      {
+        clue: "single",
+        worth: 80,
+        risk: "safe",
+        number: 1,
+        margin: 0.2,
+        expectedNet: 1,
+        success: 0.9,
+      },
+      {
+        clue: "pair",
+        worth: 75,
+        risk: "safe",
+        number: 2,
+        margin: 0.2,
+        expectedNet: 1,
+        success: 0.9,
+      },
+    ],
+  },
+  ownRemaining: 7,
+  opponentRemaining: 5,
+  policy: PLAY_CLUE_POLICY.HYBRID,
+  multiTolerance: 5,
+  random: () => 0,
+});
+assert.equal(clueDecision.selected.clue, "pair");
+assert.equal(clueDecision.selection, "multi-tolerance");
+assert.equal(typeof clueDecision.ranked[0].playScore, "number");
 assert.ok(
   scorePlayClue(
     {
@@ -776,6 +878,19 @@ assert.equal(
   }),
   4,
 );
+const guessDecision = evaluateBotGuess({
+  aggression: PLAY_OPERATIVE_AGGRESSION.AGGRESSIVE,
+  candidates: [
+    { layoutId: 4, similarity: 0.4 },
+    { layoutId: 8, similarity: 0.1 },
+  ],
+  guessesMade: 0,
+  clueNumber: 2,
+  random: () => 0.5,
+});
+assert.equal(guessDecision.layoutId, 4);
+assert.equal(guessDecision.reason, "guess");
+assert.equal(guessDecision.ranked[0].botScore, 0.4);
 assert.equal(
   chooseBotGuess({
     aggression: PLAY_OPERATIVE_AGGRESSION.AGGRESSIVE,
@@ -942,6 +1057,7 @@ assert.equal(
   upgradedStoredGame.wordReusePolicy,
   PLAY_WORD_REUSE_POLICY.FULLY_RANDOM,
 );
+assert.equal(upgradedStoredGame.developerMode, false);
 
 const randomSeed = boardSeed(1);
 const randomReuseBoard = createPlayBoardWithWordReuse({

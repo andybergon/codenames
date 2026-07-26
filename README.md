@@ -76,6 +76,8 @@ Play settings are grouped by ownership: Game controls the board word set and reu
 
 Retry missed targets controls when the bot spymaster returns to intended friendly words that remain unrevealed after an earlier clue. Late strongly prefers never-targeted words until few remain, Mid-game applies a lighter early bias, and Immediately leaves clue ranking unchanged. Operative aggression controls whether the guessing bot continues through weaker associations. Conservative passes on doubt, Aggressive pursues the declared clue number, and Dynamic adapts using only public remaining-agent counts.
 
+The final Developer settings section enables marked diagnostic games. Developer games store `developerMode: true` at the game root and on the canonical `game-started` event. They also retain versioned raw clue scores and bot decision traces on the related clue, guess, and pass events. Show live diagnostics exposes those model scores and policy thresholds during play. The display resets off for each tab, but the developer provenance and collected data remain in the saved game so archives, review links, and later calibration can include or filter them.
+
 New boards remain fully random by default. The optional Avoid recent words policy records the last 32 local Play boards, uses every unseen word in the selected pool before the least-recently-used repeats, and warns when fewer than 25 unseen words remain. Clear history resets board reuse without changing the selected policy. History and policy stay local under `codenames-play-word-reuse-v1`.
 
 After a game ends, select any clue in the Game log to replay that turn from the event history. The review restores which cards were already revealed when the clue was given, marks intended targets and guess outcomes, and shows the configured operative model's cosine-similarity score for every board word. It is completion-gated, so none of these annotations or hidden roles appear during live operative play.
@@ -85,6 +87,7 @@ The Play implementation keeps rules, bot choices, persistence, and rendering sep
 - `src/play/game-state.js` owns the rules, seat authorization, event history, public projection, win conditions, and completed-turn replay.
 - `src/play/bots.js` chooses bot clues and guesses. The operative API accepts only clue-to-word similarities and never receives card roles or intended targets.
 - `src/play/session-store.js` persists the versioned game state under `codenames-play-session-v1`.
+- `src/developer-settings.js` persists the separate Developer mode preference under `codenames-developer-settings-v1`.
 - `src/play/word-reuse.js` owns new-board reuse policy, bounded local history, exhaustion fallback, and reset behavior.
 - `src/play/mode.js` owns Play setup, rendering, model orchestration, bot pacing, resume/backward/forward controls, and post-game score overlays.
 - `scripts/play-smoke.mjs` covers seat ownership, information boundaries, reveal outcomes, deterministic bots, and bounded self-play.
