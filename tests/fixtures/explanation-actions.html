@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Explanation action placement mockups</title>
+    <link rel="stylesheet" href="/tests/fixtures/explanation-actions.css" />
+  </head>
+  <body>
+    <main class="mockup-shell">
+      <header class="mockup-header">
+        <div>
+          <p class="mockup-kicker">Codenames Play design study</p>
+          <h1 id="variant-title">Explanation actions</h1>
+          <p id="variant-summary" class="mockup-summary"></p>
+        </div>
+        <nav class="variant-switcher" aria-label="Explanation action mockups">
+          <a href="?variant=current">Current</a>
+          <a href="?variant=icons">Icons</a>
+          <a href="?variant=adjacent">Adjacent</a>
+          <a href="?variant=selected">Selected row</a>
+          <a href="?variant=inline">Inline selected</a>
+        </nav>
+      </header>
+
+      <div class="paid-boundary" role="note">
+        <span class="paid-boundary-icon" aria-hidden="true">✨</span>
+        <span
+          ><strong>AI explanations are optional.</strong> Each Explain action
+          makes one paid request and caches its result in this tab.</span
+        >
+      </div>
+
+      <section
+        id="inline-treatment-controls"
+        class="inline-treatment-controls"
+        hidden
+      >
+        <div>
+          <strong>Clue selection examples</strong>
+          <span
+            >Each option sends the same clue and target words after the paid
+            click.</span
+          >
+        </div>
+        <nav
+          class="clue-treatment-switcher"
+          aria-label="Clue selection treatments"
+        >
+          <a href="?variant=inline&amp;clue=whole">Whole row</a>
+          <a href="?variant=inline&amp;clue=clue">Clue only</a>
+          <a href="?variant=inline&amp;clue=grouped">Grouped lines</a>
+        </nav>
+      </section>
+
+      <section
+        id="scenario-grid"
+        class="scenario-grid"
+        aria-label="Analysis scenarios"
+      ></section>
+
+      <aside id="request-preview" class="request-preview" aria-live="polite">
+        <span>No paid request made.</span>
+      </aside>
+    </main>
+    <script type="module" src="/tests/fixtures/explanation-actions.js"></script>
+  </body>
+</html>
