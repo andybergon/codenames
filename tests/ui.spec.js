@@ -4062,7 +4062,12 @@ test("completed Play sessions replay turns and explain intended targets", async 
   await expect(explanations.nth(0)).toContainText(
     "These words connect through sequence",
   );
+  await expect(explanations.nth(0)).toHaveCSS("font-weight", "400");
   await expect(explanations.nth(0).locator(".play-clue-pill")).toHaveText("first");
+  await expect(explanations.nth(0).locator(".play-clue-pill")).toHaveCSS(
+    "font-weight",
+    "900",
+  );
   await expect(
     explanations.nth(0).locator('.play-history-card[data-team="friendly"]'),
   ).toHaveText(["word0", "word1"]);
@@ -4093,6 +4098,9 @@ test("completed Play sessions replay turns and explain intended targets", async 
       const explanationBounds = explanation.getBoundingClientRect();
       const action = history.querySelector(".play-history-clue-action");
       const actionBounds = action.getBoundingClientRect();
+      const pillBounds = [
+        ...explanation.querySelectorAll(".play-clue-pill, .play-history-card"),
+      ].map((pill) => pill.getBoundingClientRect());
       return {
         pageOverflows:
           document.documentElement.scrollWidth > document.documentElement.clientWidth,
@@ -4104,6 +4112,14 @@ test("completed Play sessions replay turns and explain intended targets", async 
         ),
         explanationBelowActions:
           explanationBounds.top >= actionBounds.bottom - 1,
+        pillsOverlapAcrossLines: pillBounds.some((left, leftIndex) =>
+          pillBounds.slice(leftIndex + 1).some(
+            (right) =>
+              Math.abs(left.top - right.top) > 1 &&
+              left.top < right.bottom &&
+              right.top < left.bottom,
+          ),
+        ),
       };
     });
     expect(layout.pageOverflows, `page overflow at ${viewport.width}px`).toBe(false);
@@ -4115,6 +4131,10 @@ test("completed Play sessions replay turns and explain intended targets", async 
       layout.explanationBelowActions,
       `explanation action overlap at ${viewport.width}px`,
     ).toBe(true);
+    expect(
+      layout.pillsOverlapAcrossLines,
+      `explanation pill overlap at ${viewport.width}px`,
+    ).toBe(false);
   }
   const finishedNewGame = page.getByRole("button", {
     name: "Start new game",

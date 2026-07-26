@@ -2051,7 +2051,7 @@ h3 {
 
 .explanation-targets {
   color: var(--ink);
-  font-weight: 800;
+  font-weight: 400;
   line-height: 1.35;
 }
 
@@ -3717,6 +3717,7 @@ button.play-card:not(:disabled):hover {
   max-width: 72ch;
   color: var(--ink);
   font-size: 0.78rem;
+  line-height: 1.75;
 }
 
 .play-history-explanation .play-clue-pill,
