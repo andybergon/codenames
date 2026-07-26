@@ -652,7 +652,9 @@ test("Play reuses the saved seat until Random explicitly changes it", async ({
   const savedSeat = page.locator('[data-play-seat="blue:spymaster"]');
   await expect(savedSeat).toHaveAttribute("aria-pressed", "true");
 
-  await page.getByRole("button", { name: "Resume game", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Review finished game", exact: true })
+    .click();
   await expect(page.locator("#play-human-seat .play-seat-identity")).toHaveText(
     "🔵 Blue 🕵️ Spymaster",
   );
