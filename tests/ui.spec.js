@@ -1426,7 +1426,7 @@ test("Play exposes and saves bot policy settings", async ({ page }) => {
   expect(storedGame.history[0].developerMode).toBe(false);
 });
 
-test("Developer mode marks games and retains live score diagnostics", async ({
+test("Developer mode reuses turn analysis and retains score diagnostics", async ({
   page,
 }) => {
   const externalRequests = await useTestPlayAnalysis(page);
@@ -1477,12 +1477,40 @@ test("Developer mode marks games and retains live score diagnostics", async ({
   await expect(page.locator(".play-card[data-operative-score]")).toHaveCount(
     25,
   );
-  await expect(page.locator("#play-live-diagnostics-panel")).toContainText(
-    "Raw model scores",
+  await expect(page.locator("#play-post-game-analysis")).toBeVisible();
+  await expect(page.locator("#play-post-game-outcome")).toHaveText(
+    "Developer game",
   );
-  await expect(page.locator("#play-live-diagnostics-panel")).toContainText(
-    "Operative policy",
+  await expect(page.locator("#play-history-heading-label")).toHaveText(
+    "Live turn analysis",
   );
+  await expect(page.locator(".play-card[data-intended='true']")).toHaveCount(2);
+  await expect(
+    page.locator("#play-history-list .play-history-clue"),
+  ).toHaveCount(1);
+  await expect(
+    page.locator("#play-history-list .explain-recommendation-button"),
+  ).toHaveCount(0);
+  await expect(page.locator("#play-live-diagnostics-panel")).toHaveCount(0);
+  for (const viewport of [
+    { width: 390, height: 844 },
+    { width: 768, height: 1024 },
+    { width: 1440, height: 900 },
+  ]) {
+    await page.setViewportSize(viewport);
+    await expect(page.locator("#play-post-game-analysis")).toBeVisible();
+    await expect(page.locator(".play-card[data-operative-score]")).toHaveCount(
+      25,
+    );
+    expect(
+      await page.evaluate(
+        () =>
+          document.documentElement.scrollWidth >
+          document.documentElement.clientWidth,
+      ),
+      `live analysis overflow at ${viewport.width}px`,
+    ).toBe(false);
+  }
 
   const storedGame = await page.evaluate(() =>
     JSON.parse(localStorage.getItem("codenames-play-session-v1")),
@@ -1502,8 +1530,10 @@ test("Developer mode marks games and retains live score diagnostics", async ({
   await page.getByRole("button", { name: "Resume game", exact: true }).click();
   await expect(liveToggle).toBeVisible();
   await expect(liveCheckbox).not.toBeChecked();
+  await expect(page.locator("#play-post-game-analysis")).toBeHidden();
   await expect(page.locator(".play-card[data-operative-score]")).toHaveCount(0);
   await liveCheckbox.check();
+  await expect(page.locator("#play-post-game-analysis")).toBeVisible();
   await expect(page.locator(".play-card[data-operative-score]")).toHaveCount(
     25,
   );
@@ -1592,13 +1622,18 @@ test("Developer mode can mark and diagnose a saved game in progress", async ({
   await expect(suggestion).toBeVisible({ timeout: 15_000 });
   await suggestion.click();
   await page.getByRole("button", { name: "Give clue", exact: true }).click();
+  await expect(page.locator("#play-history-heading-label")).toHaveText(
+    "Live turn analysis",
+  );
   await expect(page.locator(".play-card[data-operative-score]")).toHaveCount(
     25,
   );
   expect(externalRequests).toEqual([]);
 });
 
-test("Developer scores do not reveal operative card roles", async ({ page }) => {
+test("Developer live analysis matches post-game role and target review", async ({
+  page,
+}) => {
   const session = playSessionWithHistory([
     {
       type: "clue-given",
@@ -1637,13 +1672,30 @@ test("Developer scores do not reveal operative card roles", async ({ page }) => 
   }, session);
   await page.goto("/?mode=play");
   await page.getByRole("button", { name: "Resume game", exact: true }).click();
+
+  await expect(page.locator('.play-card[data-team="hidden"]')).toHaveCount(25);
+  await expect(page.locator("#play-post-game-analysis")).toBeHidden();
   await page.locator("#play-live-diagnostics").check();
 
   await expect(page.locator(".play-card[data-operative-score]")).toHaveCount(
     25,
   );
+  await expect(page.locator('.play-card[data-team="friendly"]')).toHaveCount(9);
+  await expect(page.locator('.play-card[data-team="enemy"]')).toHaveCount(8);
+  await expect(page.locator('.play-card[data-team="neutral"]')).toHaveCount(7);
+  await expect(page.locator('.play-card[data-team="assassin"]')).toHaveCount(1);
+  await expect(page.locator(".play-card[data-intended='true']")).toHaveCount(2);
+  await expect(page.locator("#play-operative-controls")).toBeHidden();
+  await expect(
+    page.getByRole("button", {
+      name: "Review turn 1: Blue clue FIXTURE 2",
+      exact: true,
+    }),
+  ).toHaveAttribute("aria-pressed", "true");
+
+  await page.locator("#play-live-diagnostics").uncheck();
   await expect(page.locator('.play-card[data-team="hidden"]')).toHaveCount(25);
-  await expect(page.locator(".play-card[data-intended='true']")).toHaveCount(0);
+  await expect(page.locator("#play-operative-controls")).toBeVisible();
 });
 
 test("Play avoids recent words across pools and persists policy", async ({
@@ -3194,6 +3246,17 @@ test("long Play logs remain complete and responsive in both views", async ({ pag
 test("completed Play sessions replay turns and explain intended targets", async ({
   page,
 }) => {
+  await page.addInitScript(() => {
+    window.__codenamesPlayModeOptions = {
+      ...window.__codenamesPlayModeOptions,
+      guessCandidateExecutor({ cards }) {
+        return cards.map((card, index) => ({
+          layoutId: card.layoutId,
+          similarity: 0.9 - index * 0.02,
+        }));
+      },
+    };
+  });
   const explanationRequests = [];
   await page.route("**/api/explain-recommendations", async (route) => {
     const request = route.request().postDataJSON();

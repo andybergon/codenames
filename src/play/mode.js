@@ -56,6 +56,7 @@ import {
   randomHumanSeat,
   recordCurrentClueDeveloperDiagnostics,
   replayCompletedClueTurns,
+  replayDeveloperClueTurns,
   restorePlayGame,
   unresolvedIntendedTargetIds,
   undoPlayGame,
@@ -357,12 +358,6 @@ export function createPlayMode(options = {}) {
       "#play-live-diagnostics-toggle",
     ),
     liveDiagnostics: document.querySelector("#play-live-diagnostics"),
-    liveDiagnosticsPanel: document.querySelector(
-      "#play-live-diagnostics-panel",
-    ),
-    liveDiagnosticsContent: document.querySelector(
-      "#play-live-diagnostics-content",
-    ),
     clueForm: document.querySelector("#play-clue-form"),
     clueInput: document.querySelector("#play-clue-input"),
     clearClue: document.querySelector("#clear-play-clue"),
@@ -446,6 +441,7 @@ export function createPlayMode(options = {}) {
   let boardVectors = null;
   let clueIndex = null;
   let analysisRun = 0;
+  let postGameAnalysisRun = 0;
   let botTimer = 0;
   let botBusy = false;
   let botWaitDetailTimer = 0;
@@ -473,7 +469,6 @@ export function createPlayMode(options = {}) {
     key: "",
     status: "idle",
   };
-  let lastDeveloperDecision = null;
   const clueIndexPromises = new Map();
   const manifestPromises = new Map();
 
@@ -536,7 +531,9 @@ export function createPlayMode(options = {}) {
 
   elements.liveDiagnostics.addEventListener("change", () => {
     liveDiagnosticsVisible = elements.liveDiagnostics.checked;
+    resetPostGameAnalysis();
     renderGame();
+    ensurePostGameAnalysis();
   });
 
   for (const [element, key, transform] of [
@@ -1187,6 +1184,7 @@ export function createPlayMode(options = {}) {
   }
 
   function resetPostGameAnalysis() {
+    postGameAnalysisRun += 1;
     postGameTurns = [];
     selectedPostGameTurn = 0;
     postGameScores = [];
@@ -1207,7 +1205,6 @@ export function createPlayMode(options = {}) {
           : "",
       status: savedScores.length > 0 ? "ready" : "idle",
     };
-    lastDeveloperDecision = latestDeveloperDecision(game);
   }
 
   function commitGame() {
@@ -1218,6 +1215,7 @@ export function createPlayMode(options = {}) {
     }
     renderGame();
     if (game.phase === GAME_PHASE.COMPLETE) {
+      resetPostGameAnalysis();
       ensurePostGameAnalysis();
       return;
     }
@@ -1225,6 +1223,9 @@ export function createPlayMode(options = {}) {
       resetAnalysis();
       ensureAnalysis();
       return;
+    }
+    if (game.developerMode && liveDiagnosticsVisible) {
+      ensurePostGameAnalysis();
     }
     queueBotAction();
   }
@@ -1360,15 +1361,51 @@ export function createPlayMode(options = {}) {
   }
 
   function preparePostGameTurns() {
-    if (
-      game?.phase === GAME_PHASE.COMPLETE &&
-      postGameTurns.length === 0
-    ) {
+    if (game?.phase === GAME_PHASE.COMPLETE && postGameTurns.length === 0) {
       postGameTurns = replayCompletedClueTurns(game);
       selectedPostGameTurn = Math.max(
         0,
         Math.min(selectedPostGameTurn, postGameTurns.length - 1),
       );
+      return;
+    }
+    if (game?.developerMode && liveDiagnosticsVisible) {
+      const nextTurns = replayDeveloperClueTurns(game);
+      const previousLastTurn = postGameTurns.at(-1);
+      const nextLastTurn = nextTurns.at(-1);
+      const latestClueChanged =
+        previousLastTurn?.turn !== nextLastTurn?.turn ||
+        previousLastTurn?.side !== nextLastTurn?.side ||
+        previousLastTurn?.clue !== nextLastTurn?.clue;
+      postGameTurns = nextTurns;
+      selectedPostGameTurn =
+        latestClueChanged && nextTurns.length > 0
+          ? nextTurns.length - 1
+          : Math.max(
+              0,
+              Math.min(selectedPostGameTurn, nextTurns.length - 1),
+            );
+      const savedScores = nextTurns.map((turn) =>
+        Object.fromEntries(
+          (turn.developerDiagnostics?.operativeScores ?? []).map(
+            ({ layoutId, similarity }) => [layoutId, similarity],
+          ),
+        ),
+      );
+      const hasCompleteSavedScores =
+        savedScores.length > 0 &&
+        savedScores.every(
+          (scores) => Object.keys(scores).length === game.cards.length,
+        );
+      if (latestClueChanged) {
+        postGameAnalysisState = "idle";
+      }
+      if (hasCompleteSavedScores) {
+        postGameScores = savedScores;
+        postGameAnalysisState = "ready";
+      } else if (postGameAnalysisState !== "ready") {
+        postGameScores = savedScores;
+      }
     }
   }
 
@@ -1377,8 +1414,9 @@ export function createPlayMode(options = {}) {
     if (
       !active ||
       !game ||
-      game.phase !== GAME_PHASE.COMPLETE ||
       game.reviewCompatibility === "history-only" ||
+      (game.phase !== GAME_PHASE.COMPLETE &&
+        !(game.developerMode && liveDiagnosticsVisible)) ||
       postGameTurns.length === 0 ||
       postGameAnalysisState !== "idle"
     ) {
@@ -1388,13 +1426,42 @@ export function createPlayMode(options = {}) {
   }
 
   async function runPostGameAnalysis() {
-    const runId = ++analysisRun;
+    const runId = ++postGameAnalysisRun;
     const gameAtStart = game;
     const turnsAtStart = postGameTurns;
     postGameAnalysisState = "loading";
     renderGame();
 
     try {
+      if (guessCandidateExecutor) {
+        const scores = await Promise.all(
+          turnsAtStart.map((turn) =>
+            guessCandidateExecutor({
+              cards: gameAtStart.cards.map(({ layoutId, word }) => ({
+                layoutId,
+                word,
+                done: false,
+              })),
+              clue: turn.clue,
+              language: gameAtStart.language ?? LANGUAGE.ENGLISH,
+            }),
+          ),
+        );
+        if (runId !== postGameAnalysisRun || game !== gameAtStart) {
+          return;
+        }
+        postGameScores = scores.map((candidates) =>
+          Object.fromEntries(
+            candidates.map(({ layoutId, similarity }) => [
+              layoutId,
+              similarity,
+            ]),
+          ),
+        );
+        postGameAnalysisState = "ready";
+        renderGame();
+        return;
+      }
       const { modelId } = gameAtStart.botSettings;
       if (!manifestPromises.has(modelId)) {
         const promise = loadClueIndexManifest(indexManifestUrl(modelId)).catch(
@@ -1414,7 +1481,7 @@ export function createPlayMode(options = {}) {
         manifestPromises.get(modelId),
         embedTerms(terms, { model: model.model }),
       ]);
-      if (runId !== analysisRun || game !== gameAtStart) {
+      if (runId !== postGameAnalysisRun || game !== gameAtStart) {
         return;
       }
 
@@ -1431,7 +1498,7 @@ export function createPlayMode(options = {}) {
       );
       postGameAnalysisState = "ready";
     } catch {
-      if (runId !== analysisRun) {
+      if (runId !== postGameAnalysisRun) {
         return;
       }
       postGameAnalysisState = "error";
@@ -1532,8 +1599,6 @@ export function createPlayMode(options = {}) {
               }
             : null,
         });
-        lastDeveloperDecision =
-          game.currentTurn?.developerDiagnostics?.spymasterDecision ?? null;
         statusMessage = translate(gameLanguage(), "botClue", {
           side: localizedSideLabel(actingSide),
           clue: clue.clue.toLocaleUpperCase(gameLanguage()),
@@ -1544,15 +1609,25 @@ export function createPlayMode(options = {}) {
         const decisionRandom = createSeededRandom(
           `${game.seed}:${game.turnNumber}:${game.history.length}`,
         );
-        const candidates = await buildBotGuessCandidates(game.currentTurn.clue);
+        const allCandidates = game.developerMode
+          ? await buildBotGuessCandidates(game.currentTurn.clue, {
+              includeRevealed: true,
+            })
+          : null;
+        const candidates = allCandidates
+          ? allCandidates.filter(
+              ({ layoutId }) =>
+                !game.cards.find((card) => card.layoutId === layoutId)?.done,
+            )
+          : await buildBotGuessCandidates(game.currentTurn.clue);
         if (game.developerMode) {
           game = recordCurrentClueDeveloperDiagnostics(game, {
             diagnosticsVersion: 1,
             modelId: activeModelId ?? game.botSettings.modelId,
-            operativeScores: serializeOperativeScores(candidates),
+            operativeScores: serializeOperativeScores(allCandidates),
           });
           liveDiagnosticsState = {
-            candidates: serializeOperativeScores(candidates),
+            candidates: serializeOperativeScores(allCandidates),
             key: currentClueDiagnosticsKey(),
             status: "ready",
           };
@@ -1610,8 +1685,6 @@ export function createPlayMode(options = {}) {
               ),
             }
           : null;
-        lastDeveloperDecision =
-          operativeDiagnostics?.operativeDecision ?? lastDeveloperDecision;
         if (layoutId === null) {
           game = passTurn(game, {
             actor: "bot",
@@ -1645,6 +1718,9 @@ export function createPlayMode(options = {}) {
       renderGame();
     }
 
+    if (game?.developerMode && liveDiagnosticsVisible) {
+      ensurePostGameAnalysis();
+    }
     if (game?.phase === GAME_PHASE.COMPLETE) {
       ensurePostGameAnalysis();
     } else if (game?.phase === GAME_PHASE.AWAITING_CLUE) {
@@ -1655,13 +1731,16 @@ export function createPlayMode(options = {}) {
     }
   }
 
-  async function buildBotGuessCandidates(clue) {
+  async function buildBotGuessCandidates(
+    clue,
+    { includeRevealed = false } = {},
+  ) {
     if (game && guessCandidateExecutor) {
       return guessCandidateExecutor({
         cards: game.cards.map(({ layoutId, word, done }) => ({
           layoutId,
           word,
-          done,
+          done: includeRevealed ? false : done,
         })),
         clue,
         language: gameLanguage(),
@@ -1684,7 +1763,7 @@ export function createPlayMode(options = {}) {
         done: card.done,
         similarity: dotVectors(clueVector, boardVectors[index]),
       }))
-      .filter((candidate) => !candidate.done)
+      .filter((candidate) => includeRevealed || !candidate.done)
       .map(({ layoutId, similarity }) => ({ layoutId, similarity }));
   }
 
@@ -1733,16 +1812,16 @@ export function createPlayMode(options = {}) {
       setShareFeedback("idle");
     }
     preparePostGameTurns();
-    const selectedTurn =
-      game.phase === GAME_PHASE.COMPLETE
-        ? postGameTurns[selectedPostGameTurn] ?? null
-        : null;
+    const selectedTurn = turnAnalysisEnabled()
+      ? postGameTurns[selectedPostGameTurn] ?? null
+      : null;
     const view = publicGameView(
       selectedTurn
         ? {
             ...game,
             activeSide: selectedTurn.side,
             cards: selectedTurn.cards,
+            phase: GAME_PHASE.COMPLETE,
           }
         : game,
     );
@@ -1751,7 +1830,7 @@ export function createPlayMode(options = {}) {
         ? PLAYER_ROLE.SPYMASTER
         : PLAYER_ROLE.OPERATIVE;
     const currentActor =
-      game.phase === GAME_PHASE.COMPLETE
+      selectedTurn || game.phase === GAME_PHASE.COMPLETE
         ? null
         : actorForSeat(game, game.activeSide, currentRole);
 
@@ -1775,7 +1854,7 @@ export function createPlayMode(options = {}) {
     renderBoardToolbar();
     renderBoard(view, currentActor, currentRole, selectedTurn);
     renderTurnPanel(currentActor, currentRole, selectedTurn);
-    renderLiveDiagnostics();
+    renderLiveDiagnosticsToggle();
     renderPostGameAnalysis(selectedTurn);
     renderHistory(view.history);
     ensureCurrentClueDeveloperDiagnostics();
@@ -1822,6 +1901,7 @@ export function createPlayMode(options = {}) {
 
   function renderBoard(view, currentActor, currentRole, selectedTurn) {
     const canGuess =
+      !selectedTurn &&
       game.phase === GAME_PHASE.AWAITING_GUESS &&
       currentActor === "human" &&
       currentRole === PLAYER_ROLE.OPERATIVE &&
@@ -1837,16 +1917,7 @@ export function createPlayMode(options = {}) {
         : view.cards;
     const turnScores = selectedTurn
       ? postGameScores[selectedPostGameTurn] ?? {}
-      : game.developerMode &&
-          liveDiagnosticsVisible &&
-          game.currentTurn &&
-          liveDiagnosticsState.key === currentClueDiagnosticsKey()
-        ? Object.fromEntries(
-            liveDiagnosticsState.candidates.map(
-              ({ layoutId, similarity }) => [layoutId, similarity],
-            ),
-          )
-        : {};
+      : {};
     const intended = new Set(selectedTurn?.intendedLayoutIds ?? []);
     const guesses = new Map(
       (selectedTurn?.guesses ?? []).map((guess, index) => [
@@ -1968,7 +2039,8 @@ export function createPlayMode(options = {}) {
       currentRole === PLAYER_ROLE.OPERATIVE;
 
     const displaySide =
-      game.phase === GAME_PHASE.COMPLETE ? game.winner : game.activeSide;
+      selectedTurn?.side ??
+      (game.phase === GAME_PHASE.COMPLETE ? game.winner : game.activeSide);
     elements.clueDisplay.dataset.side = displaySide;
     const turnLabel = document.createElement("span");
     turnLabel.className = "play-turn-team";
@@ -1988,10 +2060,16 @@ export function createPlayMode(options = {}) {
     );
 
     if (selectedTurn) {
-      turnLabel.textContent = translate(gameLanguage(), "postGameTurn", {
-        current: selectedPostGameTurn + 1,
-        total: postGameTurns.length,
-      });
+      turnLabel.textContent = translate(
+        gameLanguage(),
+        game.phase === GAME_PHASE.COMPLETE
+          ? "postGameTurn"
+          : "liveAnalysisTurn",
+        {
+          current: selectedPostGameTurn + 1,
+          total: postGameTurns.length,
+        },
+      );
       turnAction.className = "play-current-clue";
       turnAction.append(
         createCluePill(selectedTurn.clue),
@@ -2045,10 +2123,11 @@ export function createPlayMode(options = {}) {
     }
     elements.clueDisplay.replaceChildren(turnLabel, turnAction, turnNote);
 
-    elements.clueForm.hidden = !humanSpymaster;
-    elements.operativeControls.hidden = !humanOperative;
+    elements.clueForm.hidden = !humanSpymaster || Boolean(selectedTurn);
+    elements.operativeControls.hidden =
+      !humanOperative || Boolean(selectedTurn);
     renderClearClueButton();
-    renderSuggestionVisibility(humanSpymaster);
+    renderSuggestionVisibility(humanSpymaster && !selectedTurn);
 
     if (humanSpymaster) {
       renderClueNumber();
@@ -2137,139 +2216,11 @@ export function createPlayMode(options = {}) {
     note.replaceChildren(progress, detailText);
   }
 
-  function renderLiveDiagnostics() {
+  function renderLiveDiagnosticsToggle() {
     const developerGame = game.developerMode === true;
     elements.liveDiagnosticsToggle.hidden = !developerGame;
     elements.liveDiagnostics.checked =
       developerGame && liveDiagnosticsVisible;
-    elements.liveDiagnosticsPanel.hidden =
-      !developerGame || !liveDiagnosticsVisible;
-    if (!developerGame || !liveDiagnosticsVisible) {
-      return;
-    }
-
-    const rows = [];
-    rows.push(
-      createDeveloperRow(
-        translate(gameLanguage(), "embeddingModel"),
-        modelOption(game.botSettings.modelId).label,
-      ),
-    );
-
-    if (!game.currentTurn) {
-      const note = document.createElement("p");
-      note.className = "play-live-diagnostics-note";
-      note.textContent = translate(
-        gameLanguage(),
-        "waitingForClueScores",
-      );
-      rows.push(note);
-    } else if (liveDiagnosticsState.status === "loading") {
-      const note = document.createElement("p");
-      note.className = "play-live-diagnostics-note";
-      note.textContent = translate(gameLanguage(), "loadingLiveScores");
-      rows.push(note);
-    } else if (liveDiagnosticsState.candidates.length > 0) {
-      const ranked = [...liveDiagnosticsState.candidates].sort(
-        (left, right) => right.similarity - left.similarity,
-      );
-      const first = ranked[0];
-      const second = ranked[1] ?? ranked[0];
-      rows.push(
-        createDeveloperRow(
-          translate(gameLanguage(), "rawModelScores"),
-          translate(gameLanguage(), "rawScoreSummary", {
-            first: cardWord(first.layoutId),
-            firstScore: first.similarity.toFixed(3),
-            second: cardWord(second.layoutId),
-            secondScore: second.similarity.toFixed(3),
-            gap: (first.similarity - second.similarity).toFixed(3),
-          }),
-        ),
-      );
-      const thresholds = operativeGuessThresholds({
-        aggression: game.botSettings.operativeAggression,
-        clueNumber: game.currentTurn.number,
-        guessesMade: game.currentTurn.guesses.length,
-        ownRemaining: remainingCardsForSide(game.cards, game.activeSide),
-        opponentRemaining: remainingCardsForSide(
-          game.cards,
-          game.activeSide === SIDE.BLUE ? SIDE.RED : SIDE.BLUE,
-        ),
-      });
-      rows.push(
-        createDeveloperRow(
-          translate(gameLanguage(), "operativePolicy"),
-          translate(gameLanguage(), "operativeThresholdSummary", {
-            similarity: thresholds.minimumSimilarity.toFixed(3),
-            gap: thresholds.minimumGap.toFixed(3),
-          }),
-        ),
-      );
-    } else if (liveDiagnosticsState.status === "error") {
-      const note = document.createElement("p");
-      note.className = "play-live-diagnostics-note";
-      note.textContent = translate(gameLanguage(), "liveScoresUnavailable");
-      rows.push(note);
-    }
-
-    const decision = latestDeveloperDecision(game) ?? lastDeveloperDecision;
-    if (decision?.kind === "spymaster") {
-      rows.push(
-        createDeveloperRow(
-          translate(gameLanguage(), "spymasterPolicy"),
-          translate(gameLanguage(), "clueDecisionSummary", {
-            clue: decision.selected.clue,
-            number: decision.selected.number,
-            score: decision.selected.playScore.toFixed(2),
-            selection: translate(
-              gameLanguage(),
-              selectionTranslationKey(decision.selection),
-            ),
-          }),
-        ),
-      );
-    } else if (decision?.kind === "operative") {
-      const selectedWord =
-        decision.layoutId === null ? null : cardWord(decision.layoutId);
-      rows.push(
-        createDeveloperRow(
-          translate(gameLanguage(), "operativePolicy"),
-          selectedWord
-            ? translate(gameLanguage(), "botGuessDecision", {
-                word: selectedWord,
-              })
-            : translate(gameLanguage(), "botPassDecision", {
-                reason: translate(
-                  gameLanguage(),
-                  operativeReasonTranslationKey(decision.reason),
-                ),
-              }),
-        ),
-      );
-    }
-
-    elements.liveDiagnosticsContent.className =
-      "play-live-diagnostics-content";
-    elements.liveDiagnosticsContent.replaceChildren(...rows);
-  }
-
-  function createDeveloperRow(labelText, valueText) {
-    const row = document.createElement("div");
-    row.className = "play-live-diagnostics-row";
-    const label = document.createElement("span");
-    label.textContent = labelText;
-    const value = document.createElement("strong");
-    value.textContent = valueText;
-    row.append(label, value);
-    return row;
-  }
-
-  function cardWord(layoutId) {
-    return (
-      game.cards.find((card) => card.layoutId === layoutId)?.word ??
-      String(layoutId)
-    );
   }
 
   function currentClueDiagnosticsKey() {
@@ -2296,7 +2247,10 @@ export function createPlayMode(options = {}) {
     const key = currentClueDiagnosticsKey();
     const savedScores =
       game.currentTurn.developerDiagnostics?.operativeScores;
-    if (Array.isArray(savedScores)) {
+    if (
+      Array.isArray(savedScores) &&
+      savedScores.length === game.cards.length
+    ) {
       if (
         liveDiagnosticsState.key !== key ||
         liveDiagnosticsState.status !== "ready"
@@ -2323,7 +2277,7 @@ export function createPlayMode(options = {}) {
       key,
       status: "loading",
     };
-    void buildBotGuessCandidates(clue)
+    void buildBotGuessCandidates(clue, { includeRevealed: true })
       .then((candidates) => {
         if (
           runId !== liveDiagnosticsRun ||
@@ -2346,6 +2300,7 @@ export function createPlayMode(options = {}) {
           status: "ready",
         };
         renderGame();
+        ensurePostGameAnalysis();
       })
       .catch(() => {
         if (runId !== liveDiagnosticsRun) {
@@ -2368,19 +2323,29 @@ export function createPlayMode(options = {}) {
     elements.historicalReviewNote.hidden =
       game.reviewCompatibility !== "history-only";
 
-    elements.postGameOutcome.textContent = `${sideEmoji(game.winner)} ${translate(
-      gameLanguage(),
-      "postGameOutcome",
-      {
-        winner: localizedSideLabel(game.winner),
-        reason: translate(
-          gameLanguage(),
-          game.endReason === GAME_END_REASON.ASSASSIN
-            ? "assassin"
-            : "allAgents",
-        ),
-      },
-    )}`;
+    elements.postGameOutcome.textContent =
+      game.phase === GAME_PHASE.COMPLETE
+        ? `${sideEmoji(game.winner)} ${translate(
+            gameLanguage(),
+            "postGameOutcome",
+            {
+              winner: localizedSideLabel(game.winner),
+              reason: translate(
+                gameLanguage(),
+                game.endReason === GAME_END_REASON.ASSASSIN
+                  ? "assassin"
+                  : "allAgents",
+              ),
+            },
+          )}`
+        : translate(gameLanguage(), "developerGame");
+  }
+
+  function turnAnalysisEnabled() {
+    return (
+      game?.phase === GAME_PHASE.COMPLETE ||
+      (game?.developerMode === true && liveDiagnosticsVisible)
+    );
   }
 
   function renderSuggestionVisibility(humanSpymaster) {
@@ -2524,7 +2489,11 @@ export function createPlayMode(options = {}) {
     );
     elements.historyLabel.textContent = translate(
       gameLanguage(),
-      game.phase === GAME_PHASE.COMPLETE ? "postGameAnalysis" : "gameLog",
+      game.phase === GAME_PHASE.COMPLETE
+        ? "postGameAnalysis"
+        : turnAnalysisEnabled()
+          ? "liveAnalysis"
+          : "gameLog",
     );
     elements.historyCount.textContent = translate(gameLanguage(), "events", {
       count: visible.length,
@@ -2569,7 +2538,7 @@ export function createPlayMode(options = {}) {
         )
       : [createEmptyHistoryItem(emptyMessage)];
     list.replaceChildren(...items);
-    if (game.phase === GAME_PHASE.COMPLETE) {
+    if (turnAnalysisEnabled()) {
       const selectedItem = list.querySelector(
         `[data-analysis-turn="${selectedPostGameTurn}"]`,
       );
@@ -2626,7 +2595,7 @@ export function createPlayMode(options = {}) {
     const turnActions = document.createElement("div");
     const actions = document.createElement("ol");
     const turnIndex =
-      game.phase === GAME_PHASE.COMPLETE && Number.isInteger(turn.turn)
+      turnAnalysisEnabled() && Number.isInteger(turn.turn)
         ? postGameTurns.findIndex(
             (candidate) =>
               candidate.turn === turn.turn && candidate.side === turn.side,
@@ -2668,8 +2637,9 @@ export function createPlayMode(options = {}) {
     item.className = "play-history-action";
     item.dataset.action = event.type;
     if (event.type === "clue-given") {
+      const analysisEnabled = turnAnalysisEnabled();
       const intendedTargets =
-        game.phase === GAME_PHASE.COMPLETE && event.intendedLayoutIds?.length
+        analysisEnabled && event.intendedLayoutIds?.length
           ? event.intendedLayoutIds
               .map((layoutId) =>
                 game.cards.find((card) => card.layoutId === layoutId),
@@ -2734,7 +2704,10 @@ export function createPlayMode(options = {}) {
         appendHistoryClueSummary(summary, event, intendedTargets);
         item.append(summary);
       }
-      if (intendedWords.length) {
+      if (
+        game.phase === GAME_PHASE.COMPLETE &&
+        intendedWords.length
+      ) {
         const explanation = createRecommendationExplanationControl(
           {
             clue: event.clue,
@@ -2932,51 +2905,6 @@ function serializeOperativeDecision(decision, game) {
       }),
     ),
   };
-}
-
-function latestDeveloperDecision(game) {
-  if (!game?.developerMode) {
-    return null;
-  }
-  for (const event of [...game.history].reverse()) {
-    const decision =
-      event.developerDiagnostics?.operativeDecision ??
-      event.developerDiagnostics?.spymasterDecision;
-    if (decision) {
-      return decision;
-    }
-  }
-  return (
-    game.currentTurn?.developerDiagnostics?.operativeDecision ??
-    game.currentTurn?.developerDiagnostics?.spymasterDecision ??
-    null
-  );
-}
-
-function selectionTranslationKey(selection) {
-  if (selection === "multi-tolerance") {
-    return "multiToleranceSelection";
-  }
-  if (selection === "shortlist-random") {
-    return "shortlistSelection";
-  }
-  if (selection === "human-selection") {
-    return "humanSelection";
-  }
-  return "bestScoreSelection";
-}
-
-function operativeReasonTranslationKey(reason) {
-  if (reason === "minimum-similarity") {
-    return "minimumSimilarityReason";
-  }
-  if (reason === "minimum-gap") {
-    return "minimumGapReason";
-  }
-  if (reason === "guess-limit") {
-    return "guessLimitReason";
-  }
-  return "noCandidatesReason";
 }
 
 function formatDeveloperNumber(value) {

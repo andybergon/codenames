@@ -445,7 +445,17 @@ export function replayCompletedClueTurns(game) {
   if (game.phase !== GAME_PHASE.COMPLETE) {
     return [];
   }
+  return replayClueTurns(game);
+}
 
+export function replayDeveloperClueTurns(game) {
+  if (!game.developerMode) {
+    return [];
+  }
+  return replayClueTurns(game);
+}
+
+function replayClueTurns(game) {
   const replayCards = game.cards.map((card) => ({
     ...card,
     done: false,
@@ -465,6 +475,13 @@ export function replayCompletedClueTurns(game) {
         intendedLayoutIds: [...(event.intendedLayoutIds ?? [])],
         guesses: [],
         cards: replayCards.map((card) => ({ ...card })),
+        ...(event.developerDiagnostics
+          ? {
+              developerDiagnostics: structuredClone(
+                event.developerDiagnostics,
+              ),
+            }
+          : {}),
       });
       continue;
     }

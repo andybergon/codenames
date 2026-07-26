@@ -3559,45 +3559,6 @@ button.play-card:not(:disabled):hover {
   font-weight: 800;
 }
 
-.play-live-diagnostics {
-  border: 1px solid var(--orange);
-  border-radius: 8px;
-  padding: 10px;
-  background: color-mix(in srgb, var(--orange-soft) 45%, var(--surface));
-}
-
-.play-live-diagnostics[hidden] {
-  display: none;
-}
-
-.play-live-diagnostics-content,
-.play-live-diagnostics-list {
-  display: grid;
-  gap: 6px;
-}
-
-.play-live-diagnostics-row {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 10px;
-  color: var(--muted);
-  font-size: 0.68rem;
-  line-height: 1.35;
-}
-
-.play-live-diagnostics-row strong {
-  color: var(--ink);
-  font-variant-numeric: tabular-nums;
-  text-align: right;
-}
-
-.play-live-diagnostics-note {
-  color: var(--muted);
-  font-size: 0.66rem;
-  line-height: 1.4;
-}
-
 .play-post-game-analysis {
   border-top: 1px solid var(--hairline);
   padding-top: 12px;

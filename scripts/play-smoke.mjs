@@ -43,6 +43,7 @@ import {
   undoPlayGame,
   unresolvedIntendedTargetIds,
   replayCompletedClueTurns,
+  replayDeveloperClueTurns,
   validateStoredGame,
 } from "../src/play/game-state.js";
 import {
@@ -358,6 +359,14 @@ developerGame = giveClue(developerGame, {
   intendedLayoutIds: [0],
   number: 1,
 });
+const liveDeveloperTurns = replayDeveloperClueTurns(developerGame);
+assert.equal(liveDeveloperTurns.length, 1);
+assert.equal(liveDeveloperTurns[0].clue, "ORBIT");
+assert.equal(
+  liveDeveloperTurns[0].developerDiagnostics.spymasterDecision.kind,
+  "spymaster",
+);
+assert.deepEqual(replayDeveloperClueTurns(morphologyGame), []);
 developerGame = recordCurrentClueDeveloperDiagnostics(developerGame, {
   diagnosticsVersion: 1,
   modelId: "bge-small",
