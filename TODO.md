@@ -6,6 +6,11 @@
 
 ## 🔴 High
 
+- 🎛️ Review the placement and presentation of explanation actions.
+  - The clue action sits in the turn header, visually separated from its clue, while dense turns repeat one inline Explain button for every guess.
+  - Create several compact mockups to test before changing production, including icon-only actions with accessible labels and tooltips, plus placements adjacent to clue and guess pills.
+  - Compare the options in completed-game and developer live analysis at 390x844, 768x1024, and 1440x900. Preserve the explicit paid-action boundary and the clue-plus-selected-words network payload.
+
 - 🧠 Prevent the bot spymaster from repeating the previous clue.
   - A human operative remembers an immediately repeated clue, so giving it again adds no useful information even when it remains the highest-ranked option.
   - Select the next-best legal clue instead. Its intended cards may overlap with zero, some, or all of the previous clue's intended cards.
