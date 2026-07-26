@@ -1460,7 +1460,51 @@ test("Play exposes and saves bot policy settings", async ({ page }) => {
     "dynamic",
   );
   await expect(page.locator("#play-bonus-guesses")).toHaveValue("pass");
-  await expect(settings.locator(".play-setting-label .info-button")).toHaveCount(8);
+  await expect(settings.locator(".play-setting-label .info-button")).toHaveCount(9);
+  await expect(
+    page.getByRole("button", {
+      name: "About developer mode",
+      exact: true,
+    }),
+  ).toBeVisible();
+
+  for (const viewport of [
+    { width: 390, height: 844 },
+    { width: 768, height: 1024 },
+    { width: 860, height: 998 },
+    { width: 1440, height: 900 },
+  ]) {
+    await page.setViewportSize(viewport);
+    const layout = await gameSettings.evaluate((section) => {
+      const wordSet = section.querySelector(".play-word-set");
+      const label = wordSet.querySelector(".play-setting-label");
+      const wordSetSwitch = wordSet.querySelector(".word-set-switch");
+      const wordSetBounds = wordSet.getBoundingClientRect();
+      const labelBounds = label.getBoundingClientRect();
+      const switchBounds = wordSetSwitch.getBoundingClientRect();
+      return {
+        pageOverflows:
+          document.documentElement.scrollWidth >
+          document.documentElement.clientWidth,
+        switchBelowLabel: switchBounds.top >= labelBounds.bottom,
+        switchFits:
+          switchBounds.left >= wordSetBounds.left - 1 &&
+          switchBounds.right <= wordSetBounds.right + 1,
+      };
+    });
+
+    expect(layout.pageOverflows, `page overflow at ${viewport.width}px`).toBe(
+      false,
+    );
+    expect(
+      layout.switchBelowLabel,
+      `word-set switch beside label at ${viewport.width}px`,
+    ).toBe(true);
+    expect(
+      layout.switchFits,
+      `word-set switch overflow at ${viewport.width}px`,
+    ).toBe(true);
+  }
 
   await page.getByRole("button", { name: "Extended 800", exact: true }).click();
   await expect(settings).toContainText(
@@ -1660,22 +1704,39 @@ test("Developer mode can mark and diagnose a saved game in progress", async ({
   await page.locator("#leave-play-game").click();
   const settings = page.locator(".play-settings");
   await settings.locator("summary").click();
-  const developerModeHelp = page.locator('[data-i18n="developerModeHelp"]');
+  const developerModeInfo = page.getByRole("button", {
+    name: "About developer mode",
+    exact: true,
+  });
+  const developerModeHelp = page.locator(
+    "#info-play-developer-setting-developer-mode",
+  );
   for (const viewport of [
     { width: 390, height: 844 },
     { width: 768, height: 1024 },
+    { width: 860, height: 998 },
     { width: 1440, height: 900 },
   ]) {
     await page.setViewportSize(viewport);
+    await developerModeInfo.click();
     await expect(developerModeHelp).toBeVisible();
     await expect(developerModeHelp).toContainText("Unlike other settings");
-    expect(
-      await page.evaluate(
-        () =>
+    const layout = await developerModeHelp.evaluate((popover) => {
+      const bounds = popover.getBoundingClientRect();
+      return {
+        pageOverflows:
           document.documentElement.scrollWidth >
           document.documentElement.clientWidth,
-      ),
-    ).toBe(false);
+        popoverFits:
+          bounds.left >= 0 &&
+          bounds.right <= document.documentElement.clientWidth &&
+          bounds.top >= 0 &&
+          bounds.bottom <= document.documentElement.clientHeight,
+      };
+    });
+    expect(layout.pageOverflows).toBe(false);
+    expect(layout.popoverFits).toBe(true);
+    await developerModeInfo.click();
   }
   const developerMode = page.locator("#play-developer-mode");
   await developerMode.check();

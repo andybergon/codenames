@@ -2627,10 +2627,10 @@ h3 {
 }
 
 .play-setting-checkbox {
-  display: flex;
+  display: grid;
   align-items: flex-start;
   grid-column: 1 / -1;
-  flex-direction: row;
+  grid-template-columns: 18px minmax(0, 1fr);
   text-transform: none;
 }
 
@@ -2643,9 +2643,9 @@ h3 {
   accent-color: var(--blue);
 }
 
-.play-setting-checkbox span {
+.play-setting-checkbox-copy {
   display: grid;
-  gap: 3px;
+  min-width: 0;
 }
 
 .play-setting-checkbox strong {
@@ -2653,10 +2653,8 @@ h3 {
   font-size: 0.72rem;
 }
 
-.play-setting-checkbox small {
-  color: var(--muted);
-  font-size: 0.65rem;
-  font-weight: 700;
+.play-setting-checkbox label {
+  cursor: pointer;
 }
 
 .play-setting-label {
@@ -2723,11 +2721,10 @@ h3 {
 }
 
 .play-word-set {
-  display: flex;
+  display: grid;
   min-width: 0;
-  align-items: center;
-  justify-content: space-between;
-  gap: 14px;
+  align-content: start;
+  gap: 6px;
   padding: 5px 2px;
 }
 
@@ -2741,8 +2738,7 @@ h3 {
 
 .play-word-set .word-set-switch {
   display: grid;
-  flex: 0 1 300px;
-  width: min(300px, 100%);
+  width: 100%;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   border-color: var(--input-line);
   padding: 3px;
@@ -3961,15 +3957,7 @@ button.play-card:not(:disabled):hover {
   }
 
   .play-word-set {
-    align-items: stretch;
-    flex-direction: column;
-    gap: 6px;
     padding: 2px 0;
-  }
-
-  .play-word-set .word-set-switch {
-    flex-basis: auto;
-    width: 100%;
   }
 
   .play-workspace {

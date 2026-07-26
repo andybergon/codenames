@@ -322,6 +322,7 @@ export function createPlayMode(options = {}) {
     bonusGuesses: document.querySelector("#play-bonus-guesses"),
     bonusGuessesInfo: document.querySelector("#play-bonus-guesses-info"),
     developerMode: document.querySelector("#play-developer-mode"),
+    developerModeInfo: document.querySelector("#play-developer-mode-info"),
     settingsSummary: document.querySelector("#play-settings-summary"),
     startGame: document.querySelector("#start-play-game"),
     startGameLabel: document.querySelector("#start-play-game-label"),
@@ -681,6 +682,17 @@ export function createPlayMode(options = {}) {
   };
 
   function renderSetup() {
+    elements.developerModeInfo.replaceChildren(
+      createInfoControl(
+        {
+          id: "developer-mode",
+          label: translate(selectedLanguage, "enableDeveloperMode"),
+          aboutLabel: translate(selectedLanguage, "developerModeAbout"),
+          info: translate(selectedLanguage, "developerModeHelp"),
+        },
+        "play-developer-setting",
+      ),
+    );
     elements.italianNote.hidden =
       selectedLanguage !== LANGUAGE.ITALIAN;
     elements.italianNote.textContent = translate(

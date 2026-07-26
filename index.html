@@ -599,13 +599,17 @@
               >
                 <legend><span aria-hidden="true">🧪</span> <span data-i18n="developer">Developer</span></legend>
                 <div class="play-settings-fields">
-                  <label class="play-setting play-setting-checkbox">
+                  <div class="play-setting play-setting-checkbox">
                     <input id="play-developer-mode" type="checkbox" />
-                    <span>
-                      <strong data-i18n="enableDeveloperMode">Enable developer mode</strong>
-                      <small data-i18n="developerModeHelp">Marks new games as developer data. Unlike other settings, enabling it also applies to a saved game in progress. Once marked, that game stays developer data.</small>
+                    <span class="play-setting-checkbox-copy">
+                      <span class="play-setting-label">
+                        <label for="play-developer-mode">
+                          <strong data-i18n="enableDeveloperMode">Enable developer mode</strong>
+                        </label>
+                        <span id="play-developer-mode-info"></span>
+                      </span>
                     </span>
-                  </label>
+                  </div>
                 </div>
               </fieldset>
             </div>
