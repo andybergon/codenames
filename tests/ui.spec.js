@@ -5821,3 +5821,142 @@ test("completed local games accept scoped player feedback", async ({ page }) => 
     },
   ]);
 });
+
+test("benchmark scorecard stays hidden outside its direct route", async ({ page }) => {
+  await page.goto("/");
+
+  await expect(page.locator("#benchmark-mode")).toBeHidden();
+  await expect(page.getByRole("heading", { name: "Benchmark scorecard" })).toHaveCount(0);
+});
+
+test("benchmark scorecard compares complete settings combinations", async ({ page }) => {
+  await page.goto("/?mode=benchmarks");
+
+  await expect(page).toHaveTitle("Codenames benchmarks");
+  await expect(page.locator(".app-mode-switch")).toBeHidden();
+  await expect(page.getByRole("heading", { name: "Benchmark scorecard" })).toBeVisible();
+  await expect(page.locator("#benchmark-table-body tr")).toHaveCount(5);
+  await expect(
+    page.locator(".benchmark-table thead .info-button"),
+  ).toHaveCount(8);
+  await expect(page.locator("#benchmark-details")).toContainText("BGE · Hybrid · Dynamic");
+  await expect(page.locator("#benchmark-details")).toContainText("67.7");
+  await expect(page.getByText("Transfer remains a promotion gate, not a point source.")).toBeVisible();
+
+  await page.locator("#benchmark-human-weight").fill("100");
+  await expect(page.locator("#benchmark-human-weight-value")).toHaveText("100%");
+  await expect(page.locator("#benchmark-fun-weight-value")).toHaveText("0%");
+
+  await page
+    .getByRole("button", { name: /Voyage · Hybrid · Dynamic/ })
+    .click();
+  await expect(page.locator("#benchmark-details")).toContainText("62.7");
+  await expect(page.locator("#benchmark-details")).toContainText("Blocked");
+  await expect(
+    page
+      .locator("#benchmark-details .benchmark-bars")
+      .first()
+      .locator(":scope > div"),
+  ).toHaveCount(5);
+  await expect(page.locator("#benchmark-details")).toContainText("128 paired boards");
+});
+
+test("benchmark columns explain their metrics on hover", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/?mode=benchmarks");
+
+  const scoreInfo = page.getByRole("button", {
+    name: "About Score",
+    exact: true,
+  });
+  const humanInfo = page.getByRole("button", {
+    name: "About Human",
+    exact: true,
+  });
+  const funInfo = page.getByRole("button", {
+    name: "About Fun",
+    exact: true,
+  });
+
+  await scoreInfo.hover();
+  await expect(page.locator("#info-benchmark-column-score")).toBeVisible();
+  await expect(page.locator("#info-benchmark-column-score")).toContainText(
+    "60% Human and 40% same-model Fun",
+  );
+
+  await humanInfo.hover();
+  await expect(page.locator("#info-benchmark-column-human")).toContainText(
+    "Five dataset sources receive equal weight",
+  );
+
+  await funInfo.hover();
+  await expect(page.locator("#info-benchmark-column-fun")).toContainText(
+    "ambitious multi-card clues",
+  );
+});
+
+test("benchmark scorecard is responsive and keeps its matrix scrollable", async ({ page }) => {
+  for (const viewport of [
+    { width: 390, height: 844, matrixScrolls: true },
+    { width: 768, height: 1024, matrixScrolls: true },
+    { width: 1440, height: 900, matrixScrolls: false },
+  ]) {
+    await page.setViewportSize(viewport);
+    await page.goto("/?mode=benchmarks");
+    await expect(page.getByRole("heading", { name: "Benchmark scorecard" })).toBeVisible();
+
+    const layout = await page.evaluate(() => {
+      const matrix = document.querySelector(".benchmark-table-wrap");
+      const scorecard = document.querySelector("#benchmark-details");
+      const matrixBounds = matrix.getBoundingClientRect();
+      const scorecardBounds = scorecard.getBoundingClientRect();
+      return {
+        pageOverflows:
+          document.documentElement.scrollWidth >
+          document.documentElement.clientWidth,
+        matrixScrolls: matrix.scrollWidth > matrix.clientWidth,
+        matrixFits:
+          matrixBounds.left >= 0 &&
+          matrixBounds.right <= document.documentElement.clientWidth,
+        scorecardFits:
+          scorecardBounds.left >= 0 &&
+          scorecardBounds.right <= document.documentElement.clientWidth,
+      };
+    });
+
+    expect(layout.pageOverflows, `page overflow at ${viewport.width}px`).toBe(false);
+    expect(layout.matrixScrolls, `matrix scroll at ${viewport.width}px`).toBe(
+      viewport.matrixScrolls,
+    );
+    expect(layout.matrixFits, `matrix clipping at ${viewport.width}px`).toBe(true);
+    expect(layout.scorecardFits, `scorecard clipping at ${viewport.width}px`).toBe(true);
+
+    const scoreInfo = page.getByRole("button", {
+      name: "About Score",
+      exact: true,
+    });
+    await scoreInfo.scrollIntoViewIfNeeded();
+    await scoreInfo.hover();
+    const tooltipFits = await page
+      .locator("#info-benchmark-column-score")
+      .evaluate((tooltip) => {
+        const bounds = tooltip.getBoundingClientRect();
+        return (
+          bounds.left >= 0 &&
+          bounds.right <= document.documentElement.clientWidth &&
+          bounds.top >= 0 &&
+          bounds.bottom <= document.documentElement.clientHeight
+        );
+      });
+    expect(
+      tooltipFits,
+      `score tooltip clipping at ${viewport.width}px`,
+    ).toBe(true);
+
+    if (viewport.width <= 820) {
+      await expect(page.locator(".benchmark-scroll-hint")).toBeVisible();
+    } else {
+      await expect(page.locator(".benchmark-scroll-hint")).toBeHidden();
+    }
+  }
+});
