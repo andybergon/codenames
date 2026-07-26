@@ -15,16 +15,16 @@ A local-first Codenames clue trainer and one-human game. Train mode ranks clue o
 - 💬 **Explanations** · shared concept and target relationships · score-based danger stays separate
 - 🎴 **Board words** · Official 400-word set · Extended 800-word strict superset
 - 🔁 **New boards** · fully random or avoid words from recent local games
-- 🔗 **Sharing** · board-only `?b=` links · completed-game `?g=` review links
+- 🔗 **Sharing** · board-only `?b=` links · resumable Play `?g=` links
 - 🎨 **Appearance** · system, light, and dark modes
-- 🔒 **Privacy** · local by default · completed review links contain the full key and history · explanations send only the selected clue and targets
+- 🔒 **Privacy** · local by default · Play links contain the full key and history · explanations send only the selected clue and targets
 
-The first model load is cached by the browser. Italian Train and Play load about 123.6 MB on a cold browser, primarily the 118.3 MB E5 model. Training progress is session-local. Play progress, including language, is saved after every event and can be resumed or discarded from setup. During an active game, history can move backward and forward. Shared board links open Train without Play history. Completed games are kept in a bounded local archive and their review links reopen the full Play history.
+The first model load is cached by the browser. Italian Train and Play load about 123.6 MB on a cold browser, primarily the 118.3 MB E5 model. Training progress is session-local. Play progress, including language, is saved after every event and can be resumed or discarded from setup. During an active game, history can move backward and forward. Board-only links open Train without Play history. Play links reopen the current phase, revealed cards, and complete history so far. Completed games are also kept in a bounded local archive.
 
 ## Docs
 
 - [Clue engine](docs/clue-engine.md) explains the embedding pipeline, legality filter, scoring contract, model assets, and evaluation commands.
-- [Completed game sharing](docs/completed-game-sharing.md) defines the portable game export, local archive, validation, and future feedback-storage boundary.
+- [Play game sharing](docs/play-game-sharing.md) defines the portable active and completed game export, local archive, validation, and future feedback-storage boundary.
 - [Data licenses and attribution](docs/data-licenses.md) records Italian board, corpus, and model provenance.
 - [Play clue number analysis](docs/play-clue-number-analysis.md) records the controlled Play-policy evidence.
 - [Play fun optimization](docs/play-fun-optimization.md) defines the Fun Index and hosted-model promotion gates.
@@ -81,14 +81,14 @@ The final Developer settings section enables marked diagnostic games. Unlike oth
 
 New boards remain fully random by default. The optional Avoid recent words policy records the last 32 local Play boards, uses every unseen word in the selected pool before the least-recently-used repeats, and warns when fewer than 25 unseen words remain. Clear history resets board reuse without changing the selected policy. History and policy stay local under `codenames-play-word-reuse-v1`.
 
-After a game ends, select any clue in the Game log to replay that turn from the event history. The review restores which cards were already revealed when the clue was given, marks intended targets and guess outcomes, and shows the configured operative model's cosine-similarity score for every board word. It is completion-gated, so none of these annotations or hidden roles appear during live operative play. The header Share action copies a full-game `?g=` link, while active games continue to copy board-only Train links.
+After a game ends, select any clue in the Game log to replay that turn from the event history. The review restores which cards were already revealed when the clue was given, marks intended targets and guess outcomes, and shows the configured operative model's cosine-similarity score for every board word. It is completion-gated, so none of these annotations or hidden roles appear during live operative play. The header Share action always copies a `?mode=play&g=` link. Active links preserve the current phase, revealed cards, and turn history; completed links open the full review.
 
-Completed games are deduplicated into a 32-game local archive. The newest completed save keeps its prominent review action, while older records stay in a collapsed Past games section below Play Settings. Each archived game can be reviewed, copied as a link, or removed. Developer records retain raw diagnostics locally, while copied links contain only provenance plus the starting state, settings, and actions needed for replay. The export versions its format, rules, and settings separately; unsupported historical rules fall back to an action-log review without rewriting the original link. See [Completed game sharing](docs/completed-game-sharing.md) for the versioned export contract and privacy boundary.
+Completed games are deduplicated into a 32-game local archive. The newest completed save keeps its prominent review action, while older records stay in a collapsed Past games section below Play Settings. Each archived game can be reviewed, copied as a link, or removed. Developer records retain raw diagnostics locally, while copied links contain only provenance plus the starting state, settings, and actions needed for replay. The export versions its format, rules, and settings separately; unsupported historical completed-game rules fall back to an action-log review without rewriting the original link. See [Play game sharing](docs/play-game-sharing.md) for the versioned export contract and privacy boundary.
 
 The Play implementation keeps rules, bot choices, persistence, and rendering separate:
 
 - `src/play/game-state.js` owns the rules, seat authorization, event history, public projection, win conditions, and completed-turn replay.
-- `src/play/game-share.js` owns the versioned completed-game export and validated replay.
+- `src/play/game-share.js` owns the versioned active and completed Play export and validated replay.
 - `src/play/bots.js` chooses bot clues and guesses. The operative API accepts only clue-to-word similarities and never receives card roles or intended targets.
 - `src/play/session-store.js` persists the resumable game under `codenames-play-session-v1` and the bounded completed archive under `codenames-play-completed-v1`.
 - `src/developer-settings.js` persists the separate Developer mode preference under `codenames-developer-settings-v1`.

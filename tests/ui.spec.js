@@ -1,10 +1,11 @@
 import { expect, test } from "@playwright/test";
 import pickerBenchmark from "../scripts/generated/model-picker-benchmark.json" with { type: "json" };
 import calibrationRound from "../public/data/calibration/embedding-finalists-v1.json" with { type: "json" };
-import { decodeBoardParam } from "../src/board-share.js";
 import {
   decodeCompletedGame,
+  decodePlayGame,
   encodeCompletedGame,
+  encodePlayGame,
 } from "../src/play/game-share.js";
 import { OFFICIAL_WORDS } from "../src/word-data.js";
 
@@ -218,6 +219,74 @@ function completedShareGame() {
         turn: 1,
         winner: "red",
         reason: "assassin",
+      },
+    ],
+  };
+}
+
+function activeShareGame() {
+  const completed = completedShareGame();
+  const humanSeat = { side: "red", role: "spymaster" };
+  const cards = completed.cards.map((card) => ({
+    ...card,
+    done: card.layoutId === 0,
+    revealedBy: card.layoutId === 0 ? "blue" : null,
+    revealedTurn: card.layoutId === 0 ? 1 : null,
+  }));
+  const guess = {
+    layoutId: 0,
+    word: "WORD0",
+    team: "friendly",
+    actor: "bot",
+  };
+  return {
+    ...completed,
+    seed: "shared-active",
+    humanSeat,
+    cards,
+    activeSide: "red",
+    phase: "awaiting-clue",
+    turnNumber: 2,
+    currentTurn: null,
+    winner: null,
+    endReason: null,
+    history: [
+      {
+        type: "game-started",
+        humanSeat,
+        language: "en",
+        botSettings: completed.botSettings,
+        activeSide: "blue",
+      },
+      {
+        type: "clue-given",
+        turn: 1,
+        side: "blue",
+        actor: "bot",
+        clue: "FIRST",
+        number: 1,
+        intendedLayoutIds: [0],
+      },
+      {
+        type: "card-guessed",
+        turn: 1,
+        side: "blue",
+        ...guess,
+      },
+      {
+        type: "turn-passed",
+        turn: 1,
+        side: "blue",
+        actor: "bot",
+      },
+      {
+        type: "turn-ended",
+        turn: 1,
+        side: "blue",
+        reason: "pass",
+        clue: "FIRST",
+        number: 1,
+        guesses: [guess],
       },
     ],
   };
@@ -1795,7 +1864,7 @@ test("Play avoids recent words across pools and persists policy", async ({
       configurable: true,
       value: {
         writeText(value) {
-          window.__copiedBoardLink = value;
+          window.__copiedPlayGame = value;
           return Promise.resolve();
         },
       },
@@ -1815,11 +1884,11 @@ test("Play avoids recent words across pools and persists policy", async ({
   const firstOfficial = await page
     .locator(".play-card")
     .evaluateAll((cards) => cards.map((card) => card.textContent.trim()));
-  await page.getByRole("button", { name: "Share board", exact: true }).click();
-  const shared = decodeBoardParam(
-    new URL(await page.evaluate(() => window.__copiedBoardLink)).searchParams.get("b"),
+  await page.getByRole("button", { name: "Share game", exact: true }).click();
+  const shared = decodePlayGame(
+    new URL(await page.evaluate(() => window.__copiedPlayGame)).searchParams.get("g"),
   );
-  expect(shared.source.type).toBe("explicit");
+  expect(shared.wordReusePolicy).toBe("avoid-recent");
   expect(shared.cards.map(({ word }) => word).sort()).toEqual(
     [...firstOfficial].sort(),
   );
@@ -2187,7 +2256,7 @@ test("Play enforces operative and spymaster information views", async ({ page })
   await expect(page.locator("#play-clue-form")).toBeVisible();
   await expect(page.locator("#undo-play-action svg.lucide-undo-2")).toHaveCount(1);
   await expect(page.locator("#forward-play-action svg.lucide-redo-2")).toHaveCount(1);
-  await expect(page.locator("#share-play-board svg.lucide-share-2")).toHaveCount(1);
+  await expect(page.locator("#share-play-game svg.lucide-share-2")).toHaveCount(1);
   await expect(page.locator("#leave-play-game svg.lucide-refresh-cw")).toHaveCount(1);
   const clueInput = page.getByRole("textbox", { name: "Clue", exact: true });
   const clearClue = page.getByRole("button", { name: "Clear clue", exact: true });
@@ -3885,28 +3954,43 @@ test("completed Play sessions replay turns and explain intended targets", async 
   }
 });
 
-test("Play sharing copies a board-only link", async ({ page }) => {
+test("active Play sharing copies progress and turn history", async ({ page }) => {
   await page.addInitScript(() => {
     Object.defineProperty(navigator, "clipboard", {
       configurable: true,
       value: {
         writeText(value) {
-          window.__copiedBoardLink = value;
+          window.__copiedPlayGame = value;
           return Promise.resolve();
         },
       },
     });
   });
-  await page.goto("/?mode=play");
-  await page.locator('[data-play-seat="blue:spymaster"]').click();
-  await page.getByRole("button", { name: "Start new game", exact: true }).click();
-  await page.getByRole("button", { name: "Share board", exact: true }).click();
+  const code = encodePlayGame(activeShareGame());
+  await page.goto(`/?mode=play&g=${code}`);
+  await expect(page.locator("#play-history-list")).toContainText("FIRST");
+  await expect(page.locator('.play-card[data-layout-id="0"]')).toHaveAttribute(
+    "aria-label",
+    /revealed before this clue/u,
+  );
+  await page.getByRole("button", { name: "Share game", exact: true }).click();
 
-  await expect(page.getByRole("button", { name: "Board copied", exact: true })).toBeVisible();
-  await expect(page.locator("#share-play-board svg.lucide-check")).toHaveCount(1);
-  const copied = new URL(await page.evaluate(() => window.__copiedBoardLink));
-  expect(copied.searchParams.has("b")).toBe(true);
-  expect(copied.searchParams.get("mode")).toBe("train");
+  await expect(
+    page.getByRole("button", { name: "Game link copied", exact: true }),
+  ).toBeVisible();
+  await expect(page.locator("#share-play-game svg.lucide-check")).toHaveCount(1);
+  const copied = new URL(await page.evaluate(() => window.__copiedPlayGame));
+  expect(copied.searchParams.get("mode")).toBe("play");
+  expect(copied.searchParams.has("b")).toBe(false);
+  const shared = decodePlayGame(copied.searchParams.get("g"));
+  expect(shared.phase).toBe("awaiting-clue");
+  expect(shared.turnNumber).toBe(2);
+  expect(shared.cards.find(({ layoutId }) => layoutId === 0).done).toBe(true);
+  expect(
+    shared.history.some(
+      (event) => event.type === "clue-given" && event.clue === "FIRST",
+    ),
+  ).toBe(true);
 });
 
 test("completed Play links reopen full games and stay in the local archive", async ({
@@ -3932,10 +4016,10 @@ test("completed Play links reopen full games and stay in the local archive", asy
   await expect(page.locator("#play-history-list")).toContainText("FIRST");
   await expect(page.locator("#play-history-list")).toContainText("WORD24");
   await expect(
-    page.getByRole("button", { name: "Share completed game", exact: true }),
+    page.getByRole("button", { name: "Share game", exact: true }),
   ).toBeVisible();
   await page
-    .getByRole("button", { name: "Share completed game", exact: true })
+    .getByRole("button", { name: "Share game", exact: true })
     .click();
   await expect(
     page.getByRole("button", { name: "Game link copied", exact: true }),
@@ -4027,7 +4111,7 @@ test("unsupported historical rules still open and preserve their original action
     "Actions remain available",
   );
   await page
-    .getByRole("button", { name: "Share completed game", exact: true })
+    .getByRole("button", { name: "Share game", exact: true })
     .click();
   expect(
     new URL(
@@ -4143,7 +4227,7 @@ test("developer archives keep diagnostics local when copying a replay link", asy
   });
 });
 
-test("Italian Play uses E5, persists its session, and shares a v4 board", async ({
+test("Italian Play uses E5, persists its session, and shares the active game", async ({
   page,
 }) => {
   await page.addInitScript(() => {
@@ -4151,7 +4235,7 @@ test("Italian Play uses E5, persists its session, and shares a v4 board", async 
       configurable: true,
       value: {
         writeText(value) {
-          window.__copiedItalianBoardLink = value;
+          window.__copiedItalianGame = value;
           return Promise.resolve();
         },
       },
@@ -4207,14 +4291,16 @@ test("Italian Play uses E5, persists its session, and shares a v4 board", async 
     "Blu 🕵️ Capo agenzia",
   );
 
-  await page.locator("#share-play-board").click();
+  await page.locator("#share-play-game").click();
   const copied = new URL(
-    await page.evaluate(() => window.__copiedItalianBoardLink),
+    await page.evaluate(() => window.__copiedItalianGame),
   );
-  expect(copied.searchParams.get("b")).toMatch(
-    /^4s[A-Za-z0-9_-]{11}i1xr$/,
-  );
-  expect(copied.searchParams.get("mode")).toBe("train");
+  const shared = decodePlayGame(copied.searchParams.get("g"));
+  expect(copied.searchParams.get("mode")).toBe("play");
+  expect(copied.searchParams.has("b")).toBe(false);
+  expect(shared.language).toBe("it");
+  expect(shared.wordSet).toBe("extended");
+  expect(shared.phase).toBe("awaiting-clue");
 
   await page.reload();
   await expect(page.locator("html")).toHaveAttribute("lang", "it");

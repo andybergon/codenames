@@ -48,7 +48,9 @@ import {
 } from "../src/play/game-state.js";
 import {
   decodeCompletedGame,
+  decodePlayGame,
   encodeCompletedGame,
+  encodePlayGame,
 } from "../src/play/game-share.js";
 import {
   DEFAULT_PLAY_BOT_SETTINGS,
@@ -1287,6 +1289,19 @@ assert.equal(italianGame.currentTurn.clue, "OCEANO");
 const restoredItalianGame = validateStoredGame(italianGame);
 assert.equal(restoredItalianGame.language, LANGUAGE.ITALIAN);
 assert.equal(restoredItalianGame.botSettings.modelId, ITALIAN_MODEL_ID);
+const activeGameCode = encodePlayGame(italianGame);
+const sharedActiveGame = decodePlayGame(activeGameCode);
+assert.equal(sharedActiveGame.phase, GAME_PHASE.AWAITING_GUESS);
+assert.equal(sharedActiveGame.language, LANGUAGE.ITALIAN);
+assert.equal(sharedActiveGame.currentTurn.clue, "OCEANO");
+assert.deepEqual(
+  sharedActiveGame.history.slice(1),
+  italianGame.history.slice(1),
+);
+assert.throws(
+  () => decodeCompletedGame(activeGameCode),
+  /not complete/,
+);
 
 const seededA = createSeededRandom("same");
 const seededB = createSeededRandom("same");
@@ -1371,7 +1386,7 @@ assert.deepEqual(
     compatibility: sharedCompletedGame.reviewCompatibility,
   },
   {
-    formatVersion: 2,
+    formatVersion: 3,
     rulesVersion: 1,
     settingsVersion: 1,
     compatibility: "full",
@@ -1434,11 +1449,18 @@ assert.throws(
 );
 assert.throws(
   () => decodeCompletedGame(oversizedCompletedGameCode),
-  /Invalid completed-game code/,
+  /Invalid Play-game code/,
 );
 const currentPayload = JSON.parse(
   Buffer.from(completedGameCode, "base64url").toString("utf8"),
 );
+const versionTwoPayload = structuredClone(currentPayload);
+versionTwoPayload[0] = 2;
+const versionTwoGame = decodeCompletedGame(
+  Buffer.from(JSON.stringify(versionTwoPayload)).toString("base64url"),
+);
+assert.equal(versionTwoGame.shareMetadata.formatVersion, 2);
+assert.equal(versionTwoGame.winner, simulated.winner);
 const legacySettings = currentPayload[7].filter(
   (_value, index) => index !== 4,
 );
@@ -1613,7 +1635,7 @@ assert.throws(
 );
 assert.throws(
   () => decodeCompletedGame("not-a-completed-game"),
-  /completed-game code/,
+  /Play-game code/,
 );
 
 console.log("Play smoke passed.");

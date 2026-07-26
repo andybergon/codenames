@@ -2957,12 +2957,12 @@ h3 {
   opacity: 0.58;
 }
 
-#share-play-board[data-state="copied"] {
+#share-play-game[data-state="copied"] {
   border-color: var(--green);
   color: var(--green);
 }
 
-#share-play-board[data-state="error"] {
+#share-play-game[data-state="error"] {
   border-color: var(--orange);
   color: var(--orange);
 }

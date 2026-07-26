@@ -1,9 +1,5 @@
 import { Check, Share2, TriangleAlert, createIcons } from "lucide";
-import {
-  BOARD_ORDER,
-  createRandomSeed,
-  encodeBoardParam,
-} from "../board-share.js";
+import { createRandomSeed } from "../board-share.js";
 import PLAY_CLUE_BIAS_ANALYSIS from "../../scripts/generated/play-clue-bias-analysis.json" with { type: "json" };
 import PLAY_MODEL_BENCHMARK from "../../scripts/generated/play-model-benchmark.json" with { type: "json" };
 import {
@@ -63,8 +59,9 @@ import {
 } from "./game-state.js";
 import {
   completedGameIdentity,
-  decodeCompletedGame,
+  decodePlayGame,
   encodeCompletedGame,
+  encodePlayGame,
 } from "./game-share.js";
 import {
   archiveCompletedPlayGame,
@@ -347,7 +344,7 @@ export function createPlayMode(options = {}) {
     leaveGame: document.querySelector("#leave-play-game"),
     undoAction: document.querySelector("#undo-play-action"),
     forwardAction: document.querySelector("#forward-play-action"),
-    shareBoard: document.querySelector("#share-play-board"),
+    shareGame: document.querySelector("#share-play-game"),
     humanSeat: document.querySelector("#play-human-seat"),
     score: document.querySelector("#play-score"),
     boardToolbar: document.querySelector("#play-board-toolbar"),
@@ -426,12 +423,17 @@ export function createPlayMode(options = {}) {
   if (savedGame?.phase === GAME_PHASE.COMPLETE) {
     completedGames = archiveCompletedPlayGame(savedGame);
   }
-  const sharedCompletedGame = readSharedCompletedGame();
-  let game = sharedCompletedGame?.game ?? null;
+  const sharedPlayGame = readSharedPlayGame();
+  let game = sharedPlayGame?.game ?? null;
   if (game) {
-    completedGames = archiveCompletedPlayGame(game, {
-      sourceCode: sharedCompletedGame.code,
-    });
+    if (game.phase === GAME_PHASE.COMPLETE) {
+      completedGames = archiveCompletedPlayGame(game, {
+        sourceCode: sharedPlayGame.code,
+      });
+    } else {
+      savedGame = game;
+      savePlaySession(game);
+    }
     selectedLanguage = game.language;
     selectedHumanSeat = { ...game.humanSeat };
     selectedWordSet = game.wordSet;
@@ -592,7 +594,7 @@ export function createPlayMode(options = {}) {
   elements.leaveGame.addEventListener("click", showSetup);
   elements.undoAction.addEventListener("click", undoAction);
   elements.forwardAction.addEventListener("click", forwardAction);
-  elements.shareBoard.addEventListener("click", () => void copyBoardLink());
+  elements.shareGame.addEventListener("click", () => void copyGameLink());
   elements.toggleSuggestions.addEventListener("click", () => {
     suggestionsExpanded = !suggestionsExpanded;
     renderSuggestionVisibility(true);
@@ -847,7 +849,7 @@ export function createPlayMode(options = {}) {
             completedGame.reviewCompatibility === "history-only"
               ? entry.code
               : encodeCompletedGame(completedGame);
-          await writeClipboardText(completedGameUrl(shareCode));
+          await writeClipboardText(playGameUrl(shareCode));
           copy.textContent = translate(selectedLanguage, "gameCopied");
           window.setTimeout(() => {
             copy.textContent = translate(selectedLanguage, "copyGame");
@@ -1043,32 +1045,18 @@ export function createPlayMode(options = {}) {
     renderGame();
   }
 
-  async function copyBoardLink() {
+  async function copyGameLink() {
     if (!game) {
       return;
     }
     try {
-      const completed = game.phase === GAME_PHASE.COMPLETE;
-      const url = completed
-        ? new URL(completedGameUrl(completedGameShareCode(game)))
-        : new URL(window.location.href);
-      if (!completed) {
-        const code = encodeBoardParam({
-          cards: game.cards.map((card) => ({ ...card, done: false })),
-          randomLayoutOrder: game.cards.map((card) => card.layoutId),
-          order: BOARD_ORDER.RANDOM,
-          language: game.language ?? LANGUAGE.ENGLISH,
-          wordSet: game.wordSet,
-          source:
-            game.wordReusePolicy === PLAY_WORD_REUSE_POLICY.AVOID_RECENT
-              ? { type: "explicit" }
-              : { type: "seed", seed: game.seed, version: "3" },
-        });
-        url.search = "";
-        url.searchParams.set("mode", "train");
-        url.searchParams.set("b", code);
-      }
-      await writeClipboardText(url.href);
+      await writeClipboardText(
+        playGameUrl(
+          game.phase === GAME_PHASE.COMPLETE
+            ? completedGameShareCode(game)
+            : encodePlayGame(game),
+        ),
+      );
       setShareFeedback("copied");
     } catch {
       setShareFeedback("error");
@@ -1077,43 +1065,28 @@ export function createPlayMode(options = {}) {
 
   function setShareFeedback(state) {
     window.clearTimeout(shareFeedbackTimer);
-    elements.shareBoard.dataset.state = state;
+    elements.shareGame.dataset.state = state;
     const label =
       state === "copied"
-        ? translate(
-            gameLanguage(),
-            game?.phase === GAME_PHASE.COMPLETE
-              ? "gameCopied"
-              : "boardCopied",
-          )
+        ? translate(gameLanguage(), "gameCopied")
         : state === "error"
           ? translate(gameLanguage(), "copyFailed")
-          : translate(
-              gameLanguage(),
-              game?.phase === GAME_PHASE.COMPLETE
-                ? "shareGame"
-                : "shareBoard",
-            );
+          : translate(gameLanguage(), "shareGame");
     const iconName =
       state === "copied" ? "check" : state === "error" ? "triangle-alert" : "share-2";
-    elements.shareBoard.setAttribute("aria-label", label);
-    elements.shareBoard.title =
+    elements.shareGame.setAttribute("aria-label", label);
+    elements.shareGame.title =
       state === "idle"
-        ? translate(
-            gameLanguage(),
-            game?.phase === GAME_PHASE.COMPLETE
-              ? "copyGameLink"
-              : "copyBoardLink",
-          )
+        ? translate(gameLanguage(), "copyGameLink")
         : label;
     const icon = document.createElement("i");
     icon.dataset.lucide = iconName;
     icon.setAttribute("aria-hidden", "true");
-    elements.shareBoard.replaceChildren(icon);
+    elements.shareGame.replaceChildren(icon);
     createIcons({
       icons: { Check, Share2, TriangleAlert },
       attrs: { width: 18, height: 18, "stroke-width": 2 },
-      root: elements.shareBoard,
+      root: elements.shareGame,
     });
     if (state !== "idle") {
       shareFeedbackTimer = window.setTimeout(() => setShareFeedback("idle"), 3000);
@@ -1839,12 +1812,6 @@ export function createPlayMode(options = {}) {
   function renderGame() {
     if (!game) {
       return;
-    }
-    const shareKind =
-      game.phase === GAME_PHASE.COMPLETE ? "game" : "board";
-    if (elements.shareBoard.dataset.shareKind !== shareKind) {
-      elements.shareBoard.dataset.shareKind = shareKind;
-      setShareFeedback("idle");
     }
     preparePostGameTurns();
     const selectedTurn = turnAnalysisEnabled()
@@ -3106,7 +3073,7 @@ async function writeClipboardText(value) {
   }
 }
 
-function completedGameUrl(code) {
+function playGameUrl(code) {
   const url = new URL(window.location.href);
   url.search = "";
   url.searchParams.set("mode", "play");
@@ -3114,20 +3081,20 @@ function completedGameUrl(code) {
   return url.href;
 }
 
-function readSharedCompletedGame() {
+function readSharedPlayGame() {
   const url = new URL(window.location.href);
   const code = url.searchParams.get("g");
   if (!code) {
     return null;
   }
   try {
-    const game = decodeCompletedGame(code);
+    const game = decodePlayGame(code);
     if (game.reviewCompatibility === "history-only") {
       game.shareMetadata.sourceCode = code;
     }
     return { code, game };
   } catch (error) {
-    console.warn("Ignoring invalid shared completed game.", error);
+    console.warn("Ignoring invalid shared Play game.", error);
     url.searchParams.delete("g");
     window.history.replaceState(null, "", url);
     return null;

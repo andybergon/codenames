@@ -15,7 +15,8 @@ import {
 } from "./game-state.js";
 import { PLAY_WORD_REUSE_POLICY } from "./word-reuse.js";
 
-const SHARE_VERSION = 2;
+const SHARE_VERSION = 3;
+const COMPLETED_SHARE_VERSION = 2;
 const LEGACY_SHARE_VERSION = 1;
 const PLAY_RULES_VERSION = 1;
 const SETTINGS_VERSION = 1;
@@ -67,15 +68,23 @@ const WORD_REUSE_FROM_CODE = new Map(
 
 export function encodeCompletedGame(
   game,
+  options = {},
+) {
+  const validated = validateStoredGame(game);
+  if (validated.phase !== GAME_PHASE.COMPLETE) {
+    throw new Error("Only completed Play games can be shared.");
+  }
+  return encodePlayGame(validated, options);
+}
+
+export function encodePlayGame(
+  game,
   {
     includeDeveloperDiagnostics = false,
     maxLength = MAX_SHARE_LENGTH,
   } = {},
 ) {
   const validated = validateStoredGame(game);
-  if (validated.phase !== GAME_PHASE.COMPLETE) {
-    throw new Error("Only completed Play games can be shared.");
-  }
 
   const board = encodeBoardParam({
     cards: validated.cards.map((card) => ({ ...card, done: false })),
@@ -158,19 +167,32 @@ export function encodeCompletedGame(
     ],
     WORD_REUSE_CODE[validated.wordReusePolicy],
     validated.developerMode === true ? 1 : 0,
-    [SIDE_CODE[validated.winner], validated.endReason],
+    validated.phase === GAME_PHASE.COMPLETE
+      ? [SIDE_CODE[validated.winner], validated.endReason]
+      : null,
     actions,
   ];
   const code = bytesToBase64Url(
     new TextEncoder().encode(JSON.stringify(payload)),
   );
   if (code.length > maxLength) {
-    throw new Error("Completed game is too large to share in a link.");
+    throw new Error("Play game is too large to share in a link.");
   }
   return code;
 }
 
 export function decodeCompletedGame(
+  code,
+  options = {},
+) {
+  const game = decodePlayGame(code, options);
+  if (game.phase !== GAME_PHASE.COMPLETE) {
+    throw new Error("Shared Play game is not complete.");
+  }
+  return game;
+}
+
+export function decodePlayGame(
   code,
   { maxLength = MAX_SHARE_LENGTH } = {},
 ) {
@@ -180,7 +202,7 @@ export function decodeCompletedGame(
     code.length > maxLength ||
     !/^[A-Za-z0-9_-]+$/u.test(code)
   ) {
-    throw new Error("Invalid completed-game code.");
+    throw new Error("Invalid Play-game code.");
   }
 
   let payload;
@@ -191,7 +213,7 @@ export function decodeCompletedGame(
       ),
     );
   } catch {
-    throw new Error("Invalid completed-game code.");
+    throw new Error("Invalid Play-game code.");
   }
 
   return decodeParsedCompletedGame(parseCompletedPayload(payload));
@@ -212,7 +234,7 @@ function decodeParsedCompletedGame(parsed) {
   const seatValue = SEAT_FROM_CODE.get(seatCode);
   const wordReusePolicy = WORD_REUSE_FROM_CODE.get(reuseCode);
   if (!seatValue || !wordReusePolicy) {
-    throw new Error("Completed game contains unsupported settings.");
+    throw new Error("Play game contains unsupported settings.");
   }
   const [side, role] = seatValue.split(":");
   const board = decodeBoardParam(boardCode);
@@ -221,7 +243,7 @@ function decodeParsedCompletedGame(parsed) {
     boardCode,
   );
   if (gameId !== null && gameId !== resolvedGameId) {
-    throw new Error("Completed game identity does not match its board.");
+    throw new Error("Play game identity does not match its board.");
   }
   const positions = new Map(
     board.randomLayoutOrder.map((layoutId, index) => [layoutId, index]),
@@ -314,14 +336,21 @@ function decodeParsedCompletedGame(parsed) {
           ),
         });
       } else {
-        throw new Error("Invalid completed-game action.");
+        throw new Error("Invalid Play-game action.");
       }
     }
   } catch {
-    throw new Error("Completed-game actions cannot be replayed.");
+    throw new Error("Play-game actions cannot be replayed.");
   }
 
-  if (game.phase !== GAME_PHASE.COMPLETE) {
+  if (
+    parsed.supportsActive &&
+    ((outcome === null && game.phase === GAME_PHASE.COMPLETE) ||
+      (outcome !== null && game.phase !== GAME_PHASE.COMPLETE))
+  ) {
+    throw new Error("Shared Play game phase does not match its outcome.");
+  }
+  if (!parsed.supportsActive && game.phase !== GAME_PHASE.COMPLETE) {
     throw new Error("Shared Play game is not complete.");
   }
   if (
@@ -329,7 +358,7 @@ function decodeParsedCompletedGame(parsed) {
     (game.winner !== outcome.winner ||
       game.endReason !== outcome.endReason)
   ) {
-    throw new Error("Completed-game outcome does not match its actions.");
+    throw new Error("Play-game outcome does not match its actions.");
   }
   const validated = validateStoredGame(game);
   const normalizedBotSettings = {
@@ -371,14 +400,18 @@ function decodeParsedCompletedGame(parsed) {
 
 function parseCompletedPayload(payload) {
   if (!Array.isArray(payload)) {
-    throw new Error("Unsupported completed-game code.");
+    throw new Error("Unsupported Play-game code.");
   }
-  if (payload[0] === SHARE_VERSION) {
-    if (!validCurrentPayloadShape(payload)) {
-      throw new Error("Unsupported completed-game code.");
+  if (
+    payload[0] === SHARE_VERSION ||
+    payload[0] === COMPLETED_SHARE_VERSION
+  ) {
+    const supportsActive = payload[0] === SHARE_VERSION;
+    if (!validCurrentPayloadShape(payload, supportsActive)) {
+      throw new Error("Unsupported Play-game code.");
     }
     return {
-      formatVersion: SHARE_VERSION,
+      formatVersion: payload[0],
       rulesVersion: payload[1],
       settingsVersion: payload[2],
       gameId: payload[3],
@@ -388,19 +421,23 @@ function parseCompletedPayload(payload) {
       rawSettings: payload[7],
       reuseCode: payload[8],
       developerMode: payload[9] === 1,
-      outcome: {
-        winner: SIDE_FROM_CODE.get(payload[10][0]),
-        endReason: payload[10][1],
-      },
+      outcome:
+        payload[10] === null
+          ? null
+          : {
+              winner: SIDE_FROM_CODE.get(payload[10][0]),
+              endReason: payload[10][1],
+            },
       actions: payload[11],
       actionVersion: 2,
+      supportsActive,
     };
   }
   if (
     payload[0] !== LEGACY_SHARE_VERSION ||
     !validLegacyPayloadShape(payload)
   ) {
-    throw new Error("Unsupported completed-game code.");
+    throw new Error("Unsupported Play-game code.");
   }
   const currentLegacy = payload.length === 9;
   const hasDeveloperMode = payload.length >= 8;
@@ -422,10 +459,19 @@ function parseCompletedPayload(payload) {
     outcome: null,
     actions: payload[hasDeveloperMode ? 7 + offset : 6 + offset],
     actionVersion: 1,
+    supportsActive: false,
   };
 }
 
-function validCurrentPayloadShape(payload) {
+function validCurrentPayloadShape(payload, supportsActive) {
+  const outcome = payload[10];
+  const validOutcome =
+    supportsActive && outcome === null
+      ? true
+      : Array.isArray(outcome) &&
+        outcome.length === 2 &&
+        SIDE_FROM_CODE.has(outcome[0]) &&
+        ["agents", "assassin"].includes(outcome[1]);
   return (
     payload.length === 12 &&
     Number.isInteger(payload[1]) &&
@@ -440,10 +486,7 @@ function validCurrentPayloadShape(payload) {
     payload[7].length <= 32 &&
     typeof payload[8] === "string" &&
     (payload[9] === 0 || payload[9] === 1) &&
-    Array.isArray(payload[10]) &&
-    payload[10].length === 2 &&
-    SIDE_FROM_CODE.has(payload[10][0]) &&
-    ["agents", "assassin"].includes(payload[10][1]) &&
+    validOutcome &&
     Array.isArray(payload[11]) &&
     payload[11].length <= MAX_ACTIONS
   );
@@ -483,7 +526,7 @@ function decodeSettings(rawSettings, settingsVersion) {
     ? rawSettings[4]
     : "late";
   if (!MISSED_TARGET_TIMINGS.has(missedTargetTiming)) {
-    throw new Error("Completed game contains unsupported settings.");
+    throw new Error("Play game contains unsupported settings.");
   }
   return {
     modelId: rawSettings[0],
@@ -498,7 +541,7 @@ function decodeSettings(rawSettings, settingsVersion) {
 
 function decodeAction(action, actionVersion, developerMode) {
   if (!Array.isArray(action) || action.length === 0) {
-    throw new Error("Invalid completed-game action.");
+    throw new Error("Invalid Play-game action.");
   }
   if (actionVersion === 1) {
     return decodeLegacyAction(action, developerMode);
@@ -551,7 +594,7 @@ function decodeAction(action, actionVersion, developerMode) {
       ),
     };
   }
-  throw new Error("Invalid completed-game action.");
+  throw new Error("Invalid Play-game action.");
 }
 
 function decodeActionContext(action) {
@@ -563,7 +606,7 @@ function decodeActionContext(action) {
     !side ||
     !actor
   ) {
-    throw new Error("Invalid completed-game action context.");
+    throw new Error("Invalid Play-game action context.");
   }
   return { turn: action[1], side, actor };
 }
@@ -609,7 +652,7 @@ function decodeLegacyAction(action, developerMode) {
       ),
     };
   }
-  throw new Error("Invalid completed-game action.");
+  throw new Error("Invalid Play-game action.");
 }
 
 function decodeActionDiagnostics(value, developerMode) {
@@ -632,7 +675,7 @@ function validateReplayContext(action, game, role) {
     action.side !== game.activeSide ||
     action.actor !== expectedActor
   ) {
-    throw new Error("Completed-game action context cannot be replayed.");
+    throw new Error("Play-game action context cannot be replayed.");
   }
 }
 
