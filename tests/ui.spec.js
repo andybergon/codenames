@@ -378,6 +378,37 @@ test("recommendations explain one clue only after an uncached click", async ({ p
   );
 });
 
+test("an unconfigured explanation reports the deployment issue without retrying", async ({
+  page,
+}) => {
+  let explanationRequests = 0;
+  await page.route("**/api/explain-recommendations", async (route) => {
+    explanationRequests += 1;
+    await route.fulfill({
+      status: 503,
+      contentType: "application/json",
+      body: JSON.stringify({
+        code: "semantic_explanations_not_configured",
+        error: "Semantic explanations are not configured.",
+      }),
+    });
+  });
+  await page.goto("/tests/fixtures/recommendations.html");
+
+  const explainButton = page.getByRole("button", {
+    name: "Explain why Province connects Microscope, Hospital, Nurse",
+    exact: true,
+  });
+  await expect(explainButton).toBeVisible();
+  await explainButton.click();
+
+  await expect(page.locator(".explanation-targets.is-error")).toHaveText(
+    "Semantic explanations are not configured for this deployment.",
+  );
+  await expect(explainButton).toHaveCount(0);
+  expect(explanationRequests).toBe(1);
+});
+
 test("choosing a word pool does not replace the current board", async ({ page }) => {
   await page.goto(SHARED_BOARD);
 

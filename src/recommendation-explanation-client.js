@@ -2,6 +2,18 @@ const CACHE_STORAGE_KEY = "codenames-semantic-explanations-p5-gpt-5.4-nano";
 const MAX_CACHE_ENTRIES = 128;
 const explanationCache = loadStoredCache();
 
+export const SEMANTIC_EXPLANATIONS_NOT_CONFIGURED =
+  "semantic_explanations_not_configured";
+
+export class SemanticExplanationRequestError extends Error {
+  constructor(message, { code = "unknown", status = 0 } = {}) {
+    super(message);
+    this.name = "SemanticExplanationRequestError";
+    this.code = code;
+    this.status = status;
+  }
+}
+
 export function recommendationExplanationKey(suggestion, language = "en") {
   return [
     language,
@@ -54,7 +66,19 @@ export async function loadSemanticExplanations(
     signal,
   });
   if (!response.ok) {
-    throw new Error(`Semantic explanation request failed with status ${response.status}.`);
+    let payload = {};
+    try {
+      payload = await response.json();
+    } catch {
+      // Error classification falls back to the HTTP status.
+    }
+    throw new SemanticExplanationRequestError(
+      `Semantic explanation request failed with status ${response.status}.`,
+      {
+        code: payload?.code,
+        status: response.status,
+      },
+    );
   }
 
   const payload = await response.json();

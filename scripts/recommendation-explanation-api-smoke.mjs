@@ -29,6 +29,7 @@ const missingKey = await handleRecommendationExplanationRequest({
   body: { recommendations },
 });
 assert.equal(missingKey.status, 503);
+assert.equal(missingKey.body.code, "semantic_explanations_not_configured");
 
 let requestBody;
 const success = await handleRecommendationExplanationRequest({

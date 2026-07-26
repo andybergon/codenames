@@ -3,6 +3,7 @@ import {
   cachedSemanticExplanation,
   loadSemanticExplanations,
   recommendationExplanationKey,
+  SEMANTIC_EXPLANATIONS_NOT_CONFIGURED,
 } from "./recommendation-explanation-client.js";
 
 const pendingExplanations = new Map();
@@ -14,6 +15,8 @@ const COPY = Object.freeze({
     explain: "Explain",
     explaining: "Explaining",
     empty: "The explanation response was empty.",
+    notConfigured:
+      "Semantic explanations are not configured for this deployment.",
     error: "Could not generate an explanation. Try again.",
     retry: "Retry",
   },
@@ -26,6 +29,8 @@ const COPY = Object.freeze({
     explain: "Spiega",
     explaining: "Generazione",
     empty: "La risposta non contiene una spiegazione.",
+    notConfigured:
+      "Le spiegazioni semantiche non sono configurate per questa distribuzione.",
     error: "Impossibile generare una spiegazione. Riprova.",
     retry: "Riprova",
   },
@@ -111,11 +116,17 @@ async function requestExplanation(
     output.title = copy.generated;
     output.hidden = false;
     button.remove();
-  } catch {
-    output.textContent = copy.error;
+  } catch (error) {
+    const notConfigured =
+      error?.code === SEMANTIC_EXPLANATIONS_NOT_CONFIGURED;
+    output.textContent = notConfigured ? copy.notConfigured : copy.error;
     output.title = "";
     output.hidden = false;
     output.classList.add("is-error");
+    if (notConfigured) {
+      button.remove();
+      return;
+    }
     button.disabled = false;
     button.removeAttribute("aria-busy");
     button.classList.remove("is-loading");

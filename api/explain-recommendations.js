@@ -13,6 +13,12 @@ export default async function explainRecommendations(request, response) {
     body,
     apiKey: process.env.OPENAI_API_KEY,
   });
+  if (result.status >= 500) {
+    console.error("[explain-recommendations] request failed", {
+      status: result.status,
+      code: result.body?.code ?? "unknown",
+    });
+  }
   response.statusCode = result.status;
   response.setHeader("Content-Type", "application/json; charset=utf-8");
   for (const [name, value] of Object.entries(result.headers ?? {})) {

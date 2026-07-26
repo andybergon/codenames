@@ -27,7 +27,10 @@ export async function handleRecommendationExplanationRequest({
   if (!apiKey) {
     return {
       status: 503,
-      body: { error: "Semantic explanations are not configured." },
+      body: {
+        code: "semantic_explanations_not_configured",
+        error: "Semantic explanations are not configured.",
+      },
     };
   }
 
@@ -60,7 +63,10 @@ export async function handleRecommendationExplanationRequest({
   } catch {
     return {
       status: 502,
-      body: { error: "Semantic explanations are temporarily unavailable." },
+      body: {
+        code: "semantic_explanations_temporarily_unavailable",
+        error: "Semantic explanations are temporarily unavailable.",
+      },
     };
   }
 }
