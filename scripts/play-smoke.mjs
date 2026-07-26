@@ -34,6 +34,7 @@ import {
   differentRandomHumanSeat,
   giveClue,
   guessCard,
+  markPlayGameAsDeveloper,
   passTurn,
   publicGameView,
   randomHumanSeat,
@@ -320,6 +321,20 @@ const morphologyGame = createPlayGame({
   seed: "morphology",
   wordSet: sample.wordSet,
 });
+
+const ordinaryGame = createPlayGame({
+  cards: sample.cards,
+  developerMode: false,
+  humanSeat: { side: SIDE.BLUE, role: PLAYER_ROLE.SPYMASTER },
+  seed: "ordinary-mode",
+  wordSet: sample.wordSet,
+});
+const markedDeveloperGame = markPlayGameAsDeveloper(ordinaryGame);
+assert.equal(markedDeveloperGame.developerMode, true);
+assert.equal(markedDeveloperGame.history[0].developerMode, true);
+assert.equal(markPlayGameAsDeveloper(markedDeveloperGame), markedDeveloperGame);
+assert.equal(ordinaryGame.developerMode, false);
+assert.equal(ordinaryGame.history[0].developerMode, false);
 
 let developerGame = createPlayGame({
   cards: sample.cards,

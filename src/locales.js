@@ -160,7 +160,7 @@ const COPY = Object.freeze({
     developer: "Developer",
     enableDeveloperMode: "Enable developer mode",
     developerModeHelp:
-      "Marks new games as developer data and enables live diagnostics.",
+      "Marks new games as developer data. Unlike other settings, enabling it also applies to a saved game in progress. Once marked, that game stays developer data.",
     showLiveDiagnostics: "Show live diagnostics",
     liveDiagnosticsSpoiler: "Spoils active games",
     liveDiagnostics: "Live diagnostics",
@@ -495,7 +495,7 @@ const COPY = Object.freeze({
     developer: "Sviluppo",
     enableDeveloperMode: "Abilita modalità sviluppatore",
     developerModeHelp:
-      "Contrassegna le nuove partite come dati di sviluppo e abilita la diagnostica in tempo reale.",
+      "Contrassegna le nuove partite come dati di sviluppo. A differenza delle altre impostazioni, l'attivazione si applica anche a una partita salvata in corso. Una volta contrassegnata, la partita rimane un dato di sviluppo.",
     showLiveDiagnostics: "Mostra diagnostica in tempo reale",
     liveDiagnosticsSpoiler: "Rivela la partita",
     liveDiagnostics: "Diagnostica in tempo reale",

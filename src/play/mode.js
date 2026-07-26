@@ -50,6 +50,7 @@ import {
   differentRandomHumanSeat,
   giveClue,
   guessCard,
+  markPlayGameAsDeveloper,
   passTurn,
   publicGameView,
   randomHumanSeat,
@@ -510,10 +511,20 @@ export function createPlayMode(options = {}) {
   });
 
   elements.developerMode.addEventListener("change", () => {
+    const enabled = elements.developerMode.checked;
     developerSettings = {
-      enabled: elements.developerMode.checked,
+      enabled,
     };
     saveDeveloperSettings(developerSettings);
+    if (
+      enabled &&
+      savedGame &&
+      savedGame.phase !== GAME_PHASE.COMPLETE &&
+      !savedGame.developerMode
+    ) {
+      savedGame = markPlayGameAsDeveloper(savedGame);
+      savePlaySession(savedGame);
+    }
     renderSetup();
   });
 

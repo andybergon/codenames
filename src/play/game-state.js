@@ -299,6 +299,24 @@ export function recordCurrentClueDeveloperDiagnostics(game, diagnostics) {
   };
 }
 
+export function markPlayGameAsDeveloper(game) {
+  if (game.developerMode) {
+    return game;
+  }
+  return {
+    ...game,
+    developerMode: true,
+    history: game.history.map((event) =>
+      event.type === "game-started"
+        ? {
+            ...event,
+            developerMode: true,
+          }
+        : event,
+    ),
+  };
+}
+
 export function canUndoPlayGame(game) {
   return game.history.some((event) => PLAY_ACTION_TYPES.has(event.type));
 }

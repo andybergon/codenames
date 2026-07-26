@@ -1510,6 +1510,94 @@ test("Developer mode marks games and retains live score diagnostics", async ({
   expect(externalRequests).toEqual([]);
 });
 
+test("Developer mode can mark and diagnose a saved game in progress", async ({
+  page,
+}) => {
+  const externalRequests = await useTestPlayAnalysis(page);
+  await page.addInitScript(() => {
+    window.__codenamesPlayModeOptions = {
+      ...window.__codenamesPlayModeOptions,
+      botActionDelay: 5000,
+    };
+  });
+  await page.goto("/?mode=play");
+
+  await page.locator('[data-play-seat="blue:spymaster"]').click();
+  await page.getByRole("button", { name: "Start new game", exact: true }).click();
+  const originalGame = await page.evaluate(() =>
+    JSON.parse(localStorage.getItem("codenames-play-session-v1")),
+  );
+  expect(originalGame.developerMode).toBe(false);
+
+  await page.locator("#leave-play-game").click();
+  const settings = page.locator(".play-settings");
+  await settings.locator("summary").click();
+  const developerModeHelp = page.locator('[data-i18n="developerModeHelp"]');
+  for (const viewport of [
+    { width: 390, height: 844 },
+    { width: 768, height: 1024 },
+    { width: 1440, height: 900 },
+  ]) {
+    await page.setViewportSize(viewport);
+    await expect(developerModeHelp).toBeVisible();
+    await expect(developerModeHelp).toContainText("Unlike other settings");
+    expect(
+      await page.evaluate(
+        () =>
+          document.documentElement.scrollWidth >
+          document.documentElement.clientWidth,
+      ),
+    ).toBe(false);
+  }
+  const developerMode = page.locator("#play-developer-mode");
+  await developerMode.check();
+
+  await expect
+    .poll(() =>
+      page.evaluate(() =>
+        JSON.parse(localStorage.getItem("codenames-play-session-v1")),
+      ),
+    )
+    .toMatchObject({
+      developerMode: true,
+      seed: originalGame.seed,
+      history: [{ type: "game-started", developerMode: true }],
+    });
+
+  await developerMode.uncheck();
+  await expect
+    .poll(() =>
+      page.evaluate(() =>
+        JSON.parse(
+          localStorage.getItem("codenames-developer-settings-v1"),
+        ),
+      ),
+    )
+    .toEqual({ enabled: false });
+  const stillMarkedGame = await page.evaluate(() =>
+    JSON.parse(localStorage.getItem("codenames-play-session-v1")),
+  );
+  expect(stillMarkedGame.developerMode).toBe(true);
+  expect(stillMarkedGame.history[0].developerMode).toBe(true);
+
+  await page.getByRole("button", { name: "Resume game", exact: true }).click();
+  const liveToggle = page.locator("#play-live-diagnostics-toggle");
+  await expect(liveToggle).toBeVisible();
+  await page.locator("#play-live-diagnostics").check();
+  await page.getByRole("button", {
+    name: "Show clue suggestions",
+    exact: true,
+  }).click();
+  const suggestion = page.locator(".play-suggestion").first();
+  await expect(suggestion).toBeVisible({ timeout: 15_000 });
+  await suggestion.click();
+  await page.getByRole("button", { name: "Give clue", exact: true }).click();
+  await expect(page.locator(".play-card[data-operative-score]")).toHaveCount(
+    25,
+  );
+  expect(externalRequests).toEqual([]);
+});
+
 test("Developer scores do not reveal operative card roles", async ({ page }) => {
   const session = playSessionWithHistory([
     {
