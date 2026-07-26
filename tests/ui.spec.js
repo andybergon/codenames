@@ -525,6 +525,7 @@ test("Italian Train controls fit phone, tablet, and desktop viewports", async ({
     { width: 390, height: 844 },
     { width: 768, height: 1024 },
     { width: 1440, height: 900 },
+    { width: 1920, height: 1080 },
   ]) {
     await page.setViewportSize(viewport);
     const layout = await page.evaluate(() => ({
@@ -1141,9 +1142,11 @@ test("header centers the mode switch across responsive layouts", async ({ page }
   await page.goto("/?mode=play");
 
   for (const viewport of [
-    { width: 390, height: 844, sameRow: false },
-    { width: 768, height: 1024, sameRow: true },
-    { width: 1440, height: 900, sameRow: true },
+    { width: 390, height: 844, compact: true },
+    { width: 430, height: 998, compact: true },
+    { width: 768, height: 1024, compact: false },
+    { width: 1440, height: 900, compact: false },
+    { width: 1920, height: 1080, compact: false },
   ]) {
     await page.setViewportSize(viewport);
     const layout = await page.evaluate(() => {
@@ -1151,37 +1154,53 @@ test("header centers the mode switch across responsive layouts", async ({ page }
       const title = document.querySelector("#app-title").getBoundingClientRect();
       const mode = document.querySelector(".app-mode-switch").getBoundingClientRect();
       const theme = document.querySelector(".theme-switcher").getBoundingClientRect();
+      const controls = document
+        .querySelector(".topbar-controls")
+        .getBoundingClientRect();
+      const setup = document.querySelector(".play-setup").getBoundingClientRect();
       return {
         pageOverflows:
           document.documentElement.scrollWidth > document.documentElement.clientWidth,
+        controlsEndOffset: topbar.right - controls.right,
+        setupEndOffset: setup.right - controls.right,
         modeCenterOffset:
           mode.left + mode.width / 2 - (topbar.left + topbar.width / 2),
         titleThemeCenterOffset:
           title.top + title.height / 2 - (theme.top + theme.height / 2),
         modeThemeCenterOffset:
           mode.top + mode.height / 2 - (theme.top + theme.height / 2),
-        modeBelowTopRow: mode.top >= Math.max(title.bottom, theme.bottom),
+        titleAboveControls:
+          title.bottom <= Math.min(mode.top, controls.top) + 1,
       };
     });
 
     expect(layout.pageOverflows, `page overflow at ${viewport.width}px`).toBe(false);
     expect(
-      Math.abs(layout.modeCenterOffset),
-      `mode centering at ${viewport.width}px`,
+      Math.abs(layout.controlsEndOffset),
+      `topbar controls end alignment at ${viewport.width}px`,
     ).toBeLessThanOrEqual(1);
     expect(
-      Math.abs(layout.titleThemeCenterOffset),
-      `title and theme alignment at ${viewport.width}px`,
+      Math.abs(layout.setupEndOffset),
+      `setup card end alignment at ${viewport.width}px`,
     ).toBeLessThanOrEqual(1);
-    if (viewport.sameRow) {
+    expect(
+      Math.abs(layout.modeThemeCenterOffset),
+      `mode and controls alignment at ${viewport.width}px`,
+    ).toBeLessThanOrEqual(1);
+    if (viewport.compact) {
       expect(
-        Math.abs(layout.modeThemeCenterOffset),
-        `mode and theme alignment at ${viewport.width}px`,
-      ).toBeLessThanOrEqual(1);
+        layout.titleAboveControls,
+        `compact title row at ${viewport.width}px`,
+      ).toBe(true);
     } else {
-      expect(layout.modeBelowTopRow, `mobile wrapping at ${viewport.width}px`).toBe(
-        true,
-      );
+      expect(
+        Math.abs(layout.modeCenterOffset),
+        `mode centering at ${viewport.width}px`,
+      ).toBeLessThanOrEqual(1);
+      expect(
+        Math.abs(layout.titleThemeCenterOffset),
+        `title and theme alignment at ${viewport.width}px`,
+      ).toBeLessThanOrEqual(1);
     }
   }
 });
@@ -1820,9 +1839,12 @@ test("Play keeps game creation actions prominent across responsive states", asyn
   page,
 }) => {
   for (const viewport of [
-    { width: 390, height: 844 },
-    { width: 768, height: 1024 },
-    { width: 1440, height: 900 },
+    { width: 390, height: 844, setupActionBelow: true },
+    { width: 430, height: 998, setupActionBelow: true },
+    { width: 625, height: 998, setupActionBelow: false },
+    { width: 768, height: 1024, setupActionBelow: false },
+    { width: 1440, height: 900, setupActionBelow: false },
+    { width: 1920, height: 1080, setupActionBelow: false },
   ]) {
     await page.setViewportSize(viewport);
     await page.goto("/?mode=play");
@@ -1851,6 +1873,12 @@ test("Play keeps game creation actions prominent across responsive states", asyn
       const newGameBounds = document
         .querySelector("#start-play-game")
         .getBoundingClientRect();
+      const setupHeadingBounds = document
+        .querySelector(".play-setup-heading")
+        .getBoundingClientRect();
+      const setupTitleBounds = document
+        .querySelector(".play-setup-title")
+        .getBoundingClientRect();
       return {
         pageOverflows:
           document.documentElement.scrollWidth > document.documentElement.clientWidth,
@@ -1862,6 +1890,12 @@ test("Play keeps game creation actions prominent across responsive states", asyn
             document.querySelector("#play-title").getBoundingClientRect().right &&
           randomizeBounds.top <
             document.querySelector("#play-title").getBoundingClientRect().bottom,
+        newGameAtRightEdge:
+          Math.abs(setupHeadingBounds.right - newGameBounds.right) <= 1,
+        newGameIsBelowTitle: newGameBounds.top >= setupTitleBounds.bottom,
+        newGameIsBesideTitle:
+          newGameBounds.left >= setupTitleBounds.right &&
+          newGameBounds.top < setupTitleBounds.bottom,
       };
     });
     expect(setupLayout.pageOverflows, `setup overflow at ${viewport.width}px`).toBe(false);
@@ -1873,6 +1907,18 @@ test("Play keeps game creation actions prominent across responsive states", asyn
       setupLayout.randomizeIsBesideTitle,
       `randomize placement at ${viewport.width}px`,
     ).toBe(true);
+    expect(
+      setupLayout.newGameIsBelowTitle,
+      `new game placement at ${viewport.width}px`,
+    ).toBe(viewport.setupActionBelow);
+    expect(
+      setupLayout.newGameAtRightEdge,
+      `new game right alignment at ${viewport.width}px`,
+    ).toBe(true);
+    expect(
+      setupLayout.newGameIsBesideTitle,
+      `new game inline placement at ${viewport.width}px`,
+    ).toBe(!viewport.setupActionBelow);
 
     await startGame.click();
     const gameActions = page.locator(".play-game-header .play-game-actions");
@@ -3422,15 +3468,23 @@ test("Play board remains usable at phone, tablet, and desktop widths", async ({ 
   await page.getByRole("button", { name: "Start new game", exact: true }).click();
 
   for (const viewport of [
-    { width: 390, height: 844 },
-    { width: 768, height: 1024 },
-    { width: 1440, height: 900 },
+    { width: 390, height: 844, layout: "stacked", minCardFont: 11 },
+    { width: 768, height: 1024, layout: "stacked", minCardFont: 11 },
+    { width: 1440, height: 900, layout: "wide", minCardFont: 14 },
+    { width: 1920, height: 1080, layout: "wide", minCardFont: 16.5 },
   ]) {
-    await page.setViewportSize(viewport);
+    await page.setViewportSize({
+      width: viewport.width,
+      height: viewport.height,
+    });
     const layout = await page.evaluate(() => {
       const board = document.querySelector("#play-board-grid");
+      const boardPanel = document.querySelector(".play-board-panel");
       const header = document.querySelector(".play-game-header");
+      const history = document.querySelector(".play-history");
       const score = document.querySelector("#play-score");
+      const turnPanel = document.querySelector(".play-turn-panel");
+      const workspace = document.querySelector(".play-workspace");
       const cards = [...document.querySelectorAll(".play-card")];
       const clueActions = document.querySelector(".play-clue-actions");
       const giveClue = clueActions.querySelector('[type="submit"]');
@@ -3442,7 +3496,12 @@ test("Play board remains usable at phone, tablet, and desktop widths", async ({ 
       const hintsBounds = hints.getBoundingClientRect();
       const clueFieldBounds = clueField.getBoundingClientRect();
       const clueNumberBounds = clueNumberField.getBoundingClientRect();
+      const boardPanelBounds = boardPanel.getBoundingClientRect();
+      const historyBounds = history.getBoundingClientRect();
+      const turnPanelBounds = turnPanel.getBoundingClientRect();
+      const workspaceBounds = workspace.getBoundingClientRect();
       return {
+        viewportScale: window.visualViewport?.scale ?? 1,
         pageOverflows:
           document.documentElement.scrollWidth > document.documentElement.clientWidth,
         headerOverflows: header.scrollWidth > header.clientWidth,
@@ -3465,9 +3524,20 @@ test("Play board remains usable at phone, tablet, and desktop widths", async ({ 
         clueFieldsFit:
           clueFieldBounds.width >= 120 &&
           clueFieldBounds.right <= clueNumberBounds.left,
+        cardFont: Number.parseFloat(getComputedStyle(cards[0]).fontSize),
+        clueLabelFont: Number.parseFloat(getComputedStyle(clueField).fontSize),
+        giveClueHeight: Math.round(giveClueBounds.height),
+        historyBelowContent:
+          historyBounds.top >=
+          Math.max(boardPanelBounds.bottom, turnPanelBounds.bottom),
+        turnBesideBoard:
+          Math.abs(turnPanelBounds.top - boardPanelBounds.top) <= 1 &&
+          turnPanelBounds.left >= boardPanelBounds.right,
+        workspaceUsage: workspaceBounds.width / window.innerWidth,
       };
     });
 
+    expect(layout.viewportScale, `browser scale at ${viewport.width}px`).toBe(1);
     expect(layout.pageOverflows, `page overflow at ${viewport.width}px`).toBe(false);
     expect(layout.headerOverflows, `header overflow at ${viewport.width}px`).toBe(false);
     expect(layout.scoreWidth, `score width at ${viewport.width}px`).toBeLessThan(190);
@@ -3476,6 +3546,22 @@ test("Play board remains usable at phone, tablet, and desktop widths", async ({ 
     expect(layout.clueActionsFit, `clue action overflow at ${viewport.width}px`).toBe(true);
     expect(layout.hintsBesideClue, `Hints placement at ${viewport.width}px`).toBe(true);
     expect(layout.clueFieldsFit, `clue field overlap at ${viewport.width}px`).toBe(true);
+    expect(layout.cardFont, `card font at ${viewport.width}px`).toBeGreaterThanOrEqual(
+      viewport.minCardFont,
+    );
+    expect(layout.clueLabelFont, `clue label at ${viewport.width}px`).toBeGreaterThanOrEqual(
+      12,
+    );
+    expect(layout.giveClueHeight, `clue action height at ${viewport.width}px`).toBeGreaterThanOrEqual(
+      44,
+    );
+    expect(layout.historyBelowContent, `game log order at ${viewport.width}px`).toBe(true);
+    expect(layout.turnBesideBoard, `workspace layout at ${viewport.width}px`).toBe(
+      viewport.layout === "wide",
+    );
+    if (viewport.width === 1920) {
+      expect(layout.workspaceUsage, "large-screen workspace width").toBeGreaterThan(0.85);
+    }
   }
 });
 

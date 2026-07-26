@@ -1,6 +1,7 @@
 :root {
   color-scheme: light;
   scrollbar-gutter: stable;
+  font-size: 106.25%;
   font-family:
     Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
     sans-serif;
@@ -179,7 +180,7 @@ button {
 }
 
 .app-shell {
-  width: min(1480px, calc(100vw - 32px));
+  width: min(1760px, calc(100vw - 36px));
   min-height: 100vh;
   margin: 0 auto;
   padding: 24px 0 32px;
@@ -191,6 +192,11 @@ button {
   align-items: center;
   gap: 20px;
   margin-bottom: 18px;
+}
+
+.app-shell:has(#play-mode:not([hidden]) #play-setup:not([hidden])) .topbar {
+  width: min(1040px, 100%);
+  margin-inline: auto;
 }
 
 #app-title {
@@ -208,7 +214,7 @@ button {
 }
 
 .app-mode-switch button {
-  min-height: 32px;
+  min-height: 36px;
   border: 0;
   border-radius: 5px;
   padding: 0 12px;
@@ -227,6 +233,7 @@ button {
   display: inline-flex;
   flex: 0 0 auto;
   align-items: center;
+  justify-self: end;
   gap: 8px;
 }
 
@@ -245,8 +252,8 @@ button {
 .theme-switcher button,
 .app-language-switch button {
   display: inline-grid;
-  width: 32px;
-  min-height: 32px;
+  width: 36px;
+  min-height: 36px;
   place-items: center;
   border: 0;
   border-radius: 5px;
@@ -325,7 +332,7 @@ h3 {
 }
 
 .button {
-  min-height: 40px;
+  min-height: 44px;
   border: 1px solid var(--ink);
   border-radius: 8px;
   padding: 0 14px;
@@ -359,9 +366,9 @@ h3 {
 }
 
 .board-action {
-  min-height: 36px;
-  padding: 0 10px;
-  font-size: 0.78rem;
+  min-height: 40px;
+  padding: 0 12px;
+  font-size: 0.8rem;
   white-space: nowrap;
 }
 
@@ -2386,7 +2393,7 @@ h3 {
 }
 
 .play-setup {
-  width: min(900px, 100%);
+  width: min(1040px, 100%);
   margin: 0 auto;
 }
 
@@ -2470,13 +2477,13 @@ h3 {
 
 .seat-grid > button > span:last-child {
   color: var(--muted);
-  font-size: 0.72rem;
+  font-size: 0.8rem;
 }
 
 .seat-team {
   border-radius: 99px;
   padding: 3px 7px;
-  font-size: 0.63rem;
+  font-size: 0.7rem;
   font-weight: 900;
   text-transform: uppercase;
 }
@@ -2541,7 +2548,7 @@ h3 {
 
 .play-settings-copy > span {
   color: var(--muted);
-  font-size: 0.72rem;
+  font-size: 0.78rem;
 }
 
 .play-settings-toggle {
@@ -2554,7 +2561,7 @@ h3 {
   padding: 5px 7px 5px 10px;
   background: var(--control-fill);
   color: var(--ink);
-  font-size: 0.7rem;
+  font-size: 0.76rem;
   font-weight: 900;
 }
 
@@ -2614,7 +2621,7 @@ h3 {
   padding: 10px;
   background: var(--subtle-fill-soft);
   color: var(--muted);
-  font-size: 0.65rem;
+  font-size: 0.72rem;
   font-weight: 900;
   text-transform: uppercase;
 }
@@ -2661,13 +2668,13 @@ h3 {
   appearance: none;
   min-width: 0;
   width: 100%;
-  min-height: 38px;
+  min-height: 42px;
   border: 1px solid var(--input-line);
   border-radius: 7px;
   padding: 0 32px 0 10px;
   background: var(--control-fill);
   color: var(--ink);
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   font-weight: 700;
   text-transform: none;
 }
@@ -2694,7 +2701,7 @@ h3 {
 .play-word-set .play-setting-label {
   flex: none;
   color: var(--muted);
-  font-size: 0.65rem;
+  font-size: 0.72rem;
   font-weight: 900;
   text-transform: uppercase;
 }
@@ -2780,12 +2787,12 @@ h3 {
 }
 
 .saved-play-copy strong {
-  font-size: 0.78rem;
+  font-size: 0.84rem;
 }
 
 .saved-play-copy span {
   color: var(--muted);
-  font-size: 0.7rem;
+  font-size: 0.76rem;
 }
 
 .play-primary-actions {
@@ -2846,7 +2853,7 @@ h3 {
 
 .play-seat-context {
   color: var(--muted);
-  font-size: 0.6rem;
+  font-size: 0.68rem;
   font-weight: 850;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -2854,7 +2861,7 @@ h3 {
 }
 
 .play-seat-identity {
-  font-size: 0.8rem;
+  font-size: 0.9rem;
   font-weight: 900;
   white-space: nowrap;
 }
@@ -2876,7 +2883,7 @@ h3 {
   min-width: 68px;
   border-radius: 6px;
   padding: 6px 8px;
-  font-size: 0.7rem;
+  font-size: 0.78rem;
   font-weight: 900;
 }
 
@@ -2903,12 +2910,12 @@ h3 {
 
 .play-score-team strong {
   margin-left: auto;
-  font-size: 0.82rem;
+  font-size: 0.9rem;
 }
 
 .play-workspace {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
+  grid-template-columns: minmax(0, 1fr) minmax(360px, 420px);
   gap: 14px;
   align-items: start;
 }
@@ -2931,7 +2938,7 @@ h3 {
 
 .play-board-toolbar > span {
   color: var(--muted);
-  font-size: 0.65rem;
+  font-size: 0.72rem;
   font-weight: 900;
   text-transform: uppercase;
 }
@@ -2948,13 +2955,13 @@ h3 {
 
 .play-board-order button,
 .play-history-switch button {
-  min-height: 28px;
+  min-height: 32px;
   border: 0;
   border-radius: 5px;
   padding: 0 8px;
   background: transparent;
   color: var(--muted);
-  font-size: 0.7rem;
+  font-size: 0.76rem;
   font-weight: 850;
 }
 
@@ -2985,7 +2992,7 @@ h3 {
   padding: 8px;
   background: var(--surface);
   color: var(--ink);
-  font-size: clamp(0.66rem, 1vw, 0.86rem);
+  font-size: clamp(0.84rem, 0.9vw, 1rem);
   font-weight: 900;
   overflow-wrap: anywhere;
   text-align: center;
@@ -3011,7 +3018,7 @@ h3 {
 .play-card-operative-score {
   border-radius: 999px;
   padding: 2px 5px;
-  font-size: 0.5rem;
+  font-size: 0.58rem;
   font-variant-numeric: tabular-nums;
   font-weight: 900;
   line-height: 1.2;
@@ -3092,7 +3099,7 @@ button.play-card:not(:disabled):hover {
   right: 6px;
   bottom: 5px;
   content: "Revealed";
-  font-size: 0.5rem;
+  font-size: 0.58rem;
   letter-spacing: 0.04em;
 }
 
@@ -3130,7 +3137,7 @@ button.play-card:not(:disabled):hover {
 
 .play-clue-display span {
   color: var(--muted);
-  font-size: 0.72rem;
+  font-size: 0.8rem;
   font-weight: 800;
 }
 
@@ -3205,7 +3212,7 @@ button.play-card:not(:disabled):hover {
   min-width: 0;
   gap: 5px;
   color: var(--muted);
-  font-size: 0.66rem;
+  font-size: 0.74rem;
   font-weight: 900;
   text-transform: uppercase;
 }
@@ -3217,7 +3224,7 @@ button.play-card:not(:disabled):hover {
 .play-clue-form input,
 .play-clue-form select {
   width: 100%;
-  min-height: 40px;
+  min-height: 44px;
   border: 1px solid var(--line);
   border-radius: 8px;
   padding: 0 10px;
@@ -3264,7 +3271,7 @@ button.play-card:not(:disabled):hover {
   min-height: 1em;
   grid-column: 1 / -1;
   color: var(--red);
-  font-size: 0.72rem;
+  font-size: 0.78rem;
 }
 
 .play-clue-actions {
@@ -3304,7 +3311,7 @@ button.play-card:not(:disabled):hover {
 
 .play-section-heading span {
   color: var(--muted);
-  font-size: 0.65rem;
+  font-size: 0.72rem;
 }
 
 .play-suggestion-list {
@@ -3332,7 +3339,7 @@ button.play-card:not(:disabled):hover {
 .play-suggestion-metric {
   border-radius: 999px;
   padding: 3px 7px;
-  font-size: 0.68rem;
+  font-size: 0.74rem;
   font-variant-numeric: tabular-nums;
   font-weight: 850;
   white-space: nowrap;
@@ -3365,7 +3372,7 @@ button.play-card:not(:disabled):hover {
 
 .play-operative-controls p {
   color: var(--muted);
-  font-size: 0.76rem;
+  font-size: 0.82rem;
   font-weight: 800;
 }
 
@@ -3379,8 +3386,12 @@ button.play-card:not(:disabled):hover {
 }
 
 .play-history {
-  border-top: 1px solid var(--hairline);
-  padding-top: 12px;
+  min-width: 0;
+  grid-column: 1 / -1;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 12px;
+  background: var(--panel);
 }
 
 .play-history-heading {
@@ -3412,7 +3423,7 @@ button.play-card:not(:disabled):hover {
   border-left: 3px solid var(--line);
   padding: 4px 0 4px 9px;
   color: var(--muted);
-  font-size: 0.7rem;
+  font-size: 0.78rem;
   line-height: 1.35;
 }
 
@@ -3427,14 +3438,14 @@ button.play-card:not(:disabled):hover {
 .play-history-explanation .explanation-targets {
   max-width: 72ch;
   color: var(--ink);
-  font-size: 0.72rem;
+  font-size: 0.78rem;
 }
 
 .play-history-explanation .play-clue-pill,
 .play-history-explanation .play-history-card {
   margin: 0 2px;
   padding: 0 6px;
-  font-size: 0.68rem;
+  font-size: 0.74rem;
   line-height: 1.35;
 }
 
@@ -3574,7 +3585,7 @@ button.play-card:not(:disabled):hover {
 .play-history-team h3 {
   margin: 0 0 7px;
   color: var(--ink);
-  font-size: 0.72rem;
+  font-size: 0.78rem;
 }
 
 .play-history li.is-selected,
@@ -3618,7 +3629,7 @@ button.play-card:not(:disabled):hover {
   padding: 3px 8px;
   background: var(--subtle-fill-soft);
   color: var(--ink);
-  font-size: 0.68rem;
+  font-size: 0.74rem;
   font-weight: 900;
   letter-spacing: 0;
   line-height: 1;
@@ -3642,6 +3653,30 @@ button.play-card:not(:disabled):hover {
   border-color: var(--blue);
   background: var(--blue-soft);
   color: var(--blue-text);
+}
+
+@media (min-width: 1181px) {
+  .play-card {
+    min-height: clamp(96px, 10.5vh, 118px);
+  }
+}
+
+@media (max-width: 1180px) {
+  .play-workspace {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .play-turn-panel {
+    grid-row: 1;
+  }
+
+  .play-history {
+    grid-row: 3;
+  }
+
+  .play-board-panel {
+    grid-row: 2;
+  }
 }
 
 @media (max-width: 1120px) {
@@ -3758,12 +3793,6 @@ button.play-card:not(:disabled):hover {
     padding: 12px;
   }
 
-  .play-setup-heading {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 12px;
-  }
-
   .play-game-header {
     grid-template-areas:
       "seat seat"
@@ -3785,14 +3814,6 @@ button.play-card:not(:disabled):hover {
   .play-game-actions {
     grid-area: actions;
     justify-self: start;
-  }
-
-  .play-primary-actions {
-    width: 100%;
-  }
-
-  .play-primary-actions .button {
-    width: 100%;
   }
 
   .saved-play-actions {
@@ -3827,7 +3848,7 @@ button.play-card:not(:disabled):hover {
     border-width: 1px;
     border-radius: 6px;
     padding: 4px;
-    font-size: 0.58rem;
+    font-size: 0.66rem;
   }
 
   .play-card.is-done::after {
@@ -4097,9 +4118,9 @@ button.play-card:not(:disabled):hover {
 @media (max-width: 520px) {
   .topbar {
     grid-template-areas:
-      "title theme"
-      "mode mode";
-    grid-template-columns: minmax(0, 1fr) auto;
+      "title title"
+      "mode controls";
+    grid-template-columns: auto minmax(0, 1fr);
   }
 
   #app-title {
@@ -4108,10 +4129,23 @@ button.play-card:not(:disabled):hover {
 
   .app-mode-switch {
     grid-area: mode;
+    justify-self: start;
   }
 
-  .theme-switcher {
-    grid-area: theme;
+  .topbar-controls {
+    grid-area: controls;
+    gap: 6px;
+  }
+
+  .play-setup-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .play-primary-actions,
+  .play-primary-actions .button {
+    width: 100%;
   }
 
   .board-metrics {

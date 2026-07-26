@@ -739,55 +739,56 @@
                 </div>
               </section>
 
-              <div class="play-history">
-                <div class="play-section-heading play-history-heading">
-                  <div class="play-history-title">
-                    <strong id="play-history-heading-label" data-i18n="gameLog">Game log</strong>
-                    <span id="play-history-count"></span>
-                  </div>
-                  <div class="play-history-switch" role="group" aria-label="Game log view" data-i18n-label="gameLogView">
-                    <button
-                      type="button"
-                      data-play-history-view="timeline"
-                      aria-pressed="true"
-                    >
-                      🕒 <span data-i18n="timeline">Timeline</span>
-                    </button>
-                    <button
-                      type="button"
-                      data-play-history-view="teams"
-                      aria-pressed="false"
-                    >
-                      ↔️ <span data-i18n="byTeam">By team</span>
-                    </button>
-                  </div>
+            </aside>
+
+            <section class="play-history" aria-labelledby="play-history-heading-label">
+              <div class="play-section-heading play-history-heading">
+                <div class="play-history-title">
+                  <strong id="play-history-heading-label" data-i18n="gameLog">Game log</strong>
+                  <span id="play-history-count"></span>
                 </div>
-                <ol
-                  id="play-history-list"
-                  class="play-history-list"
-                  aria-label="Chronological game log"
-                  data-i18n-label="chronologicalGameLog"
-                ></ol>
-                <div id="play-history-team-lists" class="play-history-team-lists" hidden>
-                  <section class="play-history-team" data-side="blue">
-                    <h3 id="play-history-blue-title">🔵 <span data-i18n="blue">Blue</span></h3>
-                    <ol
-                      id="play-history-blue-list"
-                      class="play-history-list"
-                      aria-labelledby="play-history-blue-title"
-                    ></ol>
-                  </section>
-                  <section class="play-history-team" data-side="red">
-                    <h3 id="play-history-red-title">🔴 <span data-i18n="red">Red</span></h3>
-                    <ol
-                      id="play-history-red-list"
-                      class="play-history-list"
-                      aria-labelledby="play-history-red-title"
-                    ></ol>
-                  </section>
+                <div class="play-history-switch" role="group" aria-label="Game log view" data-i18n-label="gameLogView">
+                  <button
+                    type="button"
+                    data-play-history-view="timeline"
+                    aria-pressed="true"
+                  >
+                    🕒 <span data-i18n="timeline">Timeline</span>
+                  </button>
+                  <button
+                    type="button"
+                    data-play-history-view="teams"
+                    aria-pressed="false"
+                  >
+                    ↔️ <span data-i18n="byTeam">By team</span>
+                  </button>
                 </div>
               </div>
-            </aside>
+              <ol
+                id="play-history-list"
+                class="play-history-list"
+                aria-label="Chronological game log"
+                data-i18n-label="chronologicalGameLog"
+              ></ol>
+              <div id="play-history-team-lists" class="play-history-team-lists" hidden>
+                <section class="play-history-team" data-side="blue">
+                  <h3 id="play-history-blue-title">🔵 <span data-i18n="blue">Blue</span></h3>
+                  <ol
+                    id="play-history-blue-list"
+                    class="play-history-list"
+                    aria-labelledby="play-history-blue-title"
+                  ></ol>
+                </section>
+                <section class="play-history-team" data-side="red">
+                  <h3 id="play-history-red-title">🔴 <span data-i18n="red">Red</span></h3>
+                  <ol
+                    id="play-history-red-list"
+                    class="play-history-list"
+                    aria-labelledby="play-history-red-title"
+                  ></ol>
+                </section>
+              </div>
+            </section>
           </div>
         </section>
       </section>
