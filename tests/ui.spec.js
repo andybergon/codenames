@@ -157,6 +157,7 @@ function completedShareGame() {
       cluePolicy: "hybrid",
       multiTolerance: 5,
       operativeAggression: "dynamic",
+      operativeNoise: "none",
       bonusGuesses: "pass",
     },
     humanSeat,
@@ -192,6 +193,7 @@ function completedShareGame() {
           cluePolicy: "hybrid",
           multiTolerance: 5,
           operativeAggression: "dynamic",
+          operativeNoise: "none",
           bonusGuesses: "pass",
         },
         activeSide: "blue",
@@ -1444,7 +1446,7 @@ test("Play exposes and saves bot policy settings", async ({ page }) => {
 
   const settings = page.locator(".play-settings");
   await expect(settings).toContainText(
-    "Official, fully random, BGE-small, 10k, human-like, never repeat team clues, fresh targets first, dynamic operative, stop at number",
+    "Official, fully random, BGE-small, 10k, human-like, never repeat team clues, fresh targets first, dynamic operative, deterministic guesses, stop at number",
   );
   await expect(settings).not.toHaveAttribute("open", "");
   await expect(settings.locator(".play-settings-toggle")).toContainText("Edit");
@@ -1488,7 +1490,7 @@ test("Play exposes and saves bot policy settings", async ({ page }) => {
   );
   await expect(allBotSettings.locator("#play-bot-model")).toHaveCount(1);
   await expect(spymasterSettings.locator("select")).toHaveCount(5);
-  await expect(operativeSettings.locator("select")).toHaveCount(2);
+  await expect(operativeSettings.locator("select")).toHaveCount(3);
   await expect(developerSettings.locator("#play-developer-mode")).not.toBeChecked();
 
   await expect(page.locator("#play-bot-model")).toHaveValue("bge-small");
@@ -1500,8 +1502,9 @@ test("Play exposes and saves bot policy settings", async ({ page }) => {
   await expect(page.locator("#play-operative-aggression")).toHaveValue(
     "dynamic",
   );
+  await expect(page.locator("#play-operative-noise")).toHaveValue("none");
   await expect(page.locator("#play-bonus-guesses")).toHaveValue("pass");
-  await expect(settings.locator(".play-setting-label .info-button")).toHaveCount(10);
+  await expect(settings.locator(".play-setting-label .info-button")).toHaveCount(11);
   await expect(
     page.getByRole("button", {
       name: "About developer mode",
@@ -1549,7 +1552,7 @@ test("Play exposes and saves bot policy settings", async ({ page }) => {
 
   await page.getByRole("button", { name: "Extended 800", exact: true }).click();
   await expect(settings).toContainText(
-    "Extended, fully random, BGE-small, 10k, human-like, never repeat team clues, fresh targets first, dynamic operative, stop at number",
+    "Extended, fully random, BGE-small, 10k, human-like, never repeat team clues, fresh targets first, dynamic operative, deterministic guesses, stop at number",
   );
   await page.locator("#play-bot-model").selectOption("minilm-l6");
   await page.locator("#play-bot-candidates").selectOption("30000");
@@ -1558,6 +1561,7 @@ test("Play exposes and saves bot policy settings", async ({ page }) => {
   await page.locator("#play-multi-tolerance").selectOption("10");
   await page.locator("#play-missed-target-timing").selectOption("balanced");
   await page.locator("#play-operative-aggression").selectOption("conservative");
+  await page.locator("#play-operative-noise").selectOption("standard");
   await page.locator("#play-bonus-guesses").selectOption("allow");
   await page.locator('[data-play-seat="blue:spymaster"]').click();
   await page.getByRole("button", { name: "Start new game", exact: true }).click();
@@ -1575,6 +1579,7 @@ test("Play exposes and saves bot policy settings", async ({ page }) => {
     multiTolerance: 10,
     missedTargetTiming: "balanced",
     operativeAggression: "conservative",
+    operativeNoise: "standard",
     bonusGuesses: "allow",
   });
   expect(storedGame.botSettings).not.toHaveProperty("wordReusePolicy");

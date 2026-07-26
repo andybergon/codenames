@@ -59,6 +59,7 @@ import {
   PLAY_CLUE_REPEAT_POLICY,
   PLAY_MISSED_TARGET_TIMING,
   PLAY_OPERATIVE_AGGRESSION,
+  PLAY_OPERATIVE_NOISE,
   normalizePlayBotSettings,
 } from "../src/play/settings.js";
 import {
@@ -1111,6 +1112,45 @@ const guessDecision = evaluateBotGuess({
 assert.equal(guessDecision.layoutId, 4);
 assert.equal(guessDecision.reason, "guess");
 assert.equal(guessDecision.ranked[0].botScore, 0.4);
+const noNoiseDecision = evaluateBotGuess({
+  aggression: PLAY_OPERATIVE_AGGRESSION.AGGRESSIVE,
+  candidates: [
+    { layoutId: 4, similarity: 0.2 },
+    { layoutId: 8, similarity: 0.19 },
+  ],
+  guessesMade: 0,
+  clueNumber: 2,
+  noise: PLAY_OPERATIVE_NOISE.NONE,
+  random: () => 0,
+});
+assert.equal(noNoiseDecision.layoutId, 4);
+assert.equal(noNoiseDecision.ranked[0].botScore, 0.2);
+const standardNoiseDecision = evaluateBotGuess({
+  aggression: PLAY_OPERATIVE_AGGRESSION.AGGRESSIVE,
+  candidates: [
+    { layoutId: 4, similarity: 0.2 },
+    { layoutId: 8, similarity: 0.19 },
+  ],
+  guessesMade: 0,
+  clueNumber: 2,
+  noise: PLAY_OPERATIVE_NOISE.STANDARD,
+  random: (() => {
+    const values = [0, 1];
+    return () => values.shift();
+  })(),
+});
+assert.equal(standardNoiseDecision.layoutId, 8);
+assert.throws(
+  () =>
+    evaluateBotGuess({
+      candidates: [{ layoutId: 4, similarity: 0.4 }],
+      guessesMade: 0,
+      clueNumber: 1,
+      noise: "unknown",
+      random: () => 0.5,
+    }),
+  /Unknown operative noise/,
+);
 assert.equal(
   chooseBotGuess({
     aggression: PLAY_OPERATIVE_AGGRESSION.AGGRESSIVE,
@@ -1197,7 +1237,7 @@ const wimbledonComebackDecision = evaluateBotGuess({
   opponentRemaining: 3,
   random: createSeededRandom("BZEF30hnrDs:5:21"),
 });
-assert.equal(wimbledonComebackDecision.layoutId, 2);
+assert.equal(wimbledonComebackDecision.layoutId, 22);
 assert.equal(wimbledonComebackDecision.reason, "guess");
 assert.equal(wimbledonComebackDecision.thresholds.minimumSimilarity, 0.09);
 assert.ok(wimbledonComebackDecision.gap >= 0.005);
@@ -1314,6 +1354,10 @@ assert.equal(
   PLAY_CLUE_REPEAT_POLICY.NEVER,
 );
 assert.equal(
+  upgradedStoredGame.botSettings.operativeNoise,
+  PLAY_OPERATIVE_NOISE.STANDARD,
+);
+assert.equal(
   normalizePlayBotSettings({
     missedTargetTiming: "unknown",
   }).missedTargetTiming,
@@ -1336,6 +1380,12 @@ assert.equal(
     clueRepeatPolicy: PLAY_CLUE_REPEAT_POLICY.ALLOW,
   }).clueRepeatPolicy,
   PLAY_CLUE_REPEAT_POLICY.ALLOW,
+);
+assert.equal(
+  normalizePlayBotSettings({
+    operativeNoise: PLAY_OPERATIVE_NOISE.STANDARD,
+  }).operativeNoise,
+  PLAY_OPERATIVE_NOISE.STANDARD,
 );
 assert.equal(upgradedStoredGame.botSettings.bonusGuesses, PLAY_BONUS_POLICY.PASS);
 assert.equal(
@@ -1632,6 +1682,7 @@ assert.equal(
   sharedCompletedGame.botSettings.clueRepeatPolicy,
   "allow",
 );
+assert.equal(sharedCompletedGame.botSettings.operativeNoise, "none");
 assert.equal(sharedCompletedGame.developerMode, false);
 assert.equal(
   sharedCompletedGame.history[0].developerMode,
@@ -1651,7 +1702,7 @@ assert.deepEqual(
   {
     formatVersion: 3,
     rulesVersion: 2,
-    settingsVersion: 2,
+    settingsVersion: 3,
     compatibility: "full",
   },
 );
@@ -1724,16 +1775,60 @@ const versionTwoGame = decodeCompletedGame(
 );
 assert.equal(versionTwoGame.shareMetadata.formatVersion, 2);
 assert.equal(versionTwoGame.winner, simulated.winner);
-const previousSettingsPayload = structuredClone(currentPayload);
-previousSettingsPayload[2] = 1;
-previousSettingsPayload[7] = previousSettingsPayload[7].slice(0, 7);
-const previousSettingsGame = decodeCompletedGame(
-  Buffer.from(JSON.stringify(previousSettingsPayload)).toString("base64url"),
+const versionTwoSettingsPayload = structuredClone(currentPayload);
+versionTwoSettingsPayload[2] = 2;
+versionTwoSettingsPayload[7] = currentPayload[7].slice(0, 8);
+const versionTwoSettingsGame = decodeCompletedGame(
+  Buffer.from(JSON.stringify(versionTwoSettingsPayload)).toString("base64url"),
 );
-assert.equal(previousSettingsGame.botSettings.clueRepeatPolicy, "never");
-const legacySettings = currentPayload[7].slice(0, 7).filter(
-  (_value, index) => index !== 4,
+assert.equal(versionTwoSettingsGame.botSettings.clueRepeatPolicy, "allow");
+assert.equal(
+  versionTwoSettingsGame.botSettings.operativeNoise,
+  PLAY_OPERATIVE_NOISE.STANDARD,
 );
+const versionOneSettingsPayload = structuredClone(currentPayload);
+versionOneSettingsPayload[2] = 1;
+versionOneSettingsPayload[7] = currentPayload[7].slice(0, 7);
+const versionOneSettingsGame = decodeCompletedGame(
+  Buffer.from(JSON.stringify(versionOneSettingsPayload)).toString(
+    "base64url",
+  ),
+);
+assert.equal(
+  versionOneSettingsGame.botSettings.clueRepeatPolicy,
+  PLAY_CLUE_REPEAT_POLICY.NEVER,
+);
+assert.equal(
+  versionOneSettingsGame.botSettings.operativeNoise,
+  PLAY_OPERATIVE_NOISE.STANDARD,
+);
+const unsupportedClueRepeatPayload = structuredClone(currentPayload);
+unsupportedClueRepeatPayload[7][7] = "unknown";
+assert.throws(
+  () =>
+    decodeCompletedGame(
+      Buffer.from(JSON.stringify(unsupportedClueRepeatPayload)).toString(
+        "base64url",
+      ),
+    ),
+  /unsupported settings/,
+);
+const unsupportedNoisePayload = structuredClone(currentPayload);
+unsupportedNoisePayload[7][8] = "unknown";
+assert.throws(
+  () =>
+    decodeCompletedGame(
+      Buffer.from(JSON.stringify(unsupportedNoisePayload)).toString(
+        "base64url",
+      ),
+    ),
+  /unsupported settings/,
+);
+const legacySettings = [
+  ...currentPayload[7].slice(0, 4),
+  currentPayload[7][5],
+  currentPayload[7][6],
+];
 const legacyActions = currentPayload[11].map((action) => {
   if (action[0] === "c") {
     return [action[0], action[4], action[5], action[6]];
@@ -1757,6 +1852,10 @@ const legacyCompletedGame = decodeCompletedGame(
 );
 assert.equal(legacyCompletedGame.botSettings.missedTargetTiming, "late");
 assert.equal(legacyCompletedGame.botSettings.clueRepeatPolicy, "never");
+assert.equal(
+  legacyCompletedGame.botSettings.operativeNoise,
+  PLAY_OPERATIVE_NOISE.STANDARD,
+);
 assert.equal(legacyCompletedGame.developerMode, false);
 assert.equal(legacyCompletedGame.shareMetadata.formatVersion, 1);
 const unsupportedRulesPayload = structuredClone(currentPayload);

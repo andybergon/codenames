@@ -6,7 +6,10 @@ import {
 } from "../gameplay.js";
 import { isForbiddenClue, normalizeTerm } from "../model.js";
 import { LANGUAGE } from "../word-data.js";
-import { normalizePlayBotSettings } from "./settings.js";
+import {
+  PLAY_OPERATIVE_NOISE,
+  normalizePlayBotSettings,
+} from "./settings.js";
 import { normalizeWordReusePolicy } from "./word-reuse.js";
 
 export const PLAYER_ROLE = Object.freeze({
@@ -541,6 +544,18 @@ export function validateStoredGame(value) {
   const language = Object.values(LANGUAGE).includes(value.language)
     ? value.language
     : LANGUAGE.ENGLISH;
+  const storedBotSettings =
+    value.botSettings &&
+    Object.hasOwn(value.botSettings, "operativeNoise")
+      ? value.botSettings
+      : {
+          ...(value.botSettings ?? {}),
+          operativeNoise: PLAY_OPERATIVE_NOISE.STANDARD,
+        };
+  const normalizedBotSettings = normalizePlayBotSettings(
+    storedBotSettings,
+    language,
+  );
   return {
     ...value,
     developerMode: value.developerMode === true,
@@ -549,11 +564,12 @@ export function validateStoredGame(value) {
         ? {
             ...event,
             developerMode: value.developerMode === true,
+            botSettings: normalizedBotSettings,
           }
         : event,
     ),
     language,
-    botSettings: normalizePlayBotSettings(value.botSettings, language),
+    botSettings: normalizedBotSettings,
     wordReusePolicy: normalizeWordReusePolicy(
       value.wordReusePolicy,
     ),

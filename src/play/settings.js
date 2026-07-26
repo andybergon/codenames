@@ -28,6 +28,11 @@ export const PLAY_OPERATIVE_AGGRESSION = Object.freeze({
   DYNAMIC: "dynamic",
 });
 
+export const PLAY_OPERATIVE_NOISE = Object.freeze({
+  NONE: "none",
+  STANDARD: "standard",
+});
+
 export const PLAY_MISSED_TARGET_TIMING = Object.freeze({
   LATE: "late",
   BALANCED: "balanced",
@@ -42,6 +47,7 @@ export const DEFAULT_PLAY_BOT_SETTINGS = Object.freeze({
   multiTolerance: 5,
   missedTargetTiming: PLAY_MISSED_TARGET_TIMING.LATE,
   operativeAggression: PLAY_OPERATIVE_AGGRESSION.DYNAMIC,
+  operativeNoise: PLAY_OPERATIVE_NOISE.NONE,
   bonusGuesses: PLAY_BONUS_POLICY.PASS,
 });
 
@@ -57,6 +63,9 @@ const CLUE_REPEAT_POLICIES = new Set(
 const BONUS_POLICIES = new Set(Object.values(PLAY_BONUS_POLICY));
 const OPERATIVE_AGGRESSIONS = new Set(
   Object.values(PLAY_OPERATIVE_AGGRESSION),
+);
+const OPERATIVE_NOISE_VALUES = new Set(
+  Object.values(PLAY_OPERATIVE_NOISE),
 );
 const MISSED_TARGET_TIMINGS = new Set(
   Object.values(PLAY_MISSED_TARGET_TIMING),
@@ -98,6 +107,9 @@ export function normalizePlayBotSettings(
     operativeAggression: OPERATIVE_AGGRESSIONS.has(value.operativeAggression)
       ? value.operativeAggression
       : DEFAULT_PLAY_BOT_SETTINGS.operativeAggression,
+    operativeNoise: OPERATIVE_NOISE_VALUES.has(value.operativeNoise)
+      ? value.operativeNoise
+      : DEFAULT_PLAY_BOT_SETTINGS.operativeNoise,
     bonusGuesses: BONUS_POLICIES.has(value.bonusGuesses)
       ? value.bonusGuesses
       : DEFAULT_PLAY_BOT_SETTINGS.bonusGuesses,

@@ -4,6 +4,7 @@ import {
   PLAY_CLUE_REPEAT_POLICY,
   PLAY_MISSED_TARGET_TIMING,
   PLAY_OPERATIVE_AGGRESSION,
+  PLAY_OPERATIVE_NOISE,
 } from "./settings.js";
 
 export {
@@ -11,6 +12,7 @@ export {
   PLAY_CLUE_REPEAT_POLICY,
   PLAY_MISSED_TARGET_TIMING,
   PLAY_OPERATIVE_AGGRESSION,
+  PLAY_OPERATIVE_NOISE,
 } from "./settings.js";
 
 const RISK_VALUE = Object.freeze({
@@ -217,6 +219,7 @@ export function chooseBotGuess({
   candidates,
   clueNumber,
   guessesMade,
+  noise = PLAY_OPERATIVE_NOISE.NONE,
   opponentRemaining,
   ownRemaining,
   random,
@@ -226,6 +229,7 @@ export function chooseBotGuess({
     candidates,
     clueNumber,
     guessesMade,
+    noise,
     opponentRemaining,
     ownRemaining,
     random,
@@ -237,6 +241,7 @@ export function evaluateBotGuess({
   candidates,
   clueNumber,
   guessesMade,
+  noise = PLAY_OPERATIVE_NOISE.NONE,
   opponentRemaining,
   ownRemaining,
   random,
@@ -260,7 +265,9 @@ export function evaluateBotGuess({
   const ranked = candidates
     .map((candidate) => ({
       ...candidate,
-      botScore: candidate.similarity + (random() - 0.5) * 0.055,
+      botScore:
+        candidate.similarity +
+        operativeNoiseAdjustment(noise, random),
     }))
     .sort((left, right) => right.botScore - left.botScore);
   const best = ranked[0];
@@ -293,6 +300,16 @@ export function evaluateBotGuess({
     reason: "guess",
     thresholds,
   };
+}
+
+function operativeNoiseAdjustment(noise, random) {
+  if (noise === PLAY_OPERATIVE_NOISE.NONE) {
+    return 0;
+  }
+  if (noise === PLAY_OPERATIVE_NOISE.STANDARD) {
+    return (random() - 0.5) * 0.055;
+  }
+  throw new Error(`Unknown operative noise: ${noise}`);
 }
 
 export function operativeGuessThresholds({

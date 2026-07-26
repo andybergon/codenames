@@ -80,6 +80,7 @@ import {
   PLAY_CLUE_REPEAT_POLICY,
   PLAY_MISSED_TARGET_TIMING,
   PLAY_OPERATIVE_AGGRESSION,
+  PLAY_OPERATIVE_NOISE,
   normalizePlayBotSettings,
 } from "./settings.js";
 import {
@@ -257,6 +258,19 @@ const BOT_SETTING_INFO = Object.freeze({
     },
     note: "Dynamic adapts to the public score, becoming bolder when behind and more selective when ahead. Conservative passes more readily when the next word is only loosely related. Aggressive is more willing to keep guessing toward the clue number.",
   },
+  operativeNoise: {
+    id: "operative-noise",
+    label: "Guess variation",
+    table: {
+      headers: ["🎲 Setting", "↕️ Adjustment", "🔁 Repeat"],
+      numericColumns: [1],
+      rows: [
+        ["🛑 Off", "0", "Same ranking"],
+        ["🎲 Standard", "±0.028", "Seeded variation"],
+      ],
+    },
+    note: "Standard adds a reproducible offset to each candidate and can reorder words whose similarities are within 0.055. Off ranks candidates by cosine similarity alone. Neither setting changes the passing thresholds.",
+  },
   bonusGuesses: {
     id: "extra-guess",
     label: "Extra guess",
@@ -339,6 +353,10 @@ export function createPlayMode(options = {}) {
     operativeAggression: document.querySelector("#play-operative-aggression"),
     operativeAggressionInfo: document.querySelector(
       "#play-operative-aggression-info",
+    ),
+    operativeNoise: document.querySelector("#play-operative-noise"),
+    operativeNoiseInfo: document.querySelector(
+      "#play-operative-noise-info",
     ),
     bonusGuesses: document.querySelector("#play-bonus-guesses"),
     bonusGuessesInfo: document.querySelector("#play-bonus-guesses-info"),
@@ -425,6 +443,10 @@ export function createPlayMode(options = {}) {
     [
       elements.operativeAggressionInfo,
       BOT_SETTING_INFO.operativeAggression,
+    ],
+    [
+      elements.operativeNoiseInfo,
+      BOT_SETTING_INFO.operativeNoise,
     ],
     [elements.bonusGuessesInfo, BOT_SETTING_INFO.bonusGuesses],
   ]) {
@@ -585,6 +607,7 @@ export function createPlayMode(options = {}) {
     [elements.multiTolerance, "multiTolerance", Number],
     [elements.missedTargetTiming, "missedTargetTiming", String],
     [elements.operativeAggression, "operativeAggression", String],
+    [elements.operativeNoise, "operativeNoise", String],
     [elements.bonusGuesses, "bonusGuesses", String],
   ]) {
     element.addEventListener("change", () => {
@@ -782,6 +805,8 @@ export function createPlayMode(options = {}) {
       selectedBotSettings.missedTargetTiming;
     elements.operativeAggression.value =
       selectedBotSettings.operativeAggression;
+    elements.operativeNoise.value =
+      selectedBotSettings.operativeNoise;
     elements.bonusGuesses.value = selectedBotSettings.bonusGuesses;
     elements.developerMode.checked = developerSettings.enabled;
     elements.settingsSummary.textContent = settingsLabel(
@@ -1739,6 +1764,7 @@ export function createPlayMode(options = {}) {
               candidates,
               guessesMade: game.currentTurn.guesses.length,
               clueNumber: game.currentTurn.number,
+              noise: game.botSettings.operativeNoise,
               ownRemaining: remainingCardsForSide(
                 game.cards,
                 game.activeSide,
@@ -3172,6 +3198,12 @@ function settingsLabel(
       [PLAY_MISSED_TARGET_TIMING.IMMEDIATE]: "missedTargetsImmediate",
     }[settings.missedTargetTiming],
   ).toLocaleLowerCase(language);
+  const operativeNoise = translate(
+    language,
+    settings.operativeNoise === PLAY_OPERATIVE_NOISE.STANDARD
+      ? "variedGuesses"
+      : "deterministicGuesses",
+  ).toLocaleLowerCase(language);
   const bonus =
     settings.bonusGuesses === PLAY_BONUS_POLICY.PASS
       ? translate(language, "stopAtNumber").toLocaleLowerCase(language)
@@ -3184,7 +3216,7 @@ function settingsLabel(
     wordReusePolicy === PLAY_WORD_REUSE_POLICY.AVOID_RECENT
       ? translate(language, "avoidRecent").toLocaleLowerCase(language)
       : translate(language, "fullyRandom").toLocaleLowerCase(language);
-  return `${words}, ${reuse}, ${model.label}, ${settings.candidateCount / 1000}k, ${style}, ${clueReuse}, ${missedTargets}, ${aggression}, ${bonus}`;
+  return `${words}, ${reuse}, ${model.label}, ${settings.candidateCount / 1000}k, ${style}, ${clueReuse}, ${missedTargets}, ${aggression}, ${operativeNoise}, ${bonus}`;
 }
 
 function localizePlayError(message, language) {

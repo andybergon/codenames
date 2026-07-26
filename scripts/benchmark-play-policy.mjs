@@ -36,6 +36,7 @@ import {
   PLAY_CLUE_REPEAT_POLICY,
   PLAY_MISSED_TARGET_TIMING,
   PLAY_OPERATIVE_AGGRESSION,
+  PLAY_OPERATIVE_NOISE,
 } from "../src/play/settings.js";
 import {
   GAME_PHASE,
@@ -65,6 +66,7 @@ const RESULTS_PER_SIZE = 6;
 const DEFAULT_MAX_ACTIONS_PER_GAME = 100;
 const POLICIES = [PLAY_CLUE_POLICY.CURRENT, PLAY_CLUE_POLICY.HYBRID];
 const OPERATIVE_AGGRESSIONS = Object.values(PLAY_OPERATIVE_AGGRESSION);
+const OPERATIVE_NOISE_VALUES = Object.values(PLAY_OPERATIVE_NOISE);
 const MISSED_TARGET_TIMINGS = Object.values(PLAY_MISSED_TARGET_TIMING);
 const CLUE_REPEAT_POLICIES = Object.values(PLAY_CLUE_REPEAT_POLICY);
 const BENCHMARK_SPLITS = Object.freeze({
@@ -197,6 +199,7 @@ for (let boardIndex = 0; boardIndex < options.boards; boardIndex += 1) {
       clueRepeatPolicy: options.clueRepeatPolicy,
       bonusGuesses: options.bonusGuesses,
       operativeAggression: options.operativeAggression,
+      operativeNoise: options.operativeNoise,
       language: options.language,
       wordSet: options.wordSet,
       maxActions: options.maxActions,
@@ -228,6 +231,7 @@ for (let boardIndex = 0; boardIndex < options.boards; boardIndex += 1) {
         clueRepeatPolicy: options.clueRepeatPolicy,
         bonusGuesses: options.bonusGuesses,
         operativeAggression,
+        operativeNoise: options.operativeNoise,
         language: options.language,
         wordSet: options.wordSet,
         maxActions: options.maxActions,
@@ -307,6 +311,10 @@ const report = {
       `The bot guesser sees only centered clue-to-unrevealed-word similarities from ${operativeContext.model}.`,
     operativeAggression:
       `Policy comparison uses ${options.operativeAggression} for the clue-policy rows and holds hybrid clue scoring fixed across all three operative modes.`,
+    operativeNoise:
+      options.operativeNoise === PLAY_OPERATIVE_NOISE.NONE
+        ? "Operative candidates are ranked by similarity with no score adjustment."
+        : "Operative candidates receive a deterministic seeded adjustment from -0.0275 to +0.0275.",
     missedTargetTiming:
       `Clue ranking uses ${options.missedTargetTiming} missed-target timing. The fresh-target bias is based on unresolved intended targets from prior clues and fades as never-targeted friendly cards run out.`,
     repeatedClues:
@@ -406,6 +414,7 @@ async function simulateGame({
   clueRepeatPolicy,
   bonusGuesses: bonusGuessPolicy,
   operativeAggression,
+  operativeNoise,
   language,
   wordSet,
   maxActions,
@@ -420,6 +429,7 @@ async function simulateGame({
       missedTargetTiming,
       clueRepeatPolicy,
       operativeAggression,
+      operativeNoise,
       bonusGuesses: bonusGuessPolicy,
     },
     cards,
@@ -606,6 +616,7 @@ async function simulateGame({
             candidates,
             guessesMade,
             clueNumber: game.currentTurn.number,
+            noise: operativeNoise,
             ownRemaining,
             opponentRemaining,
             random,
@@ -1115,6 +1126,7 @@ function parseOptions(args) {
     clueRepeatPolicy: DEFAULT_PLAY_BOT_SETTINGS.clueRepeatPolicy,
     bonusGuesses: PLAY_BONUS_POLICY.PASS,
     operativeAggression: DEFAULT_PLAY_BOT_SETTINGS.operativeAggression,
+    operativeNoise: DEFAULT_PLAY_BOT_SETTINGS.operativeNoise,
     reportDetail: "full",
     output: DEFAULT_OUTPUT,
     summaryOutput: null,
@@ -1203,6 +1215,11 @@ function parseOptions(args) {
         );
       }
       values.operativeAggression = value;
+    } else if (option === "--operative-noise") {
+      if (!OPERATIVE_NOISE_VALUES.includes(value)) {
+        throw new Error(`${option} must be none or standard.`);
+      }
+      values.operativeNoise = value;
     } else if (option === "--report-detail") {
       if (!["compact", "full"].includes(value)) {
         throw new Error(`${option} must be compact or full.`);

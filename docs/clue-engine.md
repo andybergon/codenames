@@ -162,11 +162,11 @@ The penalty is applied before the multi-card tolerance comparison. `npm run benc
 
 Clue reuse is a three-way Play setting. **Never repeat in this game** is the default and excludes every clue previously given by the same team. **Block the team's previous clue** excludes only that team's immediately preceding clue. **Allow repeats** applies no history exclusion. The other team's clue history never counts, and a replacement clue may target any overlap with earlier intended cards. Live Play excludes the configured history from the full candidate analysis, with defensive filtering during ranking. Benchmarks apply the same rule to analysis, ranking, and fallback selection through `--clue-repeat-policy allow|previous|never`.
 
-In the checked 100-board default run, 142 Hybrid clue turns had an unresolved prior target. Late recovery retried one on 31.0% of those eligible turns overall, but on 0 of 43 turns where at least four never-targeted friendly cards remained. The same run kept 0 wrong-team hits per game, a 0% assassin rate, 1.53 correct cards per turn, and 10.19 turns per game.
+In the checked 100-board default run, 88 Hybrid clue turns had an unresolved prior target. Late recovery retried one on 28.4% of those eligible turns overall, but on 0 of 26 turns where at least four never-targeted friendly cards remained. The same run kept 0 wrong-team hits per game, a 0% assassin rate, 1.56 correct cards per turn, and 9.91 turns per game.
 
 ## 🔎 Play operative policy
 
-The bot operative ranks only centered clue-to-unrevealed-word cosine similarities, with deterministic noise in the range `-0.0275` to `+0.0275` to avoid identical play. It never receives hidden roles, intended target IDs, spymaster danger metrics, or the full recommendation analysis.
+The bot operative ranks only centered clue-to-unrevealed-word cosine similarities. Guess variation defaults Off, so candidates retain their exact similarity order. Standard adds a reproducible adjustment in the range `-0.0275` to `+0.0275` and can reorder candidates whose similarities are within `0.055`. Neither mode changes passing thresholds. The operative never receives hidden roles, intended target IDs, spymaster danger metrics, or the full recommendation analysis.
 
 | 🔎 Mode | 🎯 First minimum | 🧩 Later minimum | ↔️ Separation | 🏁 Public score |
 |---|---:|---:|---:|---|
@@ -178,13 +178,15 @@ Conservative keeps the first guess permissive enough for games to progress, then
 
 Dynamic uses only facts visible to an operative: guesses already made, the declared clue number, and both teams' remaining-agent counts. A trailing team accumulates comeback pressure from its deficit and from the opponent approaching four remaining agents. The first guess retains the middle threshold. Follow-up thresholds continuously interpolate toward Aggressive, reaching full pressure at a three-agent deficit while at least two declared guesses remain. The policy halves that pressure for the final declared slot and bonus guesses so a comeback push does not automatically fill every clue slot. It keeps the dedicated possible-win thresholds, raises thresholds with a comfortable lead, and never applies comeback pressure while tied or ahead. The separate Extra guess setting still decides whether any number-plus-one guess is available.
 
+`npm run benchmark:play` matches the no-variation production default. Pass `--operative-noise standard` to compare the historical seeded adjustment.
+
 The checked 100-board same-model run measures deterministic production regression and game shape:
 
 | 🔎 Mode | 🧩 Low-sim fill | 🛑 Early pass | ✅ Correct per turn | 🔴 Wrong per game | ☠️ Assassin | ⏱️ Turns |
 |---|---:|---:|---:|---:|---:|---:|
-| ⚖️ Dynamic | 1.6% | 3.2% | 1.53 | 0.00 | 0.0% | 10.18 |
-| 🛡️ Conservative | 0.0% | 16.2% | 1.24 | 0.00 | 0.0% | 12.51 |
-| 🚀 Aggressive | 3.4% | 0.0% | 1.61 | 0.00 | 0.0% | 9.62 |
+| ⚖️ Dynamic | 1.5% | 2.0% | 1.56 | 0.00 | 0.0% | 9.91 |
+| 🛡️ Conservative | 0.0% | 16.5% | 1.23 | 0.00 | 0.0% | 12.58 |
+| 🚀 Aggressive | 3.7% | 0.0% | 1.61 | 0.00 | 0.0% | 9.62 |
 
 The [MiniLM-L6 operative stress run](../scripts/generated/play-operative-aggression-cross-model.md) holds BGE-small spymaster clues fixed while changing the guesser's embedding geometry:
 
