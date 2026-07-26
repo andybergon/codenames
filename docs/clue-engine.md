@@ -200,6 +200,8 @@ Italian assets live under `public/data/model-lab/it/multilingual-e5-small/`. The
 
 The Italian board pool is original project data in [`scripts/italian/extended-words.txt`](../scripts/italian/extended-words.txt). It is intentionally independent from the official Italian game list. `npm run generate:italian` verifies exactly 800 unique single-word entries, downloads or reuses the pinned Leipzig archive, prioritizes the authored pool as game-friendly clue seeds, rebuilds the 30,000-word center, and writes both selectable shards.
 
+Generated Italian clues also receive a pairwise `0.23` similarity penalty for long clue and board-word pairs with high whole-word and consonant-skeleton Jaro-Winkler similarity plus a shared prefix or suffix. This guard suppresses the fixed `MONOLOGO → MONGOLFIERA` and `PARTONO → PANTERA + BURATTINO` spelling artifacts without changing manual clue legality, operative guesses, or English scoring. `npm run evaluate:italian` covers the three rejected fixtures and six allowed controls. Any threshold change must also refresh both Italian full-game benchmarks.
+
 ## 🧪 Evaluation
 
 | 🧪 Command | 🎯 Output | 📌 Verifies |

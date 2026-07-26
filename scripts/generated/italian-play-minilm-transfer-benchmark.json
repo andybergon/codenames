@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-25T19:41:14.228Z",
+  "generatedAt": "2026-07-26T02:39:52.650Z",
   "environment": {
     "node": "v26.5.0",
     "platform": "darwin",
@@ -90,119 +90,118 @@
     "current": {
       "gameCount": 100,
       "completedGames": 100,
-      "clueCount": 1501,
+      "clueCount": 1505,
       "clueNumberDistribution": {
-        "1": 1257,
-        "2": 235,
-        "3": 8,
-        "4": 1
+        "1": 1250,
+        "2": 243,
+        "3": 12
       },
-      "multiClueRate": 0.162558,
-      "meanClueNumber": 1.169221,
-      "firstHalfMeanClueNumber": 1.214103,
-      "correctCardsPerTurn": 0.513658,
-      "wrongTeamHits": 301,
-      "wrongTeamHitsPerGame": 3.01,
-      "wrongTeamGuessRate": 0.206731,
+      "multiClueRate": 0.169435,
+      "meanClueNumber": 1.177409,
+      "firstHalfMeanClueNumber": 1.212082,
+      "correctCardsPerTurn": 0.495017,
+      "wrongTeamHits": 310,
+      "wrongTeamHitsPerGame": 3.1,
+      "wrongTeamGuessRate": 0.215427,
       "neutralHits": 322,
       "neutralHitsPerGame": 3.22,
       "assassinHits": 62,
       "assassinRate": 0.62,
-      "closeFinishRate": 0.36,
-      "meanLosingAgentsRemaining": 3.73,
-      "meanTurnsPerGame": 15.01,
-      "meanGuessesPerTurn": 0.97002,
-      "passesPerGame": 7.85,
+      "closeFinishRate": 0.34,
+      "meanLosingAgentsRemaining": 3.85,
+      "meanTurnsPerGame": 15.05,
+      "meanGuessesPerTurn": 0.956146,
+      "passesPerGame": 7.78,
       "fallbackClues": 0,
       "fallbackClueRate": 0,
-      "forcedProgressGuesses": 6,
-      "forcedProgressGuessesPerGame": 0.06,
+      "forcedProgressGuesses": 7,
+      "forcedProgressGuessesPerGame": 0.07,
       "bonusGuesses": 0,
       "bonusGuessesPerGame": 0,
       "correctBonusGuessRate": 0,
       "operativeGuessQuality": {
-        "acceptedGuesses": 1456,
-        "meanAcceptedSimilarity": 0.306279,
-        "tenthPercentileAcceptedSimilarity": 0.1493581741731184,
+        "acceptedGuesses": 1439,
+        "meanAcceptedSimilarity": 0.291673,
+        "tenthPercentileAcceptedSimilarity": 0.14601506259020403,
         "minimumAcceptedSimilarity": -0.001265561617491688,
         "weakSimilarityThreshold": 0.25,
-        "weakGuesses": 655,
-        "weakGuessRate": 0.449863,
-        "declaredFillGuesses": 1214,
-        "weakDeclaredFillGuesses": 547,
-        "weakDeclaredFillRate": 0.450577,
-        "preDeclaredDecisions": 1618,
-        "preDeclaredPasses": 162,
-        "preDeclaredPassRate": 0.100124
+        "weakGuesses": 694,
+        "weakGuessRate": 0.482279,
+        "declaredFillGuesses": 1189,
+        "weakDeclaredFillGuesses": 567,
+        "weakDeclaredFillRate": 0.476871,
+        "preDeclaredDecisions": 1625,
+        "preDeclaredPasses": 186,
+        "preDeclaredPassRate": 0.114462
       },
       "clueNumberByOwnRemaining": {
         "1": {
-          "clues": 94,
+          "clues": 90,
           "meanNumber": 1,
           "multiClueRate": 0,
           "multiAvailableRate": 0,
           "meanBestMultiAdvantage": 0
         },
         "2": {
-          "clues": 114,
-          "meanNumber": 1.026316,
-          "multiClueRate": 0.026316,
-          "multiAvailableRate": 0.368421,
-          "meanBestMultiAdvantage": -27.772847
+          "clues": 101,
+          "meanNumber": 1.009901,
+          "multiClueRate": 0.009901,
+          "multiAvailableRate": 0.306931,
+          "meanBestMultiAdvantage": -27.462875
         },
         "3": {
-          "clues": 144,
-          "meanNumber": 1.048611,
-          "multiClueRate": 0.048611,
-          "multiAvailableRate": 0.868056,
-          "meanBestMultiAdvantage": -26.238967
+          "clues": 185,
+          "meanNumber": 1.081081,
+          "multiClueRate": 0.081081,
+          "multiAvailableRate": 0.837838,
+          "meanBestMultiAdvantage": -27.991491
         },
         "4": {
-          "clues": 176,
-          "meanNumber": 1.119318,
-          "multiClueRate": 0.119318,
-          "multiAvailableRate": 0.954545,
-          "meanBestMultiAdvantage": -20.05401
+          "clues": 172,
+          "meanNumber": 1.116279,
+          "multiClueRate": 0.116279,
+          "multiAvailableRate": 0.953488,
+          "meanBestMultiAdvantage": -21.49967
         },
         "5": {
-          "clues": 190,
-          "meanNumber": 1.121053,
-          "multiClueRate": 0.121053,
-          "multiAvailableRate": 0.989474,
-          "meanBestMultiAdvantage": -19.225824
+          "clues": 182,
+          "meanNumber": 1.115385,
+          "multiClueRate": 0.115385,
+          "multiAvailableRate": 0.956044,
+          "meanBestMultiAdvantage": -17.600767
         },
         "6": {
-          "clues": 215,
-          "meanNumber": 1.186047,
-          "multiClueRate": 0.176744,
-          "multiAvailableRate": 0.995349,
-          "meanBestMultiAdvantage": -16.483858
+          "clues": 206,
+          "meanNumber": 1.194175,
+          "multiClueRate": 0.18932,
+          "multiAvailableRate": 1,
+          "meanBestMultiAdvantage": -15.759028
         },
         "7": {
-          "clues": 194,
-          "meanNumber": 1.206186,
-          "multiClueRate": 0.201031,
-          "multiAvailableRate": 1,
-          "meanBestMultiAdvantage": -13.975326
+          "clues": 187,
+          "meanNumber": 1.224599,
+          "multiClueRate": 0.208556,
+          "multiAvailableRate": 0.989305,
+          "meanBestMultiAdvantage": -13.802808
         },
         "8": {
-          "clues": 238,
-          "meanNumber": 1.327731,
-          "multiClueRate": 0.306723,
+          "clues": 241,
+          "meanNumber": 1.323651,
+          "multiClueRate": 0.311203,
           "multiAvailableRate": 1,
-          "meanBestMultiAdvantage": -12.669043
+          "meanBestMultiAdvantage": -12.185127
         },
         "9": {
-          "clues": 136,
-          "meanNumber": 1.308824,
-          "multiClueRate": 0.294118,
+          "clues": 141,
+          "meanNumber": 1.35461,
+          "multiClueRate": 0.319149,
           "multiAvailableRate": 1,
-          "meanBestMultiAdvantage": -12.452455
+          "meanBestMultiAdvantage": -11.830348
         }
       },
       "wins": {
-        "blue": 48,
-        "red": 52
+        "blue": 38,
+        "red": 62
       },
       "gameResults": [
         {
@@ -210,7 +209,7 @@
           "seed": "Q09ERQAAAAE",
           "winner": "blue",
           "endReason": "agents",
-          "actions": 43,
+          "actions": 44,
           "turns": 17,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
@@ -231,43 +230,41 @@
             1
           ],
           "guesses": 17,
-          "correctGuesses": 10,
+          "correctGuesses": 11,
           "wrongTeamHits": 2,
-          "neutralHits": 5,
+          "neutralHits": 4,
           "assassinHits": 0,
-          "losingAgentsRemaining": 5,
-          "passes": 9
+          "losingAgentsRemaining": 4,
+          "passes": 10
         },
         {
           "board": 2,
           "seed": "Q09ERQAAAAI",
-          "winner": "red",
+          "winner": "blue",
           "endReason": "assassin",
-          "actions": 32,
-          "turns": 13,
+          "actions": 25,
+          "turns": 10,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 13
+            "1": 10
           },
           "firstHalfClueNumbers": [
             1,
             1,
             1,
             1,
-            1,
-            1,
             1
           ],
-          "guesses": 11,
-          "correctGuesses": 6,
+          "guesses": 10,
+          "correctGuesses": 5,
           "wrongTeamHits": 3,
           "neutralHits": 1,
           "assassinHits": 1,
-          "losingAgentsRemaining": 4,
-          "passes": 8
+          "losingAgentsRemaining": 2,
+          "passes": 5
         },
         {
           "board": 3,
@@ -306,40 +303,38 @@
         {
           "board": 4,
           "seed": "Q09ERQAAAAQ",
-          "winner": "blue",
-          "endReason": "agents",
-          "actions": 62,
-          "turns": 27,
+          "winner": "red",
+          "endReason": "assassin",
+          "actions": 55,
+          "turns": 21,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 27
+            "1": 19,
+            "2": 2
           },
           "firstHalfClueNumbers": [
             1,
             1,
+            2,
             1,
             1,
             1,
             1,
-            1,
-            1,
-            1,
-            1,
-            1,
+            2,
             1,
             1,
             1
           ],
-          "guesses": 23,
-          "correctGuesses": 9,
-          "wrongTeamHits": 7,
-          "neutralHits": 7,
-          "assassinHits": 0,
-          "losingAgentsRemaining": 1,
-          "passes": 12
+          "guesses": 19,
+          "correctGuesses": 13,
+          "wrongTeamHits": 0,
+          "neutralHits": 5,
+          "assassinHits": 1,
+          "losingAgentsRemaining": 2,
+          "passes": 15
         },
         {
           "board": 5,
@@ -372,14 +367,14 @@
           "seed": "Q09ERQAAAAY",
           "winner": "red",
           "endReason": "agents",
-          "actions": 45,
-          "turns": 18,
+          "actions": 39,
+          "turns": 16,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 18
+            "1": 16
           },
           "firstHalfClueNumbers": [
             1,
@@ -389,85 +384,19 @@
             1,
             1,
             1,
-            1,
             1
           ],
-          "guesses": 18,
-          "correctGuesses": 10,
-          "wrongTeamHits": 5,
-          "neutralHits": 3,
+          "guesses": 16,
+          "correctGuesses": 8,
+          "wrongTeamHits": 4,
+          "neutralHits": 4,
           "assassinHits": 0,
-          "losingAgentsRemaining": 2,
-          "passes": 9
+          "losingAgentsRemaining": 5,
+          "passes": 7
         },
         {
           "board": 7,
           "seed": "Q09ERQAAAAc",
-          "winner": "blue",
-          "endReason": "agents",
-          "actions": 59,
-          "turns": 25,
-          "fallbackClues": 0,
-          "forcedProgressGuesses": 0,
-          "bonusGuesses": 0,
-          "correctBonusGuesses": 0,
-          "clues": {
-            "1": 25
-          },
-          "firstHalfClueNumbers": [
-            1,
-            1,
-            1,
-            1,
-            1,
-            1,
-            1,
-            1,
-            1,
-            1,
-            1,
-            1,
-            1
-          ],
-          "guesses": 23,
-          "correctGuesses": 10,
-          "wrongTeamHits": 6,
-          "neutralHits": 7,
-          "assassinHits": 0,
-          "losingAgentsRemaining": 1,
-          "passes": 11
-        },
-        {
-          "board": 8,
-          "seed": "Q09ERQAAAAg",
-          "winner": "red",
-          "endReason": "assassin",
-          "actions": 13,
-          "turns": 5,
-          "fallbackClues": 0,
-          "forcedProgressGuesses": 0,
-          "bonusGuesses": 0,
-          "correctBonusGuesses": 0,
-          "clues": {
-            "1": 4,
-            "2": 1
-          },
-          "firstHalfClueNumbers": [
-            1,
-            2,
-            1
-          ],
-          "guesses": 5,
-          "correctGuesses": 3,
-          "wrongTeamHits": 1,
-          "neutralHits": 0,
-          "assassinHits": 1,
-          "losingAgentsRemaining": 8,
-          "passes": 3
-        },
-        {
-          "board": 9,
-          "seed": "Q09ERQAAAAk",
           "winner": "red",
           "endReason": "assassin",
           "actions": 43,
@@ -477,8 +406,66 @@
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 12,
-            "2": 3,
+            "1": 17
+          },
+          "firstHalfClueNumbers": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "guesses": 15,
+          "correctGuesses": 9,
+          "wrongTeamHits": 1,
+          "neutralHits": 4,
+          "assassinHits": 1,
+          "losingAgentsRemaining": 4,
+          "passes": 11
+        },
+        {
+          "board": 8,
+          "seed": "Q09ERQAAAAg",
+          "winner": "red",
+          "endReason": "assassin",
+          "actions": 2,
+          "turns": 1,
+          "fallbackClues": 0,
+          "forcedProgressGuesses": 0,
+          "bonusGuesses": 0,
+          "correctBonusGuesses": 0,
+          "clues": {
+            "1": 1
+          },
+          "firstHalfClueNumbers": [
+            1
+          ],
+          "guesses": 1,
+          "correctGuesses": 0,
+          "wrongTeamHits": 0,
+          "neutralHits": 0,
+          "assassinHits": 1,
+          "losingAgentsRemaining": 9,
+          "passes": 0
+        },
+        {
+          "board": 9,
+          "seed": "Q09ERQAAAAk",
+          "winner": "blue",
+          "endReason": "assassin",
+          "actions": 54,
+          "turns": 22,
+          "fallbackClues": 0,
+          "forcedProgressGuesses": 0,
+          "bonusGuesses": 0,
+          "correctBonusGuesses": 0,
+          "clues": {
+            "1": 11,
+            "2": 9,
             "3": 2
           },
           "firstHalfClueNumbers": [
@@ -490,15 +477,17 @@
             1,
             1,
             2,
+            2,
+            1,
             2
           ],
-          "guesses": 20,
-          "correctGuesses": 9,
-          "wrongTeamHits": 4,
+          "guesses": 22,
+          "correctGuesses": 10,
+          "wrongTeamHits": 5,
           "neutralHits": 6,
           "assassinHits": 1,
-          "losingAgentsRemaining": 2,
-          "passes": 6
+          "losingAgentsRemaining": 1,
+          "passes": 10
         },
         {
           "board": 10,
@@ -534,20 +523,20 @@
         {
           "board": 11,
           "seed": "Q09ERQAAAAs",
-          "winner": "blue",
-          "endReason": "agents",
-          "actions": 41,
-          "turns": 16,
+          "winner": "red",
+          "endReason": "assassin",
+          "actions": 38,
+          "turns": 15,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
             "1": 10,
-            "2": 6
+            "2": 5
           },
           "firstHalfClueNumbers": [
-            1,
+            2,
             1,
             2,
             1,
@@ -557,12 +546,12 @@
             1
           ],
           "guesses": 16,
-          "correctGuesses": 9,
+          "correctGuesses": 8,
           "wrongTeamHits": 4,
           "neutralHits": 3,
-          "assassinHits": 0,
-          "losingAgentsRemaining": 4,
-          "passes": 9
+          "assassinHits": 1,
+          "losingAgentsRemaining": 1,
+          "passes": 7
         },
         {
           "board": 12,
@@ -576,12 +565,12 @@
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 2,
-            "2": 2
+            "1": 1,
+            "2": 3
           },
           "firstHalfClueNumbers": [
             1,
-            1
+            2
           ],
           "guesses": 5,
           "correctGuesses": 3,
@@ -596,14 +585,14 @@
           "seed": "Q09ERQAAAA0",
           "winner": "red",
           "endReason": "agents",
-          "actions": 44,
-          "turns": 17,
+          "actions": 46,
+          "turns": 18,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 15,
+            "1": 16,
             "2": 2
           },
           "firstHalfClueNumbers": [
@@ -617,127 +606,130 @@
             1,
             1
           ],
-          "guesses": 17,
-          "correctGuesses": 10,
+          "guesses": 18,
+          "correctGuesses": 11,
           "wrongTeamHits": 4,
           "neutralHits": 3,
           "assassinHits": 0,
-          "losingAgentsRemaining": 3,
+          "losingAgentsRemaining": 2,
           "passes": 10
         },
         {
           "board": 14,
           "seed": "Q09ERQAAAA4",
-          "winner": "blue",
+          "winner": "red",
           "endReason": "assassin",
-          "actions": 47,
-          "turns": 20,
-          "fallbackClues": 0,
-          "forcedProgressGuesses": 0,
-          "bonusGuesses": 0,
-          "correctBonusGuesses": 0,
-          "clues": {
-            "1": 19,
-            "2": 1
-          },
-          "firstHalfClueNumbers": [
-            1,
-            1,
-            1,
-            1,
-            1,
-            1,
-            1,
-            1,
-            1,
-            1
-          ],
-          "guesses": 20,
-          "correctGuesses": 7,
-          "wrongTeamHits": 7,
-          "neutralHits": 5,
-          "assassinHits": 1,
-          "losingAgentsRemaining": 1,
-          "passes": 7
-        },
-        {
-          "board": 15,
-          "seed": "Q09ERQAAAA8",
-          "winner": "blue",
-          "endReason": "assassin",
-          "actions": 31,
-          "turns": 12,
-          "fallbackClues": 0,
-          "forcedProgressGuesses": 0,
-          "bonusGuesses": 0,
-          "correctBonusGuesses": 0,
-          "clues": {
-            "1": 12
-          },
-          "firstHalfClueNumbers": [
-            1,
-            1,
-            1,
-            1,
-            1,
-            1
-          ],
-          "guesses": 12,
-          "correctGuesses": 7,
-          "wrongTeamHits": 2,
-          "neutralHits": 2,
-          "assassinHits": 1,
-          "losingAgentsRemaining": 5,
-          "passes": 7
-        },
-        {
-          "board": 16,
-          "seed": "Q09ERQAAABA",
-          "winner": "blue",
-          "endReason": "agents",
-          "actions": 44,
+          "actions": 45,
           "turns": 17,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 16,
+            "1": 13,
+            "2": 4
+          },
+          "firstHalfClueNumbers": [
+            1,
+            1,
+            2,
+            1,
+            2,
+            1,
+            2,
+            1,
+            1
+          ],
+          "guesses": 19,
+          "correctGuesses": 11,
+          "wrongTeamHits": 3,
+          "neutralHits": 4,
+          "assassinHits": 1,
+          "losingAgentsRemaining": 1,
+          "passes": 9
+        },
+        {
+          "board": 15,
+          "seed": "Q09ERQAAAA8",
+          "winner": "blue",
+          "endReason": "agents",
+          "actions": 31,
+          "turns": 13,
+          "fallbackClues": 0,
+          "forcedProgressGuesses": 0,
+          "bonusGuesses": 0,
+          "correctBonusGuesses": 0,
+          "clues": {
+            "1": 12,
             "2": 1
           },
           "firstHalfClueNumbers": [
             1,
             1,
             1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "guesses": 13,
+          "correctGuesses": 6,
+          "wrongTeamHits": 4,
+          "neutralHits": 3,
+          "assassinHits": 0,
+          "losingAgentsRemaining": 7,
+          "passes": 5
+        },
+        {
+          "board": 16,
+          "seed": "Q09ERQAAABA",
+          "winner": "blue",
+          "endReason": "agents",
+          "actions": 54,
+          "turns": 23,
+          "fallbackClues": 0,
+          "forcedProgressGuesses": 0,
+          "bonusGuesses": 0,
+          "correctBonusGuesses": 0,
+          "clues": {
+            "1": 22,
+            "2": 1
+          },
+          "firstHalfClueNumbers": [
+            1,
             2,
+            1,
+            1,
+            1,
+            1,
+            1,
             1,
             1,
             1,
             1,
             1
           ],
-          "guesses": 15,
-          "correctGuesses": 11,
-          "wrongTeamHits": 2,
-          "neutralHits": 2,
+          "guesses": 16,
+          "correctGuesses": 9,
+          "wrongTeamHits": 3,
+          "neutralHits": 4,
           "assassinHits": 0,
-          "losingAgentsRemaining": 4,
-          "passes": 12
+          "losingAgentsRemaining": 5,
+          "passes": 15
         },
         {
           "board": 17,
           "seed": "Q09ERQAAABE",
           "winner": "red",
           "endReason": "agents",
-          "actions": 42,
+          "actions": 45,
           "turns": 18,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 17,
-            "2": 1
+            "1": 18
           },
           "firstHalfClueNumbers": [
             1,
@@ -751,19 +743,19 @@
             1
           ],
           "guesses": 18,
-          "correctGuesses": 7,
-          "wrongTeamHits": 9,
+          "correctGuesses": 10,
+          "wrongTeamHits": 6,
           "neutralHits": 2,
           "assassinHits": 0,
           "losingAgentsRemaining": 1,
-          "passes": 6
+          "passes": 9
         },
         {
           "board": 18,
           "seed": "Q09ERQAAABI",
           "winner": "blue",
           "endReason": "agents",
-          "actions": 44,
+          "actions": 43,
           "turns": 17,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
@@ -784,13 +776,13 @@
             1,
             1
           ],
-          "guesses": 17,
-          "correctGuesses": 11,
-          "wrongTeamHits": 2,
+          "guesses": 18,
+          "correctGuesses": 10,
+          "wrongTeamHits": 4,
           "neutralHits": 4,
           "assassinHits": 0,
-          "losingAgentsRemaining": 4,
-          "passes": 10
+          "losingAgentsRemaining": 3,
+          "passes": 8
         },
         {
           "board": 19,
@@ -836,49 +828,19 @@
           "seed": "Q09ERQAAABQ",
           "winner": "blue",
           "endReason": "assassin",
-          "actions": 24,
-          "turns": 10,
-          "fallbackClues": 0,
-          "forcedProgressGuesses": 0,
-          "bonusGuesses": 0,
-          "correctBonusGuesses": 0,
-          "clues": {
-            "1": 10
-          },
-          "firstHalfClueNumbers": [
-            1,
-            1,
-            1,
-            1,
-            1
-          ],
-          "guesses": 10,
-          "correctGuesses": 4,
-          "wrongTeamHits": 2,
-          "neutralHits": 3,
-          "assassinHits": 1,
-          "losingAgentsRemaining": 5,
-          "passes": 4
-        },
-        {
-          "board": 21,
-          "seed": "Q09ERQAAABU",
-          "winner": "blue",
-          "endReason": "assassin",
-          "actions": 49,
+          "actions": 50,
           "turns": 20,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 18,
-            "2": 2
+            "1": 20
           },
           "firstHalfClueNumbers": [
-            2,
             1,
-            2,
+            1,
+            1,
             1,
             1,
             1,
@@ -887,13 +849,46 @@
             1,
             1
           ],
-          "guesses": 21,
-          "correctGuesses": 9,
-          "wrongTeamHits": 5,
+          "guesses": 20,
+          "correctGuesses": 10,
+          "wrongTeamHits": 3,
           "neutralHits": 6,
           "assassinHits": 1,
+          "losingAgentsRemaining": 3,
+          "passes": 10
+        },
+        {
+          "board": 21,
+          "seed": "Q09ERQAAABU",
+          "winner": "blue",
+          "endReason": "assassin",
+          "actions": 40,
+          "turns": 16,
+          "fallbackClues": 0,
+          "forcedProgressGuesses": 0,
+          "bonusGuesses": 0,
+          "correctBonusGuesses": 0,
+          "clues": {
+            "1": 13,
+            "2": 3
+          },
+          "firstHalfClueNumbers": [
+            2,
+            1,
+            2,
+            1,
+            2,
+            1,
+            1,
+            1
+          ],
+          "guesses": 18,
+          "correctGuesses": 8,
+          "wrongTeamHits": 4,
+          "neutralHits": 5,
+          "assassinHits": 1,
           "losingAgentsRemaining": 2,
-          "passes": 8
+          "passes": 6
         },
         {
           "board": 22,
@@ -931,14 +926,14 @@
           "seed": "Q09ERQAAABc",
           "winner": "red",
           "endReason": "agents",
-          "actions": 52,
-          "turns": 22,
+          "actions": 48,
+          "turns": 20,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 19,
+            "1": 17,
             "2": 3
           },
           "firstHalfClueNumbers": [
@@ -951,16 +946,15 @@
             1,
             1,
             1,
-            1,
             1
           ],
-          "guesses": 17,
+          "guesses": 16,
           "correctGuesses": 9,
           "wrongTeamHits": 3,
-          "neutralHits": 5,
+          "neutralHits": 4,
           "assassinHits": 0,
           "losingAgentsRemaining": 5,
-          "passes": 13
+          "passes": 12
         },
         {
           "board": 24,
@@ -994,7 +988,7 @@
           "seed": "Q09ERQAAABk",
           "winner": "blue",
           "endReason": "assassin",
-          "actions": 30,
+          "actions": 28,
           "turns": 12,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
@@ -1013,59 +1007,60 @@
             1
           ],
           "guesses": 13,
-          "correctGuesses": 6,
-          "wrongTeamHits": 2,
-          "neutralHits": 4,
+          "correctGuesses": 4,
+          "wrongTeamHits": 3,
+          "neutralHits": 5,
           "assassinHits": 1,
-          "losingAgentsRemaining": 4,
-          "passes": 5
+          "losingAgentsRemaining": 3,
+          "passes": 3
         },
         {
           "board": 26,
           "seed": "Q09ERQAAABo",
-          "winner": "blue",
+          "winner": "red",
           "endReason": "agents",
-          "actions": 39,
-          "turns": 15,
+          "actions": 48,
+          "turns": 18,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 11,
-            "2": 4
+            "1": 15,
+            "2": 3
           },
           "firstHalfClueNumbers": [
             1,
             1,
-            1,
-            1,
             2,
             1,
             2,
+            1,
+            2,
+            1,
             1
           ],
-          "guesses": 15,
-          "correctGuesses": 10,
-          "wrongTeamHits": 3,
-          "neutralHits": 2,
+          "guesses": 19,
+          "correctGuesses": 13,
+          "wrongTeamHits": 2,
+          "neutralHits": 4,
           "assassinHits": 0,
-          "losingAgentsRemaining": 4,
-          "passes": 9
+          "losingAgentsRemaining": 2,
+          "passes": 11
         },
         {
           "board": 27,
           "seed": "Q09ERQAAABs",
           "winner": "blue",
           "endReason": "assassin",
-          "actions": 28,
-          "turns": 12,
+          "actions": 37,
+          "turns": 16,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 12
+            "1": 16
           },
           "firstHalfClueNumbers": [
             1,
@@ -1073,22 +1068,24 @@
             1,
             1,
             1,
+            1,
+            1,
             1
           ],
-          "guesses": 12,
-          "correctGuesses": 4,
-          "wrongTeamHits": 5,
-          "neutralHits": 2,
+          "guesses": 16,
+          "correctGuesses": 5,
+          "wrongTeamHits": 7,
+          "neutralHits": 3,
           "assassinHits": 1,
           "losingAgentsRemaining": 3,
-          "passes": 4
+          "passes": 5
         },
         {
           "board": 28,
           "seed": "Q09ERQAAABw",
           "winner": "red",
           "endReason": "assassin",
-          "actions": 42,
+          "actions": 41,
           "turns": 17,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
@@ -1109,28 +1106,28 @@
             2,
             1
           ],
-          "guesses": 14,
-          "correctGuesses": 8,
+          "guesses": 13,
+          "correctGuesses": 7,
           "wrongTeamHits": 3,
           "neutralHits": 2,
           "assassinHits": 1,
-          "losingAgentsRemaining": 2,
+          "losingAgentsRemaining": 3,
           "passes": 11
         },
         {
           "board": 29,
           "seed": "Q09ERQAAAB0",
-          "winner": "blue",
+          "winner": "red",
           "endReason": "agents",
-          "actions": 37,
-          "turns": 15,
+          "actions": 46,
+          "turns": 18,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 12,
-            "2": 3
+            "1": 16,
+            "2": 2
           },
           "firstHalfClueNumbers": [
             2,
@@ -1140,29 +1137,30 @@
             1,
             1,
             1,
+            1,
             1
           ],
-          "guesses": 16,
-          "correctGuesses": 8,
-          "wrongTeamHits": 4,
-          "neutralHits": 4,
+          "guesses": 19,
+          "correctGuesses": 11,
+          "wrongTeamHits": 5,
+          "neutralHits": 3,
           "assassinHits": 0,
-          "losingAgentsRemaining": 5,
-          "passes": 6
+          "losingAgentsRemaining": 1,
+          "passes": 9
         },
         {
           "board": 30,
           "seed": "Q09ERQAAAB4",
           "winner": "red",
           "endReason": "assassin",
-          "actions": 46,
-          "turns": 19,
+          "actions": 34,
+          "turns": 15,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 19
+            "1": 15
           },
           "firstHalfClueNumbers": [
             1,
@@ -1172,17 +1170,15 @@
             1,
             1,
             1,
-            1,
-            1,
             1
           ],
-          "guesses": 18,
-          "correctGuesses": 8,
-          "wrongTeamHits": 4,
-          "neutralHits": 5,
+          "guesses": 14,
+          "correctGuesses": 4,
+          "wrongTeamHits": 7,
+          "neutralHits": 2,
           "assassinHits": 1,
           "losingAgentsRemaining": 2,
-          "passes": 9
+          "passes": 5
         },
         {
           "board": 31,
@@ -1229,8 +1225,7 @@
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 12,
-            "2": 1
+            "1": 13
           },
           "firstHalfClueNumbers": [
             1,
@@ -1241,28 +1236,28 @@
             1,
             1
           ],
-          "guesses": 14,
+          "guesses": 13,
           "correctGuesses": 7,
           "wrongTeamHits": 3,
-          "neutralHits": 3,
+          "neutralHits": 2,
           "assassinHits": 1,
           "losingAgentsRemaining": 4,
-          "passes": 6
+          "passes": 7
         },
         {
           "board": 33,
           "seed": "Q09ERQAAACE",
           "winner": "blue",
           "endReason": "agents",
-          "actions": 50,
+          "actions": 47,
           "turns": 19,
           "fallbackClues": 0,
-          "forcedProgressGuesses": 0,
+          "forcedProgressGuesses": 1,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 15,
-            "2": 4
+            "1": 16,
+            "2": 3
           },
           "firstHalfClueNumbers": [
             2,
@@ -1276,13 +1271,13 @@
             1,
             1
           ],
-          "guesses": 20,
-          "correctGuesses": 13,
-          "wrongTeamHits": 3,
+          "guesses": 18,
+          "correctGuesses": 10,
+          "wrongTeamHits": 4,
           "neutralHits": 4,
           "assassinHits": 0,
-          "losingAgentsRemaining": 1,
-          "passes": 11
+          "losingAgentsRemaining": 3,
+          "passes": 10
         },
         {
           "board": 34,
@@ -1322,15 +1317,15 @@
           "seed": "Q09ERQAAACM",
           "winner": "red",
           "endReason": "agents",
-          "actions": 40,
-          "turns": 15,
+          "actions": 48,
+          "turns": 18,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 14,
-            "2": 1
+            "1": 12,
+            "2": 6
           },
           "firstHalfClueNumbers": [
             1,
@@ -1338,31 +1333,32 @@
             1,
             1,
             1,
+            2,
             1,
-            1,
+            2,
             1
           ],
-          "guesses": 16,
-          "correctGuesses": 10,
+          "guesses": 19,
+          "correctGuesses": 13,
           "wrongTeamHits": 3,
           "neutralHits": 3,
           "assassinHits": 0,
-          "losingAgentsRemaining": 4,
-          "passes": 9
+          "losingAgentsRemaining": 1,
+          "passes": 11
         },
         {
           "board": 36,
           "seed": "Q09ERQAAACQ",
           "winner": "red",
           "endReason": "agents",
-          "actions": 47,
-          "turns": 17,
+          "actions": 50,
+          "turns": 18,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 17
+            "1": 18
           },
           "firstHalfClueNumbers": [
             1,
@@ -1375,13 +1371,13 @@
             1,
             1
           ],
-          "guesses": 17,
-          "correctGuesses": 13,
-          "wrongTeamHits": 2,
+          "guesses": 18,
+          "correctGuesses": 15,
+          "wrongTeamHits": 1,
           "neutralHits": 2,
           "assassinHits": 0,
-          "losingAgentsRemaining": 2,
-          "passes": 13
+          "losingAgentsRemaining": 1,
+          "passes": 14
         },
         {
           "board": 37,
@@ -1457,205 +1453,79 @@
         {
           "board": 39,
           "seed": "Q09ERQAAACc",
-          "winner": "red",
-          "endReason": "assassin",
-          "actions": 13,
-          "turns": 5,
-          "fallbackClues": 0,
-          "forcedProgressGuesses": 0,
-          "bonusGuesses": 0,
-          "correctBonusGuesses": 0,
-          "clues": {
-            "1": 2,
-            "2": 3
-          },
-          "firstHalfClueNumbers": [
-            1,
-            2,
-            2
-          ],
-          "guesses": 6,
-          "correctGuesses": 3,
-          "wrongTeamHits": 1,
-          "neutralHits": 1,
-          "assassinHits": 1,
-          "losingAgentsRemaining": 7,
-          "passes": 2
-        },
-        {
-          "board": 40,
-          "seed": "Q09ERQAAACg",
           "winner": "blue",
           "endReason": "assassin",
-          "actions": 46,
-          "turns": 18,
-          "fallbackClues": 0,
-          "forcedProgressGuesses": 0,
-          "bonusGuesses": 0,
-          "correctBonusGuesses": 0,
-          "clues": {
-            "1": 12,
-            "2": 6
-          },
-          "firstHalfClueNumbers": [
-            2,
-            1,
-            2,
-            1,
-            2,
-            1,
-            2,
-            1,
-            2
-          ],
-          "guesses": 17,
-          "correctGuesses": 10,
-          "wrongTeamHits": 4,
-          "neutralHits": 2,
-          "assassinHits": 1,
-          "losingAgentsRemaining": 1,
-          "passes": 11
-        },
-        {
-          "board": 41,
-          "seed": "Q09ERQAAACk",
-          "winner": "red",
-          "endReason": "assassin",
-          "actions": 23,
-          "turns": 9,
-          "fallbackClues": 0,
-          "forcedProgressGuesses": 0,
-          "bonusGuesses": 0,
-          "correctBonusGuesses": 0,
-          "clues": {
-            "1": 9
-          },
-          "firstHalfClueNumbers": [
-            1,
-            1,
-            1,
-            1,
-            1
-          ],
-          "guesses": 9,
-          "correctGuesses": 5,
-          "wrongTeamHits": 2,
-          "neutralHits": 1,
-          "assassinHits": 1,
-          "losingAgentsRemaining": 4,
-          "passes": 5
-        },
-        {
-          "board": 42,
-          "seed": "Q09ERQAAACo",
-          "winner": "red",
-          "endReason": "agents",
-          "actions": 38,
-          "turns": 14,
-          "fallbackClues": 0,
-          "forcedProgressGuesses": 0,
-          "bonusGuesses": 0,
-          "correctBonusGuesses": 0,
-          "clues": {
-            "1": 12,
-            "2": 2
-          },
-          "firstHalfClueNumbers": [
-            1,
-            2,
-            1,
-            1,
-            1,
-            1,
-            2
-          ],
-          "guesses": 15,
-          "correctGuesses": 11,
-          "wrongTeamHits": 1,
-          "neutralHits": 3,
-          "assassinHits": 0,
-          "losingAgentsRemaining": 5,
-          "passes": 9
-        },
-        {
-          "board": 43,
-          "seed": "Q09ERQAAACs",
-          "winner": "red",
-          "endReason": "assassin",
-          "actions": 27,
-          "turns": 11,
-          "fallbackClues": 0,
-          "forcedProgressGuesses": 0,
-          "bonusGuesses": 0,
-          "correctBonusGuesses": 0,
-          "clues": {
-            "1": 9,
-            "2": 2
-          },
-          "firstHalfClueNumbers": [
-            1,
-            1,
-            1,
-            1,
-            1,
-            1
-          ],
-          "guesses": 11,
-          "correctGuesses": 5,
-          "wrongTeamHits": 3,
-          "neutralHits": 2,
-          "assassinHits": 1,
-          "losingAgentsRemaining": 5,
-          "passes": 5
-        },
-        {
-          "board": 44,
-          "seed": "Q09ERQAAACw",
-          "winner": "red",
-          "endReason": "agents",
-          "actions": 49,
-          "turns": 20,
+          "actions": 39,
+          "turns": 16,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
             "1": 15,
-            "2": 5
+            "2": 1
           },
           "firstHalfClueNumbers": [
-            2,
             1,
             2,
             1,
-            2,
             1,
-            2,
             1,
-            2,
+            1,
+            1,
             1
           ],
-          "guesses": 20,
-          "correctGuesses": 10,
-          "wrongTeamHits": 6,
-          "neutralHits": 4,
-          "assassinHits": 0,
-          "losingAgentsRemaining": 1,
-          "passes": 9
+          "guesses": 15,
+          "correctGuesses": 7,
+          "wrongTeamHits": 4,
+          "neutralHits": 3,
+          "assassinHits": 1,
+          "losingAgentsRemaining": 4,
+          "passes": 8
         },
         {
-          "board": 45,
-          "seed": "Q09ERQAAAC0",
-          "winner": "blue",
+          "board": 40,
+          "seed": "Q09ERQAAACg",
+          "winner": "red",
           "endReason": "assassin",
-          "actions": 27,
-          "turns": 12,
+          "actions": 17,
+          "turns": 7,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 12
+            "1": 3,
+            "2": 4
+          },
+          "firstHalfClueNumbers": [
+            2,
+            1,
+            2,
+            1
+          ],
+          "guesses": 7,
+          "correctGuesses": 3,
+          "wrongTeamHits": 1,
+          "neutralHits": 2,
+          "assassinHits": 1,
+          "losingAgentsRemaining": 7,
+          "passes": 3
+        },
+        {
+          "board": 41,
+          "seed": "Q09ERQAAACk",
+          "winner": "red",
+          "endReason": "assassin",
+          "actions": 36,
+          "turns": 15,
+          "fallbackClues": 0,
+          "forcedProgressGuesses": 0,
+          "bonusGuesses": 0,
+          "correctBonusGuesses": 0,
+          "clues": {
+            "1": 14,
+            "2": 1
           },
           "firstHalfClueNumbers": [
             1,
@@ -1663,15 +1533,148 @@
             1,
             1,
             1,
+            1,
+            1,
             1
           ],
-          "guesses": 12,
-          "correctGuesses": 3,
-          "wrongTeamHits": 5,
+          "guesses": 15,
+          "correctGuesses": 6,
+          "wrongTeamHits": 3,
+          "neutralHits": 5,
+          "assassinHits": 1,
+          "losingAgentsRemaining": 4,
+          "passes": 6
+        },
+        {
+          "board": 42,
+          "seed": "Q09ERQAAACo",
+          "winner": "red",
+          "endReason": "assassin",
+          "actions": 40,
+          "turns": 15,
+          "fallbackClues": 0,
+          "forcedProgressGuesses": 0,
+          "bonusGuesses": 0,
+          "correctBonusGuesses": 0,
+          "clues": {
+            "1": 13,
+            "2": 2
+          },
+          "firstHalfClueNumbers": [
+            1,
+            2,
+            1,
+            1,
+            1,
+            1,
+            2,
+            1
+          ],
+          "guesses": 16,
+          "correctGuesses": 10,
+          "wrongTeamHits": 2,
           "neutralHits": 3,
           "assassinHits": 1,
-          "losingAgentsRemaining": 2,
-          "passes": 3
+          "losingAgentsRemaining": 4,
+          "passes": 9
+        },
+        {
+          "board": 43,
+          "seed": "Q09ERQAAACs",
+          "winner": "red",
+          "endReason": "agents",
+          "actions": 39,
+          "turns": 16,
+          "fallbackClues": 0,
+          "forcedProgressGuesses": 0,
+          "bonusGuesses": 0,
+          "correctBonusGuesses": 0,
+          "clues": {
+            "1": 15,
+            "2": 1
+          },
+          "firstHalfClueNumbers": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "guesses": 16,
+          "correctGuesses": 8,
+          "wrongTeamHits": 5,
+          "neutralHits": 3,
+          "assassinHits": 0,
+          "losingAgentsRemaining": 4,
+          "passes": 7
+        },
+        {
+          "board": 44,
+          "seed": "Q09ERQAAACw",
+          "winner": "red",
+          "endReason": "agents",
+          "actions": 51,
+          "turns": 20,
+          "fallbackClues": 0,
+          "forcedProgressGuesses": 0,
+          "bonusGuesses": 0,
+          "correctBonusGuesses": 0,
+          "clues": {
+            "1": 14,
+            "2": 6
+          },
+          "firstHalfClueNumbers": [
+            2,
+            1,
+            2,
+            2,
+            2,
+            2,
+            2,
+            1,
+            1,
+            1
+          ],
+          "guesses": 20,
+          "correctGuesses": 12,
+          "wrongTeamHits": 4,
+          "neutralHits": 4,
+          "assassinHits": 0,
+          "losingAgentsRemaining": 1,
+          "passes": 11
+        },
+        {
+          "board": 45,
+          "seed": "Q09ERQAAAC0",
+          "winner": "red",
+          "endReason": "assassin",
+          "actions": 21,
+          "turns": 9,
+          "fallbackClues": 0,
+          "forcedProgressGuesses": 0,
+          "bonusGuesses": 0,
+          "correctBonusGuesses": 0,
+          "clues": {
+            "1": 7,
+            "2": 2
+          },
+          "firstHalfClueNumbers": [
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "guesses": 10,
+          "correctGuesses": 3,
+          "wrongTeamHits": 4,
+          "neutralHits": 2,
+          "assassinHits": 1,
+          "losingAgentsRemaining": 7,
+          "passes": 2
         },
         {
           "board": 46,
@@ -1720,13 +1723,13 @@
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 5,
-            "2": 1
+            "1": 4,
+            "2": 2
           },
           "firstHalfClueNumbers": [
             1,
             1,
-            1
+            2
           ],
           "guesses": 6,
           "correctGuesses": 4,
@@ -1741,7 +1744,7 @@
           "seed": "Q09ERQAAADA",
           "winner": "blue",
           "endReason": "agents",
-          "actions": 49,
+          "actions": 46,
           "turns": 19,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
@@ -1764,29 +1767,30 @@
             1
           ],
           "guesses": 20,
-          "correctGuesses": 12,
-          "wrongTeamHits": 3,
+          "correctGuesses": 9,
+          "wrongTeamHits": 6,
           "neutralHits": 5,
           "assassinHits": 0,
           "losingAgentsRemaining": 2,
-          "passes": 10
+          "passes": 7
         },
         {
           "board": 49,
           "seed": "Q09ERQAAADE",
           "winner": "red",
           "endReason": "assassin",
-          "actions": 28,
-          "turns": 11,
+          "actions": 30,
+          "turns": 13,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
             "1": 6,
-            "2": 5
+            "2": 7
           },
           "firstHalfClueNumbers": [
+            2,
             2,
             2,
             2,
@@ -1794,20 +1798,123 @@
             1,
             2
           ],
-          "guesses": 11,
-          "correctGuesses": 6,
-          "wrongTeamHits": 2,
-          "neutralHits": 2,
+          "guesses": 13,
+          "correctGuesses": 4,
+          "wrongTeamHits": 4,
+          "neutralHits": 4,
           "assassinHits": 1,
-          "losingAgentsRemaining": 3,
-          "passes": 6
+          "losingAgentsRemaining": 5,
+          "passes": 4
         },
         {
           "board": 50,
           "seed": "Q09ERQAAADI",
           "winner": "blue",
           "endReason": "agents",
-          "actions": 48,
+          "actions": 43,
+          "turns": 17,
+          "fallbackClues": 0,
+          "forcedProgressGuesses": 0,
+          "bonusGuesses": 0,
+          "correctBonusGuesses": 0,
+          "clues": {
+            "1": 15,
+            "2": 2
+          },
+          "firstHalfClueNumbers": [
+            1,
+            1,
+            1,
+            2,
+            1,
+            2,
+            1,
+            1,
+            1
+          ],
+          "guesses": 17,
+          "correctGuesses": 10,
+          "wrongTeamHits": 4,
+          "neutralHits": 3,
+          "assassinHits": 0,
+          "losingAgentsRemaining": 3,
+          "passes": 9
+        },
+        {
+          "board": 51,
+          "seed": "Q09ERQAAADM",
+          "winner": "red",
+          "endReason": "agents",
+          "actions": 68,
+          "turns": 28,
+          "fallbackClues": 0,
+          "forcedProgressGuesses": 1,
+          "bonusGuesses": 0,
+          "correctBonusGuesses": 0,
+          "clues": {
+            "1": 25,
+            "2": 3
+          },
+          "firstHalfClueNumbers": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            2,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "guesses": 22,
+          "correctGuesses": 13,
+          "wrongTeamHits": 2,
+          "neutralHits": 7,
+          "assassinHits": 0,
+          "losingAgentsRemaining": 2,
+          "passes": 18
+        },
+        {
+          "board": 52,
+          "seed": "Q09ERQAAADQ",
+          "winner": "red",
+          "endReason": "assassin",
+          "actions": 23,
+          "turns": 9,
+          "fallbackClues": 0,
+          "forcedProgressGuesses": 0,
+          "bonusGuesses": 0,
+          "correctBonusGuesses": 0,
+          "clues": {
+            "1": 6,
+            "2": 3
+          },
+          "firstHalfClueNumbers": [
+            1,
+            2,
+            1,
+            2,
+            1
+          ],
+          "guesses": 10,
+          "correctGuesses": 5,
+          "wrongTeamHits": 0,
+          "neutralHits": 4,
+          "assassinHits": 1,
+          "losingAgentsRemaining": 7,
+          "passes": 4
+        },
+        {
+          "board": 53,
+          "seed": "Q09ERQAAADU",
+          "winner": "blue",
+          "endReason": "agents",
+          "actions": 51,
           "turns": 19,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
@@ -1818,158 +1925,53 @@
             "2": 3
           },
           "firstHalfClueNumbers": [
-            1,
+            2,
+            2,
             1,
             1,
             2,
             1,
-            2,
             1,
             1,
             1,
             1
           ],
-          "guesses": 19,
-          "correctGuesses": 11,
-          "wrongTeamHits": 4,
-          "neutralHits": 4,
-          "assassinHits": 0,
-          "losingAgentsRemaining": 2,
-          "passes": 10
-        },
-        {
-          "board": 51,
-          "seed": "Q09ERQAAADM",
-          "winner": "red",
-          "endReason": "agents",
-          "actions": 53,
-          "turns": 21,
-          "fallbackClues": 0,
-          "forcedProgressGuesses": 0,
-          "bonusGuesses": 0,
-          "correctBonusGuesses": 0,
-          "clues": {
-            "1": 13,
-            "2": 8
-          },
-          "firstHalfClueNumbers": [
-            1,
-            2,
-            2,
-            2,
-            1,
-            2,
-            1,
-            2,
-            1,
-            2,
-            1
-          ],
-          "guesses": 22,
-          "correctGuesses": 11,
-          "wrongTeamHits": 4,
-          "neutralHits": 7,
-          "assassinHits": 0,
-          "losingAgentsRemaining": 2,
-          "passes": 10
-        },
-        {
-          "board": 52,
-          "seed": "Q09ERQAAADQ",
-          "winner": "red",
-          "endReason": "assassin",
-          "actions": 20,
-          "turns": 9,
-          "fallbackClues": 0,
-          "forcedProgressGuesses": 0,
-          "bonusGuesses": 0,
-          "correctBonusGuesses": 0,
-          "clues": {
-            "1": 5,
-            "2": 4
-          },
-          "firstHalfClueNumbers": [
-            1,
-            2,
-            1,
-            2,
-            1
-          ],
-          "guesses": 9,
-          "correctGuesses": 2,
+          "guesses": 21,
+          "correctGuesses": 14,
           "wrongTeamHits": 2,
-          "neutralHits": 4,
-          "assassinHits": 1,
-          "losingAgentsRemaining": 5,
-          "passes": 2
-        },
-        {
-          "board": 53,
-          "seed": "Q09ERQAAADU",
-          "winner": "blue",
-          "endReason": "agents",
-          "actions": 42,
-          "turns": 15,
-          "fallbackClues": 0,
-          "forcedProgressGuesses": 0,
-          "bonusGuesses": 0,
-          "correctBonusGuesses": 0,
-          "clues": {
-            "1": 12,
-            "2": 3
-          },
-          "firstHalfClueNumbers": [
-            1,
-            2,
-            1,
-            1,
-            2,
-            1,
-            2,
-            1
-          ],
-          "guesses": 17,
-          "correctGuesses": 13,
-          "wrongTeamHits": 3,
-          "neutralHits": 1,
+          "neutralHits": 5,
           "assassinHits": 0,
           "losingAgentsRemaining": 1,
-          "passes": 10
+          "passes": 11
         },
         {
           "board": 54,
           "seed": "Q09ERQAAADY",
           "winner": "red",
           "endReason": "assassin",
-          "actions": 49,
-          "turns": 19,
+          "actions": 17,
+          "turns": 7,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 14,
+            "1": 2,
             "2": 5
           },
           "firstHalfClueNumbers": [
             1,
             1,
             2,
-            2,
-            1,
-            2,
-            1,
-            2,
-            1,
-            1
+            2
           ],
-          "guesses": 19,
-          "correctGuesses": 11,
+          "guesses": 7,
+          "correctGuesses": 3,
           "wrongTeamHits": 1,
-          "neutralHits": 6,
+          "neutralHits": 2,
           "assassinHits": 1,
-          "losingAgentsRemaining": 3,
-          "passes": 11
+          "losingAgentsRemaining": 8,
+          "passes": 3
         },
         {
           "board": 55,
@@ -2164,15 +2166,14 @@
           "seed": "Q09ERQAAAD0",
           "winner": "red",
           "endReason": "agents",
-          "actions": 42,
-          "turns": 16,
+          "actions": 34,
+          "turns": 14,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 15,
-            "2": 1
+            "1": 14
           },
           "firstHalfClueNumbers": [
             1,
@@ -2181,50 +2182,43 @@
             1,
             1,
             1,
-            2,
             1
           ],
-          "guesses": 17,
-          "correctGuesses": 11,
-          "wrongTeamHits": 2,
-          "neutralHits": 4,
+          "guesses": 14,
+          "correctGuesses": 7,
+          "wrongTeamHits": 5,
+          "neutralHits": 2,
           "assassinHits": 0,
-          "losingAgentsRemaining": 4,
-          "passes": 9
+          "losingAgentsRemaining": 5,
+          "passes": 6
         },
         {
           "board": 62,
           "seed": "Q09ERQAAAD4",
           "winner": "red",
           "endReason": "assassin",
-          "actions": 43,
-          "turns": 19,
+          "actions": 17,
+          "turns": 7,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 19
+            "1": 7
           },
           "firstHalfClueNumbers": [
             1,
             1,
             1,
-            1,
-            1,
-            1,
-            1,
-            1,
-            1,
             1
           ],
-          "guesses": 16,
-          "correctGuesses": 5,
-          "wrongTeamHits": 5,
-          "neutralHits": 5,
+          "guesses": 7,
+          "correctGuesses": 3,
+          "wrongTeamHits": 1,
+          "neutralHits": 2,
           "assassinHits": 1,
-          "losingAgentsRemaining": 3,
-          "passes": 8
+          "losingAgentsRemaining": 7,
+          "passes": 3
         },
         {
           "board": 63,
@@ -2264,26 +2258,25 @@
           "seed": "Q09ERQAAAEA",
           "winner": "blue",
           "endReason": "assassin",
-          "actions": 25,
-          "turns": 10,
+          "actions": 21,
+          "turns": 8,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 10
+            "1": 8
           },
           "firstHalfClueNumbers": [
             1,
             1,
             1,
-            1,
             1
           ],
-          "guesses": 10,
+          "guesses": 8,
           "correctGuesses": 5,
-          "wrongTeamHits": 3,
-          "neutralHits": 1,
+          "wrongTeamHits": 2,
+          "neutralHits": 0,
           "assassinHits": 1,
           "losingAgentsRemaining": 5,
           "passes": 5
@@ -2292,15 +2285,16 @@
           "board": 65,
           "seed": "Q09ERQAAAEE",
           "winner": "blue",
-          "endReason": "agents",
-          "actions": 89,
-          "turns": 39,
+          "endReason": "assassin",
+          "actions": 67,
+          "turns": 30,
           "fallbackClues": 0,
-          "forcedProgressGuesses": 2,
+          "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 39
+            "1": 29,
+            "2": 1
           },
           "firstHalfClueNumbers": [
             1,
@@ -2317,34 +2311,29 @@
             1,
             1,
             1,
-            1,
-            1,
-            1,
-            1,
-            1,
             1
           ],
-          "guesses": 22,
-          "correctGuesses": 12,
+          "guesses": 18,
+          "correctGuesses": 7,
           "wrongTeamHits": 4,
           "neutralHits": 6,
-          "assassinHits": 0,
-          "losingAgentsRemaining": 1,
-          "passes": 28
+          "assassinHits": 1,
+          "losingAgentsRemaining": 4,
+          "passes": 19
         },
         {
           "board": 66,
           "seed": "Q09ERQAAAEI",
           "winner": "red",
-          "endReason": "assassin",
-          "actions": 51,
-          "turns": 21,
+          "endReason": "agents",
+          "actions": 43,
+          "turns": 19,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 10,
+            "1": 8,
             "2": 11
           },
           "firstHalfClueNumbers": [
@@ -2355,18 +2344,17 @@
             2,
             2,
             2,
-            2,
-            2,
             1,
-            2
+            2,
+            1
           ],
-          "guesses": 22,
-          "correctGuesses": 9,
-          "wrongTeamHits": 6,
-          "neutralHits": 6,
-          "assassinHits": 1,
-          "losingAgentsRemaining": 1,
-          "passes": 8
+          "guesses": 19,
+          "correctGuesses": 5,
+          "wrongTeamHits": 9,
+          "neutralHits": 5,
+          "assassinHits": 0,
+          "losingAgentsRemaining": 3,
+          "passes": 5
         },
         {
           "board": 67,
@@ -2401,21 +2389,17 @@
           "board": 68,
           "seed": "Q09ERQAAAEQ",
           "winner": "red",
-          "endReason": "agents",
-          "actions": 53,
-          "turns": 22,
+          "endReason": "assassin",
+          "actions": 37,
+          "turns": 15,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 20,
-            "2": 2
+            "1": 15
           },
           "firstHalfClueNumbers": [
-            1,
-            1,
-            1,
             1,
             1,
             1,
@@ -2425,44 +2409,47 @@
             1,
             1
           ],
-          "guesses": 21,
-          "correctGuesses": 10,
-          "wrongTeamHits": 4,
-          "neutralHits": 7,
-          "assassinHits": 0,
-          "losingAgentsRemaining": 3,
-          "passes": 10
+          "guesses": 15,
+          "correctGuesses": 7,
+          "wrongTeamHits": 2,
+          "neutralHits": 5,
+          "assassinHits": 1,
+          "losingAgentsRemaining": 6,
+          "passes": 7
         },
         {
           "board": 69,
           "seed": "Q09ERQAAAEU",
           "winner": "red",
           "endReason": "agents",
-          "actions": 39,
-          "turns": 14,
+          "actions": 49,
+          "turns": 20,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 9,
-            "2": 5
+            "1": 19,
+            "2": 1
           },
           "firstHalfClueNumbers": [
+            1,
+            1,
+            1,
+            1,
+            1,
             2,
             1,
             1,
             1,
-            2,
-            1,
-            2
+            1
           ],
-          "guesses": 17,
-          "correctGuesses": 12,
-          "wrongTeamHits": 3,
-          "neutralHits": 2,
+          "guesses": 21,
+          "correctGuesses": 10,
+          "wrongTeamHits": 6,
+          "neutralHits": 5,
           "assassinHits": 0,
-          "losingAgentsRemaining": 2,
+          "losingAgentsRemaining": 1,
           "passes": 8
         },
         {
@@ -2503,15 +2490,15 @@
           "board": 71,
           "seed": "Q09ERQAAAEc",
           "winner": "red",
-          "endReason": "assassin",
-          "actions": 25,
-          "turns": 11,
+          "endReason": "agents",
+          "actions": 46,
+          "turns": 20,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 11
+            "1": 20
           },
           "firstHalfClueNumbers": [
             1,
@@ -2519,78 +2506,85 @@
             1,
             1,
             1,
+            1,
+            1,
+            1,
+            1,
             1
           ],
-          "guesses": 11,
-          "correctGuesses": 3,
-          "wrongTeamHits": 5,
-          "neutralHits": 2,
-          "assassinHits": 1,
-          "losingAgentsRemaining": 6,
-          "passes": 3
+          "guesses": 20,
+          "correctGuesses": 7,
+          "wrongTeamHits": 7,
+          "neutralHits": 6,
+          "assassinHits": 0,
+          "losingAgentsRemaining": 3,
+          "passes": 6
         },
         {
           "board": 72,
           "seed": "Q09ERQAAAEg",
-          "winner": "blue",
-          "endReason": "assassin",
-          "actions": 49,
-          "turns": 18,
+          "winner": "red",
+          "endReason": "agents",
+          "actions": 44,
+          "turns": 17,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 16,
+            "1": 15,
             "2": 2
           },
           "firstHalfClueNumbers": [
+            1,
+            1,
             2,
             1,
             1,
-            1,
-            2,
             1,
             1,
             1,
             1
           ],
-          "guesses": 19,
-          "correctGuesses": 13,
-          "wrongTeamHits": 2,
-          "neutralHits": 3,
-          "assassinHits": 1,
-          "losingAgentsRemaining": 1,
-          "passes": 12
+          "guesses": 16,
+          "correctGuesses": 10,
+          "wrongTeamHits": 4,
+          "neutralHits": 2,
+          "assassinHits": 0,
+          "losingAgentsRemaining": 3,
+          "passes": 11
         },
         {
           "board": 73,
           "seed": "Q09ERQAAAEk",
           "winner": "red",
           "endReason": "assassin",
-          "actions": 23,
-          "turns": 9,
+          "actions": 32,
+          "turns": 13,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 9
+            "1": 11,
+            "2": 2
           },
           "firstHalfClueNumbers": [
             1,
             1,
             1,
             1,
+            1,
+            1,
             1
           ],
-          "guesses": 9,
-          "correctGuesses": 5,
-          "wrongTeamHits": 2,
-          "neutralHits": 1,
+          "guesses": 13,
+          "correctGuesses": 6,
+          "wrongTeamHits": 4,
+          "neutralHits": 2,
           "assassinHits": 1,
-          "losingAgentsRemaining": 5,
-          "passes": 5
+          "losingAgentsRemaining": 4,
+          "passes": 6
         },
         {
           "board": 74,
@@ -2630,8 +2624,41 @@
         {
           "board": 75,
           "seed": "Q09ERQAAAEs",
-          "winner": "blue",
+          "winner": "red",
           "endReason": "agents",
+          "actions": 45,
+          "turns": 18,
+          "fallbackClues": 0,
+          "forcedProgressGuesses": 0,
+          "bonusGuesses": 0,
+          "correctBonusGuesses": 0,
+          "clues": {
+            "1": 18
+          },
+          "firstHalfClueNumbers": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "guesses": 18,
+          "correctGuesses": 10,
+          "wrongTeamHits": 4,
+          "neutralHits": 4,
+          "assassinHits": 0,
+          "losingAgentsRemaining": 3,
+          "passes": 9
+        },
+        {
+          "board": 76,
+          "seed": "Q09ERQAAAEw",
+          "winner": "red",
+          "endReason": "assassin",
           "actions": 53,
           "turns": 21,
           "fallbackClues": 0,
@@ -2654,72 +2681,40 @@
             1,
             1
           ],
-          "guesses": 21,
-          "correctGuesses": 12,
-          "wrongTeamHits": 3,
-          "neutralHits": 6,
-          "assassinHits": 0,
-          "losingAgentsRemaining": 2,
-          "passes": 11
-        },
-        {
-          "board": 76,
-          "seed": "Q09ERQAAAEw",
-          "winner": "blue",
-          "endReason": "agents",
-          "actions": 49,
-          "turns": 19,
-          "fallbackClues": 0,
-          "forcedProgressGuesses": 0,
-          "bonusGuesses": 0,
-          "correctBonusGuesses": 0,
-          "clues": {
-            "1": 19
-          },
-          "firstHalfClueNumbers": [
-            1,
-            1,
-            1,
-            1,
-            1,
-            1,
-            1,
-            1,
-            1,
-            1
-          ],
-          "guesses": 19,
-          "correctGuesses": 12,
+          "guesses": 20,
+          "correctGuesses": 11,
           "wrongTeamHits": 2,
-          "neutralHits": 5,
-          "assassinHits": 0,
-          "losingAgentsRemaining": 3,
-          "passes": 11
+          "neutralHits": 6,
+          "assassinHits": 1,
+          "losingAgentsRemaining": 1,
+          "passes": 12
         },
         {
           "board": 77,
           "seed": "Q09ERQAAAE0",
           "winner": "red",
           "endReason": "assassin",
-          "actions": 15,
-          "turns": 5,
+          "actions": 20,
+          "turns": 9,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 1,
-            "2": 4
+            "1": 6,
+            "2": 3
           },
           "firstHalfClueNumbers": [
             1,
             2,
-            2
+            1,
+            2,
+            1
           ],
-          "guesses": 8,
-          "correctGuesses": 5,
-          "wrongTeamHits": 0,
-          "neutralHits": 2,
+          "guesses": 9,
+          "correctGuesses": 2,
+          "wrongTeamHits": 2,
+          "neutralHits": 4,
           "assassinHits": 1,
           "losingAgentsRemaining": 7,
           "passes": 2
@@ -2815,16 +2810,19 @@
           "seed": "Q09ERQAAAFE",
           "winner": "blue",
           "endReason": "assassin",
-          "actions": 44,
-          "turns": 18,
+          "actions": 55,
+          "turns": 24,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 18
+            "1": 24
           },
           "firstHalfClueNumbers": [
+            1,
+            1,
+            1,
             1,
             1,
             1,
@@ -2836,12 +2834,12 @@
             1
           ],
           "guesses": 14,
-          "correctGuesses": 8,
-          "wrongTeamHits": 2,
+          "correctGuesses": 7,
+          "wrongTeamHits": 3,
           "neutralHits": 3,
           "assassinHits": 1,
           "losingAgentsRemaining": 3,
-          "passes": 12
+          "passes": 17
         },
         {
           "board": 82,
@@ -2876,92 +2874,78 @@
           "seed": "Q09ERQAAAFM",
           "winner": "red",
           "endReason": "assassin",
-          "actions": 58,
-          "turns": 23,
+          "actions": 38,
+          "turns": 15,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 16,
-            "2": 7
+            "1": 9,
+            "2": 6
           },
           "firstHalfClueNumbers": [
             2,
             1,
-            2,
-            1,
-            2,
             1,
             1,
             1,
             1,
-            2,
             2,
             2
           ],
-          "guesses": 21,
-          "correctGuesses": 12,
+          "guesses": 14,
+          "correctGuesses": 8,
           "wrongTeamHits": 1,
-          "neutralHits": 7,
+          "neutralHits": 4,
           "assassinHits": 1,
           "losingAgentsRemaining": 3,
-          "passes": 14
+          "passes": 9
         },
         {
           "board": 84,
           "seed": "Q09ERQAAAFQ",
           "winner": "red",
           "endReason": "assassin",
-          "actions": 42,
-          "turns": 17,
+          "actions": 13,
+          "turns": 5,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 14,
-            "2": 2,
-            "4": 1
+            "1": 3,
+            "2": 2
           },
           "firstHalfClueNumbers": [
-            1,
-            1,
-            1,
-            1,
             2,
             1,
-            2,
-            1,
-            4
+            2
           ],
-          "guesses": 17,
-          "correctGuesses": 8,
-          "wrongTeamHits": 4,
-          "neutralHits": 4,
+          "guesses": 5,
+          "correctGuesses": 3,
+          "wrongTeamHits": 0,
+          "neutralHits": 1,
           "assassinHits": 1,
-          "losingAgentsRemaining": 1,
-          "passes": 8
+          "losingAgentsRemaining": 8,
+          "passes": 3
         },
         {
           "board": 85,
           "seed": "Q09ERQAAAFU",
           "winner": "blue",
-          "endReason": "agents",
-          "actions": 63,
-          "turns": 27,
+          "endReason": "assassin",
+          "actions": 48,
+          "turns": 20,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 27
+            "1": 19,
+            "2": 1
           },
           "firstHalfClueNumbers": [
-            1,
-            1,
-            1,
-            1,
             1,
             1,
             1,
@@ -2973,13 +2957,13 @@
             1,
             1
           ],
-          "guesses": 19,
-          "correctGuesses": 10,
-          "wrongTeamHits": 6,
-          "neutralHits": 3,
-          "assassinHits": 0,
+          "guesses": 18,
+          "correctGuesses": 8,
+          "wrongTeamHits": 4,
+          "neutralHits": 5,
+          "assassinHits": 1,
           "losingAgentsRemaining": 1,
-          "passes": 17
+          "passes": 10
         },
         {
           "board": 86,
@@ -3019,22 +3003,63 @@
           "board": 87,
           "seed": "Q09ERQAAAFc",
           "winner": "red",
-          "endReason": "assassin",
-          "actions": 40,
-          "turns": 17,
+          "endReason": "agents",
+          "actions": 80,
+          "turns": 35,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 15,
-            "2": 2
+            "1": 35
           },
           "firstHalfClueNumbers": [
             1,
             1,
             1,
             1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "guesses": 23,
+          "correctGuesses": 10,
+          "wrongTeamHits": 6,
+          "neutralHits": 7,
+          "assassinHits": 0,
+          "losingAgentsRemaining": 1,
+          "passes": 22
+        },
+        {
+          "board": 88,
+          "seed": "Q09ERQAAAFg",
+          "winner": "red",
+          "endReason": "assassin",
+          "actions": 37,
+          "turns": 15,
+          "fallbackClues": 0,
+          "forcedProgressGuesses": 0,
+          "bonusGuesses": 0,
+          "correctBonusGuesses": 0,
+          "clues": {
+            "1": 13,
+            "2": 2
+          },
+          "firstHalfClueNumbers": [
+            2,
+            1,
+            2,
             1,
             1,
             1,
@@ -3042,58 +3067,55 @@
             1
           ],
           "guesses": 15,
-          "correctGuesses": 6,
-          "wrongTeamHits": 4,
+          "correctGuesses": 7,
+          "wrongTeamHits": 3,
           "neutralHits": 4,
           "assassinHits": 1,
           "losingAgentsRemaining": 5,
-          "passes": 8
-        },
-        {
-          "board": 88,
-          "seed": "Q09ERQAAAFg",
-          "winner": "red",
-          "endReason": "assassin",
-          "actions": 34,
-          "turns": 13,
-          "fallbackClues": 0,
-          "forcedProgressGuesses": 0,
-          "bonusGuesses": 0,
-          "correctBonusGuesses": 0,
-          "clues": {
-            "1": 11,
-            "2": 2
-          },
-          "firstHalfClueNumbers": [
-            2,
-            1,
-            2,
-            1,
-            1,
-            1,
-            1
-          ],
-          "guesses": 13,
-          "correctGuesses": 8,
-          "wrongTeamHits": 1,
-          "neutralHits": 3,
-          "assassinHits": 1,
-          "losingAgentsRemaining": 6,
-          "passes": 8
+          "passes": 7
         },
         {
           "board": 89,
           "seed": "Q09ERQAAAFk",
           "winner": "red",
           "endReason": "assassin",
-          "actions": 21,
-          "turns": 9,
+          "actions": 20,
+          "turns": 7,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 8,
+            "1": 4,
+            "2": 3
+          },
+          "firstHalfClueNumbers": [
+            2,
+            1,
+            2,
+            1
+          ],
+          "guesses": 9,
+          "correctGuesses": 6,
+          "wrongTeamHits": 2,
+          "neutralHits": 0,
+          "assassinHits": 1,
+          "losingAgentsRemaining": 4,
+          "passes": 4
+        },
+        {
+          "board": 90,
+          "seed": "Q09ERQAAAFo",
+          "winner": "blue",
+          "endReason": "assassin",
+          "actions": 45,
+          "turns": 20,
+          "fallbackClues": 0,
+          "forcedProgressGuesses": 1,
+          "bonusGuesses": 0,
+          "correctBonusGuesses": 0,
+          "clues": {
+            "1": 19,
             "2": 1
           },
           "firstHalfClueNumbers": [
@@ -3101,45 +3123,20 @@
             1,
             1,
             1,
-            1
-          ],
-          "guesses": 9,
-          "correctGuesses": 3,
-          "wrongTeamHits": 3,
-          "neutralHits": 2,
-          "assassinHits": 1,
-          "losingAgentsRemaining": 7,
-          "passes": 3
-        },
-        {
-          "board": 90,
-          "seed": "Q09ERQAAAFo",
-          "winner": "red",
-          "endReason": "assassin",
-          "actions": 24,
-          "turns": 9,
-          "fallbackClues": 0,
-          "forcedProgressGuesses": 0,
-          "bonusGuesses": 0,
-          "correctBonusGuesses": 0,
-          "clues": {
-            "1": 7,
-            "2": 2
-          },
-          "firstHalfClueNumbers": [
+            2,
             1,
             1,
             1,
             1,
             1
           ],
-          "guesses": 11,
-          "correctGuesses": 6,
-          "wrongTeamHits": 2,
-          "neutralHits": 2,
+          "guesses": 17,
+          "correctGuesses": 5,
+          "wrongTeamHits": 6,
+          "neutralHits": 5,
           "assassinHits": 1,
-          "losingAgentsRemaining": 5,
-          "passes": 4
+          "losingAgentsRemaining": 3,
+          "passes": 8
         },
         {
           "board": 91,
@@ -3153,8 +3150,8 @@
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 10,
-            "2": 9
+            "1": 8,
+            "2": 11
           },
           "firstHalfClueNumbers": [
             1,
@@ -3181,46 +3178,48 @@
           "seed": "Q09ERQAAAFw",
           "winner": "blue",
           "endReason": "assassin",
-          "actions": 36,
-          "turns": 14,
+          "actions": 45,
+          "turns": 18,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 12,
-            "2": 2
+            "1": 17,
+            "2": 1
           },
           "firstHalfClueNumbers": [
             1,
-            2,
             1,
-            2,
+            1,
+            1,
+            1,
+            1,
             1,
             1,
             1
           ],
-          "guesses": 15,
-          "correctGuesses": 8,
+          "guesses": 14,
+          "correctGuesses": 9,
           "wrongTeamHits": 3,
-          "neutralHits": 3,
+          "neutralHits": 1,
           "assassinHits": 1,
-          "losingAgentsRemaining": 3,
-          "passes": 7
+          "losingAgentsRemaining": 4,
+          "passes": 13
         },
         {
           "board": 93,
           "seed": "Q09ERQAAAF0",
-          "winner": "blue",
+          "winner": "red",
           "endReason": "agents",
-          "actions": 41,
-          "turns": 17,
+          "actions": 38,
+          "turns": 16,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 16,
+            "1": 15,
             "3": 1
           },
           "firstHalfClueNumbers": [
@@ -3231,16 +3230,15 @@
             1,
             1,
             1,
-            1,
             1
           ],
-          "guesses": 19,
-          "correctGuesses": 8,
-          "wrongTeamHits": 6,
-          "neutralHits": 5,
+          "guesses": 18,
+          "correctGuesses": 7,
+          "wrongTeamHits": 8,
+          "neutralHits": 3,
           "assassinHits": 0,
-          "losingAgentsRemaining": 3,
-          "passes": 5
+          "losingAgentsRemaining": 2,
+          "passes": 4
         },
         {
           "board": 94,
@@ -3277,16 +3275,17 @@
           "board": 95,
           "seed": "Q09ERQAAAF8",
           "winner": "red",
-          "endReason": "assassin",
-          "actions": 53,
-          "turns": 21,
+          "endReason": "agents",
+          "actions": 45,
+          "turns": 18,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 18,
-            "3": 3
+            "1": 9,
+            "2": 3,
+            "3": 6
           },
           "firstHalfClueNumbers": [
             3,
@@ -3295,46 +3294,44 @@
             1,
             3,
             1,
+            3,
             1,
-            1,
-            1,
-            1,
-            1
+            3
           ],
           "guesses": 19,
-          "correctGuesses": 11,
-          "wrongTeamHits": 4,
-          "neutralHits": 3,
-          "assassinHits": 1,
-          "losingAgentsRemaining": 1,
-          "passes": 13
+          "correctGuesses": 10,
+          "wrongTeamHits": 5,
+          "neutralHits": 4,
+          "assassinHits": 0,
+          "losingAgentsRemaining": 2,
+          "passes": 8
         },
         {
           "board": 96,
           "seed": "Q09ERQAAAGA",
-          "winner": "blue",
+          "winner": "red",
           "endReason": "assassin",
-          "actions": 17,
-          "turns": 6,
+          "actions": 14,
+          "turns": 5,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 6
+            "1": 5
           },
           "firstHalfClueNumbers": [
             1,
             1,
             1
           ],
-          "guesses": 6,
-          "correctGuesses": 5,
+          "guesses": 5,
+          "correctGuesses": 4,
           "wrongTeamHits": 0,
           "neutralHits": 0,
           "assassinHits": 1,
-          "losingAgentsRemaining": 6,
-          "passes": 5
+          "losingAgentsRemaining": 7,
+          "passes": 4
         },
         {
           "board": 97,
@@ -3368,14 +3365,16 @@
           "seed": "Q09ERQAAAGI",
           "winner": "red",
           "endReason": "agents",
-          "actions": 37,
-          "turns": 14,
+          "actions": 47,
+          "turns": 18,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 14
+            "1": 15,
+            "2": 2,
+            "3": 1
           },
           "firstHalfClueNumbers": [
             1,
@@ -3384,15 +3383,17 @@
             1,
             1,
             1,
+            1,
+            1,
             1
           ],
-          "guesses": 14,
-          "correctGuesses": 10,
-          "wrongTeamHits": 1,
+          "guesses": 18,
+          "correctGuesses": 12,
+          "wrongTeamHits": 3,
           "neutralHits": 3,
           "assassinHits": 0,
-          "losingAgentsRemaining": 6,
-          "passes": 9
+          "losingAgentsRemaining": 2,
+          "passes": 11
         },
         {
           "board": 99,
@@ -3427,48 +3428,47 @@
         {
           "board": 100,
           "seed": "Q09ERQAAAGQ",
-          "winner": "blue",
-          "endReason": "assassin",
-          "actions": 51,
-          "turns": 20,
+          "winner": "red",
+          "endReason": "agents",
+          "actions": 48,
+          "turns": 18,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 19,
-            "2": 1
+            "1": 16,
+            "2": 2
           },
           "firstHalfClueNumbers": [
             1,
             1,
+            2,
             1,
-            1,
-            1,
-            1,
+            2,
             1,
             1,
             1,
             1
           ],
-          "guesses": 20,
-          "correctGuesses": 11,
-          "wrongTeamHits": 4,
-          "neutralHits": 4,
-          "assassinHits": 1,
+          "guesses": 19,
+          "correctGuesses": 13,
+          "wrongTeamHits": 3,
+          "neutralHits": 3,
+          "assassinHits": 0,
           "losingAgentsRemaining": 1,
           "passes": 11
         }
       ],
       "fun": {
         "objectiveVersion": 1,
-        "score": 16.2365,
+        "score": 13.2437,
         "selectionScore": null,
         "components": {
-          "ambition": 0.7051,
+          "ambition": 0.6041,
           "momentum": 0,
-          "suspense": 49.25,
-          "flow": 24.75
+          "suspense": 38,
+          "flow": 23.75
         },
         "guardrailsPassed": false,
         "violations": [
@@ -3479,7 +3479,7 @@
           },
           {
             "metric": "wrongTeamHitsPerGame",
-            "actual": 3.01,
+            "actual": 3.1,
             "limit": 0.15
           },
           {
@@ -3493,184 +3493,189 @@
     "hybrid": {
       "gameCount": 100,
       "completedGames": 100,
-      "clueCount": 1298,
+      "clueCount": 1320,
       "clueNumberDistribution": {
-        "1": 629,
-        "2": 617,
-        "3": 51,
-        "4": 1
+        "1": 667,
+        "2": 601,
+        "3": 52
       },
-      "multiClueRate": 0.515408,
-      "meanClueNumber": 1.55624,
-      "firstHalfMeanClueNumber": 1.732644,
-      "correctCardsPerTurn": 0.557781,
-      "wrongTeamHits": 264,
-      "wrongTeamHitsPerGame": 2.64,
-      "wrongTeamGuessRate": 0.193548,
-      "neutralHits": 311,
-      "neutralHitsPerGame": 3.11,
-      "assassinHits": 65,
-      "assassinRate": 0.65,
-      "closeFinishRate": 0.36,
-      "meanLosingAgentsRemaining": 4.15,
-      "meanTurnsPerGame": 12.98,
-      "meanGuessesPerTurn": 1.050847,
-      "passesPerGame": 6.3,
+      "multiClueRate": 0.494697,
+      "meanClueNumber": 1.534091,
+      "firstHalfMeanClueNumber": 1.69869,
+      "correctCardsPerTurn": 0.543182,
+      "wrongTeamHits": 283,
+      "wrongTeamHitsPerGame": 2.83,
+      "wrongTeamGuessRate": 0.206569,
+      "neutralHits": 309,
+      "neutralHitsPerGame": 3.09,
+      "assassinHits": 61,
+      "assassinRate": 0.61,
+      "closeFinishRate": 0.35,
+      "meanLosingAgentsRemaining": 4.04,
+      "meanTurnsPerGame": 13.2,
+      "meanGuessesPerTurn": 1.037879,
+      "passesPerGame": 6.35,
       "fallbackClues": 0,
       "fallbackClueRate": 0,
-      "forcedProgressGuesses": 2,
-      "forcedProgressGuessesPerGame": 0.02,
+      "forcedProgressGuesses": 4,
+      "forcedProgressGuessesPerGame": 0.04,
       "bonusGuesses": 0,
       "bonusGuessesPerGame": 0,
       "correctBonusGuessRate": 0,
       "operativeGuessQuality": {
-        "acceptedGuesses": 1364,
-        "meanAcceptedSimilarity": 0.300096,
-        "tenthPercentileAcceptedSimilarity": 0.1564190092400648,
-        "minimumAcceptedSimilarity": 0.05591726721342493,
+        "acceptedGuesses": 1370,
+        "meanAcceptedSimilarity": 0.289075,
+        "tenthPercentileAcceptedSimilarity": 0.15304866089780939,
+        "minimumAcceptedSimilarity": 0.05269030136124398,
         "weakSimilarityThreshold": 0.25,
-        "weakGuesses": 593,
-        "weakGuessRate": 0.434751,
-        "declaredFillGuesses": 712,
-        "weakDeclaredFillGuesses": 291,
-        "weakDeclaredFillRate": 0.408708,
-        "preDeclaredDecisions": 1627,
-        "preDeclaredPasses": 263,
-        "preDeclaredPassRate": 0.161647
+        "weakGuesses": 615,
+        "weakGuessRate": 0.448905,
+        "declaredFillGuesses": 747,
+        "weakDeclaredFillGuesses": 312,
+        "weakDeclaredFillRate": 0.417671,
+        "preDeclaredDecisions": 1641,
+        "preDeclaredPasses": 271,
+        "preDeclaredPassRate": 0.165143
       },
       "clueNumberByOwnRemaining": {
         "1": {
-          "clues": 78,
+          "clues": 68,
           "meanNumber": 1,
           "multiClueRate": 0,
           "multiAvailableRate": 0,
           "meanBestMultiAdvantage": 0
         },
         "2": {
-          "clues": 109,
-          "meanNumber": 1.045872,
-          "multiClueRate": 0.045872,
-          "multiAvailableRate": 0.311927,
-          "meanBestMultiAdvantage": -19.408107
+          "clues": 118,
+          "meanNumber": 1.101695,
+          "multiClueRate": 0.101695,
+          "multiAvailableRate": 0.279661,
+          "meanBestMultiAdvantage": -16.620045
         },
         "3": {
-          "clues": 127,
-          "meanNumber": 1.11811,
-          "multiClueRate": 0.11811,
-          "multiAvailableRate": 0.755906,
-          "meanBestMultiAdvantage": -21.903333
+          "clues": 135,
+          "meanNumber": 1.103704,
+          "multiClueRate": 0.103704,
+          "multiAvailableRate": 0.725926,
+          "meanBestMultiAdvantage": -19.134901
         },
         "4": {
-          "clues": 122,
-          "meanNumber": 1.327869,
-          "multiClueRate": 0.327869,
-          "multiAvailableRate": 0.901639,
-          "meanBestMultiAdvantage": -10.20615
+          "clues": 131,
+          "meanNumber": 1.305344,
+          "multiClueRate": 0.305344,
+          "multiAvailableRate": 0.885496,
+          "meanBestMultiAdvantage": -10.079298
         },
         "5": {
-          "clues": 157,
-          "meanNumber": 1.44586,
-          "multiClueRate": 0.44586,
-          "multiAvailableRate": 0.987261,
-          "meanBestMultiAdvantage": -4.945847
+          "clues": 160,
+          "meanNumber": 1.4375,
+          "multiClueRate": 0.4375,
+          "multiAvailableRate": 0.9625,
+          "meanBestMultiAdvantage": -5.949323
         },
         "6": {
-          "clues": 158,
-          "meanNumber": 1.607595,
-          "multiClueRate": 0.582278,
-          "multiAvailableRate": 0.987342,
-          "meanBestMultiAdvantage": -0.880226
+          "clues": 169,
+          "meanNumber": 1.538462,
+          "multiClueRate": 0.526627,
+          "multiAvailableRate": 0.994083,
+          "meanBestMultiAdvantage": -2.51831
         },
         "7": {
-          "clues": 211,
-          "meanNumber": 1.862559,
-          "multiClueRate": 0.753555,
+          "clues": 207,
+          "meanNumber": 1.830918,
+          "multiClueRate": 0.724638,
           "multiAvailableRate": 1,
-          "meanBestMultiAdvantage": 3.600643
+          "meanBestMultiAdvantage": 3.549236
         },
         "8": {
-          "clues": 192,
-          "meanNumber": 1.911458,
-          "multiClueRate": 0.84375,
+          "clues": 185,
+          "meanNumber": 1.891892,
+          "multiClueRate": 0.816216,
           "multiAvailableRate": 1,
-          "meanBestMultiAdvantage": 8.153776
+          "meanBestMultiAdvantage": 7.39146
         },
         "9": {
-          "clues": 144,
-          "meanNumber": 1.965278,
-          "multiClueRate": 0.875,
+          "clues": 147,
+          "meanNumber": 1.959184,
+          "multiClueRate": 0.863946,
           "multiAvailableRate": 1,
-          "meanBestMultiAdvantage": 8.178274
+          "meanBestMultiAdvantage": 7.845589
         }
       },
       "wins": {
-        "blue": 44,
-        "red": 56
+        "blue": 46,
+        "red": 54
       },
       "gameResults": [
         {
           "board": 1,
           "seed": "Q09ERQAAAAE",
-          "winner": "red",
+          "winner": "blue",
           "endReason": "agents",
-          "actions": 50,
-          "turns": 20,
+          "actions": 56,
+          "turns": 23,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 13,
-            "2": 7
+            "1": 10,
+            "2": 13
           },
           "firstHalfClueNumbers": [
             2,
             2,
             2,
             2,
+            1,
+            2,
+            2,
+            2,
             2,
             2,
             1,
-            2,
-            1,
-            1
+            2
           ],
-          "guesses": 21,
+          "guesses": 18,
           "correctGuesses": 11,
-          "wrongTeamHits": 5,
+          "wrongTeamHits": 2,
           "neutralHits": 5,
           "assassinHits": 0,
-          "losingAgentsRemaining": 1,
-          "passes": 9
+          "losingAgentsRemaining": 4,
+          "passes": 15
         },
         {
           "board": 2,
           "seed": "Q09ERQAAAAI",
           "winner": "blue",
           "endReason": "assassin",
-          "actions": 20,
-          "turns": 8,
+          "actions": 40,
+          "turns": 16,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 4,
-            "2": 4
+            "1": 10,
+            "2": 6
           },
           "firstHalfClueNumbers": [
             1,
             2,
             1,
-            2
+            2,
+            1,
+            1,
+            1,
+            1
           ],
-          "guesses": 9,
-          "correctGuesses": 4,
-          "wrongTeamHits": 0,
-          "neutralHits": 4,
+          "guesses": 16,
+          "correctGuesses": 8,
+          "wrongTeamHits": 2,
+          "neutralHits": 5,
           "assassinHits": 1,
-          "losingAgentsRemaining": 7,
-          "passes": 3
+          "losingAgentsRemaining": 1,
+          "passes": 8
         },
         {
           "board": 3,
@@ -3706,38 +3711,32 @@
         {
           "board": 4,
           "seed": "Q09ERQAAAAQ",
-          "winner": "blue",
-          "endReason": "agents",
-          "actions": 51,
-          "turns": 20,
+          "winner": "red",
+          "endReason": "assassin",
+          "actions": 26,
+          "turns": 9,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 7,
-            "2": 12,
-            "3": 1
+            "1": 2,
+            "2": 7
           },
           "firstHalfClueNumbers": [
             2,
             2,
             2,
             2,
-            2,
-            3,
-            2,
-            2,
-            2,
             1
           ],
-          "guesses": 21,
-          "correctGuesses": 11,
-          "wrongTeamHits": 5,
-          "neutralHits": 5,
-          "assassinHits": 0,
-          "losingAgentsRemaining": 1,
-          "passes": 10
+          "guesses": 11,
+          "correctGuesses": 8,
+          "wrongTeamHits": 0,
+          "neutralHits": 2,
+          "assassinHits": 1,
+          "losingAgentsRemaining": 4,
+          "passes": 6
         },
         {
           "board": 5,
@@ -3768,8 +3767,8 @@
         {
           "board": 6,
           "seed": "Q09ERQAAAAY",
-          "winner": "red",
-          "endReason": "agents",
+          "winner": "blue",
+          "endReason": "assassin",
           "actions": 43,
           "turns": 18,
           "fallbackClues": 0,
@@ -3792,11 +3791,11 @@
             1
           ],
           "guesses": 19,
-          "correctGuesses": 8,
-          "wrongTeamHits": 6,
-          "neutralHits": 5,
-          "assassinHits": 0,
-          "losingAgentsRemaining": 3,
+          "correctGuesses": 7,
+          "wrongTeamHits": 5,
+          "neutralHits": 6,
+          "assassinHits": 1,
+          "losingAgentsRemaining": 2,
           "passes": 6
         },
         {
@@ -3804,41 +3803,42 @@
           "seed": "Q09ERQAAAAc",
           "winner": "blue",
           "endReason": "agents",
-          "actions": 48,
-          "turns": 19,
+          "actions": 53,
+          "turns": 20,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 19
+            "1": 18,
+            "2": 2
           },
           "firstHalfClueNumbers": [
             1,
             1,
             1,
+            2,
             1,
-            1,
-            1,
+            2,
             1,
             1,
             1,
             1
           ],
-          "guesses": 19,
-          "correctGuesses": 11,
-          "wrongTeamHits": 3,
+          "guesses": 20,
+          "correctGuesses": 13,
+          "wrongTeamHits": 2,
           "neutralHits": 5,
           "assassinHits": 0,
-          "losingAgentsRemaining": 3,
-          "passes": 10
+          "losingAgentsRemaining": 2,
+          "passes": 13
         },
         {
           "board": 8,
           "seed": "Q09ERQAAAAg",
           "winner": "red",
           "endReason": "assassin",
-          "actions": 28,
+          "actions": 29,
           "turns": 11,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
@@ -3852,16 +3852,16 @@
             2,
             2,
             2,
-            2,
+            1,
             2,
             1
           ],
-          "guesses": 13,
-          "correctGuesses": 6,
-          "wrongTeamHits": 4,
-          "neutralHits": 2,
+          "guesses": 14,
+          "correctGuesses": 7,
+          "wrongTeamHits": 5,
+          "neutralHits": 1,
           "assassinHits": 1,
-          "losingAgentsRemaining": 4,
+          "losingAgentsRemaining": 2,
           "passes": 4
         },
         {
@@ -3929,8 +3929,8 @@
         {
           "board": 11,
           "seed": "Q09ERQAAAAs",
-          "winner": "red",
-          "endReason": "assassin",
+          "winner": "blue",
+          "endReason": "agents",
           "actions": 39,
           "turns": 15,
           "fallbackClues": 0,
@@ -3938,8 +3938,8 @@
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 10,
-            "2": 5
+            "1": 9,
+            "2": 6
           },
           "firstHalfClueNumbers": [
             2,
@@ -3952,11 +3952,11 @@
             1
           ],
           "guesses": 16,
-          "correctGuesses": 9,
+          "correctGuesses": 10,
           "wrongTeamHits": 3,
           "neutralHits": 3,
-          "assassinHits": 1,
-          "losingAgentsRemaining": 1,
+          "assassinHits": 0,
+          "losingAgentsRemaining": 4,
           "passes": 8
         },
         {
@@ -3989,14 +3989,14 @@
           "seed": "Q09ERQAAAA0",
           "winner": "blue",
           "endReason": "agents",
-          "actions": 40,
-          "turns": 15,
+          "actions": 47,
+          "turns": 17,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 6,
+            "1": 8,
             "2": 9
           },
           "firstHalfClueNumbers": [
@@ -4007,30 +4007,31 @@
             2,
             2,
             1,
-            2
+            2,
+            1
           ],
-          "guesses": 17,
-          "correctGuesses": 11,
-          "wrongTeamHits": 3,
+          "guesses": 19,
+          "correctGuesses": 14,
+          "wrongTeamHits": 2,
           "neutralHits": 3,
           "assassinHits": 0,
-          "losingAgentsRemaining": 3,
-          "passes": 8
+          "losingAgentsRemaining": 1,
+          "passes": 11
         },
         {
           "board": 14,
           "seed": "Q09ERQAAAA4",
           "winner": "blue",
           "endReason": "assassin",
-          "actions": 45,
-          "turns": 18,
+          "actions": 53,
+          "turns": 22,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 10,
-            "2": 8
+            "1": 11,
+            "2": 11
           },
           "firstHalfClueNumbers": [
             2,
@@ -4041,15 +4042,17 @@
             1,
             2,
             1,
+            2,
+            1,
             2
           ],
-          "guesses": 20,
+          "guesses": 23,
           "correctGuesses": 9,
-          "wrongTeamHits": 5,
-          "neutralHits": 5,
+          "wrongTeamHits": 6,
+          "neutralHits": 7,
           "assassinHits": 1,
           "losingAgentsRemaining": 1,
-          "passes": 7
+          "passes": 8
         },
         {
           "board": 15,
@@ -4084,55 +4087,52 @@
           "seed": "Q09ERQAAABA",
           "winner": "blue",
           "endReason": "agents",
-          "actions": 56,
-          "turns": 23,
+          "actions": 39,
+          "turns": 15,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 15,
-            "2": 8
+            "1": 12,
+            "2": 3
           },
           "firstHalfClueNumbers": [
             2,
             2,
             2,
             1,
-            2,
             1,
-            2,
             1,
-            2,
             1,
-            2,
-            2
+            1
           ],
-          "guesses": 19,
-          "correctGuesses": 11,
-          "wrongTeamHits": 4,
-          "neutralHits": 4,
+          "guesses": 15,
+          "correctGuesses": 10,
+          "wrongTeamHits": 3,
+          "neutralHits": 2,
           "assassinHits": 0,
-          "losingAgentsRemaining": 2,
-          "passes": 14
+          "losingAgentsRemaining": 4,
+          "passes": 9
         },
         {
           "board": 17,
           "seed": "Q09ERQAAABE",
           "winner": "blue",
-          "endReason": "assassin",
+          "endReason": "agents",
           "actions": 43,
-          "turns": 18,
+          "turns": 19,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 11,
-            "2": 7
+            "1": 13,
+            "2": 6
           },
           "firstHalfClueNumbers": [
             2,
+            1,
             2,
             1,
             2,
@@ -4142,13 +4142,13 @@
             2,
             1
           ],
-          "guesses": 18,
-          "correctGuesses": 7,
-          "wrongTeamHits": 6,
+          "guesses": 19,
+          "correctGuesses": 6,
+          "wrongTeamHits": 9,
           "neutralHits": 4,
-          "assassinHits": 1,
-          "losingAgentsRemaining": 3,
-          "passes": 7
+          "assassinHits": 0,
+          "losingAgentsRemaining": 2,
+          "passes": 5
         },
         {
           "board": 18,
@@ -4217,16 +4217,16 @@
           "board": 20,
           "seed": "Q09ERQAAABQ",
           "winner": "blue",
-          "endReason": "assassin",
-          "actions": 29,
-          "turns": 12,
+          "endReason": "agents",
+          "actions": 54,
+          "turns": 23,
           "fallbackClues": 0,
-          "forcedProgressGuesses": 0,
+          "forcedProgressGuesses": 1,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 6,
-            "2": 5,
+            "1": 16,
+            "2": 6,
             "3": 1
           },
           "firstHalfClueNumbers": [
@@ -4235,15 +4235,21 @@
             3,
             1,
             2,
+            1,
+            2,
+            1,
+            2,
+            1,
+            2,
             1
           ],
-          "guesses": 13,
-          "correctGuesses": 5,
-          "wrongTeamHits": 4,
-          "neutralHits": 3,
-          "assassinHits": 1,
-          "losingAgentsRemaining": 3,
-          "passes": 4
+          "guesses": 23,
+          "correctGuesses": 9,
+          "wrongTeamHits": 7,
+          "neutralHits": 7,
+          "assassinHits": 0,
+          "losingAgentsRemaining": 1,
+          "passes": 8
         },
         {
           "board": 21,
@@ -4278,27 +4284,25 @@
           "seed": "Q09ERQAAABY",
           "winner": "blue",
           "endReason": "assassin",
-          "actions": 20,
-          "turns": 8,
+          "actions": 11,
+          "turns": 4,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "2": 8
+            "2": 4
           },
           "firstHalfClueNumbers": [
             2,
-            2,
-            2,
             2
           ],
-          "guesses": 10,
-          "correctGuesses": 4,
-          "wrongTeamHits": 2,
-          "neutralHits": 3,
+          "guesses": 5,
+          "correctGuesses": 3,
+          "wrongTeamHits": 1,
+          "neutralHits": 0,
           "assassinHits": 1,
-          "losingAgentsRemaining": 5,
+          "losingAgentsRemaining": 7,
           "passes": 2
         },
         {
@@ -4306,35 +4310,31 @@
           "seed": "Q09ERQAAABc",
           "winner": "red",
           "endReason": "agents",
-          "actions": 47,
-          "turns": 20,
+          "actions": 29,
+          "turns": 10,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 15,
-            "2": 5
+            "1": 3,
+            "2": 6,
+            "3": 1
           },
           "firstHalfClueNumbers": [
             2,
             2,
             1,
             2,
-            1,
-            2,
-            1,
-            1,
-            1,
-            1
+            2
           ],
-          "guesses": 16,
-          "correctGuesses": 8,
+          "guesses": 15,
+          "correctGuesses": 10,
           "wrongTeamHits": 4,
-          "neutralHits": 4,
+          "neutralHits": 1,
           "assassinHits": 0,
-          "losingAgentsRemaining": 5,
-          "passes": 11
+          "losingAgentsRemaining": 3,
+          "passes": 4
         },
         {
           "board": 24,
@@ -4396,17 +4396,17 @@
         {
           "board": 26,
           "seed": "Q09ERQAAABo",
-          "winner": "red",
-          "endReason": "assassin",
-          "actions": 52,
-          "turns": 21,
+          "winner": "blue",
+          "endReason": "agents",
+          "actions": 50,
+          "turns": 19,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 10,
-            "2": 11
+            "1": 6,
+            "2": 13
           },
           "firstHalfClueNumbers": [
             2,
@@ -4415,33 +4415,32 @@
             2,
             2,
             2,
-            1,
+            2,
             2,
             1,
-            2,
-            1
+            2
           ],
-          "guesses": 23,
-          "correctGuesses": 10,
-          "wrongTeamHits": 5,
-          "neutralHits": 7,
-          "assassinHits": 1,
-          "losingAgentsRemaining": 1,
-          "passes": 8
+          "guesses": 21,
+          "correctGuesses": 13,
+          "wrongTeamHits": 2,
+          "neutralHits": 6,
+          "assassinHits": 0,
+          "losingAgentsRemaining": 2,
+          "passes": 10
         },
         {
           "board": 27,
           "seed": "Q09ERQAAABs",
-          "winner": "red",
-          "endReason": "agents",
-          "actions": 48,
-          "turns": 18,
+          "winner": "blue",
+          "endReason": "assassin",
+          "actions": 36,
+          "turns": 14,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 14,
+            "1": 10,
             "2": 4
           },
           "firstHalfClueNumbers": [
@@ -4451,63 +4450,61 @@
             2,
             1,
             1,
-            1,
-            1,
             1
           ],
-          "guesses": 20,
-          "correctGuesses": 13,
+          "guesses": 15,
+          "correctGuesses": 8,
           "wrongTeamHits": 3,
-          "neutralHits": 4,
-          "assassinHits": 0,
-          "losingAgentsRemaining": 1,
-          "passes": 10
+          "neutralHits": 3,
+          "assassinHits": 1,
+          "losingAgentsRemaining": 2,
+          "passes": 7
         },
         {
           "board": 28,
           "seed": "Q09ERQAAABw",
-          "winner": "blue",
+          "winner": "red",
           "endReason": "assassin",
-          "actions": 25,
-          "turns": 10,
+          "actions": 26,
+          "turns": 11,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 4,
-            "2": 5,
-            "3": 1
+            "1": 5,
+            "2": 6
           },
           "firstHalfClueNumbers": [
             2,
             2,
             1,
             2,
-            1
+            1,
+            2
           ],
           "guesses": 9,
-          "correctGuesses": 5,
+          "correctGuesses": 4,
           "wrongTeamHits": 3,
-          "neutralHits": 0,
+          "neutralHits": 1,
           "assassinHits": 1,
-          "losingAgentsRemaining": 7,
+          "losingAgentsRemaining": 3,
           "passes": 6
         },
         {
           "board": 29,
           "seed": "Q09ERQAAAB0",
-          "winner": "blue",
+          "winner": "red",
           "endReason": "agents",
-          "actions": 51,
-          "turns": 19,
+          "actions": 50,
+          "turns": 20,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 10,
-            "2": 9
+            "1": 13,
+            "2": 7
           },
           "firstHalfClueNumbers": [
             2,
@@ -4521,50 +4518,46 @@
             1,
             2
           ],
-          "guesses": 20,
-          "correctGuesses": 14,
-          "wrongTeamHits": 2,
-          "neutralHits": 4,
+          "guesses": 21,
+          "correctGuesses": 11,
+          "wrongTeamHits": 5,
+          "neutralHits": 5,
           "assassinHits": 0,
           "losingAgentsRemaining": 1,
-          "passes": 12
+          "passes": 9
         },
         {
           "board": 30,
           "seed": "Q09ERQAAAB4",
           "winner": "red",
           "endReason": "assassin",
-          "actions": 50,
-          "turns": 21,
+          "actions": 33,
+          "turns": 13,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 7,
-            "2": 13,
-            "3": 1
+            "1": 9,
+            "2": 2,
+            "3": 2
           },
           "firstHalfClueNumbers": [
             3,
             2,
-            2,
+            3,
             1,
             2,
             1,
-            2,
-            2,
-            2,
-            2,
-            2
+            1
           ],
-          "guesses": 23,
-          "correctGuesses": 8,
-          "wrongTeamHits": 7,
-          "neutralHits": 7,
+          "guesses": 15,
+          "correctGuesses": 7,
+          "wrongTeamHits": 5,
+          "neutralHits": 2,
           "assassinHits": 1,
-          "losingAgentsRemaining": 1,
-          "passes": 6
+          "losingAgentsRemaining": 2,
+          "passes": 5
         },
         {
           "board": 31,
@@ -4636,10 +4629,10 @@
           "seed": "Q09ERQAAACE",
           "winner": "blue",
           "endReason": "agents",
-          "actions": 46,
+          "actions": 45,
           "turns": 17,
           "fallbackClues": 0,
-          "forcedProgressGuesses": 0,
+          "forcedProgressGuesses": 1,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
@@ -4657,44 +4650,44 @@
             1,
             1
           ],
-          "guesses": 19,
-          "correctGuesses": 13,
+          "guesses": 18,
+          "correctGuesses": 12,
           "wrongTeamHits": 2,
           "neutralHits": 4,
           "assassinHits": 0,
-          "losingAgentsRemaining": 2,
+          "losingAgentsRemaining": 3,
           "passes": 10
         },
         {
           "board": 34,
           "seed": "Q09ERQAAACI",
           "winner": "red",
-          "endReason": "assassin",
-          "actions": 39,
+          "endReason": "agents",
+          "actions": 38,
           "turns": 15,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 5,
-            "2": 10
+            "1": 11,
+            "2": 4
           },
           "firstHalfClueNumbers": [
             2,
             2,
-            2,
             1,
-            2,
+            1,
+            1,
             1,
             2,
             1
           ],
-          "guesses": 17,
-          "correctGuesses": 9,
-          "wrongTeamHits": 3,
-          "neutralHits": 4,
-          "assassinHits": 1,
+          "guesses": 16,
+          "correctGuesses": 8,
+          "wrongTeamHits": 5,
+          "neutralHits": 3,
+          "assassinHits": 0,
           "losingAgentsRemaining": 4,
           "passes": 7
         },
@@ -4737,14 +4730,14 @@
           "winner": "red",
           "endReason": "agents",
           "actions": 42,
-          "turns": 15,
+          "turns": 16,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
             "1": 14,
-            "2": 1
+            "2": 2
           },
           "firstHalfClueNumbers": [
             1,
@@ -4756,13 +4749,13 @@
             1,
             1
           ],
-          "guesses": 15,
-          "correctGuesses": 12,
-          "wrongTeamHits": 1,
-          "neutralHits": 2,
+          "guesses": 16,
+          "correctGuesses": 11,
+          "wrongTeamHits": 2,
+          "neutralHits": 3,
           "assassinHits": 0,
           "losingAgentsRemaining": 4,
-          "passes": 12
+          "passes": 10
         },
         {
           "board": 37,
@@ -4796,20 +4789,19 @@
         {
           "board": 38,
           "seed": "Q09ERQAAACY",
-          "winner": "blue",
+          "winner": "red",
           "endReason": "assassin",
-          "actions": 40,
-          "turns": 16,
+          "actions": 30,
+          "turns": 13,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 8,
-            "2": 8
+            "1": 6,
+            "2": 7
           },
           "firstHalfClueNumbers": [
-            2,
             2,
             2,
             1,
@@ -4818,54 +4810,61 @@
             2,
             1
           ],
-          "guesses": 16,
-          "correctGuesses": 8,
-          "wrongTeamHits": 3,
+          "guesses": 14,
+          "correctGuesses": 4,
+          "wrongTeamHits": 5,
           "neutralHits": 4,
           "assassinHits": 1,
-          "losingAgentsRemaining": 2,
-          "passes": 8
+          "losingAgentsRemaining": 3,
+          "passes": 3
         },
         {
           "board": 39,
           "seed": "Q09ERQAAACc",
           "winner": "red",
           "endReason": "assassin",
-          "actions": 7,
-          "turns": 3,
-          "fallbackClues": 0,
-          "forcedProgressGuesses": 0,
-          "bonusGuesses": 0,
-          "correctBonusGuesses": 0,
-          "clues": {
-            "2": 3
-          },
-          "firstHalfClueNumbers": [
-            2,
-            2
-          ],
-          "guesses": 4,
-          "correctGuesses": 1,
-          "wrongTeamHits": 1,
-          "neutralHits": 1,
-          "assassinHits": 1,
-          "losingAgentsRemaining": 8,
-          "passes": 0
-        },
-        {
-          "board": 40,
-          "seed": "Q09ERQAAACg",
-          "winner": "blue",
-          "endReason": "agents",
-          "actions": 41,
+          "actions": 36,
           "turns": 15,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 11,
-            "2": 4
+            "1": 8,
+            "2": 7
+          },
+          "firstHalfClueNumbers": [
+            2,
+            2,
+            2,
+            2,
+            2,
+            1,
+            2,
+            1
+          ],
+          "guesses": 15,
+          "correctGuesses": 6,
+          "wrongTeamHits": 5,
+          "neutralHits": 3,
+          "assassinHits": 1,
+          "losingAgentsRemaining": 3,
+          "passes": 6
+        },
+        {
+          "board": 40,
+          "seed": "Q09ERQAAACg",
+          "winner": "blue",
+          "endReason": "agents",
+          "actions": 49,
+          "turns": 18,
+          "fallbackClues": 0,
+          "forcedProgressGuesses": 0,
+          "bonusGuesses": 0,
+          "correctBonusGuesses": 0,
+          "clues": {
+            "1": 13,
+            "2": 5
           },
           "firstHalfClueNumbers": [
             2,
@@ -4874,16 +4873,17 @@
             1,
             2,
             1,
-            2,
+            1,
+            1,
             1
           ],
-          "guesses": 16,
-          "correctGuesses": 12,
-          "wrongTeamHits": 3,
-          "neutralHits": 1,
+          "guesses": 19,
+          "correctGuesses": 13,
+          "wrongTeamHits": 2,
+          "neutralHits": 4,
           "assassinHits": 0,
           "losingAgentsRemaining": 2,
-          "passes": 10
+          "passes": 12
         },
         {
           "board": 41,
@@ -4970,17 +4970,17 @@
         {
           "board": 44,
           "seed": "Q09ERQAAACw",
-          "winner": "red",
+          "winner": "blue",
           "endReason": "agents",
-          "actions": 37,
-          "turns": 15,
+          "actions": 47,
+          "turns": 19,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 9,
-            "2": 6
+            "1": 10,
+            "2": 9
           },
           "firstHalfClueNumbers": [
             2,
@@ -4990,15 +4990,17 @@
             2,
             1,
             2,
+            1,
+            2,
             1
           ],
-          "guesses": 16,
-          "correctGuesses": 7,
-          "wrongTeamHits": 5,
+          "guesses": 20,
+          "correctGuesses": 10,
+          "wrongTeamHits": 6,
           "neutralHits": 4,
           "assassinHits": 0,
-          "losingAgentsRemaining": 5,
-          "passes": 6
+          "losingAgentsRemaining": 1,
+          "passes": 8
         },
         {
           "board": 45,
@@ -5037,8 +5039,8 @@
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 10,
-            "2": 7
+            "1": 9,
+            "2": 8
           },
           "firstHalfClueNumbers": [
             2,
@@ -5046,7 +5048,7 @@
             2,
             2,
             2,
-            1,
+            2,
             2,
             1,
             2
@@ -5064,234 +5066,6 @@
           "seed": "Q09ERQAAAC8",
           "winner": "blue",
           "endReason": "assassin",
-          "actions": 55,
-          "turns": 22,
-          "fallbackClues": 0,
-          "forcedProgressGuesses": 0,
-          "bonusGuesses": 0,
-          "correctBonusGuesses": 0,
-          "clues": {
-            "1": 11,
-            "2": 11
-          },
-          "firstHalfClueNumbers": [
-            2,
-            2,
-            1,
-            2,
-            2,
-            2,
-            1,
-            2,
-            1,
-            2,
-            2
-          ],
-          "guesses": 22,
-          "correctGuesses": 11,
-          "wrongTeamHits": 4,
-          "neutralHits": 6,
-          "assassinHits": 1,
-          "losingAgentsRemaining": 1,
-          "passes": 11
-        },
-        {
-          "board": 48,
-          "seed": "Q09ERQAAADA",
-          "winner": "blue",
-          "endReason": "agents",
-          "actions": 45,
-          "turns": 17,
-          "fallbackClues": 0,
-          "forcedProgressGuesses": 0,
-          "bonusGuesses": 0,
-          "correctBonusGuesses": 0,
-          "clues": {
-            "1": 14,
-            "2": 3
-          },
-          "firstHalfClueNumbers": [
-            2,
-            1,
-            2,
-            1,
-            1,
-            1,
-            1,
-            1,
-            1
-          ],
-          "guesses": 20,
-          "correctGuesses": 12,
-          "wrongTeamHits": 3,
-          "neutralHits": 5,
-          "assassinHits": 0,
-          "losingAgentsRemaining": 2,
-          "passes": 8
-        },
-        {
-          "board": 49,
-          "seed": "Q09ERQAAADE",
-          "winner": "red",
-          "endReason": "assassin",
-          "actions": 37,
-          "turns": 15,
-          "fallbackClues": 0,
-          "forcedProgressGuesses": 0,
-          "bonusGuesses": 0,
-          "correctBonusGuesses": 0,
-          "clues": {
-            "1": 8,
-            "2": 7
-          },
-          "firstHalfClueNumbers": [
-            2,
-            2,
-            2,
-            2,
-            1,
-            2,
-            1,
-            2
-          ],
-          "guesses": 15,
-          "correctGuesses": 7,
-          "wrongTeamHits": 3,
-          "neutralHits": 4,
-          "assassinHits": 1,
-          "losingAgentsRemaining": 2,
-          "passes": 7
-        },
-        {
-          "board": 50,
-          "seed": "Q09ERQAAADI",
-          "winner": "blue",
-          "endReason": "assassin",
-          "actions": 11,
-          "turns": 4,
-          "fallbackClues": 0,
-          "forcedProgressGuesses": 0,
-          "bonusGuesses": 0,
-          "correctBonusGuesses": 0,
-          "clues": {
-            "2": 4
-          },
-          "firstHalfClueNumbers": [
-            2,
-            2
-          ],
-          "guesses": 5,
-          "correctGuesses": 3,
-          "wrongTeamHits": 0,
-          "neutralHits": 1,
-          "assassinHits": 1,
-          "losingAgentsRemaining": 7,
-          "passes": 2
-        },
-        {
-          "board": 51,
-          "seed": "Q09ERQAAADM",
-          "winner": "red",
-          "endReason": "agents",
-          "actions": 48,
-          "turns": 19,
-          "fallbackClues": 0,
-          "forcedProgressGuesses": 0,
-          "bonusGuesses": 0,
-          "correctBonusGuesses": 0,
-          "clues": {
-            "1": 5,
-            "2": 14
-          },
-          "firstHalfClueNumbers": [
-            2,
-            2,
-            2,
-            2,
-            2,
-            2,
-            2,
-            2,
-            2,
-            2
-          ],
-          "guesses": 22,
-          "correctGuesses": 10,
-          "wrongTeamHits": 5,
-          "neutralHits": 7,
-          "assassinHits": 0,
-          "losingAgentsRemaining": 2,
-          "passes": 7
-        },
-        {
-          "board": 52,
-          "seed": "Q09ERQAAADQ",
-          "winner": "red",
-          "endReason": "assassin",
-          "actions": 26,
-          "turns": 11,
-          "fallbackClues": 0,
-          "forcedProgressGuesses": 0,
-          "bonusGuesses": 0,
-          "correctBonusGuesses": 0,
-          "clues": {
-            "1": 6,
-            "2": 5
-          },
-          "firstHalfClueNumbers": [
-            1,
-            2,
-            1,
-            2,
-            1,
-            2
-          ],
-          "guesses": 11,
-          "correctGuesses": 4,
-          "wrongTeamHits": 2,
-          "neutralHits": 4,
-          "assassinHits": 1,
-          "losingAgentsRemaining": 4,
-          "passes": 4
-        },
-        {
-          "board": 53,
-          "seed": "Q09ERQAAADU",
-          "winner": "blue",
-          "endReason": "agents",
-          "actions": 43,
-          "turns": 15,
-          "fallbackClues": 0,
-          "forcedProgressGuesses": 0,
-          "bonusGuesses": 0,
-          "correctBonusGuesses": 0,
-          "clues": {
-            "1": 10,
-            "2": 5
-          },
-          "firstHalfClueNumbers": [
-            2,
-            2,
-            2,
-            1,
-            2,
-            1,
-            2,
-            1
-          ],
-          "guesses": 19,
-          "correctGuesses": 14,
-          "wrongTeamHits": 2,
-          "neutralHits": 3,
-          "assassinHits": 0,
-          "losingAgentsRemaining": 1,
-          "passes": 9
-        },
-        {
-          "board": 54,
-          "seed": "Q09ERQAAADY",
-          "winner": "blue",
-          "endReason": "assassin",
           "actions": 29,
           "turns": 12,
           "fallbackClues": 0,
@@ -5299,8 +5073,73 @@
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 3,
-            "2": 9
+            "1": 7,
+            "2": 5
+          },
+          "firstHalfClueNumbers": [
+            1,
+            2,
+            1,
+            2,
+            1,
+            2
+          ],
+          "guesses": 12,
+          "correctGuesses": 5,
+          "wrongTeamHits": 2,
+          "neutralHits": 4,
+          "assassinHits": 1,
+          "losingAgentsRemaining": 3,
+          "passes": 5
+        },
+        {
+          "board": 48,
+          "seed": "Q09ERQAAADA",
+          "winner": "blue",
+          "endReason": "agents",
+          "actions": 42,
+          "turns": 17,
+          "fallbackClues": 0,
+          "forcedProgressGuesses": 0,
+          "bonusGuesses": 0,
+          "correctBonusGuesses": 0,
+          "clues": {
+            "1": 15,
+            "2": 2
+          },
+          "firstHalfClueNumbers": [
+            2,
+            1,
+            2,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "guesses": 19,
+          "correctGuesses": 9,
+          "wrongTeamHits": 6,
+          "neutralHits": 4,
+          "assassinHits": 0,
+          "losingAgentsRemaining": 2,
+          "passes": 6
+        },
+        {
+          "board": 49,
+          "seed": "Q09ERQAAADE",
+          "winner": "red",
+          "endReason": "assassin",
+          "actions": 30,
+          "turns": 13,
+          "fallbackClues": 0,
+          "forcedProgressGuesses": 0,
+          "bonusGuesses": 0,
+          "correctBonusGuesses": 0,
+          "clues": {
+            "1": 6,
+            "2": 7
           },
           "firstHalfClueNumbers": [
             2,
@@ -5308,15 +5147,177 @@
             2,
             2,
             2,
+            1,
             2
           ],
           "guesses": 13,
-          "correctGuesses": 5,
-          "wrongTeamHits": 3,
+          "correctGuesses": 4,
+          "wrongTeamHits": 4,
           "neutralHits": 4,
           "assassinHits": 1,
-          "losingAgentsRemaining": 6,
+          "losingAgentsRemaining": 5,
           "passes": 4
+        },
+        {
+          "board": 50,
+          "seed": "Q09ERQAAADI",
+          "winner": "red",
+          "endReason": "assassin",
+          "actions": 45,
+          "turns": 17,
+          "fallbackClues": 0,
+          "forcedProgressGuesses": 0,
+          "bonusGuesses": 0,
+          "correctBonusGuesses": 0,
+          "clues": {
+            "1": 5,
+            "2": 12
+          },
+          "firstHalfClueNumbers": [
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            1
+          ],
+          "guesses": 19,
+          "correctGuesses": 11,
+          "wrongTeamHits": 2,
+          "neutralHits": 5,
+          "assassinHits": 1,
+          "losingAgentsRemaining": 2,
+          "passes": 9
+        },
+        {
+          "board": 51,
+          "seed": "Q09ERQAAADM",
+          "winner": "red",
+          "endReason": "agents",
+          "actions": 52,
+          "turns": 21,
+          "fallbackClues": 0,
+          "forcedProgressGuesses": 0,
+          "bonusGuesses": 0,
+          "correctBonusGuesses": 0,
+          "clues": {
+            "1": 13,
+            "2": 8
+          },
+          "firstHalfClueNumbers": [
+            2,
+            2,
+            1,
+            2,
+            2,
+            2,
+            1,
+            2,
+            1,
+            2,
+            1
+          ],
+          "guesses": 23,
+          "correctGuesses": 10,
+          "wrongTeamHits": 6,
+          "neutralHits": 7,
+          "assassinHits": 0,
+          "losingAgentsRemaining": 1,
+          "passes": 8
+        },
+        {
+          "board": 52,
+          "seed": "Q09ERQAAADQ",
+          "winner": "red",
+          "endReason": "assassin",
+          "actions": 28,
+          "turns": 11,
+          "fallbackClues": 0,
+          "forcedProgressGuesses": 0,
+          "bonusGuesses": 0,
+          "correctBonusGuesses": 0,
+          "clues": {
+            "1": 8,
+            "2": 3
+          },
+          "firstHalfClueNumbers": [
+            1,
+            2,
+            1,
+            2,
+            1,
+            2
+          ],
+          "guesses": 12,
+          "correctGuesses": 6,
+          "wrongTeamHits": 1,
+          "neutralHits": 4,
+          "assassinHits": 1,
+          "losingAgentsRemaining": 5,
+          "passes": 5
+        },
+        {
+          "board": 53,
+          "seed": "Q09ERQAAADU",
+          "winner": "blue",
+          "endReason": "agents",
+          "actions": 47,
+          "turns": 17,
+          "fallbackClues": 0,
+          "forcedProgressGuesses": 0,
+          "bonusGuesses": 0,
+          "correctBonusGuesses": 0,
+          "clues": {
+            "1": 13,
+            "2": 4
+          },
+          "firstHalfClueNumbers": [
+            2,
+            2,
+            2,
+            1,
+            2,
+            1,
+            1,
+            1,
+            1
+          ],
+          "guesses": 20,
+          "correctGuesses": 14,
+          "wrongTeamHits": 2,
+          "neutralHits": 4,
+          "assassinHits": 0,
+          "losingAgentsRemaining": 1,
+          "passes": 10
+        },
+        {
+          "board": 54,
+          "seed": "Q09ERQAAADY",
+          "winner": "red",
+          "endReason": "assassin",
+          "actions": 6,
+          "turns": 3,
+          "fallbackClues": 0,
+          "forcedProgressGuesses": 0,
+          "bonusGuesses": 0,
+          "correctBonusGuesses": 0,
+          "clues": {
+            "2": 3
+          },
+          "firstHalfClueNumbers": [
+            2,
+            2
+          ],
+          "guesses": 3,
+          "correctGuesses": 0,
+          "wrongTeamHits": 1,
+          "neutralHits": 1,
+          "assassinHits": 1,
+          "losingAgentsRemaining": 9,
+          "passes": 0
         },
         {
           "board": 55,
@@ -5383,27 +5384,30 @@
           "seed": "Q09ERQAAADk",
           "winner": "red",
           "endReason": "assassin",
-          "actions": 13,
-          "turns": 5,
+          "actions": 25,
+          "turns": 9,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "2": 5
+            "1": 5,
+            "2": 4
           },
           "firstHalfClueNumbers": [
             2,
+            1,
             2,
+            1,
             2
           ],
-          "guesses": 6,
-          "correctGuesses": 3,
-          "wrongTeamHits": 1,
+          "guesses": 9,
+          "correctGuesses": 7,
+          "wrongTeamHits": 0,
           "neutralHits": 1,
           "assassinHits": 1,
-          "losingAgentsRemaining": 6,
-          "passes": 2
+          "losingAgentsRemaining": 5,
+          "passes": 7
         },
         {
           "board": 58,
@@ -5516,50 +5520,47 @@
           "seed": "Q09ERQAAAD0",
           "winner": "red",
           "endReason": "agents",
-          "actions": 49,
-          "turns": 19,
+          "actions": 33,
+          "turns": 13,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 18,
-            "2": 1
+            "1": 11,
+            "2": 2
           },
           "firstHalfClueNumbers": [
             2,
             1,
-            1,
-            1,
-            1,
-            1,
+            2,
             1,
             1,
             1,
             1
           ],
-          "guesses": 20,
-          "correctGuesses": 11,
-          "wrongTeamHits": 5,
-          "neutralHits": 4,
+          "guesses": 15,
+          "correctGuesses": 7,
+          "wrongTeamHits": 6,
+          "neutralHits": 2,
           "assassinHits": 0,
-          "losingAgentsRemaining": 1,
-          "passes": 10
+          "losingAgentsRemaining": 4,
+          "passes": 5
         },
         {
           "board": 62,
           "seed": "Q09ERQAAAD4",
           "winner": "red",
           "endReason": "assassin",
-          "actions": 50,
-          "turns": 21,
+          "actions": 28,
+          "turns": 11,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 14,
-            "2": 7
+            "1": 5,
+            "2": 6
           },
           "firstHalfClueNumbers": [
             2,
@@ -5567,20 +5568,15 @@
             2,
             1,
             2,
-            1,
-            2,
-            2,
-            1,
-            1,
             1
           ],
-          "guesses": 21,
-          "correctGuesses": 8,
-          "wrongTeamHits": 6,
-          "neutralHits": 6,
+          "guesses": 12,
+          "correctGuesses": 6,
+          "wrongTeamHits": 2,
+          "neutralHits": 3,
           "assassinHits": 1,
-          "losingAgentsRemaining": 2,
-          "passes": 8
+          "losingAgentsRemaining": 5,
+          "passes": 5
         },
         {
           "board": 63,
@@ -5594,13 +5590,14 @@
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "2": 7
+            "1": 2,
+            "2": 5
           },
           "firstHalfClueNumbers": [
             2,
             2,
             2,
-            2
+            1
           ],
           "guesses": 9,
           "correctGuesses": 4,
@@ -5615,23 +5612,22 @@
           "seed": "Q09ERQAAAEA",
           "winner": "red",
           "endReason": "assassin",
-          "actions": 7,
-          "turns": 3,
+          "actions": 3,
+          "turns": 1,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "2": 3
+            "2": 1
           },
           "firstHalfClueNumbers": [
-            2,
             2
           ],
-          "guesses": 4,
+          "guesses": 2,
           "correctGuesses": 1,
           "wrongTeamHits": 0,
-          "neutralHits": 2,
+          "neutralHits": 0,
           "assassinHits": 1,
           "losingAgentsRemaining": 8,
           "passes": 0
@@ -5641,14 +5637,14 @@
           "seed": "Q09ERQAAAEE",
           "winner": "blue",
           "endReason": "agents",
-          "actions": 56,
-          "turns": 23,
+          "actions": 57,
+          "turns": 24,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 13,
+            "1": 14,
             "2": 10
           },
           "firstHalfClueNumbers": [
@@ -5665,28 +5661,28 @@
             1,
             2
           ],
-          "guesses": 22,
-          "correctGuesses": 11,
-          "wrongTeamHits": 5,
-          "neutralHits": 6,
+          "guesses": 23,
+          "correctGuesses": 9,
+          "wrongTeamHits": 7,
+          "neutralHits": 7,
           "assassinHits": 0,
           "losingAgentsRemaining": 1,
-          "passes": 11
+          "passes": 10
         },
         {
           "board": 66,
           "seed": "Q09ERQAAAEI",
           "winner": "red",
           "endReason": "agents",
-          "actions": 41,
-          "turns": 17,
+          "actions": 45,
+          "turns": 20,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 4,
-            "2": 13
+            "1": 6,
+            "2": 14
           },
           "firstHalfClueNumbers": [
             2,
@@ -5697,15 +5693,16 @@
             2,
             2,
             2,
-            2
+            2,
+            1
           ],
           "guesses": 19,
-          "correctGuesses": 7,
-          "wrongTeamHits": 7,
+          "correctGuesses": 6,
+          "wrongTeamHits": 8,
           "neutralHits": 5,
           "assassinHits": 0,
           "losingAgentsRemaining": 3,
-          "passes": 5
+          "passes": 6
         },
         {
           "board": 67,
@@ -5738,16 +5735,16 @@
         {
           "board": 68,
           "seed": "Q09ERQAAAEQ",
-          "winner": "red",
-          "endReason": "agents",
-          "actions": 46,
-          "turns": 18,
+          "winner": "blue",
+          "endReason": "assassin",
+          "actions": 51,
+          "turns": 20,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 11,
+            "1": 13,
             "2": 1,
             "3": 6
           },
@@ -5760,30 +5757,31 @@
             1,
             3,
             2,
-            3
+            3,
+            1
           ],
-          "guesses": 19,
+          "guesses": 21,
           "correctGuesses": 11,
-          "wrongTeamHits": 2,
+          "wrongTeamHits": 3,
           "neutralHits": 6,
-          "assassinHits": 0,
-          "losingAgentsRemaining": 4,
-          "passes": 9
+          "assassinHits": 1,
+          "losingAgentsRemaining": 1,
+          "passes": 10
         },
         {
           "board": 69,
           "seed": "Q09ERQAAAEU",
           "winner": "red",
           "endReason": "assassin",
-          "actions": 40,
-          "turns": 15,
+          "actions": 30,
+          "turns": 11,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 6,
-            "2": 9
+            "1": 3,
+            "2": 8
           },
           "firstHalfClueNumbers": [
             2,
@@ -5791,17 +5789,15 @@
             2,
             2,
             2,
-            2,
-            2,
             2
           ],
-          "guesses": 17,
-          "correctGuesses": 10,
-          "wrongTeamHits": 3,
-          "neutralHits": 3,
+          "guesses": 13,
+          "correctGuesses": 8,
+          "wrongTeamHits": 2,
+          "neutralHits": 2,
           "assassinHits": 1,
           "losingAgentsRemaining": 3,
-          "passes": 8
+          "passes": 6
         },
         {
           "board": 70,
@@ -5867,50 +5863,47 @@
           "board": 72,
           "seed": "Q09ERQAAAEg",
           "winner": "red",
-          "endReason": "assassin",
-          "actions": 47,
-          "turns": 17,
+          "endReason": "agents",
+          "actions": 33,
+          "turns": 12,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 11,
-            "2": 4,
+            "1": 7,
+            "2": 3,
             "3": 2
           },
           "firstHalfClueNumbers": [
             2,
             3,
-            2,
+            1,
             3,
             1,
-            2,
-            1,
-            2,
-            1
+            2
           ],
-          "guesses": 19,
-          "correctGuesses": 13,
+          "guesses": 13,
+          "correctGuesses": 10,
           "wrongTeamHits": 2,
-          "neutralHits": 3,
-          "assassinHits": 1,
-          "losingAgentsRemaining": 1,
-          "passes": 11
+          "neutralHits": 1,
+          "assassinHits": 0,
+          "losingAgentsRemaining": 5,
+          "passes": 8
         },
         {
           "board": 73,
           "seed": "Q09ERQAAAEk",
           "winner": "red",
           "endReason": "assassin",
-          "actions": 41,
-          "turns": 17,
+          "actions": 52,
+          "turns": 21,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 2,
+            "1": 6,
             "2": 15
           },
           "firstHalfClueNumbers": [
@@ -5922,30 +5915,32 @@
             2,
             2,
             2,
+            2,
+            2,
             2
           ],
-          "guesses": 17,
-          "correctGuesses": 7,
+          "guesses": 21,
+          "correctGuesses": 10,
           "wrongTeamHits": 4,
-          "neutralHits": 5,
+          "neutralHits": 6,
           "assassinHits": 1,
-          "losingAgentsRemaining": 2,
-          "passes": 7
+          "losingAgentsRemaining": 1,
+          "passes": 10
         },
         {
           "board": 74,
           "seed": "Q09ERQAAAEo",
           "winner": "red",
           "endReason": "agents",
-          "actions": 36,
-          "turns": 14,
+          "actions": 31,
+          "turns": 12,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 4,
-            "2": 9,
+            "1": 3,
+            "2": 8,
             "3": 1
           },
           "firstHalfClueNumbers": [
@@ -5954,15 +5949,14 @@
             3,
             2,
             2,
-            2,
             2
           ],
-          "guesses": 15,
-          "correctGuesses": 9,
-          "wrongTeamHits": 4,
-          "neutralHits": 2,
+          "guesses": 12,
+          "correctGuesses": 8,
+          "wrongTeamHits": 3,
+          "neutralHits": 1,
           "assassinHits": 0,
-          "losingAgentsRemaining": 4,
+          "losingAgentsRemaining": 6,
           "passes": 7
         },
         {
@@ -5970,16 +5964,16 @@
           "seed": "Q09ERQAAAEs",
           "winner": "red",
           "endReason": "agents",
-          "actions": 50,
-          "turns": 20,
+          "actions": 40,
+          "turns": 16,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 10,
-            "2": 9,
-            "3": 1
+            "1": 8,
+            "2": 6,
+            "3": 2
           },
           "firstHalfClueNumbers": [
             2,
@@ -5989,50 +5983,48 @@
             2,
             1,
             2,
-            1,
-            3,
             1
           ],
-          "guesses": 21,
-          "correctGuesses": 11,
-          "wrongTeamHits": 4,
-          "neutralHits": 6,
+          "guesses": 16,
+          "correctGuesses": 9,
+          "wrongTeamHits": 3,
+          "neutralHits": 4,
           "assassinHits": 0,
-          "losingAgentsRemaining": 2,
-          "passes": 9
+          "losingAgentsRemaining": 5,
+          "passes": 8
         },
         {
           "board": 76,
           "seed": "Q09ERQAAAEw",
-          "winner": "red",
-          "endReason": "assassin",
-          "actions": 45,
+          "winner": "blue",
+          "endReason": "agents",
+          "actions": 46,
           "turns": 17,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 4,
-            "2": 13
+            "1": 10,
+            "2": 7
           },
           "firstHalfClueNumbers": [
             2,
             2,
             2,
+            1,
             2,
             2,
+            1,
             2,
-            2,
-            2,
-            2
+            1
           ],
-          "guesses": 18,
-          "correctGuesses": 11,
+          "guesses": 19,
+          "correctGuesses": 13,
           "wrongTeamHits": 2,
           "neutralHits": 4,
-          "assassinHits": 1,
-          "losingAgentsRemaining": 1,
+          "assassinHits": 0,
+          "losingAgentsRemaining": 2,
           "passes": 10
         },
         {
@@ -6040,7 +6032,7 @@
           "seed": "Q09ERQAAAE0",
           "winner": "red",
           "endReason": "assassin",
-          "actions": 9,
+          "actions": 7,
           "turns": 3,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
@@ -6053,13 +6045,13 @@
             2,
             2
           ],
-          "guesses": 5,
-          "correctGuesses": 3,
+          "guesses": 4,
+          "correctGuesses": 1,
           "wrongTeamHits": 0,
-          "neutralHits": 1,
+          "neutralHits": 2,
           "assassinHits": 1,
           "losingAgentsRemaining": 8,
-          "passes": 1
+          "passes": 0
         },
         {
           "board": 78,
@@ -6224,14 +6216,14 @@
           "seed": "Q09ERQAAAFM",
           "winner": "red",
           "endReason": "assassin",
-          "actions": 44,
-          "turns": 17,
+          "actions": 49,
+          "turns": 19,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 9,
+            "1": 11,
             "2": 8
           },
           "firstHalfClueNumbers": [
@@ -6243,86 +6235,81 @@
             2,
             2,
             2,
-            2
+            2,
+            1
           ],
-          "guesses": 18,
-          "correctGuesses": 10,
-          "wrongTeamHits": 2,
-          "neutralHits": 5,
+          "guesses": 17,
+          "correctGuesses": 11,
+          "wrongTeamHits": 1,
+          "neutralHits": 4,
           "assassinHits": 1,
-          "losingAgentsRemaining": 2,
-          "passes": 9
+          "losingAgentsRemaining": 3,
+          "passes": 13
         },
         {
           "board": 84,
           "seed": "Q09ERQAAAFQ",
           "winner": "red",
           "endReason": "assassin",
-          "actions": 37,
-          "turns": 13,
+          "actions": 25,
+          "turns": 9,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 6,
-            "2": 5,
-            "3": 1,
-            "4": 1
+            "1": 4,
+            "2": 3,
+            "3": 2
           },
           "firstHalfClueNumbers": [
-            4,
-            1,
-            3,
+            2,
             1,
             2,
             1,
-            2
+            3
           ],
-          "guesses": 15,
-          "correctGuesses": 11,
+          "guesses": 10,
+          "correctGuesses": 7,
           "wrongTeamHits": 1,
-          "neutralHits": 2,
+          "neutralHits": 1,
           "assassinHits": 1,
-          "losingAgentsRemaining": 4,
-          "passes": 9
+          "losingAgentsRemaining": 6,
+          "passes": 6
         },
         {
           "board": 85,
           "seed": "Q09ERQAAAFU",
-          "winner": "blue",
+          "winner": "red",
           "endReason": "agents",
-          "actions": 53,
-          "turns": 21,
+          "actions": 45,
+          "turns": 18,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 12,
-            "2": 5,
-            "3": 4
+            "1": 7,
+            "2": 11
           },
           "firstHalfClueNumbers": [
             1,
             2,
             2,
-            1,
             2,
             2,
-            3,
+            2,
+            2,
             1,
-            3,
-            1,
-            3
+            2
           ],
           "guesses": 19,
-          "correctGuesses": 12,
-          "wrongTeamHits": 3,
-          "neutralHits": 4,
+          "correctGuesses": 10,
+          "wrongTeamHits": 4,
+          "neutralHits": 5,
           "assassinHits": 0,
-          "losingAgentsRemaining": 2,
-          "passes": 13
+          "losingAgentsRemaining": 3,
+          "passes": 8
         },
         {
           "board": 86,
@@ -6361,89 +6348,104 @@
         {
           "board": 87,
           "seed": "Q09ERQAAAFc",
-          "winner": "red",
-          "endReason": "assassin",
-          "actions": 17,
-          "turns": 7,
+          "winner": "blue",
+          "endReason": "agents",
+          "actions": 71,
+          "turns": 31,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 3,
-            "2": 4
+            "1": 19,
+            "2": 12
           },
           "firstHalfClueNumbers": [
             1,
             2,
             1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            2,
+            1,
+            2,
+            1,
+            2,
+            1,
             2
           ],
-          "guesses": 7,
-          "correctGuesses": 3,
-          "wrongTeamHits": 1,
-          "neutralHits": 2,
-          "assassinHits": 1,
-          "losingAgentsRemaining": 8,
-          "passes": 3
+          "guesses": 21,
+          "correctGuesses": 10,
+          "wrongTeamHits": 5,
+          "neutralHits": 6,
+          "assassinHits": 0,
+          "losingAgentsRemaining": 2,
+          "passes": 19
         },
         {
           "board": 88,
           "seed": "Q09ERQAAAFg",
           "winner": "red",
           "endReason": "assassin",
-          "actions": 14,
-          "turns": 5,
+          "actions": 34,
+          "turns": 13,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 1,
-            "2": 4
+            "1": 6,
+            "2": 7
           },
           "firstHalfClueNumbers": [
             2,
             2,
+            2,
+            1,
+            1,
+            1,
             2
           ],
-          "guesses": 6,
-          "correctGuesses": 4,
-          "wrongTeamHits": 0,
-          "neutralHits": 1,
+          "guesses": 15,
+          "correctGuesses": 8,
+          "wrongTeamHits": 2,
+          "neutralHits": 4,
           "assassinHits": 1,
-          "losingAgentsRemaining": 8,
-          "passes": 3
+          "losingAgentsRemaining": 5,
+          "passes": 6
         },
         {
           "board": 89,
           "seed": "Q09ERQAAAFk",
           "winner": "red",
           "endReason": "assassin",
-          "actions": 26,
-          "turns": 9,
+          "actions": 18,
+          "turns": 7,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 1,
-            "2": 8
+            "1": 2,
+            "2": 5
           },
           "firstHalfClueNumbers": [
             2,
             2,
             2,
-            2,
             2
           ],
-          "guesses": 11,
-          "correctGuesses": 8,
-          "wrongTeamHits": 2,
+          "guesses": 8,
+          "correctGuesses": 4,
+          "wrongTeamHits": 3,
           "neutralHits": 0,
           "assassinHits": 1,
           "losingAgentsRemaining": 4,
-          "passes": 6
+          "passes": 3
         },
         {
           "board": 90,
@@ -6512,46 +6514,48 @@
           "seed": "Q09ERQAAAFw",
           "winner": "blue",
           "endReason": "assassin",
-          "actions": 37,
-          "turns": 14,
+          "actions": 43,
+          "turns": 18,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 8,
-            "2": 6
+            "1": 7,
+            "2": 11
           },
           "firstHalfClueNumbers": [
             2,
             2,
             1,
             2,
-            1,
             2,
-            1
+            2,
+            2,
+            2,
+            2
           ],
-          "guesses": 15,
-          "correctGuesses": 9,
-          "wrongTeamHits": 1,
-          "neutralHits": 4,
+          "guesses": 18,
+          "correctGuesses": 7,
+          "wrongTeamHits": 5,
+          "neutralHits": 5,
           "assassinHits": 1,
-          "losingAgentsRemaining": 2,
-          "passes": 8
+          "losingAgentsRemaining": 3,
+          "passes": 7
         },
         {
           "board": 93,
           "seed": "Q09ERQAAAF0",
-          "winner": "blue",
+          "winner": "red",
           "endReason": "agents",
-          "actions": 47,
-          "turns": 19,
+          "actions": 44,
+          "turns": 18,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 13,
+            "1": 12,
             "2": 5,
             "3": 1
           },
@@ -6564,16 +6568,15 @@
             2,
             1,
             2,
-            1,
             1
           ],
           "guesses": 21,
-          "correctGuesses": 10,
-          "wrongTeamHits": 6,
+          "correctGuesses": 9,
+          "wrongTeamHits": 7,
           "neutralHits": 5,
           "assassinHits": 0,
           "losingAgentsRemaining": 1,
-          "passes": 7
+          "passes": 5
         },
         {
           "board": 94,
@@ -6610,32 +6613,36 @@
           "board": 95,
           "seed": "Q09ERQAAAF8",
           "winner": "red",
-          "endReason": "assassin",
-          "actions": 22,
-          "turns": 9,
+          "endReason": "agents",
+          "actions": 45,
+          "turns": 18,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 3,
-            "2": 4,
-            "3": 2
+            "1": 9,
+            "2": 3,
+            "3": 6
           },
           "firstHalfClueNumbers": [
             3,
             1,
             3,
-            2,
-            2
+            1,
+            3,
+            1,
+            3,
+            1,
+            3
           ],
-          "guesses": 9,
-          "correctGuesses": 4,
-          "wrongTeamHits": 4,
-          "neutralHits": 0,
-          "assassinHits": 1,
-          "losingAgentsRemaining": 7,
-          "passes": 4
+          "guesses": 19,
+          "correctGuesses": 10,
+          "wrongTeamHits": 5,
+          "neutralHits": 4,
+          "assassinHits": 0,
+          "losingAgentsRemaining": 2,
+          "passes": 8
         },
         {
           "board": 96,
@@ -6677,8 +6684,7 @@
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 1,
-            "2": 3
+            "2": 4
           },
           "firstHalfClueNumbers": [
             2,
@@ -6696,17 +6702,17 @@
           "board": 98,
           "seed": "Q09ERQAAAGI",
           "winner": "red",
-          "endReason": "agents",
-          "actions": 38,
-          "turns": 14,
+          "endReason": "assassin",
+          "actions": 45,
+          "turns": 17,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 7,
-            "2": 3,
-            "3": 4
+            "1": 9,
+            "2": 5,
+            "3": 3
           },
           "firstHalfClueNumbers": [
             2,
@@ -6715,15 +6721,17 @@
             1,
             3,
             1,
+            3,
+            1,
             3
           ],
-          "guesses": 15,
+          "guesses": 18,
           "correctGuesses": 11,
-          "wrongTeamHits": 1,
+          "wrongTeamHits": 3,
           "neutralHits": 3,
-          "assassinHits": 0,
-          "losingAgentsRemaining": 5,
-          "passes": 9
+          "assassinHits": 1,
+          "losingAgentsRemaining": 2,
+          "passes": 10
         },
         {
           "board": 99,
@@ -6758,62 +6766,63 @@
         {
           "board": 100,
           "seed": "Q09ERQAAAGQ",
-          "winner": "red",
+          "winner": "blue",
           "endReason": "assassin",
-          "actions": 38,
-          "turns": 15,
+          "actions": 44,
+          "turns": 18,
           "fallbackClues": 0,
           "forcedProgressGuesses": 0,
           "bonusGuesses": 0,
           "correctBonusGuesses": 0,
           "clues": {
-            "1": 5,
-            "2": 10
+            "1": 7,
+            "2": 11
           },
           "firstHalfClueNumbers": [
             2,
+            2,
+            2,
             1,
             2,
             1,
             2,
-            2,
-            2,
+            1,
             2
           ],
-          "guesses": 15,
+          "guesses": 18,
           "correctGuesses": 8,
-          "wrongTeamHits": 3,
-          "neutralHits": 3,
+          "wrongTeamHits": 4,
+          "neutralHits": 5,
           "assassinHits": 1,
-          "losingAgentsRemaining": 3,
+          "losingAgentsRemaining": 2,
           "passes": 8
         }
       ],
       "fun": {
         "objectiveVersion": 1,
-        "score": 42.455,
+        "score": 40.5315,
         "selectionScore": null,
         "components": {
-          "ambition": 66.0582,
+          "ambition": 61.7716,
           "momentum": 0,
-          "suspense": 45.25,
-          "flow": 75.5
+          "suspense": 46,
+          "flow": 70
         },
         "guardrailsPassed": false,
         "violations": [
           {
             "metric": "assassinRate",
-            "actual": 0.65,
+            "actual": 0.61,
             "limit": 0.02
           },
           {
             "metric": "wrongTeamHitsPerGame",
-            "actual": 2.64,
+            "actual": 2.83,
             "limit": 0.15
           },
           {
             "metric": "neutralHitsPerGame",
-            "actual": 3.11,
+            "actual": 3.09,
             "limit": 0.35
           }
         ]
@@ -6823,111 +6832,111 @@
   "operativeAggression": {
     "conservative": {
       "gameCount": 100,
-      "correctCardsPerTurn": 0.516598,
-      "wrongTeamHitsPerGame": 2.76,
-      "neutralHitsPerGame": 3.32,
-      "assassinRate": 0.6,
-      "meanTurnsPerGame": 14.46,
-      "passesPerGame": 7.49,
+      "correctCardsPerTurn": 0.507187,
+      "wrongTeamHitsPerGame": 3.02,
+      "neutralHitsPerGame": 3.25,
+      "assassinRate": 0.54,
+      "meanTurnsPerGame": 14.61,
+      "passesPerGame": 7.44,
       "forcedProgressGuessesPerGame": 0.09,
       "operativeGuessQuality": {
-        "acceptedGuesses": 1415,
-        "meanAcceptedSimilarity": 0.299264,
-        "tenthPercentileAcceptedSimilarity": 0.15407243701675938,
-        "minimumAcceptedSimilarity": 0.03394066543218023,
+        "acceptedGuesses": 1422,
+        "meanAcceptedSimilarity": 0.288126,
+        "tenthPercentileAcceptedSimilarity": 0.1516322569070697,
+        "minimumAcceptedSimilarity": 0.03583721633158901,
         "weakSimilarityThreshold": 0.25,
-        "weakGuesses": 632,
-        "weakGuessRate": 0.446643,
-        "declaredFillGuesses": 677,
-        "weakDeclaredFillGuesses": 296,
-        "weakDeclaredFillRate": 0.437223,
-        "preDeclaredDecisions": 1816,
-        "preDeclaredPasses": 401,
-        "preDeclaredPassRate": 0.220815
+        "weakGuesses": 649,
+        "weakGuessRate": 0.456399,
+        "declaredFillGuesses": 716,
+        "weakDeclaredFillGuesses": 321,
+        "weakDeclaredFillRate": 0.448324,
+        "preDeclaredDecisions": 1818,
+        "preDeclaredPasses": 396,
+        "preDeclaredPassRate": 0.217822
       },
       "fun": {
         "objectiveVersion": 1,
-        "score": 36.8566,
+        "score": 35.1343,
         "selectionScore": null,
         "components": {
-          "ambition": 69.4387,
+          "ambition": 63.906,
           "momentum": 0,
-          "suspense": 41,
-          "flow": 38.5
+          "suspense": 43,
+          "flow": 34.75
         },
         "guardrailsPassed": false,
         "violations": [
           {
             "metric": "assassinRate",
-            "actual": 0.6,
+            "actual": 0.54,
             "limit": 0.02
           },
           {
             "metric": "wrongTeamHitsPerGame",
-            "actual": 2.76,
+            "actual": 3.02,
             "limit": 0.15
           },
           {
             "metric": "neutralHitsPerGame",
-            "actual": 3.32,
+            "actual": 3.25,
             "limit": 0.35
           }
         ]
       },
       "wins": {
-        "blue": 41,
-        "red": 59
+        "blue": 43,
+        "red": 57
       }
     },
     "aggressive": {
       "gameCount": 100,
-      "correctCardsPerTurn": 0.655477,
-      "wrongTeamHitsPerGame": 2.84,
-      "neutralHitsPerGame": 3.26,
-      "assassinRate": 0.6,
-      "meanTurnsPerGame": 11.32,
-      "passesPerGame": 4.33,
+      "correctCardsPerTurn": 0.635833,
+      "wrongTeamHitsPerGame": 3.14,
+      "neutralHitsPerGame": 3.38,
+      "assassinRate": 0.59,
+      "meanTurnsPerGame": 12,
+      "passesPerGame": 4.58,
       "forcedProgressGuessesPerGame": 0,
       "operativeGuessQuality": {
-        "acceptedGuesses": 1412,
-        "meanAcceptedSimilarity": 0.28557,
-        "tenthPercentileAcceptedSimilarity": 0.14213500676901678,
+        "acceptedGuesses": 1474,
+        "meanAcceptedSimilarity": 0.27462,
+        "tenthPercentileAcceptedSimilarity": 0.13505173820583846,
         "minimumAcceptedSimilarity": 0.035225018074261094,
         "weakSimilarityThreshold": 0.25,
-        "weakGuesses": 682,
-        "weakGuessRate": 0.483003,
-        "declaredFillGuesses": 830,
-        "weakDeclaredFillGuesses": 424,
-        "weakDeclaredFillRate": 0.510843,
-        "preDeclaredDecisions": 1438,
-        "preDeclaredPasses": 26,
-        "preDeclaredPassRate": 0.018081
+        "weakGuesses": 758,
+        "weakGuessRate": 0.514247,
+        "declaredFillGuesses": 884,
+        "weakDeclaredFillGuesses": 466,
+        "weakDeclaredFillRate": 0.527149,
+        "preDeclaredDecisions": 1513,
+        "preDeclaredPasses": 39,
+        "preDeclaredPassRate": 0.025777
       },
       "fun": {
         "objectiveVersion": 1,
-        "score": 45.1951,
+        "score": 46.1879,
         "selectionScore": null,
         "components": {
-          "ambition": 63.3586,
+          "ambition": 60.4181,
           "momentum": 0,
-          "suspense": 44.75,
+          "suspense": 52.25,
           "flow": 100
         },
         "guardrailsPassed": false,
         "violations": [
           {
             "metric": "assassinRate",
-            "actual": 0.6,
+            "actual": 0.59,
             "limit": 0.02
           },
           {
             "metric": "wrongTeamHitsPerGame",
-            "actual": 2.84,
+            "actual": 3.14,
             "limit": 0.15
           },
           {
             "metric": "neutralHitsPerGame",
-            "actual": 3.26,
+            "actual": 3.38,
             "limit": 0.35
           }
         ]
@@ -6939,97 +6948,97 @@
     },
     "dynamic": {
       "gameCount": 100,
-      "correctCardsPerTurn": 0.557781,
-      "wrongTeamHitsPerGame": 2.64,
-      "neutralHitsPerGame": 3.11,
-      "assassinRate": 0.65,
-      "meanTurnsPerGame": 12.98,
-      "passesPerGame": 6.3,
-      "forcedProgressGuessesPerGame": 0.02,
+      "correctCardsPerTurn": 0.543182,
+      "wrongTeamHitsPerGame": 2.83,
+      "neutralHitsPerGame": 3.09,
+      "assassinRate": 0.61,
+      "meanTurnsPerGame": 13.2,
+      "passesPerGame": 6.35,
+      "forcedProgressGuessesPerGame": 0.04,
       "operativeGuessQuality": {
-        "acceptedGuesses": 1364,
-        "meanAcceptedSimilarity": 0.300096,
-        "tenthPercentileAcceptedSimilarity": 0.1564190092400648,
-        "minimumAcceptedSimilarity": 0.05591726721342493,
+        "acceptedGuesses": 1370,
+        "meanAcceptedSimilarity": 0.289075,
+        "tenthPercentileAcceptedSimilarity": 0.15304866089780939,
+        "minimumAcceptedSimilarity": 0.05269030136124398,
         "weakSimilarityThreshold": 0.25,
-        "weakGuesses": 593,
-        "weakGuessRate": 0.434751,
-        "declaredFillGuesses": 712,
-        "weakDeclaredFillGuesses": 291,
-        "weakDeclaredFillRate": 0.408708,
-        "preDeclaredDecisions": 1627,
-        "preDeclaredPasses": 263,
-        "preDeclaredPassRate": 0.161647
+        "weakGuesses": 615,
+        "weakGuessRate": 0.448905,
+        "declaredFillGuesses": 747,
+        "weakDeclaredFillGuesses": 312,
+        "weakDeclaredFillRate": 0.417671,
+        "preDeclaredDecisions": 1641,
+        "preDeclaredPasses": 271,
+        "preDeclaredPassRate": 0.165143
       },
       "fun": {
         "objectiveVersion": 1,
-        "score": 42.455,
+        "score": 40.5315,
         "selectionScore": null,
         "components": {
-          "ambition": 66.0582,
+          "ambition": 61.7716,
           "momentum": 0,
-          "suspense": 45.25,
-          "flow": 75.5
+          "suspense": 46,
+          "flow": 70
         },
         "guardrailsPassed": false,
         "violations": [
           {
             "metric": "assassinRate",
-            "actual": 0.65,
+            "actual": 0.61,
             "limit": 0.02
           },
           {
             "metric": "wrongTeamHitsPerGame",
-            "actual": 2.64,
+            "actual": 2.83,
             "limit": 0.15
           },
           {
             "metric": "neutralHitsPerGame",
-            "actual": 3.11,
+            "actual": 3.09,
             "limit": 0.35
           }
         ]
       },
       "wins": {
-        "blue": 44,
-        "red": 56
+        "blue": 46,
+        "red": 54
       }
     }
   },
   "operativeAggressionVsDynamic": {
     "conservative": {
-      "correctCardsPerTurn": -0.041183,
-      "wrongTeamHitsPerGame": 0.12,
-      "neutralHitsPerGame": 0.21,
-      "assassinRate": -0.05,
-      "meanTurnsPerGame": 1.48,
-      "passesPerGame": 1.19,
-      "forcedProgressGuessesPerGame": 0.07
+      "correctCardsPerTurn": -0.035995,
+      "wrongTeamHitsPerGame": 0.19,
+      "neutralHitsPerGame": 0.16,
+      "assassinRate": -0.07,
+      "meanTurnsPerGame": 1.41,
+      "passesPerGame": 1.09,
+      "forcedProgressGuessesPerGame": 0.05
     },
     "aggressive": {
-      "correctCardsPerTurn": 0.097696,
-      "wrongTeamHitsPerGame": 0.2,
-      "neutralHitsPerGame": 0.15,
-      "assassinRate": -0.05,
-      "meanTurnsPerGame": -1.66,
-      "passesPerGame": -1.97,
-      "forcedProgressGuessesPerGame": -0.02
+      "correctCardsPerTurn": 0.092651,
+      "wrongTeamHitsPerGame": 0.31,
+      "neutralHitsPerGame": 0.29,
+      "assassinRate": -0.02,
+      "meanTurnsPerGame": -1.2,
+      "passesPerGame": -1.77,
+      "forcedProgressGuessesPerGame": -0.04
     }
   },
   "hybridMinusCurrent": {
-    "multiClueRate": 0.35285,
-    "meanClueNumber": 0.387019,
-    "firstHalfMeanClueNumber": 0.518541,
-    "correctCardsPerTurn": 0.044123,
-    "wrongTeamHitsPerGame": -0.37,
-    "wrongTeamGuessRate": -0.013183,
-    "neutralHitsPerGame": -0.11,
-    "assassinRate": 0.03,
-    "closeFinishRate": 0,
-    "meanLosingAgentsRemaining": 0.42,
-    "meanTurnsPerGame": -2.03,
-    "meanGuessesPerTurn": 0.080827,
-    "passesPerGame": -1.55,
+    "multiClueRate": 0.325262,
+    "meanClueNumber": 0.356682,
+    "firstHalfMeanClueNumber": 0.486608,
+    "correctCardsPerTurn": 0.048165,
+    "wrongTeamHitsPerGame": -0.27,
+    "wrongTeamGuessRate": -0.008858,
+    "neutralHitsPerGame": -0.13,
+    "assassinRate": -0.01,
+    "closeFinishRate": 0.01,
+    "meanLosingAgentsRemaining": 0.19,
+    "meanTurnsPerGame": -1.85,
+    "meanGuessesPerTurn": 0.081733,
+    "passesPerGame": -1.43,
     "fallbackClueRate": 0,
     "bonusGuessesPerGame": 0,
     "correctBonusGuessRate": 0

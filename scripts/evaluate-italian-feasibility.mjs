@@ -4,7 +4,11 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { performance } from "node:perf_hooks";
 import { env, pipeline } from "@huggingface/transformers";
-import { normalizeTerm } from "../src/model.js";
+import {
+  isOrthographicFalseFriend,
+  normalizeTerm,
+} from "../src/model.js";
+import { LANGUAGE } from "../src/word-data.js";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const OUTPUT_PATH = resolve(
@@ -77,6 +81,22 @@ const MORPHOLOGY_PAIRS = [
   ["università", "universita", "accent"],
 ];
 
+const ORTHOGRAPHIC_FALSE_FRIEND_CASES = {
+  block: [
+    ["monologo", "mongolfiera"],
+    ["partono", "pantera"],
+    ["partono", "burattino"],
+  ],
+  allow: [
+    ["viaggio", "valigia"],
+    ["spazio", "razzo"],
+    ["giustizia", "giudice"],
+    ["medicina", "ospedale"],
+    ["festa", "torta"],
+    ["agricoltura", "fattoria"],
+  ],
+};
+
 const selectedIds = new Set(process.argv.slice(2));
 const selectedModels = selectedIds.size
   ? MODELS.filter(({ id }) => selectedIds.has(id))
@@ -136,6 +156,8 @@ const report = {
       "Rank two intended targets against three neutral words and one high-risk related word. Report target recall in the top two, exact target-set accuracy, and risk-word intrusion.",
     morphology:
       "Mean cosine similarity for number, gender, verb, irregular, and accent variants.",
+    orthographicGuard:
+      "Block the three observed spelling-driven false friends while preserving six source-created semantic pairs with potentially confusable word shapes.",
     transforms:
       "Raw normalized vectors and a prototype centered variant using the mean of all fixture terms. Production centering still requires a representative 30,000-clue Italian corpus.",
     latency:
@@ -147,6 +169,7 @@ const report = {
     ],
   },
   normalizationCases,
+  orthographicGuard: scoreOrthographicGuard(),
   results,
 };
 
@@ -239,6 +262,30 @@ function scoreTransform(vectors) {
   return {
     semantic: scoreTurns(vectors),
     morphology: scoreMorphology(vectors),
+  };
+}
+
+function scoreOrthographicGuard() {
+  const blocked = ORTHOGRAPHIC_FALSE_FRIEND_CASES.block.map(([clue, word]) => ({
+    clue,
+    word,
+    rejected: isOrthographicFalseFriend(clue, [word], {
+      language: LANGUAGE.ITALIAN,
+    }),
+  }));
+  const allowed = ORTHOGRAPHIC_FALSE_FRIEND_CASES.allow.map(([clue, word]) => ({
+    clue,
+    word,
+    rejected: isOrthographicFalseFriend(clue, [word], {
+      language: LANGUAGE.ITALIAN,
+    }),
+  }));
+
+  return {
+    blocked,
+    allowed,
+    blockedCount: blocked.filter(({ rejected }) => rejected).length,
+    allowedCount: allowed.filter(({ rejected }) => !rejected).length,
   };
 }
 

@@ -8,7 +8,13 @@ import {
   decodeBoardParam,
   encodeBoardParam,
 } from "../src/board-share.js";
-import { isForbiddenClue, normalizeTerm } from "../src/model.js";
+import {
+  adjustSemanticSimilarity,
+  analyzeEmbeddedBoard,
+  isForbiddenClue,
+  isOrthographicFalseFriend,
+  normalizeTerm,
+} from "../src/model.js";
 import {
   ITALIAN_EXTENDED_WORDS,
   ITALIAN_WORD_REPORT,
@@ -73,6 +79,109 @@ assert.equal(
 assert.equal(
   isForbiddenClue("scritto", ["scrivere"], { language: LANGUAGE.ITALIAN }),
   true,
+);
+assert.equal(
+  isForbiddenClue("monologo", ["mongolfiera"], {
+    language: LANGUAGE.ITALIAN,
+  }),
+  false,
+);
+for (const [clue, word] of [
+  ["monologo", "mongolfiera"],
+  ["partono", "pantera"],
+  ["partono", "burattino"],
+]) {
+  assert.equal(
+    isOrthographicFalseFriend(clue, [word], {
+      language: LANGUAGE.ITALIAN,
+    }),
+    true,
+  );
+}
+for (const [clue, word] of [
+  ["viaggio", "valigia"],
+  ["spazio", "razzo"],
+  ["giustizia", "giudice"],
+]) {
+  assert.equal(
+    isOrthographicFalseFriend(clue, [word], {
+      language: LANGUAGE.ITALIAN,
+    }),
+    false,
+  );
+}
+assert.equal(
+  isOrthographicFalseFriend("partono", ["pantera"], {
+    language: LANGUAGE.ENGLISH,
+  }),
+  false,
+);
+assert.equal(
+  adjustSemanticSimilarity("monologo", "mongolfiera", 0.4211, {
+    language: LANGUAGE.ITALIAN,
+  }).toFixed(4),
+  "0.1911",
+);
+assert.equal(
+  adjustSemanticSimilarity("partono", "pantera", 0.3568, {
+    language: LANGUAGE.ITALIAN,
+  }).toFixed(4),
+  "0.1268",
+);
+assert.equal(
+  adjustSemanticSimilarity("partono", "burattino", 0.3161, {
+    language: LANGUAGE.ITALIAN,
+  }).toFixed(4),
+  "0.0861",
+);
+assert.equal(
+  adjustSemanticSimilarity("monologo", "mongolfiera", 0.4211, {
+    language: LANGUAGE.ENGLISH,
+  }),
+  0.4211,
+);
+
+const falseFriendBoard = [
+  { word: "MONGOLFIERA", team: "friendly", layoutId: 0 },
+  { word: "PANTERA", team: "friendly", layoutId: 1 },
+  { word: "BURATTINO", team: "friendly", layoutId: 2 },
+  { word: "SERVER", team: "assassin", layoutId: 3 },
+];
+const falseFriendVectors = [
+  Float32Array.from([0.35, 0.4, 0]),
+  Float32Array.from([0.35, 0.4, 0]),
+  Float32Array.from([0.35, 0.4, 0]),
+  Float32Array.from([0, 0, 1]),
+];
+const falseFriendClueIndex = {
+  clues: ["monologo", "partono", "viaggio"],
+  dimensions: 3,
+  frequencies: [5, 5, 5],
+  quantization: { scale: 127 },
+  vectors: Int8Array.from([
+    127, 0, 0,
+    127, 0, 0,
+    0, 127, 0,
+  ]),
+};
+const falseFriendAnalysis = analyzeEmbeddedBoard(
+  falseFriendBoard,
+  falseFriendVectors,
+  falseFriendClueIndex,
+  { language: LANGUAGE.ITALIAN },
+);
+assert.equal(falseFriendAnalysis.summary.candidateTotal, 3);
+assert.ok(falseFriendAnalysis.suggestions.length > 0);
+assert.ok(
+  falseFriendAnalysis.suggestions.every(
+    ({ clue, targets }) =>
+      targets.every(
+        ({ word }) =>
+          !isOrthographicFalseFriend(clue, [word], {
+            language: LANGUAGE.ITALIAN,
+          }),
+      ),
+  ),
 );
 
 for (const { term, current } of report.normalizationCases) {

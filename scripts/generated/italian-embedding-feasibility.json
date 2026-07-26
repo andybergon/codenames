@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-25T19:17:34.932Z",
+  "generatedAt": "2026-07-26T02:40:28.092Z",
   "environment": {
     "node": "v26.5.0",
     "platform": "darwin",
@@ -12,6 +12,7 @@
     "fixture": "Original project fixture with 16 Italian clue turns, 96 board-role observations, and 15 morphology pairs. It contains no official Codenames vocabulary.",
     "semantic": "Rank two intended targets against three neutral words and one high-risk related word. Report target recall in the top two, exact target-set accuracy, and risk-word intrusion.",
     "morphology": "Mean cosine similarity for number, gender, verb, irregular, and accent variants.",
+    "orthographicGuard": "Block the three observed spelling-driven false friends while preserving six source-created semantic pairs with potentially confusable word shapes.",
     "transforms": "Raw normalized vectors and a prototype centered variant using the mean of all fixture terms. Production centering still requires a representative 30,000-clue Italian corpus.",
     "latency": "Warm 25-term embedding latency after model load, averaged over five runs in Node. Browser timing and cold network transfer remain separate acceptance gates.",
     "limitations": [
@@ -46,6 +47,59 @@
       "current": "papà"
     }
   ],
+  "orthographicGuard": {
+    "blocked": [
+      {
+        "clue": "monologo",
+        "word": "mongolfiera",
+        "rejected": true
+      },
+      {
+        "clue": "partono",
+        "word": "pantera",
+        "rejected": true
+      },
+      {
+        "clue": "partono",
+        "word": "burattino",
+        "rejected": true
+      }
+    ],
+    "allowed": [
+      {
+        "clue": "viaggio",
+        "word": "valigia",
+        "rejected": false
+      },
+      {
+        "clue": "spazio",
+        "word": "razzo",
+        "rejected": false
+      },
+      {
+        "clue": "giustizia",
+        "word": "giudice",
+        "rejected": false
+      },
+      {
+        "clue": "medicina",
+        "word": "ospedale",
+        "rejected": false
+      },
+      {
+        "clue": "festa",
+        "word": "torta",
+        "rejected": false
+      },
+      {
+        "clue": "agricoltura",
+        "word": "fattoria",
+        "rejected": false
+      }
+    ],
+    "blockedCount": 3,
+    "allowedCount": 6
+  },
   "results": [
     {
       "id": "bge-small-en",
@@ -55,17 +109,17 @@
       "languageScope": "English",
       "dimensions": 384,
       "q8ModelBytes": 34014426,
-      "loadMs": 84.5,
+      "loadMs": 98.3,
       "warmLatency": {
         "terms": 25,
         "runs": 5,
-        "medianMs": 9.7,
+        "medianMs": 10.1,
         "samplesMs": [
-          9.2,
           9.6,
-          9.7,
-          9.8,
-          10.2
+          10.1,
+          10.1,
+          10.3,
+          10.6
         ]
       },
       "raw": {
@@ -299,17 +353,17 @@
       "languageScope": "94 languages",
       "dimensions": 384,
       "q8ModelBytes": 118308185,
-      "loadMs": 486.1,
+      "loadMs": 436.6,
       "warmLatency": {
         "terms": 25,
         "runs": 5,
-        "medianMs": 12.6,
+        "medianMs": 12.4,
         "samplesMs": [
-          11.6,
-          12.1,
+          12.2,
+          12.4,
+          12.4,
           12.6,
-          12.8,
-          13
+          12.7
         ]
       },
       "raw": {
@@ -543,17 +597,17 @@
       "languageScope": "50 languages",
       "dimensions": 384,
       "q8ModelBytes": 118308126,
-      "loadMs": 394.9,
+      "loadMs": 394,
       "warmLatency": {
         "terms": 25,
         "runs": 5,
-        "medianMs": 8.8,
+        "medianMs": 8.7,
         "samplesMs": [
+          8.5,
           8.6,
           8.7,
-          8.8,
-          9.1,
-          9.1
+          9,
+          9.7
         ]
       },
       "raw": {

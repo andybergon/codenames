@@ -15,6 +15,12 @@ const SAFE_MAX_SIZE = 3;
 const STRETCH_MIN_SIZE = 4;
 const MAX_TARGET_SIZE = 9;
 const SHORTLIST_SIZE = 40;
+const ITALIAN_FALSE_FRIEND_MIN_LENGTH = 7;
+const ITALIAN_FALSE_FRIEND_MIN_LENGTH_RATIO = 0.72;
+const ITALIAN_FALSE_FRIEND_MIN_EDGE = 2;
+const ITALIAN_FALSE_FRIEND_WORD_SIMILARITY = 0.685;
+const ITALIAN_FALSE_FRIEND_CONSONANT_SIMILARITY = 0.7;
+const ITALIAN_FALSE_FRIEND_SIMILARITY_PENALTY = 0.23;
 const SIDE_EASE_SAFE_WEIGHT = 0.65;
 const SIDE_EASE_STRETCH_WEIGHT = 0.2;
 const SIDE_EASE_BREADTH_WEIGHT = 0.15;
@@ -53,6 +59,7 @@ export function analyzeEmbeddedBoard(board, boardVectors, clueIndex, options = {
     entries,
     candidateIndices,
     clueIndex,
+    options.language,
     similarityCalibration,
   );
   const boardSimilarities = buildBoardSimilarities(
@@ -171,7 +178,8 @@ function buildLegalCandidateIndices(entries, clues, language = LANGUAGE.ENGLISH)
   const isForbidden = buildClueLegalityFilter(boardWords, language);
 
   clues.forEach((clue, candidateIndex) => {
-    if (!isForbidden(normalizeTerm(clue))) {
+    const normalizedClue = normalizeTerm(clue);
+    if (!isForbidden(normalizedClue)) {
       candidateIndices.push(candidateIndex);
     }
   });
@@ -202,6 +210,91 @@ export function isForbiddenClue(
   return buildClueLegalityFilter(boardWords, language)(
     normalizeTerm(clue),
   );
+}
+
+export function isOrthographicFalseFriend(
+  clue,
+  boardWords,
+  options = {},
+) {
+  const language = options.language ?? LANGUAGE.ENGLISH;
+  return buildOrthographicFalseFriendFilter(boardWords, language)(
+    normalizeTerm(clue),
+  );
+}
+
+export function adjustSemanticSimilarity(
+  clue,
+  word,
+  similarity,
+  options = {},
+) {
+  const language = options.language ?? LANGUAGE.ENGLISH;
+  if (language !== LANGUAGE.ITALIAN) {
+    return similarity;
+  }
+  return adjustItalianOrthographicSimilarity(
+    italianOrthographicForm(clue),
+    italianOrthographicForm(word),
+    similarity,
+  );
+}
+
+function buildOrthographicFalseFriendFilter(boardWords, language) {
+  if (language !== LANGUAGE.ITALIAN) {
+    return () => false;
+  }
+
+  const boardForms = boardWords.map(italianOrthographicForm);
+
+  return (clue) => {
+    const clueForm = italianOrthographicForm(clue);
+    return boardForms.some((wordForm) =>
+      sharesItalianOrthographicShape(clueForm, wordForm),
+    );
+  };
+}
+
+function italianOrthographicForm(value) {
+  const compact = foldAccents(normalizeTerm(value)).replaceAll(" ", "");
+  return {
+    compact,
+    consonants: compact.replace(/[aeiou]/gu, ""),
+  };
+}
+
+function sharesItalianOrthographicShape(left, right) {
+  if (
+    left.compact === right.compact ||
+    Math.min(left.compact.length, right.compact.length) <
+      ITALIAN_FALSE_FRIEND_MIN_LENGTH ||
+    Math.min(left.compact.length, right.compact.length) /
+        Math.max(left.compact.length, right.compact.length) <
+      ITALIAN_FALSE_FRIEND_MIN_LENGTH_RATIO ||
+    Math.min(left.consonants.length, right.consonants.length) < 3
+  ) {
+    return false;
+  }
+
+  const sharedEdge =
+    commonPrefixLength(left.compact, right.compact) >=
+      ITALIAN_FALSE_FRIEND_MIN_EDGE ||
+    commonSuffixLength(left.compact, right.compact) >=
+      ITALIAN_FALSE_FRIEND_MIN_EDGE;
+
+  return (
+    sharedEdge &&
+    jaroWinklerSimilarity(left.compact, right.compact) >=
+      ITALIAN_FALSE_FRIEND_WORD_SIMILARITY &&
+    jaroWinklerSimilarity(left.consonants, right.consonants) >=
+      ITALIAN_FALSE_FRIEND_CONSONANT_SIMILARITY
+  );
+}
+
+function adjustItalianOrthographicSimilarity(clueForm, wordForm, similarity) {
+  return sharesItalianOrthographicShape(clueForm, wordForm)
+    ? similarity - ITALIAN_FALSE_FRIEND_SIMILARITY_PENALTY
+    : similarity;
 }
 
 function buildClueLegalityFilter(boardWords, language) {
@@ -280,6 +373,94 @@ function buildClueLegalityFilter(boardWords, language) {
   };
 }
 
+function commonPrefixLength(left, right) {
+  const limit = Math.min(left.length, right.length);
+  let length = 0;
+  while (length < limit && left[length] === right[length]) {
+    length += 1;
+  }
+  return length;
+}
+
+function commonSuffixLength(left, right) {
+  const limit = Math.min(left.length, right.length);
+  let length = 0;
+  while (
+    length < limit &&
+    left[left.length - 1 - length] === right[right.length - 1 - length]
+  ) {
+    length += 1;
+  }
+  return length;
+}
+
+function jaroWinklerSimilarity(left, right) {
+  if (left === right) {
+    return 1;
+  }
+  if (!left || !right) {
+    return 0;
+  }
+
+  const matchDistance = Math.max(
+    0,
+    Math.floor(Math.max(left.length, right.length) / 2) - 1,
+  );
+  const leftMatches = Array(left.length).fill(false);
+  const rightMatches = Array(right.length).fill(false);
+  let matches = 0;
+
+  for (let leftIndex = 0; leftIndex < left.length; leftIndex += 1) {
+    const start = Math.max(0, leftIndex - matchDistance);
+    const end = Math.min(leftIndex + matchDistance + 1, right.length);
+    for (let rightIndex = start; rightIndex < end; rightIndex += 1) {
+      if (
+        rightMatches[rightIndex] ||
+        left[leftIndex] !== right[rightIndex]
+      ) {
+        continue;
+      }
+      leftMatches[leftIndex] = true;
+      rightMatches[rightIndex] = true;
+      matches += 1;
+      break;
+    }
+  }
+
+  if (matches === 0) {
+    return 0;
+  }
+
+  const leftMatched = [];
+  const rightMatched = [];
+  for (let index = 0; index < left.length; index += 1) {
+    if (leftMatches[index]) {
+      leftMatched.push(left[index]);
+    }
+  }
+  for (let index = 0; index < right.length; index += 1) {
+    if (rightMatches[index]) {
+      rightMatched.push(right[index]);
+    }
+  }
+
+  let transpositions = 0;
+  for (let index = 0; index < leftMatched.length; index += 1) {
+    transpositions += Number(leftMatched[index] !== rightMatched[index]);
+  }
+
+  const jaro =
+    (matches / left.length +
+      matches / right.length +
+      (matches - transpositions / 2) / matches) /
+    3;
+  const prefix = Math.min(
+    4,
+    commonPrefixLength(left, right),
+  );
+  return jaro + prefix * 0.1 * (1 - jaro);
+}
+
 function simpleInflections(value) {
   const forms = [];
   if (!/^[a-z]{3,}$/u.test(value)) {
@@ -354,24 +535,39 @@ function buildCandidateSimilarities(
   entries,
   candidateIndices,
   clueIndex,
+  language,
   similarityCalibration,
 ) {
   const similarities = new Float32Array(clueIndex.clues.length * entries.length);
   const scale = clueIndex.quantization.scale;
+  const useItalianGuard = language === LANGUAGE.ITALIAN;
+  const entryForms = useItalianGuard
+    ? entries.map(({ word }) => italianOrthographicForm(word))
+    : [];
 
   for (const candidateIndex of candidateIndices) {
     const vectorOffset = candidateIndex * clueIndex.dimensions;
     const rowOffset = candidateIndex * entries.length;
+    const clueForm = useItalianGuard
+      ? italianOrthographicForm(clueIndex.clues[candidateIndex])
+      : null;
 
     for (const entry of entries) {
       let total = 0;
       for (let dimension = 0; dimension < clueIndex.dimensions; dimension += 1) {
         total += clueIndex.vectors[vectorOffset + dimension] * entry.vector[dimension];
       }
-      similarities[rowOffset + entry.entryIndex] = calibrateSimilarity(
+      const calibratedSimilarity = calibrateSimilarity(
         total / scale,
         similarityCalibration,
       );
+      similarities[rowOffset + entry.entryIndex] = useItalianGuard
+        ? adjustItalianOrthographicSimilarity(
+            clueForm,
+            entryForms[entry.entryIndex],
+            calibratedSimilarity,
+          )
+        : calibratedSimilarity;
     }
   }
 

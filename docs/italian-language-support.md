@@ -125,7 +125,7 @@ The checked report records:
 
 Multilingual E5 small is the clear browser candidate. Against the English BGE control, centered target recall rises from 56.3% to 81.3%, risk intrusion falls from 37.5% to 12.5%, and raw morphology similarity rises from 0.765 to 0.936. Multilingual MiniLM improves semantic recall but has a 31.3% centered risk rate, so equal bundle size does not justify choosing it.
 
-The 12.6 ms versus 9.7 ms warm Node result is close enough for active-board inference. Network transfer is the dominant regression: Multilingual E5 adds 84.3 MB over BGE-small and 95.3 MB over the current Train MiniLM-L6 model.
+The 12.4 ms versus 10.1 ms warm Node result is close enough for active-board inference. Network transfer is the dominant regression: Multilingual E5 adds 84.3 MB over BGE-small and 95.3 MB over the current Train MiniLM-L6 model.
 
 These results are directional. They do not establish native-speaker quality, legality, cultural fit, or complete-game fun.
 
@@ -135,10 +135,10 @@ Both checked runs use 100 paired deterministic boards per clue policy and the pr
 
 | 🧪 Hybrid run | 🤖 Operative | 🎉 Fun | 🔢 Multi | ✅ Correct/turn | 🔴 Wrong/game | ☠️ Assassin | ⏱️ Turns |
 | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| 🇮🇹 Same E5 | E5 | 59.56 | 31.0% | 1.25 | 0.00 | 0% | 12.33 |
-| 🔀 Transfer | MiniLM-L6 | 42.45 | 51.5% | 0.56 | 2.64 | 65% | 12.98 |
+| 🇮🇹 Same E5 | E5 | 58.22 | 30.9% | 1.24 | 0.02 | 0% | 12.44 |
+| 🔀 Transfer | MiniLM-L6 | 40.53 | 49.5% | 0.54 | 2.83 | 61% | 13.20 |
 
-The [same-model report](../scripts/generated/italian-play-policy-benchmark.md) confirms bounded runtime behavior and no analyzer fallbacks, but it shares one geometry between clue giver and guesser. The [transfer report](../scripts/generated/italian-play-minilm-transfer-benchmark.md) deliberately uses English MiniLM-L6 as an independent operative. Its poor result is a warning about geometry agreement, not a prediction that Italian players hit the assassin 65% of the time. The transfer simulation forces the highest-similarity available guess after a complete round of passes so every stress-test game terminates, and reports those interventions separately.
+The [same-model report](../scripts/generated/italian-play-policy-benchmark.md) confirms bounded runtime behavior and no analyzer fallbacks, but it shares one geometry between clue giver and guesser. The [transfer report](../scripts/generated/italian-play-minilm-transfer-benchmark.md) deliberately uses English MiniLM-L6 as an independent operative. Its poor result is a warning about geometry agreement, not a prediction that Italian players hit the assassin 61% of the time. The transfer simulation forces the highest-similarity available guess after a complete round of passes so every stress-test game terminates, and reports those interventions separately.
 
 Promotion beyond beta still requires at least 100 native-reviewed turns and human operative guesses. A higher self-play Fun score alone is insufficient.
 
@@ -156,7 +156,9 @@ The exact pinned E5 model, `query: ` prefix, 30,000-term production mean, and qu
 
 The tokenizer splits `monologo` into `mono + logo` and `mongolfiera` into `mon + golf + iera`. It also gives `partono` and `burattino` the shared `no` subword. These examples show that centered E5 geometry can amplify orthographic and subword overlap beyond human semantic association. They also show why same-model self-play is insufficient: the spymaster selects the false friend and the operative ranks it highly using the same geometry.
 
-Treat these pairs as named regression fixtures. A fix should evaluate a conservative character-overlap penalty or veto, plus a second-model or human-alignment reranker, without confusing accidental form similarity with the existing lemma and inflection legality rules.
+Italian generated clue scoring now applies a `0.23` pairwise similarity penalty when a clue and board word are both at least seven letters, have a length ratio of at least `0.72`, share a prefix or suffix of at least two letters, and cross both whole-word and consonant-skeleton Jaro-Winkler thresholds. The production reproductions fall to `0.1911`, `0.1268`, and `0.0861` respectively. The feasibility gate blocks all three observed failures while preserving six source-created semantic controls.
+
+This is a targeted spelling-artifact guard, not a general semantic reranker. It affects only generated Italian clue scoring. English scoring, human clue legality, and operative guessing remain unchanged. Across the paired 100-board simulations, same-model Fun moved from `59.56` to `58.22`, while the transfer assassin rate improved from `65%` to `61%`; transfer Fun moved from `42.45` to `40.53` and wrong-team hits rose from `2.64` to `2.83` per game. Native review remains the promotion gate because these aggregate tradeoffs do not prove that every allowed clue is meaningful.
 
 ## Italian morphology and clue legality
 

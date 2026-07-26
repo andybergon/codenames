@@ -10,11 +10,6 @@
 
 ## 🔴 High
 
-- 🧬 Suppress Italian orthographic false-friend clues.
-  - Reproduce `MONOLOGO → MONGOLFIERA` and `PARTONO → PANTERA + BURATTINO` as fixed regression cases. The pinned centered E5 index ranks these spelling-related pairs above plausible semantic relationships.
-  - Evaluate a conservative character-overlap penalty or veto and a second-model or human-alignment reranker. Keep this separate from lemma and inflection legality.
-  - Re-run the Italian semantic fixture, same-model games, MiniLM transfer games, and native review before changing the live clue policy.
-
 - 🧠 Prevent the bot spymaster from repeating the previous clue.
   - A human operative remembers an immediately repeated clue, so giving it again adds no useful information even when it remains the highest-ranked option.
   - Select the next-best legal clue instead. Its intended cards may overlap with zero, some, or all of the previous clue's intended cards.
@@ -33,7 +28,7 @@
 
 - 🇮🇹 Native-review the Italian Train and Play beta.
   - Have two native Italian speakers review all 800 `it:extended-v1` words, localized copy, and generated clues for familiarity, regional bias, clue potential, and accidental offensiveness.
-  - Same-model and MiniLM operative runs now cover 100 paired boards each. The MiniLM stress run is intentionally harsh and reached a 65% hybrid assassin rate, so do not treat E5 self-play as human safety evidence.
+  - Same-model and MiniLM operative runs now cover 100 paired boards each. The MiniLM stress run is intentionally harsh and reached a 61% hybrid assassin rate after the spelling-artifact guard, so do not treat E5 self-play as human safety evidence.
   - Next: expand the original fixture to at least 100 reviewed turns and collect native-player guesses before removing the beta label.
 
 - 📝 Keep completed Play game action records for calibration.
