@@ -1169,6 +1169,55 @@ assert.equal(
   }),
   null,
 );
+const wimbledonComebackCandidates = [
+  { layoutId: 8, word: "STRING", similarity: 0.021 },
+  { layoutId: 20, word: "GENIUS", similarity: 0 },
+  { layoutId: 4, word: "CROWN", similarity: 0.115 },
+  { layoutId: 23, word: "KANGAROO", similarity: -0.032 },
+  { layoutId: 19, word: "STOCK", similarity: 0.093 },
+  { layoutId: 24, word: "RAY", similarity: 0.026 },
+  { layoutId: 17, word: "CAP", similarity: -0.051 },
+  { layoutId: 11, word: "HOOD", similarity: -0.063 },
+  { layoutId: 6, word: "BELT", similarity: 0.092 },
+  { layoutId: 18, word: "PANTS", similarity: -0.036 },
+  { layoutId: 22, word: "BAT", similarity: 0.131 },
+  { layoutId: 12, word: "SQUARE", similarity: 0.075 },
+  { layoutId: 2, word: "GRASS", similarity: 0.112 },
+  { layoutId: 15, word: "NAIL", similarity: 0.02 },
+  { layoutId: 0, word: "BEAT", similarity: -0.041 },
+  { layoutId: 21, word: "RULER", similarity: 0.045 },
+  { layoutId: 1, word: "GLOVE", similarity: 0.016 },
+];
+const wimbledonComebackDecision = evaluateBotGuess({
+  aggression: PLAY_OPERATIVE_AGGRESSION.DYNAMIC,
+  candidates: wimbledonComebackCandidates,
+  guessesMade: 1,
+  clueNumber: 3,
+  ownRemaining: 6,
+  opponentRemaining: 3,
+  random: createSeededRandom("BZEF30hnrDs:5:21"),
+});
+assert.equal(wimbledonComebackDecision.layoutId, 2);
+assert.equal(wimbledonComebackDecision.reason, "guess");
+assert.equal(wimbledonComebackDecision.thresholds.minimumSimilarity, 0.09);
+assert.ok(wimbledonComebackDecision.gap >= 0.005);
+const wimbledonFinalSlotDecision = evaluateBotGuess({
+  aggression: PLAY_OPERATIVE_AGGRESSION.DYNAMIC,
+  candidates: wimbledonComebackCandidates.filter(
+    ({ layoutId }) => layoutId !== 2,
+  ),
+  guessesMade: 2,
+  clueNumber: 3,
+  ownRemaining: 5,
+  opponentRemaining: 3,
+  random: createSeededRandom("BZEF30hnrDs:5:22"),
+});
+assert.equal(wimbledonFinalSlotDecision.layoutId, null);
+assert.equal(wimbledonFinalSlotDecision.reason, "minimum-similarity");
+assert.ok(
+  wimbledonFinalSlotDecision.thresholds.minimumSimilarity >
+    wimbledonFinalSlotDecision.ranked[0].botScore,
+);
 assert.equal(
   chooseBotGuess({
     aggression: PLAY_OPERATIVE_AGGRESSION.DYNAMIC,

@@ -329,32 +329,34 @@ export function operativeGuessThresholds({
   const guessesStillAvailable = isBonusGuess ? 1 : guessesLeftForClue;
   const canWinThisTurn =
     knownOwnRemaining && ownRemaining <= guessesStillAvailable;
-  const opponentCanWinSoon =
-    knownOpponentRemaining && opponentRemaining <= 2;
-  const trailing =
-    knownOwnRemaining &&
-    knownOpponentRemaining &&
-    ownRemaining > opponentRemaining;
+  const comebackPressure =
+    knownOwnRemaining && knownOpponentRemaining
+      ? dynamicComebackPressure(ownRemaining, opponentRemaining)
+      : 0;
+  const declaredGuessPressure =
+    guessesMade === 0
+      ? 0
+      : guessesLeftForClue >= 2
+        ? comebackPressure
+        : comebackPressure * 0.5;
   const comfortablyAhead =
     knownOwnRemaining &&
     knownOpponentRemaining &&
     ownRemaining + 2 < opponentRemaining;
 
   if (isBonusGuess) {
-    return canWinThisTurn || (opponentCanWinSoon && trailing)
+    return canWinThisTurn
       ? { minimumSimilarity: 0.24, minimumGap: 0.025 }
-      : { minimumSimilarity: 0.34, minimumGap: 0.045 };
+      : interpolateThresholds(
+          { minimumSimilarity: 0.34, minimumGap: 0.045 },
+          { minimumSimilarity: 0.2, minimumGap: 0.035 },
+          comebackPressure * 0.5,
+        );
   }
   if (canWinThisTurn) {
     return {
       minimumSimilarity: guessesMade === 0 ? 0.07 : 0.16,
       minimumGap: -0.01,
-    };
-  }
-  if (opponentCanWinSoon && trailing) {
-    return {
-      minimumSimilarity: guessesMade === 0 ? 0.08 : 0.22,
-      minimumGap: guessesMade === 0 ? -0.015 : 0,
     };
   }
   if (comfortablyAhead) {
@@ -363,10 +365,17 @@ export function operativeGuessThresholds({
       minimumGap: guessesMade === 0 ? -0.005 : 0.015,
     };
   }
-  return {
-    minimumSimilarity: guessesMade === 0 ? 0.1 : 0.26,
-    minimumGap: guessesMade === 0 ? -0.01 : 0.005,
-  };
+  return interpolateThresholds(
+    {
+      minimumSimilarity: guessesMade === 0 ? 0.1 : 0.26,
+      minimumGap: guessesMade === 0 ? -0.01 : 0.005,
+    },
+    {
+      minimumSimilarity: guessesMade === 0 ? 0.055 : 0.09,
+      minimumGap: -0.02,
+    },
+    declaredGuessPressure,
+  );
 }
 
 export function shouldBotTakeAnotherGuess({
@@ -378,6 +387,27 @@ export function shouldBotTakeAnotherGuess({
     guessesMade < clueNumber ||
     bonusGuesses === PLAY_BONUS_POLICY.ALLOW
   );
+}
+
+function dynamicComebackPressure(ownRemaining, opponentRemaining) {
+  const deficit = ownRemaining - opponentRemaining;
+  if (deficit <= 0) {
+    return 0;
+  }
+  const deficitPressure = Math.max(0, deficit - 1) / 2;
+  const lateGamePressure = Math.max(0, 4 - opponentRemaining) / 4;
+  return Math.min(1, deficitPressure + lateGamePressure);
+}
+
+function interpolateThresholds(baseline, aggressive, pressure) {
+  return {
+    minimumSimilarity:
+      baseline.minimumSimilarity +
+      (aggressive.minimumSimilarity - baseline.minimumSimilarity) * pressure,
+    minimumGap:
+      baseline.minimumGap +
+      (aggressive.minimumGap - baseline.minimumGap) * pressure,
+  };
 }
 
 export function createSeededRandom(seed) {

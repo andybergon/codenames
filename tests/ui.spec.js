@@ -1763,7 +1763,9 @@ test("Developer mode can mark and diagnose a saved game in progress", async ({
     await page.setViewportSize(viewport);
     await developerModeInfo.click();
     await expect(developerModeHelp).toBeVisible();
-    await expect(developerModeHelp).toContainText("Unlike other settings");
+    await expect(developerModeHelp).toContainText(
+      "stays marked even after this setting is turned off",
+    );
     const layout = await developerModeHelp.evaluate((popover) => {
       const bounds = popover.getBoundingClientRect();
       return {
@@ -2295,13 +2297,47 @@ test("Play bot setting help explains measured tradeoffs and stays on-screen", as
   page,
 }) => {
   const settingHelp = [
-    ["Embedding model", 3, "58.57%"],
-    ["Clue vocabulary", 4, "85.47%"],
-    ["Clue scoring", 2, "50.4%"],
-    ["Prefer multi-card clues", 3, "best clue for 2+ cards"],
-    ["Retry missed targets", 3, "fresh-target bias fades"],
-    ["Operative aggression", 3, "revealed-card counts"],
-    ["Extra guess", 2, "26.4% correct"],
+    ["New board words", ["Fully random", "Avoid recent"], "may reuse any word"],
+    [
+      "Embedding model",
+      ["BGE-small", "MiniLM-L6", "MiniLM-L3"],
+      "Recall measures target recovery",
+    ],
+    [
+      "Clue vocabulary",
+      ["3k", "10k", "30k", "100k"],
+      "Coverage is the share of human clues",
+    ],
+    [
+      "Clue scoring",
+      ["Human-like", "Conservative"],
+      "average number of correct cards per turn",
+    ],
+    [
+      "Clue reuse",
+      ["Never", "Previous", "Allow"],
+      "earlier target words remain available",
+    ],
+    [
+      "Prefer multi-card clues",
+      ["Off", "Balanced", "Strong"],
+      "best-scoring clue",
+    ],
+    [
+      "Retry missed targets",
+      ["Late", "Mid-game", "Immediately"],
+      "friendly word targeted by an earlier clue",
+    ],
+    [
+      "Operative aggression",
+      ["Dynamic", "Conservative", "Aggressive"],
+      "becoming bolder when behind",
+    ],
+    [
+      "Extra guess",
+      ["Stop", "Allow"],
+      "optional extra guess",
+    ],
   ];
 
   for (const viewport of [
@@ -2313,14 +2349,17 @@ test("Play bot setting help explains measured tradeoffs and stays on-screen", as
     await page.goto("/?mode=play");
     await page.locator(".play-settings summary").click();
 
-    for (const [label, rowCount, explanation] of settingHelp) {
+    for (const [label, orderedRows, explanation] of settingHelp) {
       const button = page.getByRole("button", { name: `About ${label}`, exact: true });
       await button.hover();
       const popover = page.locator(`#${await button.getAttribute("aria-controls")}`);
       await expect(popover).toBeVisible();
       await expect(popover).toContainText(explanation);
       await expect(popover.locator("table.info-table")).toBeVisible();
-      await expect(popover.locator("tbody tr")).toHaveCount(rowCount);
+      await expect(popover.locator("tbody tr")).toHaveCount(orderedRows.length);
+      for (const [index, rowLabel] of orderedRows.entries()) {
+        await expect(popover.locator("tbody tr").nth(index)).toContainText(rowLabel);
+      }
       expect(
         await popover.locator("table.info-table").evaluate(
           (table) => table.scrollWidth > table.clientWidth,

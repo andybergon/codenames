@@ -171,28 +171,28 @@ The bot operative ranks only centered clue-to-unrevealed-word cosine similaritie
 | 🔎 Mode | 🎯 First minimum | 🧩 Later minimum | ↔️ Separation | 🏁 Public score |
 |---|---:|---:|---:|---|
 | 🛡️ Conservative | `0.10` | `0.32` | Strict | Ignored |
-| ⚖️ Dynamic | `0.07–0.12` | `0.16–0.30` | Adaptive | Used |
+| ⚖️ Dynamic | `0.07` to `0.12` | `0.09` to `0.30` | Adaptive | Used |
 | 🚀 Aggressive | `0.055` | `0.09` | Permissive | Ignored |
 
 Conservative keeps the first guess permissive enough for games to progress, then requires much stronger evidence before filling the second or later slot of a multi-card clue. Aggressive preserves the former production thresholds.
 
-Dynamic uses only facts visible to an operative: guesses already made, the declared clue number, and both teams' remaining-agent counts. It lowers follow-up thresholds when the team can win within the current clue or trails an opponent with at most two agents left. It raises them with a comfortable lead and otherwise uses the middle thresholds. The separate Extra guess setting still decides whether any number-plus-one guess is available.
+Dynamic uses only facts visible to an operative: guesses already made, the declared clue number, and both teams' remaining-agent counts. A trailing team accumulates comeback pressure from its deficit and from the opponent approaching four remaining agents. The first guess retains the middle threshold. Follow-up thresholds continuously interpolate toward Aggressive, reaching full pressure at a three-agent deficit while at least two declared guesses remain. The policy halves that pressure for the final declared slot and bonus guesses so a comeback push does not automatically fill every clue slot. It keeps the dedicated possible-win thresholds, raises thresholds with a comfortable lead, and never applies comeback pressure while tied or ahead. The separate Extra guess setting still decides whether any number-plus-one guess is available.
 
 The checked 100-board same-model run measures deterministic production regression and game shape:
 
 | 🔎 Mode | 🧩 Low-sim fill | 🛑 Early pass | ✅ Correct per turn | 🔴 Wrong per game | ☠️ Assassin | ⏱️ Turns |
 |---|---:|---:|---:|---:|---:|---:|
-| ⚖️ Dynamic | 1.5% | 3.4% | 1.53 | 0.00 | 0.0% | 10.19 |
-| 🛡️ Conservative | 0.0% | 16.2% | 1.24 | 0.00 | 0.0% | 12.50 |
+| ⚖️ Dynamic | 1.6% | 3.2% | 1.53 | 0.00 | 0.0% | 10.18 |
+| 🛡️ Conservative | 0.0% | 16.2% | 1.24 | 0.00 | 0.0% | 12.51 |
 | 🚀 Aggressive | 3.4% | 0.0% | 1.61 | 0.00 | 0.0% | 9.62 |
 
 The [MiniLM-L6 operative stress run](../scripts/generated/play-operative-aggression-cross-model.md) holds BGE-small spymaster clues fixed while changing the guesser's embedding geometry:
 
 | 🔎 Mode | 🧩 Low-sim fill | 🛑 Early pass | ✅ Correct per turn | 🔴 Wrong per game | ☠️ Assassin | ⏱️ Turns |
 |---|---:|---:|---:|---:|---:|---:|
-| ⚖️ Dynamic | 12.7% | 26.3% | 0.96 | 0.46 | 9.0% | 14.34 |
-| 🛡️ Conservative | 12.6% | 29.7% | 0.91 | 0.49 | 5.0% | 15.40 |
-| 🚀 Aggressive | 42.3% | 1.7% | 1.28 | 0.85 | 9.0% | 10.59 |
+| ⚖️ Dynamic | 12.8% | 24.2% | 1.00 | 0.45 | 9.0% | 14.17 |
+| 🛡️ Conservative | 10.8% | 29.6% | 0.93 | 0.44 | 7.0% | 15.36 |
+| 🚀 Aggressive | 42.8% | 2.2% | 1.24 | 0.96 | 14.0% | 10.71 |
 
 Low-sim fill means a guess that reaches the declared clue number has centered similarity below `0.25`. This is an explicit diagnostic threshold, not a human semantic judgment. Same-model self-play overstates agreement, and cross-model transfer is a stress test rather than evidence of human guessing behavior. Human-realism claims require recorded human choices or Play telemetry.
 

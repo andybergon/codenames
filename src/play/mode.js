@@ -165,7 +165,7 @@ const BOT_SETTING_INFO = Object.freeze({
         ];
       }),
     },
-    note: "Open multi uses 80 controlled opening states. Game multi uses 100 complete same-model games with the recommended 10k, human-like, balanced, stop-at-number settings. Recall uses human target pairs. Bot benchmarks are not human win rates.",
+    note: "Recall measures target recovery on human clue pairs. Open multi is the share of 80 controlled openings that produce a clue for 2+ cards. Game multi is the share across 100 full bot games with the recommended settings. These benchmarks compare models, not human win rates.",
   },
   candidates: {
     id: "clue-vocabulary",
@@ -189,7 +189,7 @@ const BOT_SETTING_INFO = Object.freeze({
         ],
       ),
     },
-    note: "Open multi uses 80 controlled opening states per vocabulary size with MiniLM-L6. Larger vocabularies offer more multi-card clues, but their deeper clues are less familiar. This is not a full-game rate.",
+    note: "Coverage is the share of human clues included. Open multi is the share of 80 controlled openings that produce a clue for 2+ cards with MiniLM-L6. Larger vocabularies offer more options, but take more work and can surface less familiar clues.",
   },
   cluePolicy: {
     id: "clue-scoring",
@@ -202,7 +202,7 @@ const BOT_SETTING_INFO = Object.freeze({
         ["📍 Conservative", "15.7%", "1.17", "13.34"],
       ],
     },
-    note: "100 paired same-model bot games. These are not human win rates.",
+    note: "Multi is the share of clues for 2+ cards. Correct is the average number of correct cards per turn, and Turns is the average number of turns per game. Results come from 100 paired same-model bot games, not human win rates.",
   },
   clueRepeatPolicy: {
     id: "clue-repeat-policy",
@@ -215,7 +215,7 @@ const BOT_SETTING_INFO = Object.freeze({
         ["🔁 Allow", "Nothing"],
       ],
     },
-    note: "Only clues previously given by the same team count. The other team's clues and previously targeted cards do not count.",
+    note: "Only clues previously given by the same team are affected. The other team's clues and earlier target words remain available.",
   },
   multiTolerance: {
     id: "multi-clue-preference",
@@ -229,7 +229,7 @@ const BOT_SETTING_INFO = Object.freeze({
         ["🚀 Strong", "Within 10 points", "Not measured"],
       ],
     },
-    note: "The bot compares its best clue overall with its best clue for 2+ cards. Allowing more points means accepting a lower-scoring 2+ clue more often. The score combines safety and expected progress. *50.4% comes from 100 paired games using all recommended defaults, so it is not the effect of this setting alone.",
+    note: "Off always chooses the best-scoring clue. Balanced and Strong may choose a clue for 2+ cards when it scores within the shown distance of the best clue overall. A wider margin favors more multi-card clues. *50.4% is the rate for the full recommended setup, not this setting alone.",
   },
   missedTargetTiming: {
     id: "missed-target-timing",
@@ -242,7 +242,7 @@ const BOT_SETTING_INFO = Object.freeze({
         ["🔁 Immediately", "No bias", "Next turn"],
       ],
     },
-    note: "A missed target is an intended friendly word that remains unrevealed after an earlier clue. The fresh-target bias fades as fewer never-targeted friendly words remain. It changes clue ranking, not clue legality or operative information.",
+    note: "A missed target is a friendly word targeted by an earlier clue but not guessed. Late favors new targets longest, Mid-game mixes missed targets sooner, and Immediately applies no new-target preference. This affects clue choice only.",
   },
   operativeAggression: {
     id: "operative-aggression",
@@ -250,12 +250,12 @@ const BOT_SETTING_INFO = Object.freeze({
     table: {
       headers: ["🔎 Mode", "🎯 Threshold", "🏁 Game state"],
       rows: [
+        ["⚖️ Dynamic", "Adaptive", "Public score"],
         ["🛡️ Conservative", "Highest", "Ignored"],
         ["🚀 Aggressive", "Lowest", "Ignored"],
-        ["⚖️ Dynamic", "Adaptive", "Public score"],
       ],
     },
-    note: "Aggressive is more willing than Conservative to continue from a direct France match to a looser Revolution match. Dynamic becomes bolder when the team can win this turn or is trailing an opponent near victory, and more selective with a comfortable lead. It uses only clue similarities, revealed-card counts, and the public score.",
+    note: "Dynamic adapts to the public score, becoming bolder when behind and more selective when ahead. Conservative passes more readily when the next word is only loosely related. Aggressive is more willing to keep guessing toward the clue number.",
   },
   bonusGuesses: {
     id: "extra-guess",
@@ -268,7 +268,7 @@ const BOT_SETTING_INFO = Object.freeze({
         ["➕ Allow", "+1", "26.4% correct"],
       ],
     },
-    note: "Allow uses only the current clue and cannot revisit unresolved earlier clues.",
+    note: "Stop ends the turn at the clue number. Allow lets the bot make one optional extra guess using only the current clue. In the benchmark, 26.4% of those extra guesses were correct.",
   },
 });
 const WORD_REUSE_INFO = Object.freeze({
@@ -281,7 +281,7 @@ const WORD_REUSE_INFO = Object.freeze({
       ["🧠 Avoid recent", "Unseen first", "Last 32 boards"],
     ],
   },
-  note: "When fewer than 25 unseen words remain, the next board uses only the least-recently-used repeats needed. Clear history makes every word available again without changing the selected policy.",
+  note: "Fully random may reuse any word. Avoid recent prefers words absent from the last 32 boards, then uses the least-recently-used repeats needed. Clear history makes every word available again without changing this setting.",
 });
 
 export function createPlayMode(options = {}) {

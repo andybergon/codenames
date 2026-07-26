@@ -162,7 +162,7 @@ const COPY = Object.freeze({
     enableDeveloperMode: "Enable developer mode",
     developerModeAbout: "About developer mode",
     developerModeHelp:
-      "Marks new games as developer data. Unlike other settings, enabling it also applies to a saved game in progress. Once marked, that game stays developer data.",
+      "Marks new games as developer data. Enabling it also marks a saved game in progress. Once marked, a game stays marked even after this setting is turned off.",
     showLiveDiagnostics: "Show live turn analysis",
     liveDiagnosticsSpoiler: "Spoils active games",
     developerGame: "Developer game",
@@ -494,7 +494,7 @@ const COPY = Object.freeze({
     enableDeveloperMode: "Abilita modalità sviluppatore",
     developerModeAbout: "Informazioni sulla modalità sviluppatore",
     developerModeHelp:
-      "Contrassegna le nuove partite come dati di sviluppo. A differenza delle altre impostazioni, l'attivazione si applica anche a una partita salvata in corso. Una volta contrassegnata, la partita rimane un dato di sviluppo.",
+      "Contrassegna le nuove partite come dati di sviluppo. L'attivazione contrassegna anche una partita salvata in corso. Una volta contrassegnata, una partita rimane tale anche dopo aver disattivato questa impostazione.",
     showLiveDiagnostics: "Mostra analisi del turno in tempo reale",
     liveDiagnosticsSpoiler: "Rivela la partita",
     developerGame: "Partita sviluppatore",
