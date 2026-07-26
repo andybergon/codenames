@@ -27,12 +27,10 @@
   <body>
     <main class="app-shell">
       <header class="topbar">
-        <div class="app-identity">
-          <h1 id="app-title">Codenames</h1>
-          <div class="app-mode-switch" role="group" aria-label="App mode">
-            <button type="button" data-app-mode="play" aria-pressed="true">Play</button>
-            <button type="button" data-app-mode="train" aria-pressed="false">Train</button>
-          </div>
+        <h1 id="app-title">Codenames</h1>
+        <div class="app-mode-switch" role="group" aria-label="App mode">
+          <button type="button" data-app-mode="play" aria-pressed="true">Play</button>
+          <button type="button" data-app-mode="train" aria-pressed="false">Train</button>
         </div>
         <div class="theme-switcher" role="group" aria-label="Color theme">
           <button
@@ -329,10 +327,10 @@
                 <span id="mobile-metric-help" class="mobile-metric-help"></span>
                 <label
                   class="advanced-metrics-toggle"
-                  title="Show Net, Margin, and Fit/cohesion columns"
+                  title="Show Worth, Net, estimated hit, danger, margin, and fit/cohesion columns"
                 >
                   <input id="advanced-metrics" type="checkbox" />
-                  <span>Advanced</span>
+                  <span>Score details</span>
                 </label>
               </div>
             </div>
@@ -716,7 +714,7 @@
               <div class="play-history">
                 <div class="play-section-heading play-history-heading">
                   <div class="play-history-title">
-                    <strong>Game log</strong>
+                    <strong id="play-history-heading-label">Game log</strong>
                     <span id="play-history-count"></span>
                   </div>
                   <div class="play-history-switch" role="group" aria-label="Game log view">

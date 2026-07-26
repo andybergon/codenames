@@ -99,7 +99,7 @@ test("mobile board and metric help remain fully usable", async ({ page }) => {
   expect(bounds.y + bounds.height).toBeLessThanOrEqual(844);
 });
 
-test("mobile recommendation cards show every primary metric", async ({ page }) => {
+test("mobile recommendation cards keep the explanation action visible", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/tests/fixtures/recommendations.html");
 
@@ -130,12 +130,20 @@ test("mobile recommendation cards show every primary metric", async ({ page }) =
     "Clue",
     "Items",
     "Targets",
-    "Worth",
-    "Est. hit",
+    "Why it works",
     "Risk",
-    "Closest danger",
     "Apply",
   ]);
+  await expect(
+    page.getByRole("button", {
+      name: "Explain why Province connects Microscope, Hospital, Nurse",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(page.locator(".explanation-targets")).toBeHidden();
+  await expect(page.locator(".explanation-risk")).toContainText(
+    "Australia is the closest danger",
+  );
   expect(layout.targetLayout.every((target) => target.scoreFits)).toBe(true);
   expect(Math.max(...layout.targetLayout.map((target) => target.width))).toBeLessThanOrEqual(
     Math.min(...layout.targetLayout.map((target) => target.width)) + 1,
@@ -151,7 +159,7 @@ test("recommendation values remain visible across responsive breakpoints", async
       const chips = [...document.querySelectorAll(".target-chip")];
       const protectedValues = [
         ...document.querySelectorAll(
-          ".target-score, .danger-score, .item-cell strong, .score-cell strong",
+          ".target-score, .item-cell strong",
         ),
       ];
       return {
@@ -174,21 +182,21 @@ test("recommendation values remain visible across responsive breakpoints", async
   }
 });
 
-test("sortable metric headers keep sort and info controls separate", async ({ page }) => {
+test("recommendation headers keep labels and info controls separate", async ({ page }) => {
   await page.goto("/tests/fixtures/recommendations.html");
-  await expect(page.locator('th[data-column="worth"]')).toBeVisible();
+  await expect(page.locator('th[data-column="explanation"]')).toBeVisible();
 
   for (const width of [900, 1011, 1115]) {
     await page.setViewportSize({ width, height: 900 });
     const headers = await page.evaluate(() =>
-      ["worth", "hit", "risk", "danger"].map((column) => {
+      ["explanation", "risk"].map((column) => {
         const header = document.querySelector(`th[data-column="${column}"]`);
-        const sort = header.querySelector(".sort-button").getBoundingClientRect();
+        const label = header.querySelector(".sort-button, .column-label").getBoundingClientRect();
         const info = header.querySelector(".info-control").getBoundingClientRect();
         const bounds = header.getBoundingClientRect();
         return {
           column,
-          controlsOverlap: sort.right > info.left,
+          controlsOverlap: label.right > info.left,
           infoOverflows: info.right > bounds.right,
         };
       }),
@@ -199,6 +207,46 @@ test("sortable metric headers keep sort and info controls separate", async ({ pa
       `header overlap at ${width}px`,
     ).toEqual([]);
   }
+});
+
+test("recommendations explain one clue only after an uncached click", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  const explanationRequests = [];
+  await page.route("**/api/explain-recommendations", async (route) => {
+    const request = route.request().postDataJSON();
+    explanationRequests.push(request);
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        model: "gpt-5.4-nano",
+        explanations: request.recommendations.map(({ id, clue, targets }) => ({
+          id,
+          explanation: `These words connect through ${clue.toLowerCase()}: ${targets
+            .map((target) => target.toLowerCase())
+            .join(", ")} each has a direct relationship to the clue.`,
+        })),
+      }),
+    });
+  });
+  await page.goto("/tests/fixtures/recommendations.html");
+
+  const explainButtons = page.getByRole("button", { name: /^Explain why/ });
+  await expect(explainButtons).toHaveCount(1);
+  expect(explanationRequests).toHaveLength(0);
+  await expect(explainButtons.locator("svg.lucide-sparkles")).toHaveCount(1);
+  await explainButtons.click();
+  await expect(page.locator(".explanation-targets")).toContainText(
+    "These words connect through",
+  );
+  expect(explanationRequests).toHaveLength(1);
+  expect(explanationRequests[0].recommendations).toHaveLength(1);
+
+  await page.reload();
+  expect(explanationRequests).toHaveLength(1);
+  await expect(page.getByRole("button", { name: /^Explain why/ })).toHaveCount(0);
+  await expect(page.locator(".explanation-targets")).toContainText(
+    "These words connect through",
+  );
 });
 
 test("choosing a word pool does not replace the current board", async ({ page }) => {
@@ -314,6 +362,55 @@ test("switching modes keeps shared layout positions stable", async ({ page }) =>
   expect(trainPositions.title).toBeCloseTo(playPositions.title, 1);
   expect(trainPositions.modeSwitch).toBeCloseTo(playPositions.modeSwitch, 1);
   expect(trainPositions.mainCard).toBeCloseTo(playPositions.mainCard, 1);
+});
+
+test("header centers the mode switch across responsive layouts", async ({ page }) => {
+  await page.goto("/?mode=play");
+
+  for (const viewport of [
+    { width: 390, height: 844, sameRow: false },
+    { width: 768, height: 1024, sameRow: true },
+    { width: 1440, height: 900, sameRow: true },
+  ]) {
+    await page.setViewportSize(viewport);
+    const layout = await page.evaluate(() => {
+      const topbar = document.querySelector(".topbar").getBoundingClientRect();
+      const title = document.querySelector("#app-title").getBoundingClientRect();
+      const mode = document.querySelector(".app-mode-switch").getBoundingClientRect();
+      const theme = document.querySelector(".theme-switcher").getBoundingClientRect();
+      return {
+        pageOverflows:
+          document.documentElement.scrollWidth > document.documentElement.clientWidth,
+        modeCenterOffset:
+          mode.left + mode.width / 2 - (topbar.left + topbar.width / 2),
+        titleThemeCenterOffset:
+          title.top + title.height / 2 - (theme.top + theme.height / 2),
+        modeThemeCenterOffset:
+          mode.top + mode.height / 2 - (theme.top + theme.height / 2),
+        modeBelowTopRow: mode.top >= Math.max(title.bottom, theme.bottom),
+      };
+    });
+
+    expect(layout.pageOverflows, `page overflow at ${viewport.width}px`).toBe(false);
+    expect(
+      Math.abs(layout.modeCenterOffset),
+      `mode centering at ${viewport.width}px`,
+    ).toBeLessThanOrEqual(1);
+    expect(
+      Math.abs(layout.titleThemeCenterOffset),
+      `title and theme alignment at ${viewport.width}px`,
+    ).toBeLessThanOrEqual(1);
+    if (viewport.sameRow) {
+      expect(
+        Math.abs(layout.modeThemeCenterOffset),
+        `mode and theme alignment at ${viewport.width}px`,
+      ).toBeLessThanOrEqual(1);
+    } else {
+      expect(layout.modeBelowTopRow, `mobile wrapping at ${viewport.width}px`).toBe(
+        true,
+      );
+    }
+  }
 });
 
 test("returning to an initialized Train mode reuses its rendered UI", async ({
@@ -1285,8 +1382,8 @@ test("Play moves through history and groups fully automated turns", async ({ pag
   const blueScore = page.locator('.play-score-team[data-side="blue"] strong');
   const redScore = page.locator('.play-score-team[data-side="red"] strong');
 
-  await expect(turn).toContainText("THIRD 1");
   await expect(turn.locator(".play-clue-pill")).toHaveText("THIRD");
+  await expect(turn.locator(".play-history-clue-number")).toHaveText("1");
   await expect(turn.locator(".play-clue-pill")).toHaveCSS(
     "background-color",
     "rgb(255, 255, 255)",
@@ -1316,7 +1413,8 @@ test("Play moves through history and groups fully automated turns", async ({ pag
   await expect(redScore).toHaveText("7");
 
   await forward.click();
-  await expect(turn).toContainText("THIRD 1");
+  await expect(turn.locator(".play-clue-pill")).toHaveText("THIRD");
+  await expect(turn.locator(".play-history-clue-number")).toHaveText("1");
   await expect(forward).toBeDisabled();
 
   await undo.click();
@@ -1325,11 +1423,13 @@ test("Play moves through history and groups fully automated turns", async ({ pag
   await expect(turn).toHaveAttribute("data-side", "red");
 
   await undo.click();
-  await expect(turn).toContainText("FIRST 1");
+  await expect(turn.locator(".play-clue-pill")).toHaveText("FIRST");
+  await expect(turn.locator(".play-history-clue-number")).toHaveText("1");
   await expect(page.locator('.play-card[data-layout-id="0"]')).toHaveClass(/is-done/);
 
   await undo.click();
-  await expect(turn).toContainText("FIRST 1");
+  await expect(turn.locator(".play-clue-pill")).toHaveText("FIRST");
+  await expect(turn.locator(".play-history-clue-number")).toHaveText("1");
   await expect(page.locator('.play-card[data-layout-id="0"]')).not.toHaveClass(/is-done/);
   await expect(blueScore).toHaveText("9");
 
@@ -1508,7 +1608,7 @@ test("Play game log switches between chronological and separated team views", as
       actor: "human",
       clue: "OCEAN",
       number: 2,
-      intendedLayoutIds: [],
+      intendedLayoutIds: [0, 1],
     },
     {
       type: "card-guessed",
@@ -1543,6 +1643,7 @@ test("Play game log switches between chronological and separated team views", as
   await expect(timelineView).toHaveAttribute("aria-pressed", "true");
   await expect(page.locator("#play-history-count")).toHaveText("4 events");
   await expect(timeline.locator("li")).toHaveCount(4);
+  await expect(timeline.locator(".explain-recommendation-button")).toHaveCount(0);
   expect(await timeline.locator("li").allTextContents()).toEqual([
     "Blue clue: OCEAN 2",
     "Blue guessed WORD0",
@@ -1662,7 +1763,30 @@ test("long Play logs remain complete and responsive in both views", async ({ pag
   }
 });
 
-test("completed Play sessions replay clue turns with operative scores", async ({ page }) => {
+test("completed Play sessions replay turns and explain intended targets", async ({
+  page,
+}) => {
+  const explanationRequests = [];
+  await page.route("**/api/explain-recommendations", async (route) => {
+    const request = route.request().postDataJSON();
+    explanationRequests.push(request);
+    const recommendation = request.recommendations[0];
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        model: "gpt-5.4-nano",
+        explanations: [
+          {
+            id: recommendation.id,
+            explanation:
+              recommendation.clue === "FIRST"
+                ? "These words connect through sequence: word0 and word1 are the first items in the numbered series."
+                : "These words connect through sequence: word9 is the second item in the numbered series.",
+          },
+        ],
+      }),
+    });
+  });
   const teams = [
     ...Array(9).fill("friendly"),
     ...Array(8).fill("enemy"),
@@ -1771,10 +1895,16 @@ test("completed Play sessions replay clue turns with operative scores", async ({
   await page.getByRole("button", { name: "Resume game", exact: true }).click();
 
   await expect(page.locator("#play-post-game-outcome")).toContainText("Blue won");
+  await expect(page.locator("#play-history-heading-label")).toHaveText(
+    "Post-game analysis",
+  );
   await expect(page.locator('.play-card[data-team="friendly"]')).toHaveCount(9);
   await expect(page.locator('.play-card[data-team="enemy"]')).toHaveCount(8);
   await expect(page.locator("#play-post-game-analysis")).toBeVisible();
-  await expect(page.locator("#play-history-list button")).toHaveCount(2);
+  await expect(page.locator("#play-history-list .play-history-clue")).toHaveCount(2);
+  await expect(
+    page.locator("#play-history-list .explain-recommendation-button"),
+  ).toHaveCount(2);
   const firstClue = page.getByRole("button", {
     name: "Review turn 1: Blue clue FIRST 2",
     exact: true,
@@ -1787,7 +1917,16 @@ test("completed Play sessions replay clue turns with operative scores", async ({
   await expect(secondClue).toHaveAttribute("aria-pressed", "false");
   await expect(firstClue.locator(".play-history-clue-action")).toHaveText("Viewing");
   await expect(secondClue.locator(".play-history-clue-action")).toHaveText("Review");
-  await expect(page.locator("#play-clue-display")).toContainText("FIRST 2");
+  await expect(
+    page.locator("#play-clue-display .play-clue-pill"),
+  ).toHaveText("FIRST");
+  await expect(
+    page.locator("#play-clue-display .play-history-clue-number"),
+  ).toHaveText("2");
+  await expect(
+    page.locator("#play-clue-display .play-history-clue-number"),
+  ).toHaveCSS("background-color", "rgb(255, 255, 255)");
+  await expect(page.locator("#play-clue-display .play-turn-note")).toBeHidden();
   await expect(page.locator('.play-card[data-layout-id="0"]')).toHaveAttribute(
     "data-intended",
     "true",
@@ -1811,6 +1950,99 @@ test("completed Play sessions replay clue turns with operative scores", async ({
   await expect(page.locator("#play-history-list")).toContainText(
     "Blue guessed WORD0",
   );
+  await expect(page.locator("#play-history-list")).toContainText(
+    "Red clue: SECOND 1, intended WORD9",
+  );
+  const blueSummary = page
+    .locator('#play-history-list li[data-side="blue"] .play-history-event-summary')
+    .first();
+  const redSummary = page
+    .locator('#play-history-list li[data-side="red"] .play-history-event-summary')
+    .first();
+  await expect(blueSummary.locator(".play-history-clue-number")).toHaveText("2");
+  await expect(blueSummary.locator(".play-history-clue-number")).toHaveCSS(
+    "background-color",
+    "rgb(255, 255, 255)",
+  );
+  await expect(
+    blueSummary.locator('.play-history-card[data-team="friendly"]'),
+  ).toHaveText(["WORD0", "WORD1"]);
+  await expect(redSummary.locator(".play-history-clue-number")).toHaveText("1");
+  await expect(redSummary.locator(".play-history-clue-number")).toHaveCSS(
+    "background-color",
+    "rgb(255, 255, 255)",
+  );
+  await expect(
+    redSummary.locator('.play-history-card[data-team="enemy"]'),
+  ).toHaveText("WORD9");
+  const blueExplainButton = page
+    .locator("#play-history-list")
+    .getByRole("button", {
+      name: "Explain why FIRST connects WORD0, WORD1",
+      exact: true,
+    });
+  const redExplainButton = page
+    .locator("#play-history-list")
+    .getByRole("button", {
+      name: "Explain why SECOND connects WORD9",
+      exact: true,
+    });
+  await expect(blueExplainButton).toBeVisible();
+  await expect(redExplainButton).toBeVisible();
+  expect(explanationRequests).toHaveLength(0);
+  await blueExplainButton.click();
+  await redExplainButton.click();
+  const explanations = page.locator(
+    "#play-history-list .play-history-explanation .explanation-targets",
+  );
+  await expect(explanations).toHaveCount(2);
+  await expect(explanations.nth(0)).toContainText(
+    "These words connect through sequence",
+  );
+  await expect(explanations.nth(0).locator(".play-clue-pill")).toHaveText("first");
+  await expect(
+    explanations.nth(0).locator('.play-history-card[data-team="friendly"]'),
+  ).toHaveText(["word0", "word1"]);
+  await expect(explanations.nth(1).locator(".play-clue-pill")).toHaveText(
+    "second",
+  );
+  await expect(
+    explanations.nth(1).locator('.play-history-card[data-team="enemy"]'),
+  ).toHaveText("word9");
+  expect(explanationRequests).toHaveLength(2);
+  expect(
+    explanationRequests.every(({ recommendations }) => recommendations.length === 1),
+  ).toBe(true);
+
+  for (const viewport of [
+    { width: 390, height: 844 },
+    { width: 768, height: 1024 },
+    { width: 1440, height: 900 },
+  ]) {
+    await page.setViewportSize(viewport);
+    const layout = await page.evaluate(() => {
+      const history = document.querySelector("#play-history-list");
+      const explanation = history.querySelector(".play-history-explanation");
+      const summaries = [...history.querySelectorAll(".play-history-event-summary")];
+      const historyBounds = history.getBoundingClientRect();
+      const explanationBounds = explanation.getBoundingClientRect();
+      return {
+        pageOverflows:
+          document.documentElement.scrollWidth > document.documentElement.clientWidth,
+        explanationFits:
+          explanationBounds.left >= historyBounds.left - 1 &&
+          explanationBounds.right <= historyBounds.right + 1,
+        summariesFit: summaries.every(
+          (summary) => summary.scrollWidth <= summary.clientWidth + 1,
+        ),
+      };
+    });
+    expect(layout.pageOverflows, `page overflow at ${viewport.width}px`).toBe(false);
+    expect(layout.explanationFits, `explanation clipping at ${viewport.width}px`).toBe(
+      true,
+    );
+    expect(layout.summariesFit, `summary clipping at ${viewport.width}px`).toBe(true);
+  }
   const finishedNewGame = page.getByRole("button", {
     name: "Start new game",
     exact: true,
@@ -1830,7 +2062,12 @@ test("completed Play sessions replay clue turns with operative scores", async ({
   await expect(secondClue).toHaveAttribute("aria-pressed", "true");
   await expect(firstClue.locator(".play-history-clue-action")).toHaveText("Review");
   await expect(secondClue.locator(".play-history-clue-action")).toHaveText("Viewing");
-  await expect(page.locator("#play-clue-display")).toContainText("SECOND 1");
+  await expect(
+    page.locator("#play-clue-display .play-clue-pill"),
+  ).toHaveText("SECOND");
+  await expect(
+    page.locator("#play-clue-display .play-history-clue-number"),
+  ).toHaveText("1");
   await expect(page.locator('.play-card[data-layout-id="0"]')).toHaveClass(
     /is-done/,
   );

@@ -11,11 +11,12 @@ A local-first Codenames clue trainer and one-human game. Train mode ranks clue o
 - 🧠 **Train model** · MiniLM-L6 by default · browser-local inference
 - 📚 **Clue index** · balanced 10,000-word default · selectable 3k, 30k, and experimental 100k tiers
 - 🛡️ **Recommendations** · safe clues for one to three targets · stretch clues for four to nine
+- 💬 **Explanations** · shared concept and target relationships · score-based danger stays separate
 - 🎴 **Board words** · Official 400-word set · Extended 800-word strict superset
 - 🔁 **New boards** · fully random or avoid words from recent local games
 - 🔗 **Sharing** · versioned `?b=` links preserve the board, roles, word set, and layout
 - 🎨 **Appearance** · system, light, and dark modes
-- 🔒 **Privacy** · board words stay in the browser and are not sent to an application server
+- 🔒 **Privacy** · scoring and roles stay in the browser · explanations send only the clue and intended targets
 
 The first model load is cached by the browser. Training progress is session-local. Play progress is saved after every event and can be resumed or discarded from setup. During an active game, history can move backward and forward. Shared board links open Train without Play history.
 
@@ -33,11 +34,19 @@ npm install
 npm run dev
 ```
 
+The app makes no semantic explanation request until **Explain** is selected for one recommendation or a completed-game clue. `npm run dev` works without a key; to exercise the paid explanation action, provide `OPENAI_API_KEY` or use the app-scoped key in Doppler:
+
+```sh
+npm run dev:semantic
+```
+
 The Vite server accepts explicit host and port arguments:
 
 ```sh
 npm run dev -- --host 127.0.0.1 --port 3535
 ```
+
+Production uses the `OPENAI_API_KEY` Vercel environment variable. The browser never receives the key.
 
 ## Verification
 

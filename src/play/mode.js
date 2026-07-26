@@ -23,6 +23,7 @@ import {
   modelOption,
 } from "../model-lab.js";
 import { analyzeEmbeddedBoard } from "../model.js";
+import { createRecommendationExplanationControl } from "../recommendation-explanation-control.js";
 import { WORD_SET } from "../word-data.js";
 import {
   chooseBotClue,
@@ -294,6 +295,7 @@ export function createPlayMode(options = {}) {
     postGameOutcome: document.querySelector("#play-post-game-outcome"),
     analysisSummary: document.querySelector("#play-analysis-summary"),
     analysisStatus: document.querySelector("#play-analysis-status"),
+    historyLabel: document.querySelector("#play-history-heading-label"),
     historyCount: document.querySelector("#play-history-count"),
     historyViewButtons: [...document.querySelectorAll("[data-play-history-view]")],
     historyList: document.querySelector("#play-history-list"),
@@ -1299,15 +1301,15 @@ export function createPlayMode(options = {}) {
       turnAction.className = "play-current-clue";
       turnAction.append(
         createCluePill(selectedTurn.clue),
-        ` ${selectedTurn.number}`,
+        createClueNumberPill(selectedTurn.number),
       );
-      turnNote.textContent = turnReviewSummary(selectedTurn);
+      turnNote.hidden = true;
     } else if (game.currentTurn) {
       turnLabel.textContent = `${sideLabel(game.currentTurn.side)} turn`;
       turnAction.className = "play-current-clue";
       turnAction.append(
         createCluePill(game.currentTurn.clue),
-        ` ${game.currentTurn.number}`,
+        createClueNumberPill(game.currentTurn.number),
       );
       turnNote.textContent =
         currentActor === "human"
@@ -1555,6 +1557,8 @@ export function createPlayMode(options = {}) {
     const visible = history.filter((event) =>
       ["clue-given", "card-guessed", "turn-passed", "game-ended"].includes(event.type),
     );
+    elements.historyLabel.textContent =
+      game.phase === GAME_PHASE.COMPLETE ? "Post-game analysis" : "Game log";
     elements.historyCount.textContent = `${visible.length} events`;
     for (const button of elements.historyViewButtons) {
       button.setAttribute(
@@ -1599,12 +1603,15 @@ export function createPlayMode(options = {}) {
     const item = document.createElement("li");
     item.dataset.side = event.side ?? event.winner ?? "";
     if (event.type === "clue-given") {
-      const intendedWords =
+      const intendedTargets =
         game.phase === GAME_PHASE.COMPLETE && event.intendedLayoutIds?.length
           ? event.intendedLayoutIds
-              .map((layoutId) => game.cards.find((card) => card.layoutId === layoutId)?.word)
+              .map((layoutId) =>
+                game.cards.find((card) => card.layoutId === layoutId),
+              )
               .filter(Boolean)
           : [];
+      const intendedWords = intendedTargets.map(({ word }) => word);
       const turnIndex =
         game.phase === GAME_PHASE.COMPLETE
           ? postGameTurns.findIndex(
@@ -1620,14 +1627,9 @@ export function createPlayMode(options = {}) {
         const selected = turnIndex === selectedPostGameTurn;
         button.type = "button";
         button.className = "play-history-clue";
-        clueLabel.className = "play-history-clue-label";
-        clueLabel.append(
-          `${sideLabel(event.side)} clue: `,
-          createCluePill(event.clue),
-          ` ${event.number}${
-            intendedWords.length ? `, intended ${intendedWords.join(" + ")}` : ""
-          }`,
-        );
+        clueLabel.className =
+          "play-history-clue-label play-history-event-summary";
+        appendHistoryClueSummary(clueLabel, event, intendedTargets);
         actionLabel.className = "play-history-clue-action";
         actionLabel.textContent = selected ? "Viewing" : "Review";
         actionLabel.setAttribute("aria-hidden", "true");
@@ -1645,24 +1647,26 @@ export function createPlayMode(options = {}) {
         button.append(clueLabel, actionLabel);
         item.append(button);
       } else {
-        item.append(
-          `${sideLabel(event.side)} clue: `,
-          createCluePill(event.clue),
-          ` ${event.number}${
-            intendedWords.length ? `, intended ${intendedWords.join(" + ")}` : ""
-          }`,
+        const summary = document.createElement("div");
+        summary.className = "play-history-event-summary";
+        appendHistoryClueSummary(summary, event, intendedTargets);
+        item.append(summary);
+      }
+      if (intendedWords.length) {
+        const explanation = createRecommendationExplanationControl(
+          {
+            clue: event.clue,
+            targets: intendedTargets,
+          },
+          { wordPills: true },
         );
+        explanation.classList.add("play-history-explanation");
+        item.append(explanation);
       }
     } else if (event.type === "card-guessed") {
-      const card = document.createElement("span");
-      card.className = "play-history-card";
-      card.dataset.team = event.team;
-      card.textContent = event.word;
-      card.setAttribute("aria-label", `${event.word}, ${teamLabel(event.team)} card`);
-      card.title = `${teamLabel(event.team)} card`;
       item.append(
         `${sideLabel(event.side)} guessed `,
-        card,
+        createHistoryCardPill(event.word, event.team),
       );
     } else if (event.type === "turn-passed") {
       item.textContent = `${sideLabel(event.side)} passed`;
@@ -1678,6 +1682,43 @@ export function createPlayMode(options = {}) {
     const pill = document.createElement("span");
     pill.className = "play-clue-pill";
     pill.textContent = clue;
+    return pill;
+  }
+
+  function createClueNumberPill(number) {
+    const pill = document.createElement("span");
+    pill.className = "play-history-clue-number";
+    pill.textContent = String(number);
+    pill.setAttribute("aria-label", `Clue number ${number}`);
+    pill.title = "Clue number";
+    return pill;
+  }
+
+  function appendHistoryClueSummary(container, event, intendedTargets) {
+    container.append(
+      `${sideLabel(event.side)} clue: `,
+      createCluePill(event.clue),
+      " ",
+      createClueNumberPill(event.number),
+    );
+    if (intendedTargets.length) {
+      container.append(", intended ");
+      intendedTargets.forEach((target, index) => {
+        if (index > 0) {
+          container.append(" + ");
+        }
+        container.append(createHistoryCardPill(target.word, target.team));
+      });
+    }
+  }
+
+  function createHistoryCardPill(word, team) {
+    const pill = document.createElement("span");
+    pill.className = "play-history-card";
+    pill.dataset.team = team;
+    pill.textContent = word;
+    pill.setAttribute("aria-label", `${word}, ${teamLabel(team)} card`);
+    pill.title = `${teamLabel(team)} card`;
     return pill;
   }
 
