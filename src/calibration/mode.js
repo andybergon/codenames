@@ -4,12 +4,14 @@ import {
   createCalibrationState,
   loadCalibrationState,
   mergeCalibrationRound,
+  mergeCalibrationState,
   normalizeCalibrationRound,
   normalizeCalibrationState,
   saveCalibrationState,
   upsertCalibrationAnswer,
 } from "./store.js";
 import {
+  applyRemoteCalibrationRecord,
   createCalibrationRemoteSync,
   reconcileCalibrationAnswers,
 } from "./sync.js";
@@ -29,6 +31,7 @@ export function createCalibrationMode(options = {}) {
   let active = false;
   let initialized = false;
   let statusMessage = "";
+  let emptyBaselineIsPass = false;
 
   root.replaceChildren(buildShell());
   const elements = {
@@ -55,11 +58,13 @@ export function createCalibrationMode(options = {}) {
   };
   const remoteSync = createCalibrationRemoteSync({
     onStatus: renderSyncStatus,
+    onConflict: handleRemoteConflict,
   });
 
   elements.roundSelect.addEventListener("change", () => {
     activeRoundId = elements.roundSelect.value;
     taskIndex = firstUnansweredIndex(activeRound());
+    statusMessage = "";
     loadCurrentAnswer();
     render();
   });
@@ -97,7 +102,9 @@ export function createCalibrationMode(options = {}) {
       if (!initialized) {
         initialized = true;
         await loadBuiltInRounds(options.manifestUrl ?? DEFAULT_MANIFEST_URL);
-        await loadRemoteAnswers();
+        render();
+        void loadRemoteAnswers({ reposition: true }).then(render);
+        return;
       }
       render();
     },
@@ -145,10 +152,16 @@ export function createCalibrationMode(options = {}) {
         button.dataset.state = storedRound.answers[taskId]
           ? "answered"
           : "unanswered";
-        button.setAttribute("aria-label", `Open calibration task ${index + 1}`);
+        button.setAttribute(
+          "aria-label",
+          `Open calibration task ${index + 1}, ${
+            storedRound.answers[taskId] ? "answered" : "unanswered"
+          }`,
+        );
         button.setAttribute("aria-current", String(index === taskIndex));
         button.addEventListener("click", () => {
           taskIndex = index;
+          statusMessage = "";
           loadCurrentAnswer();
           render();
         });
@@ -186,7 +199,7 @@ export function createCalibrationMode(options = {}) {
     }
   }
 
-  function renderTask(task) {
+  function renderTask(task, focusLayoutId = null) {
     elements.board.replaceChildren();
     if (!task) {
       elements.clue.textContent = "Import or generate a calibration round";
@@ -204,7 +217,9 @@ export function createCalibrationMode(options = {}) {
         const guessPosition = selectedGuesses.indexOf(entry.layoutId);
         button.type = "button";
         button.className = "calibration-word";
+        button.dataset.layoutId = String(entry.layoutId);
         button.dataset.selected = String(guessPosition >= 0);
+        button.setAttribute("aria-pressed", String(guessPosition >= 0));
         button.setAttribute(
           "aria-label",
           guessPosition >= 0
@@ -225,6 +240,11 @@ export function createCalibrationMode(options = {}) {
       }),
     );
     renderGuessOrder(task);
+    if (focusLayoutId !== null) {
+      elements.board
+        .querySelector(`[data-layout-id="${focusLayoutId}"]`)
+        ?.focus({ preventScroll: true });
+    }
   }
 
   function renderGuessOrder(task) {
@@ -245,13 +265,14 @@ export function createCalibrationMode(options = {}) {
       const task = currentTask();
       if (selectedGuesses.length >= task.number + 1) {
         statusMessage = `This clue allows at most ${task.number + 1} guesses.`;
-        render();
+        renderTask(task, layoutId);
+        elements.status.textContent = statusMessage;
         return;
       }
       selectedGuesses.push(layoutId);
     }
     persistCurrentDraft();
-    renderTask(currentTask());
+    renderTask(currentTask(), layoutId);
     elements.status.textContent = statusMessage;
   }
 
@@ -259,12 +280,36 @@ export function createCalibrationMode(options = {}) {
     const task = currentTask();
     if (!task) return false;
     if (!hasDraftContent()) {
+      if (emptyBaselineIsPass) {
+        state = upsertCalibrationAnswer(
+          state,
+          activeRoundId,
+          task.taskId,
+          {
+            guessedLayoutIds: [],
+            judgment: null,
+            note: "",
+          },
+        );
+        saveCalibrationState(state);
+        remoteSync.save(
+          activeRoundId,
+          task.taskId,
+          activeRound().answers[task.taskId],
+        );
+        statusMessage = "Explicit pass preserved.";
+        renderPersistenceState();
+        return true;
+      }
       if (activeRound()?.answers[task.taskId]) {
         state = clearCalibrationAnswer(state, activeRoundId, task.taskId);
+        const deletedAt = activeRound().deletions[task.taskId];
         saveCalibrationState(state);
-        remoteSync.clear(activeRoundId, task.taskId);
+        remoteSync.clear(activeRoundId, task.taskId, deletedAt);
+        statusMessage = "Empty answer removed.";
+      } else {
+        statusMessage = "";
       }
-      statusMessage = "";
       renderPersistenceState();
       return false;
     }
@@ -308,10 +353,13 @@ export function createCalibrationMode(options = {}) {
       task.taskId,
       activeRound().answers[task.taskId],
     );
-    statusMessage = "Pass saved locally.";
+    emptyBaselineIsPass = true;
     if (taskIndex < activeRound().round.tasks.length - 1) {
       taskIndex += 1;
       loadCurrentAnswer();
+      statusMessage = "Pass recorded for the previous task.";
+    } else {
+      statusMessage = "Pass saved locally.";
     }
     render();
   }
@@ -333,10 +381,18 @@ export function createCalibrationMode(options = {}) {
       : "No calibration round";
     const currentDot = elements.taskNav.children[taskIndex];
     if (currentDot) {
-      currentDot.dataset.state = storedRound?.answers[task?.taskId]
+      const answered = Boolean(storedRound?.answers[task?.taskId]);
+      currentDot.dataset.state = answered
         ? "answered"
         : "unanswered";
+      currentDot.setAttribute(
+        "aria-label",
+        `Open calibration task ${taskIndex + 1}, ${
+          answered ? "answered" : "unanswered"
+        }`,
+      );
     }
+    updateActiveRoundOption();
     elements.clear.disabled = !task || !storedRound?.answers[task.taskId];
     elements.saveNext.disabled = !task || hasDraftContent();
     elements.status.textContent = statusMessage;
@@ -346,8 +402,10 @@ export function createCalibrationMode(options = {}) {
     const task = currentTask();
     if (!task) return;
     state = clearCalibrationAnswer(state, activeRoundId, task.taskId);
+    const deletedAt = activeRound().deletions[task.taskId];
     saveCalibrationState(state);
-    remoteSync.clear(activeRoundId, task.taskId);
+    remoteSync.clear(activeRoundId, task.taskId, deletedAt);
+    emptyBaselineIsPass = false;
     statusMessage = "Saved answer cleared.";
     loadCurrentAnswer();
     render();
@@ -356,6 +414,7 @@ export function createCalibrationMode(options = {}) {
   function moveTask(offset) {
     const tasks = activeRound()?.round.tasks ?? [];
     taskIndex = Math.max(0, Math.min(tasks.length - 1, taskIndex + offset));
+    statusMessage = "";
     loadCurrentAnswer();
     render();
   }
@@ -366,27 +425,28 @@ export function createCalibrationMode(options = {}) {
     selectedGuesses = [...(answer?.guessedLayoutIds ?? [])];
     elements.judgment.value = answer?.judgment ?? "";
     elements.note.value = answer?.note ?? "";
+    emptyBaselineIsPass = Boolean(
+      answer &&
+        answer.guessedLayoutIds.length === 0 &&
+        answer.judgment === null &&
+        answer.note === "",
+    );
   }
 
   async function importFile(file) {
     if (!file) return;
     try {
       const value = JSON.parse(await file.text());
-      if (normalizeCalibrationRound(value)) {
-        state = mergeCalibrationRound(state, value);
-        activeRoundId = value.roundId;
+      const importedRound = normalizeCalibrationRound(value);
+      if (importedRound) {
+        state = mergeCalibrationRound(state, importedRound);
+        activeRoundId = importedRound.roundId;
       } else {
         const imported = normalizeCalibrationState(value);
         if (imported.rounds.length === 0) {
           throw new Error("The file contains no valid calibration rounds.");
         }
-        for (const storedRound of imported.rounds) {
-          state = mergeCalibrationRound(state, storedRound.round);
-          const current = state.rounds.find(
-            ({ round }) => round.roundId === storedRound.round.roundId,
-          );
-          current.answers = { ...current.answers, ...storedRound.answers };
-        }
+        state = mergeCalibrationState(state, imported);
         activeRoundId = imported.rounds[0].round.roundId;
       }
       saveCalibrationState(state);
@@ -400,16 +460,23 @@ export function createCalibrationMode(options = {}) {
     render();
   }
 
-  async function loadRemoteAnswers() {
+  async function loadRemoteAnswers({ reposition = false } = {}) {
     const remoteAnswers = await remoteSync.load();
     if (!remoteAnswers) return;
     const reconciled = reconcileCalibrationAnswers(state, remoteAnswers);
     state = reconciled.state;
     saveCalibrationState(state);
     for (const upload of reconciled.uploads) {
-      remoteSync.save(upload.roundId, upload.taskId, upload.answer);
+      if (upload.method === "DELETE") {
+        remoteSync.clear(upload.roundId, upload.taskId, upload.updatedAt);
+      } else {
+        remoteSync.save(upload.roundId, upload.taskId, upload.answer);
+      }
     }
     await remoteSync.flush();
+    if (reposition) {
+      taskIndex = firstUnansweredIndex(activeRound());
+    }
     loadCurrentAnswer();
   }
 
@@ -417,6 +484,11 @@ export function createCalibrationMode(options = {}) {
     for (const storedRound of state.rounds) {
       for (const [taskId, answer] of Object.entries(storedRound.answers)) {
         remoteSync.save(storedRound.round.roundId, taskId, answer);
+      }
+      for (const [taskId, updatedAt] of Object.entries(
+        storedRound.deletions,
+      )) {
+        remoteSync.clear(storedRound.round.roundId, taskId, updatedAt);
       }
     }
   }
@@ -433,13 +505,28 @@ export function createCalibrationMode(options = {}) {
     render();
   }
 
+  function handleRemoteConflict(record) {
+    if (!record || !applyRemoteCalibrationRecord(state, record)) return;
+    saveCalibrationState(state);
+    if (
+      record.roundId === activeRoundId &&
+      record.taskId === currentTask()?.taskId
+    ) {
+      loadCurrentAnswer();
+    }
+    statusMessage = "A newer database version was restored.";
+    render();
+  }
+
   function renderSyncStatus(syncState) {
     const labels = {
       checking: "Checking database…",
+      syncing: "Saving to database…",
       synced: "Database synced",
       auth_required: "Database key required",
       not_configured: "Local only",
       offline: "Saved locally · database pending",
+      rejected: "Saved locally · database rejected",
     };
     elements.syncStatus.textContent = labels[syncState] ?? labels.offline;
     elements.syncStatus.dataset.state = syncState;
@@ -458,7 +545,7 @@ export function createCalibrationMode(options = {}) {
       .toISOString()
       .slice(0, 10)}.json`;
     link.click();
-    URL.revokeObjectURL(link.href);
+    setTimeout(() => URL.revokeObjectURL(link.href), 0);
     statusMessage = "Calibration data exported.";
     elements.status.textContent = statusMessage;
   }
@@ -469,6 +556,17 @@ export function createCalibrationMode(options = {}) {
 
   function currentTask() {
     return activeRound()?.round.tasks[taskIndex] ?? null;
+  }
+
+  function updateActiveRoundOption() {
+    const storedRound = activeRound();
+    const option = [...elements.roundSelect.options].find(
+      ({ value }) => value === activeRoundId,
+    );
+    if (!storedRound || !option) return;
+    const progress = calibrationProgress(storedRound);
+    option.textContent =
+      `${storedRound.round.title} (${progress.answered}/${progress.taskCount})`;
   }
 }
 
@@ -507,7 +605,7 @@ function buildShell() {
     <label>Round
       <select id="calibration-round"></select>
     </label>
-    <strong id="calibration-progress">No calibration round</strong>`;
+    <strong id="calibration-progress" class="calibration-progress">No calibration round</strong>`;
 
   const task = document.createElement("article");
   task.className = "calibration-task";
@@ -523,7 +621,7 @@ function buildShell() {
       </div>
     </div>
     <p class="calibration-instruction">Select the words you would guess, in order. Choices, rating, and notes save automatically. Record a pass only when you would make no guess.</p>
-    <div id="calibration-board" class="calibration-board" aria-label="Calibration board"></div>
+    <div id="calibration-board" class="calibration-board" role="group" aria-label="Calibration board"></div>
     <p id="calibration-guess-order" class="calibration-guess-order" aria-live="polite"></p>
     <div class="calibration-optional">
       <label>Would you give this clue?

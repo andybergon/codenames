@@ -4,8 +4,9 @@ import { neon } from "@neondatabase/serverless";
 export const CALIBRATION_AUTH_COOKIE = "codenames_calibration_auth";
 const MAX_NOTE_LENGTH = 2_000;
 const MAX_GUESSES = 10;
+const MAX_FUTURE_TIMESTAMP_MS = 5 * 60 * 1_000;
 const COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 365;
-let tableReady = false;
+const readyDatabases = new Set();
 
 export async function handleCalibrationSyncRequest({
   method,
@@ -55,13 +56,25 @@ export async function handleCalibrationSyncRequest({
     }
     if (method === "PUT") {
       const record = validateRecord(body);
-      await store.upsertAnswer(record);
-      return jsonResult(200, { answer: record });
+      const result = await store.upsertAnswer(record);
+      return result.applied
+        ? jsonResult(200, { answer: result.record })
+        : jsonResult(409, {
+            error: "A newer calibration answer is already stored.",
+            code: "stale_write",
+            answer: result.record,
+          });
     }
     if (method === "DELETE") {
-      const target = validateTarget(body);
-      await store.deleteAnswer(target);
-      return jsonResult(200, { deleted: target });
+      const target = validateDeletion(body);
+      const result = await store.deleteAnswer(target);
+      return result.applied
+        ? jsonResult(200, { answer: result.record })
+        : jsonResult(409, {
+            error: "A newer calibration answer is already stored.",
+            code: "stale_write",
+            answer: result.record,
+          });
     }
     return {
       status: 405,
@@ -86,31 +99,32 @@ export function createNeonCalibrationStore(databaseUrl) {
   const sql = neon(databaseUrl);
   return {
     async listAnswers() {
-      await ensureTable(sql);
+      await ensureTable(sql, databaseUrl);
       const rows = await sql`
-        SELECT round_id, task_id, guessed_layout_ids, judgment, note, updated_at
+        SELECT
+          round_id,
+          task_id,
+          guessed_layout_ids,
+          judgment,
+          note,
+          updated_at,
+          deleted_at
         FROM codenames_calibration_answers
         ORDER BY round_id, task_id
       `;
-      return rows.map((row) => ({
-        roundId: row.round_id,
-        taskId: row.task_id,
-        guessedLayoutIds: row.guessed_layout_ids,
-        judgment: row.judgment,
-        note: row.note,
-        updatedAt: new Date(row.updated_at).toISOString(),
-      }));
+      return rows.map(toCalibrationRecord);
     },
     async upsertAnswer(record) {
-      await ensureTable(sql);
-      await sql`
+      await ensureTable(sql, databaseUrl);
+      const rows = await sql`
         INSERT INTO codenames_calibration_answers (
           round_id,
           task_id,
           guessed_layout_ids,
           judgment,
           note,
-          updated_at
+          updated_at,
+          deleted_at
         )
         VALUES (
           ${record.roundId},
@@ -118,29 +132,78 @@ export function createNeonCalibrationStore(databaseUrl) {
           ${JSON.stringify(record.guessedLayoutIds)}::jsonb,
           ${record.judgment},
           ${record.note},
-          ${record.updatedAt}
+          ${record.updatedAt},
+          NULL
         )
         ON CONFLICT (round_id, task_id)
         DO UPDATE SET
           guessed_layout_ids = EXCLUDED.guessed_layout_ids,
           judgment = EXCLUDED.judgment,
           note = EXCLUDED.note,
-          updated_at = EXCLUDED.updated_at
-        WHERE codenames_calibration_answers.updated_at <= EXCLUDED.updated_at
+          updated_at = EXCLUDED.updated_at,
+          deleted_at = NULL
+        WHERE
+          codenames_calibration_answers.updated_at < EXCLUDED.updated_at
+          OR (
+            codenames_calibration_answers.updated_at = EXCLUDED.updated_at
+            AND codenames_calibration_answers.deleted_at IS NULL
+          )
+        RETURNING
+          round_id,
+          task_id,
+          guessed_layout_ids,
+          judgment,
+          note,
+          updated_at,
+          deleted_at
       `;
+      return writeResult(sql, rows, record);
     },
-    async deleteAnswer({ roundId, taskId }) {
-      await ensureTable(sql);
-      await sql`
-        DELETE FROM codenames_calibration_answers
-        WHERE round_id = ${roundId} AND task_id = ${taskId}
+    async deleteAnswer({ roundId, taskId, updatedAt }) {
+      await ensureTable(sql, databaseUrl);
+      const rows = await sql`
+        INSERT INTO codenames_calibration_answers (
+          round_id,
+          task_id,
+          guessed_layout_ids,
+          judgment,
+          note,
+          updated_at,
+          deleted_at
+        )
+        VALUES (
+          ${roundId},
+          ${taskId},
+          '[]'::jsonb,
+          NULL,
+          '',
+          ${updatedAt},
+          ${updatedAt}
+        )
+        ON CONFLICT (round_id, task_id)
+        DO UPDATE SET
+          guessed_layout_ids = '[]'::jsonb,
+          judgment = NULL,
+          note = '',
+          updated_at = EXCLUDED.updated_at,
+          deleted_at = EXCLUDED.deleted_at
+        WHERE codenames_calibration_answers.updated_at <= EXCLUDED.updated_at
+        RETURNING
+          round_id,
+          task_id,
+          guessed_layout_ids,
+          judgment,
+          note,
+          updated_at,
+          deleted_at
       `;
+      return writeResult(sql, rows, { roundId, taskId });
     },
   };
 }
 
-async function ensureTable(sql) {
-  if (tableReady) return;
+async function ensureTable(sql, databaseUrl) {
+  if (readyDatabases.has(databaseUrl)) return;
   await sql`
     CREATE TABLE IF NOT EXISTS codenames_calibration_answers (
       round_id TEXT NOT NULL,
@@ -149,13 +212,18 @@ async function ensureTable(sql) {
       judgment TEXT,
       note TEXT NOT NULL DEFAULT '',
       updated_at TIMESTAMPTZ NOT NULL,
+      deleted_at TIMESTAMPTZ,
       PRIMARY KEY (round_id, task_id),
       CHECK (jsonb_typeof(guessed_layout_ids) = 'array'),
       CHECK (judgment IS NULL OR judgment IN ('good', 'unsure', 'bad')),
       CHECK (char_length(note) <= 2000)
     )
   `;
-  tableReady = true;
+  await sql`
+    ALTER TABLE codenames_calibration_answers
+    ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ
+  `;
+  readyDatabases.add(databaseUrl);
 }
 
 function validateRecord(value) {
@@ -184,17 +252,21 @@ function validateRecord(value) {
   if (note.length > MAX_NOTE_LENGTH) {
     throw new CalibrationValidationError("Calibration note is too long.");
   }
-  const updatedAt = new Date(value?.updatedAt);
-  if (!Number.isFinite(updatedAt.getTime())) {
-    throw new CalibrationValidationError("Calibration timestamp is invalid.");
-  }
+  const updatedAt = validateTimestamp(value?.updatedAt);
   return {
     roundId,
     taskId,
     guessedLayoutIds,
     judgment,
     note,
-    updatedAt: updatedAt.toISOString(),
+    updatedAt,
+  };
+}
+
+function validateDeletion(value) {
+  return {
+    ...validateTarget(value),
+    updatedAt: validateTimestamp(value?.updatedAt),
   };
 }
 
@@ -213,6 +285,63 @@ function validateIdentifier(value, label) {
     );
   }
   return identifier;
+}
+
+function validateTimestamp(value) {
+  const updatedAt = new Date(value);
+  if (
+    !Number.isFinite(updatedAt.getTime()) ||
+    updatedAt.getTime() > Date.now() + MAX_FUTURE_TIMESTAMP_MS
+  ) {
+    throw new CalibrationValidationError("Calibration timestamp is invalid.");
+  }
+  return updatedAt.toISOString();
+}
+
+async function writeResult(sql, rows, { roundId, taskId }) {
+  if (rows.length > 0) {
+    return { applied: true, record: toCalibrationRecord(rows[0]) };
+  }
+  const current = await sql`
+    SELECT
+      round_id,
+      task_id,
+      guessed_layout_ids,
+      judgment,
+      note,
+      updated_at,
+      deleted_at
+    FROM codenames_calibration_answers
+    WHERE round_id = ${roundId} AND task_id = ${taskId}
+    LIMIT 1
+  `;
+  return {
+    applied: false,
+    record: current[0] ? toCalibrationRecord(current[0]) : null,
+  };
+}
+
+function toCalibrationRecord(row) {
+  return {
+    roundId: row.round_id,
+    taskId: row.task_id,
+    guessedLayoutIds: row.guessed_layout_ids,
+    judgment: row.judgment,
+    note: row.note,
+    updatedAt: new Date(row.updated_at).toISOString(),
+    deletedAt: row.deleted_at
+      ? new Date(row.deleted_at).toISOString()
+      : null,
+  };
+}
+
+export function isLoopbackAddress(value) {
+  const address = String(value ?? "").toLowerCase();
+  return (
+    address === "::1" ||
+    /^127(?:\.\d{1,3}){3}$/.test(address) ||
+    /^::ffff:127(?:\.\d{1,3}){3}$/.test(address)
+  );
 }
 
 function buildAuthCookie(secret, secure) {

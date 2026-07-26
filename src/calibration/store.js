@@ -1,5 +1,10 @@
 export const CALIBRATION_STORAGE_KEY = "codenames-human-calibration-v1";
 export const CALIBRATION_SCHEMA_VERSION = 1;
+export const CALIBRATION_LEGACY_TIMESTAMP = "1970-01-01T00:00:00.000Z";
+
+const IDENTIFIER_PATTERN = /^[A-Za-z0-9_-]{1,100}$/;
+const MAX_TASK_NUMBER = 9;
+const MAX_LAYOUT_ID = 24;
 
 export function createCalibrationState() {
   return {
@@ -45,8 +50,7 @@ export function normalizeCalibrationState(value) {
 export function normalizeCalibrationRound(value) {
   if (
     value?.schemaVersion !== CALIBRATION_SCHEMA_VERSION ||
-    typeof value.roundId !== "string" ||
-    !value.roundId.trim() ||
+    !isValidIdentifier(value.roundId) ||
     !Array.isArray(value.tasks) ||
     value.tasks.length === 0
   ) {
@@ -66,7 +70,11 @@ export function normalizeCalibrationRound(value) {
   };
 }
 
-export function mergeCalibrationRound(state, definition) {
+export function mergeCalibrationRound(
+  state,
+  definition,
+  now = new Date().toISOString(),
+) {
   const normalized = normalizeCalibrationRound(definition);
   if (!normalized) {
     throw new Error("Calibration round is invalid.");
@@ -76,7 +84,7 @@ export function mergeCalibrationRound(state, definition) {
     ({ round }) => round.roundId === normalized.roundId,
   );
   if (existingIndex === -1) {
-    next.rounds.push({ round: normalized, answers: {} });
+    next.rounds.push({ round: normalized, answers: {}, deletions: {} });
     return next;
   }
   const existing = next.rounds[existingIndex];
@@ -91,13 +99,21 @@ export function mergeCalibrationRound(state, definition) {
       )
       .map(({ taskId }) => taskId),
   );
+  const retainedAnswers = Object.fromEntries(
+    Object.entries(existing.answers).filter(([taskId]) =>
+      retainedTaskIds.has(taskId),
+    ),
+  );
+  const deletions = { ...existing.deletions };
+  for (const taskId of Object.keys(existing.answers)) {
+    if (!retainedTaskIds.has(taskId)) {
+      deletions[taskId] = newestTimestamp(deletions[taskId], now);
+    }
+  }
   next.rounds[existingIndex] = {
     round: normalized,
-    answers: Object.fromEntries(
-      Object.entries(existing.answers).filter(([taskId]) =>
-        retainedTaskIds.has(taskId),
-      ),
-    ),
+    answers: retainedAnswers,
+    deletions,
   };
   return next;
 }
@@ -130,16 +146,55 @@ export function upsertCalibrationAnswer(
       ? answer.judgment
       : null,
     note: cleanText(answer?.note),
-    updatedAt: now,
+    updatedAt: normalizeTimestamp(now),
   };
+  delete storedRound.deletions[taskId];
   return next;
 }
 
-export function clearCalibrationAnswer(state, roundId, taskId) {
+export function clearCalibrationAnswer(
+  state,
+  roundId,
+  taskId,
+  now = new Date().toISOString(),
+) {
   const next = normalizeCalibrationState(state);
   const storedRound = next.rounds.find(({ round }) => round.roundId === roundId);
-  if (storedRound) {
+  if (
+    storedRound?.round.tasks.some((entry) => entry.taskId === taskId)
+  ) {
     delete storedRound.answers[taskId];
+    storedRound.deletions[taskId] = newestTimestamp(
+      storedRound.deletions[taskId],
+      now,
+    );
+  }
+  return next;
+}
+
+export function mergeCalibrationState(state, importedState) {
+  let next = normalizeCalibrationState(state);
+  const imported = normalizeCalibrationState(importedState);
+  for (const importedRound of imported.rounds) {
+    next = mergeCalibrationRound(next, importedRound.round);
+    const current = next.rounds.find(
+      ({ round }) => round.roundId === importedRound.round.roundId,
+    );
+    for (const [taskId, answer] of Object.entries(importedRound.answers)) {
+      applyNewestEvent(current, taskId, {
+        type: "answer",
+        updatedAt: answer.updatedAt,
+        answer,
+      });
+    }
+    for (const [taskId, updatedAt] of Object.entries(
+      importedRound.deletions,
+    )) {
+      applyNewestEvent(current, taskId, {
+        type: "deletion",
+        updatedAt,
+      });
+    }
   }
   return next;
 }
@@ -179,21 +234,37 @@ function normalizeStoredRound(value) {
             ? answer.judgment
             : null,
           note: cleanText(answer?.note),
-          updatedAt: cleanText(answer?.updatedAt),
+          updatedAt: normalizeTimestamp(answer?.updatedAt),
         },
       ]),
   );
-  return { round, answers };
+  const deletions = Object.fromEntries(
+    Object.entries(value?.deletions ?? {})
+      .filter(([taskId]) => isValidIdentifier(taskId))
+      .map(([taskId, updatedAt]) => [
+        taskId,
+        normalizeTimestamp(updatedAt),
+      ]),
+  );
+  for (const [taskId, deletionAt] of Object.entries(deletions)) {
+    const answer = answers[taskId];
+    if (answer && timestamp(deletionAt) >= timestamp(answer.updatedAt)) {
+      delete answers[taskId];
+    } else if (answer) {
+      delete deletions[taskId];
+    }
+  }
+  return { round, answers, deletions };
 }
 
 function normalizeTask(value) {
   if (
-    typeof value?.taskId !== "string" ||
-    !value.taskId.trim() ||
+    !isValidIdentifier(value?.taskId) ||
     typeof value.clue !== "string" ||
     !value.clue.trim() ||
     !Number.isInteger(value.number) ||
     value.number < 1 ||
+    value.number > MAX_TASK_NUMBER ||
     !Array.isArray(value.words) ||
     value.words.length < 2
   ) {
@@ -226,6 +297,8 @@ function normalizeTask(value) {
 function normalizeWord(value) {
   if (
     !Number.isInteger(value?.layoutId) ||
+    value.layoutId < 0 ||
+    value.layoutId > MAX_LAYOUT_ID ||
     typeof value.word !== "string" ||
     !value.word.trim()
   ) {
@@ -260,4 +333,56 @@ function taskSignature(task) {
     intendedLayoutIds: task.intendedLayoutIds,
     source: task.source,
   });
+}
+
+function applyNewestEvent(storedRound, taskId, event) {
+  const taskExists = storedRound.round.tasks.some(
+    (task) => task.taskId === taskId,
+  );
+  const localAnswer = storedRound.answers[taskId];
+  const localDeletion = storedRound.deletions[taskId];
+  const localTimestamp = Math.max(
+    timestamp(localAnswer?.updatedAt),
+    timestamp(localDeletion),
+  );
+  const eventTimestamp = timestamp(event.updatedAt);
+  if (
+    eventTimestamp < localTimestamp ||
+    (
+      eventTimestamp === localTimestamp &&
+      localDeletion &&
+      event.type === "answer"
+    )
+  ) {
+    return;
+  }
+  if (event.type === "answer" && taskExists) {
+    storedRound.answers[taskId] = event.answer;
+    delete storedRound.deletions[taskId];
+    return;
+  }
+  delete storedRound.answers[taskId];
+  storedRound.deletions[taskId] = normalizeTimestamp(event.updatedAt);
+}
+
+function normalizeTimestamp(value) {
+  const parsed = Date.parse(value);
+  return Number.isFinite(parsed)
+    ? new Date(parsed).toISOString()
+    : CALIBRATION_LEGACY_TIMESTAMP;
+}
+
+function newestTimestamp(left, right) {
+  return timestamp(left) > timestamp(right)
+    ? normalizeTimestamp(left)
+    : normalizeTimestamp(right);
+}
+
+function timestamp(value) {
+  const parsed = Date.parse(value);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function isValidIdentifier(value) {
+  return typeof value === "string" && IDENTIFIER_PATTERN.test(value);
 }

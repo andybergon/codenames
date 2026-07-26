@@ -7,6 +7,8 @@ import {
   createCalibrationState,
   loadCalibrationState,
   mergeCalibrationRound,
+  mergeCalibrationState,
+  normalizeCalibrationRound,
   saveCalibrationState,
   upsertCalibrationAnswer,
 } from "../src/calibration/store.js";
@@ -75,8 +77,12 @@ assert.deepEqual(loadCalibrationState(storage), state);
 state = mergeCalibrationRound(state, {
   ...round,
   tasks: [{ ...round.tasks[0], clue: "space" }],
-});
+}, "2026-07-26T01:00:00.000Z");
 assert.equal(calibrationProgress(state.rounds[0]).answered, 0);
+assert.equal(
+  state.rounds[0].deletions["task-1"],
+  "2026-07-26T01:00:00.000Z",
+);
 
 const localNewer = upsertCalibrationAnswer(
   mergeCalibrationRound(createCalibrationState(), round),
@@ -97,9 +103,11 @@ const localResult = reconcileCalibrationAnswers(localNewer, [
 ]);
 assert.deepEqual(localResult.uploads, [
   {
+    method: "PUT",
     roundId: "smoke-round",
     taskId: "task-1",
     answer: localNewer.rounds[0].answers["task-1"],
+    updatedAt: "2026-07-26T12:00:00.000Z",
   },
 ]);
 assert.equal(
@@ -125,8 +133,112 @@ assert.deepEqual(remoteResult.state.rounds[0].answers["task-1"], {
   updatedAt: "2026-07-26T13:00:00.000Z",
 });
 
-state = clearCalibrationAnswer(state, "smoke-round", "task-1");
+state = clearCalibrationAnswer(
+  remoteResult.state,
+  "smoke-round",
+  "task-1",
+  "2026-07-26T14:00:00.000Z",
+);
 assert.equal(calibrationProgress(state.rounds[0]).answered, 0);
+assert.equal(
+  state.rounds[0].deletions["task-1"],
+  "2026-07-26T14:00:00.000Z",
+);
+
+const deletionResult = reconcileCalibrationAnswers(state, [
+  {
+    roundId: "smoke-round",
+    taskId: "task-1",
+    guessedLayoutIds: [1],
+    judgment: "good",
+    note: "Stale remote",
+    updatedAt: "2026-07-26T13:30:00.000Z",
+    deletedAt: null,
+  },
+]);
+assert.equal(deletionResult.state.rounds[0].answers["task-1"], undefined);
+assert.deepEqual(deletionResult.uploads, [
+  {
+    method: "DELETE",
+    roundId: "smoke-round",
+    taskId: "task-1",
+    updatedAt: "2026-07-26T14:00:00.000Z",
+  },
+]);
+
+const restoredDeletion = reconcileCalibrationAnswers(localNewer, [
+  {
+    roundId: "smoke-round",
+    taskId: "task-1",
+    guessedLayoutIds: [],
+    judgment: null,
+    note: "",
+    updatedAt: "2026-07-26T15:00:00.000Z",
+    deletedAt: "2026-07-26T15:00:00.000Z",
+  },
+]);
+assert.equal(restoredDeletion.state.rounds[0].answers["task-1"], undefined);
+assert.equal(
+  restoredDeletion.state.rounds[0].deletions["task-1"],
+  "2026-07-26T15:00:00.000Z",
+);
+
+const importedOlder = {
+  schemaVersion: 1,
+  rounds: [
+    {
+      round,
+      answers: {
+        "task-1": {
+          guessedLayoutIds: [2],
+          judgment: "bad",
+          note: "Old export",
+          updatedAt: "2026-07-26T10:00:00.000Z",
+        },
+      },
+    },
+  ],
+};
+const importBase = upsertCalibrationAnswer(
+  mergeCalibrationRound(createCalibrationState(), round),
+  "smoke-round",
+  "task-1",
+  { guessedLayoutIds: [1], judgment: "good", note: "Local" },
+  "2026-07-26T12:00:00.000Z",
+);
+const importResult = mergeCalibrationState(importBase, importedOlder);
+assert.equal(importResult.rounds[0].answers["task-1"].note, "Local");
+
+assert.equal(
+  normalizeCalibrationRound({ ...round, roundId: "invalid:id" }),
+  null,
+);
+assert.equal(
+  normalizeCalibrationRound({ ...round, roundId: " smoke-round " }),
+  null,
+);
+assert.equal(
+  normalizeCalibrationRound({
+    ...round,
+    tasks: [{ ...round.tasks[0], number: 10 }],
+  }),
+  null,
+);
+assert.equal(
+  normalizeCalibrationRound({
+    ...round,
+    tasks: [
+      {
+        ...round.tasks[0],
+        words: [
+          ...round.tasks[0].words,
+          { layoutId: 25, word: "INVALID" },
+        ],
+      },
+    ],
+  }),
+  null,
+);
 
 const publicRound = JSON.parse(
   await readFile(

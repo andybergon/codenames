@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import pickerBenchmark from "../scripts/generated/model-picker-benchmark.json" with { type: "json" };
+import calibrationRound from "../public/data/calibration/embedding-finalists-v1.json" with { type: "json" };
 import { decodeBoardParam } from "../src/board-share.js";
 import { OFFICIAL_WORDS } from "../src/word-data.js";
 
@@ -515,23 +516,37 @@ test("human calibration auto-saves answers and corrections across navigation", a
   const firstWord = page.locator(".calibration-word").first();
   const secondWord = page.locator(".calibration-word").nth(1);
   await firstWord.click();
+  await expect(firstWord).toBeFocused();
   await secondWord.click();
   await page.locator("#calibration-judgment").selectOption("good");
   await page.locator("#calibration-note").fill("First pass");
   await expect(page.locator("#calibration-progress")).toHaveText(
     "1/30 answered",
   );
+  await expect(page.locator("#calibration-round option:checked")).toHaveText(
+    "Embedding finalists (1/30)",
+  );
+  await expect(
+    page.getByRole("button", {
+      name: "Open calibration task 1, answered",
+      exact: true,
+    }),
+  ).toHaveAttribute("data-state", "answered");
   await expect(page.locator("#calibration-status")).toHaveText(
     "Saved automatically in this browser.",
   );
   await page.getByRole("button", { name: "Next", exact: true }).click();
+  await expect(page.locator("#calibration-status")).toBeEmpty();
 
   await page.reload();
   await expect(page.locator("#calibration-progress")).toHaveText(
     "1/30 answered",
   );
   await page
-    .getByRole("button", { name: "Open calibration task 1", exact: true })
+    .getByRole("button", {
+      name: "Open calibration task 1, answered",
+      exact: true,
+    })
     .click();
   await expect(page.locator(".calibration-word[data-selected='true']")).toHaveCount(
     2,
@@ -541,7 +556,10 @@ test("human calibration auto-saves answers and corrections across navigation", a
   await page.getByRole("button", { name: "Next", exact: true }).click();
   await page.reload();
   await page
-    .getByRole("button", { name: "Open calibration task 1", exact: true })
+    .getByRole("button", {
+      name: "Open calibration task 1, answered",
+      exact: true,
+    })
     .click();
   await expect(page.locator(".calibration-word[data-selected='true']")).toHaveCount(
     1,
@@ -595,6 +613,18 @@ test("human calibration restores and updates database answers automatically", as
   await expect(page.locator("#calibration-progress")).toHaveText(
     "1/30 answered",
   );
+  await expect(
+    page.getByRole("button", {
+      name: "Open calibration task 2, unanswered",
+      exact: true,
+    }),
+  ).toHaveAttribute("aria-current", "true");
+  await page
+    .getByRole("button", {
+      name: "Open calibration task 1, answered",
+      exact: true,
+    })
+    .click();
   await expect(page.locator(".calibration-word[data-selected='true']")).toHaveCount(
     1,
   );
@@ -636,8 +666,107 @@ test("human calibration distinguishes browsing from an explicit pass", async ({
   );
   await page.reload();
   await expect(
-    page.getByRole("button", { name: "Open calibration task 2", exact: true }),
+    page.getByRole("button", {
+      name: "Open calibration task 2, answered",
+      exact: true,
+    }),
   ).toHaveAttribute("data-state", "answered");
+});
+
+test("human calibration renders locally before database restore completes", async ({
+  page,
+}) => {
+  let releaseRemote;
+  const remoteReleased = new Promise((resolve) => {
+    releaseRemote = resolve;
+  });
+  await page.route("**/api/calibration", async (route) => {
+    await remoteReleased;
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({ answers: [] }),
+    });
+  });
+
+  await page.goto("/?mode=calibrate");
+  await expect(page.locator("#calibration-clue")).not.toHaveText(
+    "Loading calibration",
+  );
+  await expect(page.locator(".calibration-word")).toHaveCount(25);
+  releaseRemote();
+  await expect(page.locator("#calibration-sync-status")).toHaveText(
+    "Database synced",
+  );
+});
+
+test("human calibration preserves an explicit pass when its draft returns to empty", async ({
+  page,
+}) => {
+  await page.goto("/?mode=calibrate");
+  await page
+    .getByRole("button", { name: "Record pass and next", exact: true })
+    .click();
+  await page
+    .getByRole("button", {
+      name: "Open calibration task 1, answered",
+      exact: true,
+    })
+    .click();
+  const firstWord = page.locator(".calibration-word").first();
+  await firstWord.click();
+  await firstWord.click();
+  await expect(page.locator("#calibration-status")).toHaveText(
+    "Explicit pass preserved.",
+  );
+  await expect(page.locator("#calibration-progress")).toHaveText(
+    "1/30 answered",
+  );
+});
+
+test("human calibration rejects an older imported answer", async ({ page }) => {
+  await page.goto("/?mode=calibrate");
+  const firstWord = page.locator(".calibration-word").first();
+  const firstLayoutId = Number(await firstWord.getAttribute("data-layout-id"));
+  await firstWord.click();
+
+  const task = calibrationRound.tasks[0];
+  const olderLayoutId = task.words.find(
+    ({ layoutId }) => layoutId !== firstLayoutId,
+  ).layoutId;
+  const imported = {
+    schemaVersion: 1,
+    rounds: [
+      {
+        round: calibrationRound,
+        answers: {
+          [task.taskId]: {
+            guessedLayoutIds: [olderLayoutId],
+            judgment: "bad",
+            note: "Older export",
+            updatedAt: "2020-01-01T00:00:00.000Z",
+          },
+        },
+      },
+    ],
+  };
+  await page.locator("#calibration-import-input").setInputFiles({
+    name: "older-calibration.json",
+    mimeType: "application/json",
+    buffer: Buffer.from(JSON.stringify(imported)),
+  });
+  await page
+    .getByRole("button", {
+      name: "Open calibration task 1, answered",
+      exact: true,
+    })
+    .click();
+
+  await expect(
+    page.locator(
+      `.calibration-word[data-layout-id="${firstLayoutId}"][data-selected="true"]`,
+    ),
+  ).toHaveCount(1);
+  await expect(page.locator("#calibration-note")).not.toHaveValue("Older export");
 });
 
 test("human calibration fits the required responsive viewports", async ({

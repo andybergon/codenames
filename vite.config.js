@@ -1,5 +1,8 @@
 import { defineConfig, loadEnv } from "vite";
-import { handleCalibrationSyncRequest } from "./server/calibration-sync-service.js";
+import {
+  handleCalibrationSyncRequest,
+  isLoopbackAddress,
+} from "./server/calibration-sync-service.js";
 import { handleRecommendationExplanationRequest } from "./server/recommendation-explanation-service.js";
 
 export default defineConfig(({ mode }) => {
@@ -60,7 +63,9 @@ function calibrationSyncApi({ databaseUrl, syncSecret }) {
           databaseUrl,
           syncSecret,
           secureCookie: false,
-          trustLocalClient: true,
+          trustLocalClient: isLoopbackAddress(
+            request.socket?.remoteAddress,
+          ),
         });
         response.statusCode = result.status;
         for (const [name, value] of Object.entries(result.headers ?? {})) {
@@ -82,11 +87,15 @@ async function readJsonBody(request, response, methods = ["POST"]) {
     return {};
   }
 
-  let raw = "";
+  const chunks = [];
+  let byteLength = 0;
   for await (const chunk of request) {
-    raw += chunk;
-    if (Buffer.byteLength(raw) > 8_192) {
+    const buffer = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
+    chunks.push(buffer);
+    byteLength += buffer.byteLength;
+    if (byteLength > 8_192) {
       response.statusCode = 413;
+      response.setHeader("Cache-Control", "private, no-store");
       response.setHeader("Content-Type", "application/json; charset=utf-8");
       response.end(JSON.stringify({ error: "Request body is too large." }));
       return null;
@@ -94,9 +103,11 @@ async function readJsonBody(request, response, methods = ["POST"]) {
   }
 
   try {
+    const raw = Buffer.concat(chunks, byteLength).toString("utf8");
     return JSON.parse(raw || "{}");
   } catch {
     response.statusCode = 400;
+    response.setHeader("Cache-Control", "private, no-store");
     response.setHeader("Content-Type", "application/json; charset=utf-8");
     response.end(JSON.stringify({ error: "Request body must be valid JSON." }));
     return null;
