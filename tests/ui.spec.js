@@ -1446,7 +1446,7 @@ test("Play exposes and saves bot policy settings", async ({ page }) => {
 
   const settings = page.locator(".play-settings");
   await expect(settings).toContainText(
-    "Official, fully random, BGE-small, 10k, human-like, never repeat team clues, fresh targets first, dynamic operative, deterministic guesses, stop at number",
+    "Official, fully random, BGE-small, 30k, human-like, never repeat team clues, fresh targets first, dynamic operative, deterministic guesses, stop at number",
   );
   await expect(settings).not.toHaveAttribute("open", "");
   await expect(settings.locator(".play-settings-toggle")).toContainText("Edit");
@@ -1494,7 +1494,7 @@ test("Play exposes and saves bot policy settings", async ({ page }) => {
   await expect(developerSettings.locator("#play-developer-mode")).not.toBeChecked();
 
   await expect(page.locator("#play-bot-model")).toHaveValue("bge-small");
-  await expect(page.locator("#play-bot-candidates")).toHaveValue("10000");
+  await expect(page.locator("#play-bot-candidates")).toHaveValue("30000");
   await expect(page.locator("#play-clue-policy")).toHaveValue("hybrid");
   await expect(page.locator("#play-clue-repeat-policy")).toHaveValue("never");
   await expect(page.locator("#play-multi-tolerance")).toHaveValue("5");
@@ -1552,7 +1552,7 @@ test("Play exposes and saves bot policy settings", async ({ page }) => {
 
   await page.getByRole("button", { name: "Extended 800", exact: true }).click();
   await expect(settings).toContainText(
-    "Extended, fully random, BGE-small, 10k, human-like, never repeat team clues, fresh targets first, dynamic operative, deterministic guesses, stop at number",
+    "Extended, fully random, BGE-small, 30k, human-like, never repeat team clues, fresh targets first, dynamic operative, deterministic guesses, stop at number",
   );
   await page.locator("#play-bot-model").selectOption("minilm-l6");
   await page.locator("#play-bot-candidates").selectOption("30000");
@@ -2217,11 +2217,28 @@ test("Play explains new-board reuse in a responsive info control", async ({
   for (const viewport of [
     { width: 390, height: 844 },
     { width: 768, height: 1024 },
+    { width: 804, height: 998 },
     { width: 1440, height: 900 },
   ]) {
     await page.setViewportSize(viewport);
     await page.goto("/?mode=play");
     await page.locator(".play-settings summary").click();
+    const clearHistory = page.getByRole("button", {
+      name: "Clear history",
+      exact: true,
+    });
+    await expect(clearHistory).toBeDisabled();
+    await clearHistory.hover();
+    expect(
+      await clearHistory.evaluate((button) => getComputedStyle(button).cursor),
+      `disabled reuse cursor at ${viewport.width}px`,
+    ).toBe("not-allowed");
+    expect(
+      await page.locator("#play-word-reuse-setting").evaluate(
+        (setting) => getComputedStyle(setting, "::after").content,
+      ),
+      `stray reuse caret at ${viewport.width}px`,
+    ).toBe("none");
     const help = page.getByRole("button", {
       name: "About New board words",
       exact: true,
@@ -2425,6 +2442,18 @@ test("Play bot setting help explains measured tradeoffs and stays on-screen", as
   await expect(vocabularyPopover.locator("tbody tr").nth(3)).toContainText(
     "88.75%",
   );
+  await expect(vocabularyPopover.locator("thead")).toContainText("Scoring");
+  await expect(vocabularyPopover.locator("tbody tr").nth(0)).toContainText("1×");
+  await expect(vocabularyPopover.locator("tbody tr").nth(1)).toContainText(
+    "~3.3×",
+  );
+  await expect(vocabularyPopover.locator("tbody tr").nth(2)).toContainText(
+    "10×",
+  );
+  await expect(vocabularyPopover.locator("tbody tr").nth(3)).toContainText(
+    "~33.3×",
+  );
+  await expect(vocabularyPopover).not.toContainText("MiniLM-L6");
   const multiHelp = page.getByRole("button", {
     name: "About Prefer multi-card clues",
     exact: true,
@@ -2437,7 +2466,7 @@ test("Play bot setting help explains measured tradeoffs and stays on-screen", as
   await expect(multiPopover.locator("tbody tr").nth(1)).toContainText(
     "Within 5 points",
   );
-  await expect(multiPopover.locator("tbody tr").nth(1)).toContainText("50.4%");
+  await expect(multiPopover.locator("tbody tr").nth(1)).toContainText("58.4%");
   await multiHelp.click();
 
   await modelHelp.hover();

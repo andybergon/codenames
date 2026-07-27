@@ -177,7 +177,7 @@ const BOT_SETTING_INFO = Object.freeze({
         "👥 Coverage",
         "🏁 Open multi",
         "⬇️ Index",
-        "⏱️ Work",
+        "⏱️ Scoring",
       ],
       numericColumns: [1, 2, 3, 4],
       rows: CANDIDATE_OPTIONS.map(
@@ -190,7 +190,7 @@ const BOT_SETTING_INFO = Object.freeze({
         ],
       ),
     },
-    note: "Coverage is the share of human clues included. Open multi is the share of 80 controlled openings that produce a clue for 2+ cards with MiniLM-L6. Larger vocabularies offer more options, but take more work and can surface less familiar clues.",
+    note: "Coverage is the share of human clues included. Open multi is the share of 80 controlled openings that produce a clue for 2+ cards with the same fixed setup. Scoring work is normalized to 3k = 1×; loading is excluded. Larger vocabularies offer more options, but take more work and can surface less familiar clues.",
   },
   cluePolicy: {
     id: "clue-scoring",
@@ -199,7 +199,7 @@ const BOT_SETTING_INFO = Object.freeze({
       headers: ["🧮 Scoring", "🔢 Multi", "✅ Correct", "⏱️ Turns"],
       numericColumns: [1, 2, 3],
       rows: [
-        ["🧪 Human-like", "50.4%", "1.58", "9.85"],
+        ["🧪 Human-like", "58.4%", "1.60", "9.78"],
         ["📍 Conservative", "15.7%", "1.17", "13.34"],
       ],
     },
@@ -226,11 +226,11 @@ const BOT_SETTING_INFO = Object.freeze({
       numericColumns: [2],
       rows: [
         ["🛑 Off", "It has the best score", "Not measured"],
-        ["⚖️ Balanced", "Within 5 points", "50.4%*"],
+        ["⚖️ Balanced", "Within 5 points", "58.4%*"],
         ["🚀 Strong", "Within 10 points", "Not measured"],
       ],
     },
-    note: "Off always chooses the best-scoring clue. Balanced and Strong may choose a clue for 2+ cards when it scores within the shown distance of the best clue overall. A wider margin favors more multi-card clues. *50.4% is the rate for the full recommended setup, not this setting alone.",
+    note: "Off always chooses the best-scoring clue. Balanced and Strong may choose a clue for 2+ cards when it scores within the shown distance of the best clue overall. A wider margin favors more multi-card clues. *58.4% is the rate for the full recommended setup, not this setting alone.",
   },
   missedTargetTiming: {
     id: "missed-target-timing",
@@ -3155,8 +3155,10 @@ function formatCompactCount(count) {
 }
 
 function formatRelativeWork(count) {
-  const relative = count / 10_000;
-  return relative === 1 ? "1×" : `~${Number(relative.toFixed(1))}×`;
+  const relative = count / CANDIDATE_OPTIONS[0].count;
+  return Number.isInteger(relative)
+    ? `${relative}×`
+    : `~${Number(relative.toFixed(1))}×`;
 }
 
 function settingsLabel(

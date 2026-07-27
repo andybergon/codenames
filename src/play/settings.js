@@ -41,7 +41,7 @@ export const PLAY_MISSED_TARGET_TIMING = Object.freeze({
 
 export const DEFAULT_PLAY_BOT_SETTINGS = Object.freeze({
   modelId: "bge-small",
-  candidateCount: 10_000,
+  candidateCount: 30_000,
   cluePolicy: PLAY_CLUE_POLICY.HYBRID,
   clueRepeatPolicy: PLAY_CLUE_REPEAT_POLICY.NEVER,
   multiTolerance: 5,
@@ -56,6 +56,7 @@ const CANDIDATE_COUNTS = new Set(CANDIDATE_OPTIONS.map(({ count }) => count));
 const ITALIAN_CANDIDATE_COUNTS = new Set(
   ITALIAN_CANDIDATE_OPTIONS.map(({ count }) => count),
 );
+const DEFAULT_ITALIAN_CANDIDATE_COUNT = 10_000;
 const CLUE_POLICIES = new Set(Object.values(PLAY_CLUE_POLICY));
 const CLUE_REPEAT_POLICIES = new Set(
   Object.values(PLAY_CLUE_REPEAT_POLICY),
@@ -83,6 +84,9 @@ export function normalizePlayBotSettings(
   const candidateCounts = italian
     ? ITALIAN_CANDIDATE_COUNTS
     : CANDIDATE_COUNTS;
+  const defaultCandidateCount = italian
+    ? DEFAULT_ITALIAN_CANDIDATE_COUNT
+    : DEFAULT_PLAY_BOT_SETTINGS.candidateCount;
   const candidateCount = Number(value.candidateCount);
   const multiTolerance = Number(value.multiTolerance);
   return {
@@ -91,7 +95,7 @@ export function normalizePlayBotSettings(
       : defaultModelId,
     candidateCount: candidateCounts.has(candidateCount)
       ? candidateCount
-      : DEFAULT_PLAY_BOT_SETTINGS.candidateCount,
+      : defaultCandidateCount,
     cluePolicy: CLUE_POLICIES.has(value.cluePolicy)
       ? value.cluePolicy
       : DEFAULT_PLAY_BOT_SETTINGS.cluePolicy,

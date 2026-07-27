@@ -115,7 +115,7 @@ const italianPlayTransferBenchmark = JSON.parse(
 
 assert.equal(playPolicyBenchmark.methodology.boardCount, 100);
 assert.equal(playPolicyBenchmark.methodology.pairedBoards, true);
-assert.equal(playPolicyBenchmark.methodology.candidateCount, 10_000);
+assert.equal(playPolicyBenchmark.methodology.candidateCount, 30_000);
 assert.equal(playPolicyBenchmark.methodology.funObjective.version, 1);
 assert.equal(
   playPolicyBenchmark.methodology.operativeAggression.includes("dynamic"),
@@ -287,6 +287,7 @@ assert.deepEqual(
   {
     ...DEFAULT_PLAY_BOT_SETTINGS,
     modelId: ITALIAN_MODEL_ID,
+    candidateCount: 10_000,
   },
 );
 

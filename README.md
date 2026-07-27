@@ -10,7 +10,7 @@ A local-first Codenames clue trainer and one-human game. Train mode ranks clue o
 - 🌍 **Languages** · English remains the default · Italian Extended is available as a Train and Play beta
 - 🤖 **Play bots** · configurable model, vocabulary, clue policy, missed-target timing, operative aggression, guess variation, and bonus guesses
 - 🧠 **Train model** · MiniLM-L6 for English · Multilingual E5 small for Italian · browser-local inference
-- 📚 **Clue index** · balanced 10,000-word default · selectable 3k, 30k, and experimental 100k tiers
+- 📚 **Clue index** · selectable 3k, 10k, 30k, and experimental 100k tiers
 - 🛡️ **Recommendations** · safe clues for one to three targets · stretch clues for four to nine
 - 💬 **Explanations** · clue-to-target and clue-to-guess relationships · score-based danger stays separate
 - 🎴 **Board words** · Official 400-word set · Extended 800-word strict superset
@@ -73,7 +73,7 @@ npm run benchmark:picker
 
 Play defaults to the preserved table order. The top-right EN/IT control selects English or Italian Extended for a new game, while first-time visitors remain on English. Operatives see only unrevealed words and public card reveals. Spymasters see the full key, can switch between table and team-grouped order, type any one-word clue, and open clue suggestions only when wanted.
 
-Play settings are grouped by ownership: Game controls the board word set and reuse policy, All bots controls the shared embedding model, Spymaster controls clue generation, and Operative controls guessing behavior. Bot settings remain independent from Train's Model picker and persist with each saved game. English defaults to BGE-small with 10,000 candidates. Italian uses Multilingual E5 small with 3,000 or 10,000 candidates. Both default to hybrid scoring, a five-point multi-clue tolerance, fresh targets before missed targets, Dynamic operative aggression, deterministic similarity ranking with no guess variation, and no automatic extra guess.
+Play settings are grouped by ownership: Game controls the board word set and reuse policy, All bots controls the shared embedding model, Spymaster controls clue generation, and Operative controls guessing behavior. Bot settings remain independent from Train's Model picker and persist with each saved game. English defaults to BGE-small with 30,000 candidates. Italian uses Multilingual E5 small with 3,000 or 10,000 candidates and defaults to 10,000. Both default to hybrid scoring, a five-point multi-clue tolerance, fresh targets before missed targets, Dynamic operative aggression, deterministic similarity ranking with no guess variation, and no automatic extra guess.
 
 Retry missed targets controls when the bot spymaster returns to intended friendly words that remain unrevealed after an earlier clue. Late strongly prefers never-targeted words until few remain, Mid-game applies a lighter early bias, and Immediately leaves clue ranking unchanged. Operative aggression controls whether the guessing bot continues through weaker associations. Conservative passes on doubt, Aggressive pursues the declared clue number, and Dynamic adapts using only public remaining-agent counts. Guess variation defaults Off, so the operative ranks by similarity alone. Standard adds a reproducible adjustment from `-0.0275` to `+0.0275` to vary close choices without changing passing thresholds.
 

@@ -2,7 +2,7 @@
 
 ## 🎯 Conclusion
 
-Play's single-clue bias is primarily a scoring and policy problem. The standard board word set is not responsible, and increasing the clue vocabulary beyond 10,000 candidates is not the best first fix.
+Play's single-clue bias is primarily a scoring and policy problem. The standard board word set is not responsible. The 30,000-candidate default broadens clue coverage, but it does not replace the scoring-policy fix.
 
 | 🧩 Factor | 🎯 Verdict | 📊 Strongest evidence |
 | --- | --- | --- |
@@ -12,9 +12,9 @@ Play's single-clue bias is primarily a scoring and policy problem. The standard 
 | 📚 Candidate count | 🟡 Secondary | 30k adds 7.3 percentage points |
 | 🗂️ Board word set | 🟢 Not causal | Official and Extended differ by 5 points at opening |
 
-The implemented Play default is BGE-small, the hybrid score, a five-point multi-clue tolerance, late missed-target recovery, Dynamic operative aggression, and passing after the declared clue number. Across 100 deterministic games, that combination produced a 1.59 mean clue number and 51.8% multi-card clues. Opening clues averaged 2.20, the chronological first half averaged 1.92, and late-game singles remained available.
+The implemented English Play default is BGE-small with 30,000 candidates, the hybrid score, a five-point multi-clue tolerance, late missed-target recovery, Dynamic operative aggression, and passing after the declared clue number. Across 100 deterministic games, that combination produced a 1.66 mean clue number and 58.4% multi-card clues. Opening clues averaged 2.20, the chronological first half averaged 1.99, and late-game singles remained available.
 
-BGE-small is `Xenova/bge-small-en-v1.5`. Its quantized model is 34.0 MB versus 23.0 MB for the previous MiniLM-L6 model. With the same 5.3 MB 10k clue index, the total download is about 39.3 MB versus 28.2 MB.
+BGE-small is `Xenova/bge-small-en-v1.5`. Its quantized model is 34.0 MB versus 23.0 MB for the previous MiniLM-L6 model. With the 15.8 MB 30k clue index, the total download is about 49.8 MB versus 38.8 MB.
 
 This is a policy benchmark, not proof of human-level safety. The simulated spymaster and operative share the same embedding geometry, so their agreement is higher than agreement with a human player. The separate MiniLM-L6 operative run is a transfer stress test, not a human simulation.
 
@@ -55,7 +55,7 @@ Larger vocabularies improve opening multi-clue availability, but the full-game e
 
 ## 🧠 Same-policy full-game model comparison
 
-Each selectable model played 100 complete games on the same deterministic boards with the recommended 10k vocabulary, hybrid score, five-point multi preference, stop-at-number policy, and the former Aggressive operative thresholds. The spymaster and operative use the same model, so these historical results compare model behavior rather than human agreement.
+Each selectable model played 100 complete games on the same deterministic boards with a fixed 10k vocabulary, hybrid score, five-point multi preference, stop-at-number policy, and the former Aggressive operative thresholds. The spymaster and operative use the same model, so these historical results compare model behavior rather than human agreement.
 
 | 🧠 Model | 🔢 Multi clues | 📈 Mean number | ⏩ First-half mean | ✅ Correct per turn | ⏱️ Turns |
 | --- | ---: | ---: | ---: | ---: | ---: |
@@ -89,23 +89,28 @@ The bot operative also takes an automatic number-plus-one guess using the curren
 
 | 🎛️ Policy | 📈 Full mean | ⏩ First-half mean | 🔢 Multi clues | ✅ Correct per turn | 🔴 Wrong hits | ☠️ Assassin | ⏱️ Turns |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| 🧪 BGE hybrid, Dynamic, pass | 1.59 | 1.92 | 51.8% | 1.53 | 0.00 | 0.0% | 10.19 |
-| 📍 BGE current, Dynamic, pass | 1.20 | 1.25 | 18.8% | 1.19 | 0.00 | 0.0% | 13.13 |
-| 🧠 BGE hybrid, random, bonus | 1.42 | N/A | 37.7% | 1.49 | 0.57 | 3.0% | 9.74 |
-| 🧱 MiniLM hybrid, random, bonus | 1.26 | N/A | 22.8% | 1.31 | 0.50 | 7.0% | 10.83 |
+| 🧪 BGE hybrid, Dynamic, pass | 1.66 | 1.99 | 58.4% | 1.60 | 0.00 | 0.0% | 9.78 |
+| 📍 BGE current, Dynamic, pass | 1.14 | 1.18 | 13.1% | 1.14 | 0.00 | 0.0% | 13.70 |
+
+The current 30k run supersedes the earlier 10k policy-default comparison. The historical 10k bonus-guess runs remain separate because they used different operative settings:
+
+| 🎛️ Historical policy | 📈 Full mean | 🔢 Multi clues | ✅ Correct per turn | 🔴 Wrong hits | ☠️ Assassin | ⏱️ Turns |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| 🧠 BGE hybrid, random, bonus | 1.42 | 37.7% | 1.49 | 0.57 | 3.0% | 9.74 |
+| 🧱 MiniLM hybrid, random, bonus | 1.26 | 22.8% | 1.31 | 0.50 | 7.0% | 10.83 |
 
 The first-half mean takes the first `ceiling(total clue turns / 2)` clue turns from each completed game, then aggregates their clue numbers. The implemented policy prefers the best multi-card clue when its hybrid score is within five points of the overall best clue. It does not force a pair when the score gap is larger. Its clue-number shape changes naturally with the board:
 
 | 🕵️ Own agents left | 📈 Mean number | 🔢 Multi clues |
 | --- | ---: | ---: |
 | 🔵 9 | 2.20 | 100.0% |
-| 🔵 8 | 2.26 | 95.1% |
-| 🔵 7 | 1.95 | 87.1% |
-| 🔵 6 | 1.76 | 66.7% |
-| 🔵 5 | 1.70 | 64.3% |
-| 🔵 4 | 1.39 | 38.5% |
-| 🔵 3 | 1.18 | 17.8% |
-| 🔵 2 | 1.16 | 16.4% |
+| 🔵 8 | 2.27 | 97.0% |
+| 🔵 7 | 2.03 | 94.3% |
+| 🔵 6 | 1.92 | 83.0% |
+| 🔵 5 | 1.77 | 73.5% |
+| 🔵 4 | 1.46 | 44.4% |
+| 🔵 3 | 1.35 | 35.4% |
+| 🔵 2 | 1.14 | 14.2% |
 | 🔵 1 | 1.00 | 0.0% |
 
 The zero-error self-play result must not be treated as a human safety estimate. A real validation should replay human operative choices or collect Play sessions where the human guesses bot clues.
@@ -117,7 +122,7 @@ The zero-error self-play result must not be treated as a human safety estimate. 
 3. Bot spymasters prefer never-targeted friendly cards until late game.
 4. Bot operatives use Dynamic aggression and adapt only to public remaining-agent counts.
 5. Bot operatives pass after the declared clue number.
-6. The default candidate vocabulary remains 10,000.
+6. The English default candidate vocabulary is 30,000; Italian defaults to its largest available 10,000 tier.
 7. Official remains the default 400-word board set.
 8. Play setup can override and persist every bot parameter.
 

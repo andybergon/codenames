@@ -162,7 +162,7 @@ The penalty is applied before the multi-card tolerance comparison. `npm run benc
 
 Clue reuse is a three-way Play setting. **Never repeat in this game** is the default and excludes every clue previously given by the same team. **Block the team's previous clue** excludes only that team's immediately preceding clue. **Allow repeats** applies no history exclusion. The other team's clue history never counts, and a replacement clue may target any overlap with earlier intended cards. Live Play excludes the configured history from the full candidate analysis, with defensive filtering during ranking. Benchmarks apply the same rule to analysis, ranking, and fallback selection through `--clue-repeat-policy allow|previous|never`.
 
-In the checked 100-board default run, 88 Hybrid clue turns had an unresolved prior target. Late recovery retried one on 28.4% of those eligible turns overall, but on 0 of 26 turns where at least four never-targeted friendly cards remained. The same run kept 0 wrong-team hits per game, a 0% assassin rate, 1.56 correct cards per turn, and 9.91 turns per game.
+In the checked 100-board default run, 91 Hybrid clue turns had an unresolved prior target. Late recovery retried one on 35.2% of those eligible turns overall, but on 0 of 20 turns where at least four never-targeted friendly cards remained. The same run kept 0 wrong-team hits per game, a 0% assassin rate, 1.60 correct cards per turn, and 9.78 turns per game.
 
 ## 🔎 Play operative policy
 
@@ -184,9 +184,9 @@ The checked 100-board same-model run measures deterministic production regressio
 
 | 🔎 Mode | 🧩 Low-sim fill | 🛑 Early pass | ✅ Correct per turn | 🔴 Wrong per game | ☠️ Assassin | ⏱️ Turns |
 |---|---:|---:|---:|---:|---:|---:|
-| ⚖️ Dynamic | 1.5% | 2.0% | 1.56 | 0.00 | 0.0% | 9.91 |
-| 🛡️ Conservative | 0.0% | 16.5% | 1.23 | 0.00 | 0.0% | 12.58 |
-| 🚀 Aggressive | 3.7% | 0.0% | 1.61 | 0.00 | 0.0% | 9.62 |
+| ⚖️ Dynamic | 1.0% | 2.5% | 1.60 | 0.00 | 0.0% | 9.78 |
+| 🛡️ Conservative | 0.0% | 16.7% | 1.29 | 0.00 | 0.0% | 11.97 |
+| 🚀 Aggressive | 3.6% | 0.0% | 1.67 | 0.00 | 0.0% | 9.38 |
 
 The [MiniLM-L6 operative stress run](../scripts/generated/play-operative-aggression-cross-model.md) holds BGE-small spymaster clues fixed while changing the guesser's embedding geometry:
 
