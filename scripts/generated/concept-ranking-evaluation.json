@@ -1,0 +1,1601 @@
+{
+  "version": 3,
+  "fixture": "JOUST → medieval tournament → MATCH / CROWN / GLOVE / BELT, where PIANO was guessed before those stronger human associations.",
+  "source": {
+    "concepts": "Princeton WordNet 3.0",
+    "humanDatasets": {
+      "culturalCodes": {
+        "name": "Cultural Codes",
+        "repository": "https://github.com/SALT-NLP/codenames",
+        "commit": "9bf4550e681f7a42ac406439b00b0c717f59f13c",
+        "turns": 7703
+      },
+      "connector": {
+        "name": "Lexical Search and Pragmatics in Connector, Experiment 1",
+        "repository": "https://github.com/hawkrobe/lexical-search-and-pragmatics",
+        "commit": "8d824794d623adf4dd19cbff13d987d539b19c5e",
+        "turns": 2250
+      },
+      "licenseNote": "Neither upstream repository has an explicit license file. Data is fetched into the gitignored cache and is not redistributed."
+    }
+  },
+  "approaches": {
+    "direct": {
+      "description": "Centered clue-to-card cosine similarity, the production baseline."
+    },
+    "latentVocabularyWalk": {
+      "description": "Top-64 local clue-vocabulary concepts, with the strongest positive two-edge cosine product used for each card.",
+      "scope": "preserved-fixture screen",
+      "result": [
+        {
+          "word": "CROWN",
+          "score": 0.0824,
+          "concept": "majesty"
+        },
+        {
+          "word": "PIANO",
+          "score": 0.0781,
+          "concept": "acoustic"
+        },
+        {
+          "word": "GLOVE",
+          "score": 0.0759,
+          "concept": "blades"
+        },
+        {
+          "word": "MATCH",
+          "score": 0.065,
+          "concept": "tournament"
+        },
+        {
+          "word": "BELT",
+          "score": 0.0561,
+          "concept": "sword"
+        }
+      ],
+      "outcome": "fails",
+      "productionDirectReference": [
+        {
+          "word": "PIANO",
+          "score": 0.1742,
+          "direct": 0.1742,
+          "concept": 0.1798
+        },
+        {
+          "word": "MATCH",
+          "score": 0.152,
+          "direct": 0.152,
+          "concept": 0.4219
+        },
+        {
+          "word": "CROWN",
+          "score": 0.037,
+          "direct": 0.037,
+          "concept": 0.2655
+        },
+        {
+          "word": "GLOVE",
+          "score": -0.0034,
+          "direct": -0.0034,
+          "concept": 0.2737
+        },
+        {
+          "word": "BELT",
+          "score": -0.1029,
+          "direct": -0.1029,
+          "concept": 0.3082
+        }
+      ]
+    },
+    "wordnetSenseBridge": {
+      "description": "Maximum cosine between separate WordNet sense-definition embeddings for the clue and card, calibrated back into operative score geometry with max(direct, concept - offset).",
+      "offsets": [
+        0,
+        0.025,
+        0.05,
+        0.075,
+        0.1
+      ],
+      "guardedActivationCeilings": [
+        0.2,
+        0.22,
+        0.25,
+        0.3
+      ],
+      "guardedOffsets": [
+        0.05,
+        0.075,
+        0.1
+      ]
+    },
+    "hostedLlmReranker": {
+      "status": "rejected-before-paid-run",
+      "reason": "Automatic bot turns require bounded local latency, offline behavior, and zero per-turn spend. A hosted reranker would also add a server dependency to public clue and board data.",
+      "paidCostUsd": 0
+    }
+  },
+  "selected": {
+    "approach": "wordnetSenseBridge",
+    "modelId": "bge-small",
+    "conceptOffset": 0.05,
+    "activationCeiling": 0.2,
+    "minimumClueNumber": 2,
+    "otherModelBehavior": "direct",
+    "rationale": "The bridge activates only for multi-card clues whose best direct match is below 0.20. The 0.05 offset is the most conservative tested calibration that places all four preserved JOUST associations before PIANO."
+  },
+  "models": [
+    {
+      "id": "bge-small",
+      "model": "Xenova/bge-small-en-v1.5",
+      "role": "production",
+      "sampleStride": 1,
+      "turns": {
+        "culturalCodes": 7703,
+        "connector": 2250
+      },
+      "embeddingLatencyMs": 11435.8512,
+      "warmTurnLatencyMs": {
+        "cardCount": 25,
+        "conceptTexts": 101,
+        "directMedian": 1.5853,
+        "conceptMedian": 108.6709,
+        "addedMedian": 107.0857
+      },
+      "direct": {
+        "culturalCodes": {
+          "scoredGuessTurns": 7625,
+          "scoredTargetTurns": 7703,
+          "firstGuessAccuracy": 0.5231,
+          "guessRecallAtHumanCount": 0.5188,
+          "targetRecallAtCount": 0.5899,
+          "exactTargetSetAccuracy": 0.5303,
+          "avoidWordRate": 0.0945,
+          "pairwiseTargetAccuracy": 0.8553
+        },
+        "connector": {
+          "scoredGuessTurns": 0,
+          "scoredTargetTurns": 2250,
+          "firstGuessAccuracy": null,
+          "guessRecallAtHumanCount": null,
+          "targetRecallAtCount": 0.5291,
+          "exactTargetSetAccuracy": 0.2489,
+          "avoidWordRate": 0,
+          "pairwiseTargetAccuracy": 0.8241
+        }
+      },
+      "offsets": {
+        "0": {
+          "culturalCodes": {
+            "scoredGuessTurns": 7625,
+            "scoredTargetTurns": 7703,
+            "firstGuessAccuracy": 0.5054,
+            "guessRecallAtHumanCount": 0.5055,
+            "targetRecallAtCount": 0.5819,
+            "exactTargetSetAccuracy": 0.522,
+            "avoidWordRate": 0.1024,
+            "pairwiseTargetAccuracy": 0.8516
+          },
+          "connector": {
+            "scoredGuessTurns": 0,
+            "scoredTargetTurns": 2250,
+            "firstGuessAccuracy": null,
+            "guessRecallAtHumanCount": null,
+            "targetRecallAtCount": 0.4884,
+            "exactTargetSetAccuracy": 0.1911,
+            "avoidWordRate": 0,
+            "pairwiseTargetAccuracy": 0.818
+          }
+        },
+        "0.025": {
+          "culturalCodes": {
+            "scoredGuessTurns": 7625,
+            "scoredTargetTurns": 7703,
+            "firstGuessAccuracy": 0.5078,
+            "guessRecallAtHumanCount": 0.5077,
+            "targetRecallAtCount": 0.5844,
+            "exactTargetSetAccuracy": 0.5243,
+            "avoidWordRate": 0.1013,
+            "pairwiseTargetAccuracy": 0.8529
+          },
+          "connector": {
+            "scoredGuessTurns": 0,
+            "scoredTargetTurns": 2250,
+            "firstGuessAccuracy": null,
+            "guessRecallAtHumanCount": null,
+            "targetRecallAtCount": 0.4964,
+            "exactTargetSetAccuracy": 0.2018,
+            "avoidWordRate": 0,
+            "pairwiseTargetAccuracy": 0.8226
+          }
+        },
+        "0.05": {
+          "culturalCodes": {
+            "scoredGuessTurns": 7625,
+            "scoredTargetTurns": 7703,
+            "firstGuessAccuracy": 0.5127,
+            "guessRecallAtHumanCount": 0.5127,
+            "targetRecallAtCount": 0.5888,
+            "exactTargetSetAccuracy": 0.5288,
+            "avoidWordRate": 0.0994,
+            "pairwiseTargetAccuracy": 0.8545
+          },
+          "connector": {
+            "scoredGuessTurns": 0,
+            "scoredTargetTurns": 2250,
+            "firstGuessAccuracy": null,
+            "guessRecallAtHumanCount": null,
+            "targetRecallAtCount": 0.5073,
+            "exactTargetSetAccuracy": 0.2169,
+            "avoidWordRate": 0,
+            "pairwiseTargetAccuracy": 0.8256
+          }
+        },
+        "0.075": {
+          "culturalCodes": {
+            "scoredGuessTurns": 7625,
+            "scoredTargetTurns": 7703,
+            "firstGuessAccuracy": 0.5195,
+            "guessRecallAtHumanCount": 0.518,
+            "targetRecallAtCount": 0.5923,
+            "exactTargetSetAccuracy": 0.5323,
+            "avoidWordRate": 0.098,
+            "pairwiseTargetAccuracy": 0.8563
+          },
+          "connector": {
+            "scoredGuessTurns": 0,
+            "scoredTargetTurns": 2250,
+            "firstGuessAccuracy": null,
+            "guessRecallAtHumanCount": null,
+            "targetRecallAtCount": 0.5131,
+            "exactTargetSetAccuracy": 0.2182,
+            "avoidWordRate": 0,
+            "pairwiseTargetAccuracy": 0.8289
+          }
+        },
+        "0.1": {
+          "culturalCodes": {
+            "scoredGuessTurns": 7625,
+            "scoredTargetTurns": 7703,
+            "firstGuessAccuracy": 0.5249,
+            "guessRecallAtHumanCount": 0.5219,
+            "targetRecallAtCount": 0.5971,
+            "exactTargetSetAccuracy": 0.5369,
+            "avoidWordRate": 0.0974,
+            "pairwiseTargetAccuracy": 0.8582
+          },
+          "connector": {
+            "scoredGuessTurns": 0,
+            "scoredTargetTurns": 2250,
+            "firstGuessAccuracy": null,
+            "guessRecallAtHumanCount": null,
+            "targetRecallAtCount": 0.5096,
+            "exactTargetSetAccuracy": 0.2111,
+            "avoidWordRate": 0,
+            "pairwiseTargetAccuracy": 0.832
+          }
+        }
+      },
+      "guarded": {
+        "0.05": {
+          "0.2": {
+            "culturalCodes": {
+              "scoredGuessTurns": 7625,
+              "scoredTargetTurns": 7703,
+              "firstGuessAccuracy": 0.5246,
+              "guessRecallAtHumanCount": 0.5196,
+              "targetRecallAtCount": 0.5916,
+              "exactTargetSetAccuracy": 0.5306,
+              "avoidWordRate": 0.0945,
+              "pairwiseTargetAccuracy": 0.8561
+            },
+            "connector": {
+              "scoredGuessTurns": 0,
+              "scoredTargetTurns": 2250,
+              "firstGuessAccuracy": null,
+              "guessRecallAtHumanCount": null,
+              "targetRecallAtCount": 0.5376,
+              "exactTargetSetAccuracy": 0.2524,
+              "avoidWordRate": 0,
+              "pairwiseTargetAccuracy": 0.8286
+            }
+          },
+          "0.22": {
+            "culturalCodes": {
+              "scoredGuessTurns": 7625,
+              "scoredTargetTurns": 7703,
+              "firstGuessAccuracy": 0.5243,
+              "guessRecallAtHumanCount": 0.5192,
+              "targetRecallAtCount": 0.5904,
+              "exactTargetSetAccuracy": 0.5303,
+              "avoidWordRate": 0.0955,
+              "pairwiseTargetAccuracy": 0.8552
+            },
+            "connector": {
+              "scoredGuessTurns": 0,
+              "scoredTargetTurns": 2250,
+              "firstGuessAccuracy": null,
+              "guessRecallAtHumanCount": null,
+              "targetRecallAtCount": 0.538,
+              "exactTargetSetAccuracy": 0.252,
+              "avoidWordRate": 0,
+              "pairwiseTargetAccuracy": 0.8296
+            }
+          },
+          "0.25": {
+            "culturalCodes": {
+              "scoredGuessTurns": 7625,
+              "scoredTargetTurns": 7703,
+              "firstGuessAccuracy": 0.5243,
+              "guessRecallAtHumanCount": 0.5196,
+              "targetRecallAtCount": 0.5898,
+              "exactTargetSetAccuracy": 0.5306,
+              "avoidWordRate": 0.0952,
+              "pairwiseTargetAccuracy": 0.856
+            },
+            "connector": {
+              "scoredGuessTurns": 0,
+              "scoredTargetTurns": 2250,
+              "firstGuessAccuracy": null,
+              "guessRecallAtHumanCount": null,
+              "targetRecallAtCount": 0.538,
+              "exactTargetSetAccuracy": 0.2507,
+              "avoidWordRate": 0,
+              "pairwiseTargetAccuracy": 0.8311
+            }
+          },
+          "0.3": {
+            "culturalCodes": {
+              "scoredGuessTurns": 7625,
+              "scoredTargetTurns": 7703,
+              "firstGuessAccuracy": 0.5246,
+              "guessRecallAtHumanCount": 0.5189,
+              "targetRecallAtCount": 0.5892,
+              "exactTargetSetAccuracy": 0.5298,
+              "avoidWordRate": 0.0955,
+              "pairwiseTargetAccuracy": 0.8555
+            },
+            "connector": {
+              "scoredGuessTurns": 0,
+              "scoredTargetTurns": 2250,
+              "firstGuessAccuracy": null,
+              "guessRecallAtHumanCount": null,
+              "targetRecallAtCount": 0.5311,
+              "exactTargetSetAccuracy": 0.2493,
+              "avoidWordRate": 0,
+              "pairwiseTargetAccuracy": 0.8298
+            }
+          }
+        },
+        "0.075": {
+          "0.2": {
+            "culturalCodes": {
+              "scoredGuessTurns": 7625,
+              "scoredTargetTurns": 7703,
+              "firstGuessAccuracy": 0.5246,
+              "guessRecallAtHumanCount": 0.5195,
+              "targetRecallAtCount": 0.5915,
+              "exactTargetSetAccuracy": 0.5306,
+              "avoidWordRate": 0.0945,
+              "pairwiseTargetAccuracy": 0.8561
+            },
+            "connector": {
+              "scoredGuessTurns": 0,
+              "scoredTargetTurns": 2250,
+              "firstGuessAccuracy": null,
+              "guessRecallAtHumanCount": null,
+              "targetRecallAtCount": 0.5376,
+              "exactTargetSetAccuracy": 0.2524,
+              "avoidWordRate": 0,
+              "pairwiseTargetAccuracy": 0.8287
+            }
+          },
+          "0.22": {
+            "culturalCodes": {
+              "scoredGuessTurns": 7625,
+              "scoredTargetTurns": 7703,
+              "firstGuessAccuracy": 0.5243,
+              "guessRecallAtHumanCount": 0.5191,
+              "targetRecallAtCount": 0.5903,
+              "exactTargetSetAccuracy": 0.5303,
+              "avoidWordRate": 0.0955,
+              "pairwiseTargetAccuracy": 0.8553
+            },
+            "connector": {
+              "scoredGuessTurns": 0,
+              "scoredTargetTurns": 2250,
+              "firstGuessAccuracy": null,
+              "guessRecallAtHumanCount": null,
+              "targetRecallAtCount": 0.538,
+              "exactTargetSetAccuracy": 0.252,
+              "avoidWordRate": 0,
+              "pairwiseTargetAccuracy": 0.83
+            }
+          },
+          "0.25": {
+            "culturalCodes": {
+              "scoredGuessTurns": 7625,
+              "scoredTargetTurns": 7703,
+              "firstGuessAccuracy": 0.5245,
+              "guessRecallAtHumanCount": 0.5196,
+              "targetRecallAtCount": 0.5898,
+              "exactTargetSetAccuracy": 0.5307,
+              "avoidWordRate": 0.0952,
+              "pairwiseTargetAccuracy": 0.8562
+            },
+            "connector": {
+              "scoredGuessTurns": 0,
+              "scoredTargetTurns": 2250,
+              "firstGuessAccuracy": null,
+              "guessRecallAtHumanCount": null,
+              "targetRecallAtCount": 0.5382,
+              "exactTargetSetAccuracy": 0.2507,
+              "avoidWordRate": 0,
+              "pairwiseTargetAccuracy": 0.8318
+            }
+          },
+          "0.3": {
+            "culturalCodes": {
+              "scoredGuessTurns": 7625,
+              "scoredTargetTurns": 7703,
+              "firstGuessAccuracy": 0.5249,
+              "guessRecallAtHumanCount": 0.5188,
+              "targetRecallAtCount": 0.5894,
+              "exactTargetSetAccuracy": 0.5301,
+              "avoidWordRate": 0.0955,
+              "pairwiseTargetAccuracy": 0.8559
+            },
+            "connector": {
+              "scoredGuessTurns": 0,
+              "scoredTargetTurns": 2250,
+              "firstGuessAccuracy": null,
+              "guessRecallAtHumanCount": null,
+              "targetRecallAtCount": 0.532,
+              "exactTargetSetAccuracy": 0.2493,
+              "avoidWordRate": 0,
+              "pairwiseTargetAccuracy": 0.8313
+            }
+          }
+        },
+        "0.1": {
+          "0.2": {
+            "culturalCodes": {
+              "scoredGuessTurns": 7625,
+              "scoredTargetTurns": 7703,
+              "firstGuessAccuracy": 0.5246,
+              "guessRecallAtHumanCount": 0.5196,
+              "targetRecallAtCount": 0.5916,
+              "exactTargetSetAccuracy": 0.5306,
+              "avoidWordRate": 0.0945,
+              "pairwiseTargetAccuracy": 0.8563
+            },
+            "connector": {
+              "scoredGuessTurns": 0,
+              "scoredTargetTurns": 2250,
+              "firstGuessAccuracy": null,
+              "guessRecallAtHumanCount": null,
+              "targetRecallAtCount": 0.5376,
+              "exactTargetSetAccuracy": 0.2524,
+              "avoidWordRate": 0,
+              "pairwiseTargetAccuracy": 0.8289
+            }
+          },
+          "0.22": {
+            "culturalCodes": {
+              "scoredGuessTurns": 7625,
+              "scoredTargetTurns": 7703,
+              "firstGuessAccuracy": 0.5242,
+              "guessRecallAtHumanCount": 0.5192,
+              "targetRecallAtCount": 0.5904,
+              "exactTargetSetAccuracy": 0.5303,
+              "avoidWordRate": 0.0955,
+              "pairwiseTargetAccuracy": 0.8554
+            },
+            "connector": {
+              "scoredGuessTurns": 0,
+              "scoredTargetTurns": 2250,
+              "firstGuessAccuracy": null,
+              "guessRecallAtHumanCount": null,
+              "targetRecallAtCount": 0.5387,
+              "exactTargetSetAccuracy": 0.2529,
+              "avoidWordRate": 0,
+              "pairwiseTargetAccuracy": 0.8303
+            }
+          },
+          "0.25": {
+            "culturalCodes": {
+              "scoredGuessTurns": 7625,
+              "scoredTargetTurns": 7703,
+              "firstGuessAccuracy": 0.5243,
+              "guessRecallAtHumanCount": 0.5197,
+              "targetRecallAtCount": 0.59,
+              "exactTargetSetAccuracy": 0.5306,
+              "avoidWordRate": 0.095,
+              "pairwiseTargetAccuracy": 0.8563
+            },
+            "connector": {
+              "scoredGuessTurns": 0,
+              "scoredTargetTurns": 2250,
+              "firstGuessAccuracy": null,
+              "guessRecallAtHumanCount": null,
+              "targetRecallAtCount": 0.5393,
+              "exactTargetSetAccuracy": 0.252,
+              "avoidWordRate": 0,
+              "pairwiseTargetAccuracy": 0.8323
+            }
+          },
+          "0.3": {
+            "culturalCodes": {
+              "scoredGuessTurns": 7625,
+              "scoredTargetTurns": 7703,
+              "firstGuessAccuracy": 0.5246,
+              "guessRecallAtHumanCount": 0.519,
+              "targetRecallAtCount": 0.5896,
+              "exactTargetSetAccuracy": 0.5298,
+              "avoidWordRate": 0.0955,
+              "pairwiseTargetAccuracy": 0.8561
+            },
+            "connector": {
+              "scoredGuessTurns": 0,
+              "scoredTargetTurns": 2250,
+              "firstGuessAccuracy": null,
+              "guessRecallAtHumanCount": null,
+              "targetRecallAtCount": 0.532,
+              "exactTargetSetAccuracy": 0.2493,
+              "avoidWordRate": 0,
+              "pairwiseTargetAccuracy": 0.8325
+            }
+          }
+        }
+      },
+      "originalFixtures": [
+        {
+          "clue": "PALEOGRAPHY",
+          "clueNumber": 2,
+          "targets": [
+            "PAPER",
+            "JOURNAL"
+          ],
+          "candidates": [
+            "PAPER",
+            "JOURNAL",
+            "TEETH",
+            "VINYL",
+            "SHAKESPEARE"
+          ],
+          "activated": true,
+          "directTop": [
+            "TEETH",
+            "SHAKESPEARE"
+          ],
+          "guardedTop": [
+            "JOURNAL",
+            "PAPER"
+          ],
+          "directTargetHits": 0,
+          "guardedTargetHits": 2,
+          "bridges": [
+            {
+              "target": "PAPER",
+              "clueSense": "the study of ancient forms of writing (and the deciphering of them)",
+              "targetSense": "a medium for written communication",
+              "direct": 0.1569,
+              "concept": 0.5274,
+              "guarded": 0.4774,
+              "lift": 0.3205
+            },
+            {
+              "target": "JOURNAL",
+              "clueSense": "the study of ancient forms of writing (and the deciphering of them)",
+              "targetSense": "a record book as a physical object",
+              "direct": 0.1227,
+              "concept": 0.5316,
+              "guarded": 0.4816,
+              "lift": 0.3588
+            }
+          ]
+        },
+        {
+          "clue": "HERALDRY",
+          "clueNumber": 2,
+          "targets": [
+            "CROWN",
+            "EAGLE"
+          ],
+          "candidates": [
+            "CROWN",
+            "EAGLE",
+            "WEAPON",
+            "SORCERER",
+            "SIEGE"
+          ],
+          "activated": true,
+          "directTop": [
+            "SORCERER",
+            "SIEGE"
+          ],
+          "guardedTop": [
+            "EAGLE",
+            "CROWN"
+          ],
+          "directTargetHits": 0,
+          "guardedTargetHits": 2,
+          "bridges": [
+            {
+              "target": "CROWN",
+              "clueSense": "the study and classification of armorial bearings and the tracing of genealogies",
+              "targetSense": "an ornamental jeweled headdress signifying sovereignty",
+              "direct": 0.1677,
+              "concept": 0.4801,
+              "guarded": 0.4301,
+              "lift": 0.2624
+            },
+            {
+              "target": "EAGLE",
+              "clueSense": "emblem indicating the right of a person to bear arms",
+              "targetSense": "an emblem representing power",
+              "direct": 0.1719,
+              "concept": 0.6097,
+              "guarded": 0.5597,
+              "lift": 0.3878
+            }
+          ]
+        },
+        {
+          "clue": "SPECTER",
+          "clueNumber": 2,
+          "targets": [
+            "GHOST",
+            "SHADOW"
+          ],
+          "candidates": [
+            "GHOST",
+            "SHADOW",
+            "GENIUS",
+            "MIRROR",
+            "RADAR"
+          ],
+          "activated": true,
+          "directTop": [
+            "MIRROR",
+            "RADAR"
+          ],
+          "guardedTop": [
+            "GHOST",
+            "SHADOW"
+          ],
+          "directTargetHits": 0,
+          "guardedTargetHits": 2,
+          "bridges": [
+            {
+              "target": "GHOST",
+              "clueSense": "a mental representation of some haunting experience",
+              "targetSense": "a mental representation of some haunting experience",
+              "direct": 0.0687,
+              "concept": 0.8974,
+              "guarded": 0.8474,
+              "lift": 0.7787
+            },
+            {
+              "target": "SHADOW",
+              "clueSense": "a mental representation of some haunting experience",
+              "targetSense": "something existing in perception only",
+              "direct": 0.1753,
+              "concept": 0.5995,
+              "guarded": 0.5495,
+              "lift": 0.3742
+            }
+          ]
+        },
+        {
+          "clue": "THESPIAN",
+          "clueNumber": 2,
+          "targets": [
+            "PLAY",
+            "ACTOR"
+          ],
+          "candidates": [
+            "PLAY",
+            "ACTOR",
+            "AGENT",
+            "SURGEON",
+            "ALIEN"
+          ],
+          "activated": true,
+          "directTop": [
+            "AGENT",
+            "SURGEON"
+          ],
+          "guardedTop": [
+            "PLAY",
+            "ACTOR"
+          ],
+          "directTargetHits": 0,
+          "guardedTargetHits": 2,
+          "bridges": [
+            {
+              "target": "PLAY",
+              "clueSense": "of or relating to drama",
+              "targetSense": "a theatrical performance of a drama",
+              "direct": -0.031,
+              "concept": 0.587,
+              "guarded": 0.537,
+              "lift": 0.5679
+            },
+            {
+              "target": "ACTOR",
+              "clueSense": "a theatrical performer",
+              "targetSense": "a theatrical performer",
+              "direct": 0.0767,
+              "concept": 0.5745,
+              "guarded": 0.5245,
+              "lift": 0.4478
+            }
+          ]
+        },
+        {
+          "clue": "SEANCE",
+          "clueNumber": 2,
+          "targets": [
+            "GHOST",
+            "SPIRIT"
+          ],
+          "candidates": [
+            "GHOST",
+            "SPIRIT",
+            "SCORPION",
+            "OASIS",
+            "UNDERTAKER"
+          ],
+          "activated": true,
+          "directTop": [
+            "SCORPION",
+            "UNDERTAKER"
+          ],
+          "guardedTop": [
+            "GHOST",
+            "SPIRIT"
+          ],
+          "directTargetHits": 0,
+          "guardedTargetHits": 2,
+          "bridges": [
+            {
+              "target": "GHOST",
+              "clueSense": "a meeting of spiritualists",
+              "targetSense": "a mental representation of some haunting experience",
+              "direct": 0.1195,
+              "concept": 0.4398,
+              "guarded": 0.3898,
+              "lift": 0.2703
+            },
+            {
+              "target": "SPIRIT",
+              "clueSense": "a meeting of spiritualists",
+              "targetSense": "any incorporeal supernatural being that can become visible (or audible) to human beings",
+              "direct": 0.0313,
+              "concept": 0.4281,
+              "guarded": 0.3781,
+              "lift": 0.3468
+            }
+          ]
+        }
+      ],
+      "joust": {
+        "direct": [
+          {
+            "word": "PIANO",
+            "score": 0.1742,
+            "direct": 0.1742,
+            "concept": 0.1798
+          },
+          {
+            "word": "MATCH",
+            "score": 0.152,
+            "direct": 0.152,
+            "concept": 0.4219
+          },
+          {
+            "word": "CROWN",
+            "score": 0.037,
+            "direct": 0.037,
+            "concept": 0.2655
+          },
+          {
+            "word": "GLOVE",
+            "score": -0.0034,
+            "direct": -0.0034,
+            "concept": 0.2737
+          },
+          {
+            "word": "BELT",
+            "score": -0.1029,
+            "direct": -0.1029,
+            "concept": 0.3082
+          }
+        ],
+        "offsets": {
+          "0": [
+            {
+              "word": "MATCH",
+              "score": 0.4219,
+              "direct": 0.152,
+              "concept": 0.4219
+            },
+            {
+              "word": "BELT",
+              "score": 0.3082,
+              "direct": -0.1029,
+              "concept": 0.3082
+            },
+            {
+              "word": "GLOVE",
+              "score": 0.2737,
+              "direct": -0.0034,
+              "concept": 0.2737
+            },
+            {
+              "word": "CROWN",
+              "score": 0.2655,
+              "direct": 0.037,
+              "concept": 0.2655
+            },
+            {
+              "word": "PIANO",
+              "score": 0.1798,
+              "direct": 0.1742,
+              "concept": 0.1798
+            }
+          ],
+          "0.025": [
+            {
+              "word": "MATCH",
+              "score": 0.3969,
+              "direct": 0.152,
+              "concept": 0.4219
+            },
+            {
+              "word": "BELT",
+              "score": 0.2832,
+              "direct": -0.1029,
+              "concept": 0.3082
+            },
+            {
+              "word": "GLOVE",
+              "score": 0.2487,
+              "direct": -0.0034,
+              "concept": 0.2737
+            },
+            {
+              "word": "CROWN",
+              "score": 0.2405,
+              "direct": 0.037,
+              "concept": 0.2655
+            },
+            {
+              "word": "PIANO",
+              "score": 0.1742,
+              "direct": 0.1742,
+              "concept": 0.1798
+            }
+          ],
+          "0.05": [
+            {
+              "word": "MATCH",
+              "score": 0.3719,
+              "direct": 0.152,
+              "concept": 0.4219
+            },
+            {
+              "word": "BELT",
+              "score": 0.2582,
+              "direct": -0.1029,
+              "concept": 0.3082
+            },
+            {
+              "word": "GLOVE",
+              "score": 0.2237,
+              "direct": -0.0034,
+              "concept": 0.2737
+            },
+            {
+              "word": "CROWN",
+              "score": 0.2155,
+              "direct": 0.037,
+              "concept": 0.2655
+            },
+            {
+              "word": "PIANO",
+              "score": 0.1742,
+              "direct": 0.1742,
+              "concept": 0.1798
+            }
+          ],
+          "0.075": [
+            {
+              "word": "MATCH",
+              "score": 0.3469,
+              "direct": 0.152,
+              "concept": 0.4219
+            },
+            {
+              "word": "BELT",
+              "score": 0.2332,
+              "direct": -0.1029,
+              "concept": 0.3082
+            },
+            {
+              "word": "GLOVE",
+              "score": 0.1987,
+              "direct": -0.0034,
+              "concept": 0.2737
+            },
+            {
+              "word": "CROWN",
+              "score": 0.1905,
+              "direct": 0.037,
+              "concept": 0.2655
+            },
+            {
+              "word": "PIANO",
+              "score": 0.1742,
+              "direct": 0.1742,
+              "concept": 0.1798
+            }
+          ],
+          "0.1": [
+            {
+              "word": "MATCH",
+              "score": 0.3219,
+              "direct": 0.152,
+              "concept": 0.4219
+            },
+            {
+              "word": "BELT",
+              "score": 0.2082,
+              "direct": -0.1029,
+              "concept": 0.3082
+            },
+            {
+              "word": "PIANO",
+              "score": 0.1742,
+              "direct": 0.1742,
+              "concept": 0.1798
+            },
+            {
+              "word": "GLOVE",
+              "score": 0.1737,
+              "direct": -0.0034,
+              "concept": 0.2737
+            },
+            {
+              "word": "CROWN",
+              "score": 0.1655,
+              "direct": 0.037,
+              "concept": 0.2655
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "minilm-l6",
+      "model": "Xenova/all-MiniLM-L6-v2",
+      "role": "independent-operative",
+      "sampleStride": 4,
+      "turns": {
+        "culturalCodes": 1926,
+        "connector": 563
+      },
+      "embeddingLatencyMs": 6696.8181,
+      "warmTurnLatencyMs": {
+        "cardCount": 25,
+        "conceptTexts": 101,
+        "directMedian": 0.859,
+        "conceptMedian": 63.0321,
+        "addedMedian": 62.173
+      },
+      "direct": {
+        "culturalCodes": {
+          "scoredGuessTurns": 1901,
+          "scoredTargetTurns": 1926,
+          "firstGuessAccuracy": 0.5034,
+          "guessRecallAtHumanCount": 0.5021,
+          "targetRecallAtCount": 0.5648,
+          "exactTargetSetAccuracy": 0.4979,
+          "avoidWordRate": 0.0961,
+          "pairwiseTargetAccuracy": 0.8521
+        },
+        "connector": {
+          "scoredGuessTurns": 0,
+          "scoredTargetTurns": 563,
+          "firstGuessAccuracy": null,
+          "guessRecallAtHumanCount": null,
+          "targetRecallAtCount": 0.5142,
+          "exactTargetSetAccuracy": 0.2522,
+          "avoidWordRate": 0,
+          "pairwiseTargetAccuracy": 0.8108
+        }
+      },
+      "offsets": {
+        "0": {
+          "culturalCodes": {
+            "scoredGuessTurns": 1901,
+            "scoredTargetTurns": 1926,
+            "firstGuessAccuracy": 0.5308,
+            "guessRecallAtHumanCount": 0.532,
+            "targetRecallAtCount": 0.6058,
+            "exactTargetSetAccuracy": 0.54,
+            "avoidWordRate": 0.0898,
+            "pairwiseTargetAccuracy": 0.8631
+          },
+          "connector": {
+            "scoredGuessTurns": 0,
+            "scoredTargetTurns": 563,
+            "firstGuessAccuracy": null,
+            "guessRecallAtHumanCount": null,
+            "targetRecallAtCount": 0.4876,
+            "exactTargetSetAccuracy": 0.2131,
+            "avoidWordRate": 0,
+            "pairwiseTargetAccuracy": 0.8212
+          }
+        },
+        "0.025": {
+          "culturalCodes": {
+            "scoredGuessTurns": 1901,
+            "scoredTargetTurns": 1926,
+            "firstGuessAccuracy": 0.5318,
+            "guessRecallAtHumanCount": 0.5336,
+            "targetRecallAtCount": 0.6069,
+            "exactTargetSetAccuracy": 0.5415,
+            "avoidWordRate": 0.0877,
+            "pairwiseTargetAccuracy": 0.8643
+          },
+          "connector": {
+            "scoredGuessTurns": 0,
+            "scoredTargetTurns": 563,
+            "firstGuessAccuracy": null,
+            "guessRecallAtHumanCount": null,
+            "targetRecallAtCount": 0.4867,
+            "exactTargetSetAccuracy": 0.2131,
+            "avoidWordRate": 0,
+            "pairwiseTargetAccuracy": 0.8235
+          }
+        },
+        "0.05": {
+          "culturalCodes": {
+            "scoredGuessTurns": 1901,
+            "scoredTargetTurns": 1926,
+            "firstGuessAccuracy": 0.5366,
+            "guessRecallAtHumanCount": 0.5378,
+            "targetRecallAtCount": 0.6097,
+            "exactTargetSetAccuracy": 0.5441,
+            "avoidWordRate": 0.0883,
+            "pairwiseTargetAccuracy": 0.8657
+          },
+          "connector": {
+            "scoredGuessTurns": 0,
+            "scoredTargetTurns": 563,
+            "firstGuessAccuracy": null,
+            "guessRecallAtHumanCount": null,
+            "targetRecallAtCount": 0.4973,
+            "exactTargetSetAccuracy": 0.2256,
+            "avoidWordRate": 0,
+            "pairwiseTargetAccuracy": 0.8267
+          }
+        },
+        "0.075": {
+          "culturalCodes": {
+            "scoredGuessTurns": 1901,
+            "scoredTargetTurns": 1926,
+            "firstGuessAccuracy": 0.5408,
+            "guessRecallAtHumanCount": 0.5418,
+            "targetRecallAtCount": 0.6131,
+            "exactTargetSetAccuracy": 0.5478,
+            "avoidWordRate": 0.0877,
+            "pairwiseTargetAccuracy": 0.8675
+          },
+          "connector": {
+            "scoredGuessTurns": 0,
+            "scoredTargetTurns": 563,
+            "firstGuessAccuracy": null,
+            "guessRecallAtHumanCount": null,
+            "targetRecallAtCount": 0.5044,
+            "exactTargetSetAccuracy": 0.2309,
+            "avoidWordRate": 0,
+            "pairwiseTargetAccuracy": 0.8295
+          }
+        },
+        "0.1": {
+          "culturalCodes": {
+            "scoredGuessTurns": 1901,
+            "scoredTargetTurns": 1926,
+            "firstGuessAccuracy": 0.5434,
+            "guessRecallAtHumanCount": 0.5445,
+            "targetRecallAtCount": 0.6159,
+            "exactTargetSetAccuracy": 0.5509,
+            "avoidWordRate": 0.0841,
+            "pairwiseTargetAccuracy": 0.8695
+          },
+          "connector": {
+            "scoredGuessTurns": 0,
+            "scoredTargetTurns": 563,
+            "firstGuessAccuracy": null,
+            "guessRecallAtHumanCount": null,
+            "targetRecallAtCount": 0.5115,
+            "exactTargetSetAccuracy": 0.2398,
+            "avoidWordRate": 0,
+            "pairwiseTargetAccuracy": 0.8327
+          }
+        }
+      },
+      "guarded": {
+        "0.05": {
+          "0.2": {
+            "culturalCodes": {
+              "scoredGuessTurns": 1901,
+              "scoredTargetTurns": 1926,
+              "firstGuessAccuracy": 0.5071,
+              "guessRecallAtHumanCount": 0.5039,
+              "targetRecallAtCount": 0.568,
+              "exactTargetSetAccuracy": 0.5,
+              "avoidWordRate": 0.0945,
+              "pairwiseTargetAccuracy": 0.856
+            },
+            "connector": {
+              "scoredGuessTurns": 0,
+              "scoredTargetTurns": 563,
+              "firstGuessAccuracy": null,
+              "guessRecallAtHumanCount": null,
+              "targetRecallAtCount": 0.532,
+              "exactTargetSetAccuracy": 0.2629,
+              "avoidWordRate": 0,
+              "pairwiseTargetAccuracy": 0.8204
+            }
+          },
+          "0.22": {
+            "culturalCodes": {
+              "scoredGuessTurns": 1901,
+              "scoredTargetTurns": 1926,
+              "firstGuessAccuracy": 0.5045,
+              "guessRecallAtHumanCount": 0.5038,
+              "targetRecallAtCount": 0.5674,
+              "exactTargetSetAccuracy": 0.4995,
+              "avoidWordRate": 0.0929,
+              "pairwiseTargetAccuracy": 0.855
+            },
+            "connector": {
+              "scoredGuessTurns": 0,
+              "scoredTargetTurns": 563,
+              "firstGuessAccuracy": null,
+              "guessRecallAtHumanCount": null,
+              "targetRecallAtCount": 0.5284,
+              "exactTargetSetAccuracy": 0.2682,
+              "avoidWordRate": 0,
+              "pairwiseTargetAccuracy": 0.8211
+            }
+          },
+          "0.25": {
+            "culturalCodes": {
+              "scoredGuessTurns": 1901,
+              "scoredTargetTurns": 1926,
+              "firstGuessAccuracy": 0.506,
+              "guessRecallAtHumanCount": 0.5045,
+              "targetRecallAtCount": 0.5676,
+              "exactTargetSetAccuracy": 0.5016,
+              "avoidWordRate": 0.0914,
+              "pairwiseTargetAccuracy": 0.8555
+            },
+            "connector": {
+              "scoredGuessTurns": 0,
+              "scoredTargetTurns": 563,
+              "firstGuessAccuracy": null,
+              "guessRecallAtHumanCount": null,
+              "targetRecallAtCount": 0.5258,
+              "exactTargetSetAccuracy": 0.2664,
+              "avoidWordRate": 0,
+              "pairwiseTargetAccuracy": 0.8246
+            }
+          },
+          "0.3": {
+            "culturalCodes": {
+              "scoredGuessTurns": 1901,
+              "scoredTargetTurns": 1926,
+              "firstGuessAccuracy": 0.505,
+              "guessRecallAtHumanCount": 0.5032,
+              "targetRecallAtCount": 0.5664,
+              "exactTargetSetAccuracy": 0.501,
+              "avoidWordRate": 0.0914,
+              "pairwiseTargetAccuracy": 0.8561
+            },
+            "connector": {
+              "scoredGuessTurns": 0,
+              "scoredTargetTurns": 563,
+              "firstGuessAccuracy": null,
+              "guessRecallAtHumanCount": null,
+              "targetRecallAtCount": 0.5107,
+              "exactTargetSetAccuracy": 0.2362,
+              "avoidWordRate": 0,
+              "pairwiseTargetAccuracy": 0.8274
+            }
+          }
+        },
+        "0.075": {
+          "0.2": {
+            "culturalCodes": {
+              "scoredGuessTurns": 1901,
+              "scoredTargetTurns": 1926,
+              "firstGuessAccuracy": 0.5076,
+              "guessRecallAtHumanCount": 0.5041,
+              "targetRecallAtCount": 0.5677,
+              "exactTargetSetAccuracy": 0.4995,
+              "avoidWordRate": 0.095,
+              "pairwiseTargetAccuracy": 0.8561
+            },
+            "connector": {
+              "scoredGuessTurns": 0,
+              "scoredTargetTurns": 563,
+              "firstGuessAccuracy": null,
+              "guessRecallAtHumanCount": null,
+              "targetRecallAtCount": 0.5311,
+              "exactTargetSetAccuracy": 0.2629,
+              "avoidWordRate": 0,
+              "pairwiseTargetAccuracy": 0.8207
+            }
+          },
+          "0.22": {
+            "culturalCodes": {
+              "scoredGuessTurns": 1901,
+              "scoredTargetTurns": 1926,
+              "firstGuessAccuracy": 0.505,
+              "guessRecallAtHumanCount": 0.504,
+              "targetRecallAtCount": 0.5672,
+              "exactTargetSetAccuracy": 0.499,
+              "avoidWordRate": 0.0935,
+              "pairwiseTargetAccuracy": 0.8553
+            },
+            "connector": {
+              "scoredGuessTurns": 0,
+              "scoredTargetTurns": 563,
+              "firstGuessAccuracy": null,
+              "guessRecallAtHumanCount": null,
+              "targetRecallAtCount": 0.5275,
+              "exactTargetSetAccuracy": 0.2682,
+              "avoidWordRate": 0,
+              "pairwiseTargetAccuracy": 0.8217
+            }
+          },
+          "0.25": {
+            "culturalCodes": {
+              "scoredGuessTurns": 1901,
+              "scoredTargetTurns": 1926,
+              "firstGuessAccuracy": 0.5066,
+              "guessRecallAtHumanCount": 0.5048,
+              "targetRecallAtCount": 0.5673,
+              "exactTargetSetAccuracy": 0.501,
+              "avoidWordRate": 0.0919,
+              "pairwiseTargetAccuracy": 0.8561
+            },
+            "connector": {
+              "scoredGuessTurns": 0,
+              "scoredTargetTurns": 563,
+              "firstGuessAccuracy": null,
+              "guessRecallAtHumanCount": null,
+              "targetRecallAtCount": 0.5258,
+              "exactTargetSetAccuracy": 0.2664,
+              "avoidWordRate": 0,
+              "pairwiseTargetAccuracy": 0.8256
+            }
+          },
+          "0.3": {
+            "culturalCodes": {
+              "scoredGuessTurns": 1901,
+              "scoredTargetTurns": 1926,
+              "firstGuessAccuracy": 0.5055,
+              "guessRecallAtHumanCount": 0.5034,
+              "targetRecallAtCount": 0.5659,
+              "exactTargetSetAccuracy": 0.5005,
+              "avoidWordRate": 0.0919,
+              "pairwiseTargetAccuracy": 0.8567
+            },
+            "connector": {
+              "scoredGuessTurns": 0,
+              "scoredTargetTurns": 563,
+              "firstGuessAccuracy": null,
+              "guessRecallAtHumanCount": null,
+              "targetRecallAtCount": 0.5124,
+              "exactTargetSetAccuracy": 0.2416,
+              "avoidWordRate": 0,
+              "pairwiseTargetAccuracy": 0.8287
+            }
+          }
+        },
+        "0.1": {
+          "0.2": {
+            "culturalCodes": {
+              "scoredGuessTurns": 1901,
+              "scoredTargetTurns": 1926,
+              "firstGuessAccuracy": 0.5076,
+              "guessRecallAtHumanCount": 0.5041,
+              "targetRecallAtCount": 0.5677,
+              "exactTargetSetAccuracy": 0.4995,
+              "avoidWordRate": 0.0945,
+              "pairwiseTargetAccuracy": 0.8561
+            },
+            "connector": {
+              "scoredGuessTurns": 0,
+              "scoredTargetTurns": 563,
+              "firstGuessAccuracy": null,
+              "guessRecallAtHumanCount": null,
+              "targetRecallAtCount": 0.5311,
+              "exactTargetSetAccuracy": 0.2629,
+              "avoidWordRate": 0,
+              "pairwiseTargetAccuracy": 0.8221
+            }
+          },
+          "0.22": {
+            "culturalCodes": {
+              "scoredGuessTurns": 1901,
+              "scoredTargetTurns": 1926,
+              "firstGuessAccuracy": 0.505,
+              "guessRecallAtHumanCount": 0.504,
+              "targetRecallAtCount": 0.5672,
+              "exactTargetSetAccuracy": 0.499,
+              "avoidWordRate": 0.0929,
+              "pairwiseTargetAccuracy": 0.8555
+            },
+            "connector": {
+              "scoredGuessTurns": 0,
+              "scoredTargetTurns": 563,
+              "firstGuessAccuracy": null,
+              "guessRecallAtHumanCount": null,
+              "targetRecallAtCount": 0.5293,
+              "exactTargetSetAccuracy": 0.2682,
+              "avoidWordRate": 0,
+              "pairwiseTargetAccuracy": 0.8239
+            }
+          },
+          "0.25": {
+            "culturalCodes": {
+              "scoredGuessTurns": 1901,
+              "scoredTargetTurns": 1926,
+              "firstGuessAccuracy": 0.5066,
+              "guessRecallAtHumanCount": 0.5051,
+              "targetRecallAtCount": 0.5676,
+              "exactTargetSetAccuracy": 0.501,
+              "avoidWordRate": 0.0914,
+              "pairwiseTargetAccuracy": 0.8566
+            },
+            "connector": {
+              "scoredGuessTurns": 0,
+              "scoredTargetTurns": 563,
+              "firstGuessAccuracy": null,
+              "guessRecallAtHumanCount": null,
+              "targetRecallAtCount": 0.5284,
+              "exactTargetSetAccuracy": 0.2682,
+              "avoidWordRate": 0,
+              "pairwiseTargetAccuracy": 0.8277
+            }
+          },
+          "0.3": {
+            "culturalCodes": {
+              "scoredGuessTurns": 1901,
+              "scoredTargetTurns": 1926,
+              "firstGuessAccuracy": 0.505,
+              "guessRecallAtHumanCount": 0.5033,
+              "targetRecallAtCount": 0.5664,
+              "exactTargetSetAccuracy": 0.5005,
+              "avoidWordRate": 0.0914,
+              "pairwiseTargetAccuracy": 0.8575
+            },
+            "connector": {
+              "scoredGuessTurns": 0,
+              "scoredTargetTurns": 563,
+              "firstGuessAccuracy": null,
+              "guessRecallAtHumanCount": null,
+              "targetRecallAtCount": 0.5178,
+              "exactTargetSetAccuracy": 0.2487,
+              "avoidWordRate": 0,
+              "pairwiseTargetAccuracy": 0.8311
+            }
+          }
+        }
+      },
+      "originalFixtures": [],
+      "joust": {
+        "direct": [
+          {
+            "word": "MATCH",
+            "score": 0.2215,
+            "direct": 0.2215,
+            "concept": 0.3864
+          },
+          {
+            "word": "GLOVE",
+            "score": 0.1175,
+            "direct": 0.1175,
+            "concept": 0.2972
+          },
+          {
+            "word": "BELT",
+            "score": 0.059,
+            "direct": 0.059,
+            "concept": 0.2645
+          },
+          {
+            "word": "PIANO",
+            "score": 0.0573,
+            "direct": 0.0573,
+            "concept": 0.2555
+          },
+          {
+            "word": "CROWN",
+            "score": -0.0126,
+            "direct": -0.0126,
+            "concept": 0.3211
+          }
+        ],
+        "offsets": {
+          "0": [
+            {
+              "word": "MATCH",
+              "score": 0.3864,
+              "direct": 0.2215,
+              "concept": 0.3864
+            },
+            {
+              "word": "CROWN",
+              "score": 0.3211,
+              "direct": -0.0126,
+              "concept": 0.3211
+            },
+            {
+              "word": "GLOVE",
+              "score": 0.2972,
+              "direct": 0.1175,
+              "concept": 0.2972
+            },
+            {
+              "word": "BELT",
+              "score": 0.2645,
+              "direct": 0.059,
+              "concept": 0.2645
+            },
+            {
+              "word": "PIANO",
+              "score": 0.2555,
+              "direct": 0.0573,
+              "concept": 0.2555
+            }
+          ],
+          "0.025": [
+            {
+              "word": "MATCH",
+              "score": 0.3614,
+              "direct": 0.2215,
+              "concept": 0.3864
+            },
+            {
+              "word": "CROWN",
+              "score": 0.2961,
+              "direct": -0.0126,
+              "concept": 0.3211
+            },
+            {
+              "word": "GLOVE",
+              "score": 0.2722,
+              "direct": 0.1175,
+              "concept": 0.2972
+            },
+            {
+              "word": "BELT",
+              "score": 0.2395,
+              "direct": 0.059,
+              "concept": 0.2645
+            },
+            {
+              "word": "PIANO",
+              "score": 0.2305,
+              "direct": 0.0573,
+              "concept": 0.2555
+            }
+          ],
+          "0.05": [
+            {
+              "word": "MATCH",
+              "score": 0.3364,
+              "direct": 0.2215,
+              "concept": 0.3864
+            },
+            {
+              "word": "CROWN",
+              "score": 0.2711,
+              "direct": -0.0126,
+              "concept": 0.3211
+            },
+            {
+              "word": "GLOVE",
+              "score": 0.2472,
+              "direct": 0.1175,
+              "concept": 0.2972
+            },
+            {
+              "word": "BELT",
+              "score": 0.2145,
+              "direct": 0.059,
+              "concept": 0.2645
+            },
+            {
+              "word": "PIANO",
+              "score": 0.2055,
+              "direct": 0.0573,
+              "concept": 0.2555
+            }
+          ],
+          "0.075": [
+            {
+              "word": "MATCH",
+              "score": 0.3114,
+              "direct": 0.2215,
+              "concept": 0.3864
+            },
+            {
+              "word": "CROWN",
+              "score": 0.2461,
+              "direct": -0.0126,
+              "concept": 0.3211
+            },
+            {
+              "word": "GLOVE",
+              "score": 0.2222,
+              "direct": 0.1175,
+              "concept": 0.2972
+            },
+            {
+              "word": "BELT",
+              "score": 0.1895,
+              "direct": 0.059,
+              "concept": 0.2645
+            },
+            {
+              "word": "PIANO",
+              "score": 0.1805,
+              "direct": 0.0573,
+              "concept": 0.2555
+            }
+          ],
+          "0.1": [
+            {
+              "word": "MATCH",
+              "score": 0.2864,
+              "direct": 0.2215,
+              "concept": 0.3864
+            },
+            {
+              "word": "CROWN",
+              "score": 0.2211,
+              "direct": -0.0126,
+              "concept": 0.3211
+            },
+            {
+              "word": "GLOVE",
+              "score": 0.1972,
+              "direct": 0.1175,
+              "concept": 0.2972
+            },
+            {
+              "word": "BELT",
+              "score": 0.1645,
+              "direct": 0.059,
+              "concept": 0.2645
+            },
+            {
+              "word": "PIANO",
+              "score": 0.1555,
+              "direct": 0.0573,
+              "concept": 0.2555
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

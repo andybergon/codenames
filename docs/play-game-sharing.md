@@ -22,7 +22,7 @@ UTF-8, then encodes those bytes with unpadded base64url. Version 3 contains:
 3. An explicit board code with all 25 words, roles, and table positions.
 4. The original board seed.
 5. The human side and role.
-6. The nine Play bot settings.
+6. The ten Play bot settings.
 7. The word-reuse policy and developer-mode provenance marker.
 8. The winner and end reason for a completed game, or `null` while active.
 9. Ordered clue, guess, and pass actions.
@@ -59,7 +59,9 @@ payloads receive the `late` missed-target timing default. Settings-schema
 versions 0 and 1 default clue reuse to Never and retain the historical
 Standard operative variation. Version 2 stores clue reuse and retains Standard
 variation. Version 3 stores both clue reuse and the explicit `none` or
-`standard` variation. Format version 2 keeps its required final outcome.
+`standard` variation. Version 4 adds the explicit `guarded` or `direct`
+operative concept ranking. Older settings versions retain historical direct
+ranking. Format version 2 keeps its required final outcome.
 Format version 3 permits a `null` outcome only when replay ends in an active
 phase.
 

@@ -166,7 +166,40 @@ In the checked 100-board default run, 91 Hybrid clue turns had an unresolved pri
 
 ## 🔎 Play operative policy
 
-The bot operative ranks only centered clue-to-unrevealed-word cosine similarities. Guess variation defaults Off, so candidates retain their exact similarity order. Standard adds a reproducible adjustment in the range `-0.0275` to `+0.0275` and can reorder candidates whose similarities are within `0.055`. Neither mode changes passing thresholds. The operative never receives hidden roles, intended target IDs, spymaster danger metrics, or the full recommendation analysis.
+The bot operative starts with centered clue-to-unrevealed-word cosine similarities. The Concept bridges setting is On by default and can be switched Off for direct-only ranking. When it is On, BGE-small English multi-card clues use a guarded local concept bridge only when the strongest direct card similarity is below `0.20`. The bridge embeds separate Princeton WordNet sense definitions for the clue and each public board word, finds the strongest sense-to-sense relationship, and ranks with:
+
+```text
+association score = max(direct similarity, concept similarity - 0.05)
+```
+
+Turning Concept bridges Off, single-card clues, stronger direct matches, non-BGE models, and Italian games keep exact cosine ordering. Missing concept data, unsupported terms, or concept-load failures also fall back to direct ordering. The browser lazily loads one compact board dictionary and the clue's first-letter shard. It uses the already selected local BGE model, makes no paid request, and sends no clue or board data to a hosted service.
+
+The sense strings are generated data, not clue-specific rules written by hand. `npm run generate:concepts` parses a SHA-256-pinned Princeton WordNet 3.0 archive and writes the definitions under `public/data/concepts/`. Strings are retained because the selected local model embeds each relevant sense at runtime, which keeps the bridge inspectable, deterministic, offline, and aligned with the active BGE model. Precomputed BGE sense vectors could reduce runtime work, but would couple the asset format to one model and make the generated data substantially larger.
+
+The activation rule resolves the preserved regression: `JOUST → medieval tournament → MATCH / CROWN / GLOVE / BELT`, where direct BGE similarity put `PIANO` first. The selected BGE fixture ranks `MATCH`, `BELT`, `CROWN`, and `GLOVE` before `PIANO`. The order among those four associations is not a claim about a single human ranking.
+
+| 🔗 Approach | 🎯 JOUST | 👥 Human | ⏱️ Runtime | 💵 Spend |
+|---|---|---|---|---:|
+| 📐 Direct cosine | ❌ Fails | Baseline | Fastest | `$0` |
+| 🕸️ Latent walk | ❌ Fails | Not promoted | Local | `$0` |
+| 📖 BGE WordNet | ✅ Passes | Improves | Guarded | `$0` |
+| ☁️ Hosted LLM | 🚫 Rejected | Not run | Network | `$0` |
+
+The latent walk searched the top 64 local clue-vocabulary concepts and used the strongest positive two-edge cosine product. It still left `PIANO` ahead of `GLOVE`, `MATCH`, and `BELT`. A hosted LLM reranker was rejected before paid evaluation because automatic bot turns require offline behavior, bounded local latency, and no per-turn spend. The BGE WordNet bridge met those constraints and passed the human-data gate.
+
+The deterministic evaluation includes five original fixed candidate boards that use only the checked WordNet definitions and Codenames word bank. Human dataset records remain in the gitignored cache; the checked report retains only aggregate alignment metrics.
+
+| 🧩 Clue | 📐 Direct top | 🔗 Guarded top | 🎯 Measured gain |
+|---|---|---|---|
+| 📜 PALEOGRAPHY 2 | TEETH, SHAKESPEARE | JOURNAL, PAPER | 0/2 to 2/2 |
+| 🛡️ HERALDRY 2 | SORCERER, SIEGE | EAGLE, CROWN | 0/2 to 2/2 |
+| 👻 SPECTER 2 | MIRROR, RADAR | GHOST, SHADOW | 0/2 to 2/2 |
+| 🎭 THESPIAN 2 | AGENT, SURGEON | PLAY, ACTOR | 0/2 to 2/2 |
+| 🔮 SEANCE 2 | SCORPION, UNDERTAKER | GHOST, SPIRIT | 0/2 to 2/2 |
+
+The generated senses connect paleography to written records, heraldry to armorial emblems, specter to ghostly perceptions, thespian to theatrical performance, and seance to incorporeal spirits. The complete original fixtures and scores live in [`concept-ranking-evaluation.json`](../scripts/generated/concept-ranking-evaluation.json).
+
+Guess variation defaults Off, so candidates retain their association-score order. Standard adds a reproducible adjustment in the range `-0.0275` to `+0.0275` and can reorder candidates whose scores are within `0.055`. Neither mode changes passing thresholds. The operative receives only the public clue, public card words, public remaining-agent counts, and local sense definitions. It never receives hidden roles, intended target IDs, spymaster danger metrics, or the full recommendation analysis.
 
 | 🔎 Mode | 🎯 First minimum | 🧩 Later minimum | ↔️ Separation | 🏁 Public score |
 |---|---:|---:|---:|---|
@@ -178,7 +211,7 @@ Conservative keeps the first guess permissive enough for games to progress, then
 
 Dynamic uses only facts visible to an operative: guesses already made, the declared clue number, and both teams' remaining-agent counts. A trailing team accumulates comeback pressure from its deficit and from the opponent approaching four remaining agents. The first guess retains the middle threshold. Follow-up thresholds continuously interpolate toward Aggressive, reaching full pressure at a three-agent deficit while at least two declared guesses remain. The policy halves that pressure for the final declared slot and bonus guesses so a comeback push does not automatically fill every clue slot. It keeps the dedicated possible-win thresholds, raises thresholds with a comfortable lead, and never applies comeback pressure while tied or ahead. The separate Extra guess setting still decides whether any number-plus-one guess is available.
 
-`npm run benchmark:play` matches the no-variation production default. Pass `--operative-noise standard` to compare the historical seeded adjustment.
+`npm run benchmark:play` matches the guarded concept-ranking and no-variation production defaults. Pass `--operative-ranking direct` to isolate the former direct-only behavior or `--operative-noise standard` to compare the historical seeded adjustment.
 
 The checked 100-board same-model run measures deterministic production regression and game shape:
 
@@ -198,6 +231,12 @@ The [MiniLM-L6 operative stress run](../scripts/generated/play-operative-aggress
 
 Low-sim fill means a guess that reaches the declared clue number has centered similarity below `0.25`. This is an explicit diagnostic threshold, not a human semantic judgment. Same-model self-play overstates agreement, and cross-model transfer is a stress test rather than evidence of human guessing behavior. Human-realism claims require recorded human choices or Play telemetry.
 
+The checked concept evaluation keeps the existing human metrics separate from the fixed JOUST regression. On all 7,703 Cultural Codes turns, guarded BGE first-guess accuracy moved from `52.42%` to `52.47%`, target recall from `59.10%` to `59.19%`, exact target sets from `53.08%` to `53.14%`, and avoid-word rate from `9.27%` down to `9.20%`. On all 2,250 Connector turns, target recall moved from `52.58%` to `53.69%`. A deterministic quarter-sample with MiniLM-L6 also improved first-guess accuracy, target recall, exact target sets, and pairwise target accuracy without increasing its avoid-word rate.
+
+The paired [100-board BGE full-game comparison](../scripts/generated/concept-ranking-full-game-comparison.json) at 10,000 candidates produced identical decisions and aggregate outcomes for direct and guarded ranking: `1.561049` correct cards per turn, zero wrong-team, neutral, assassin, fallback, or stall events, and `9.91` turns per game. The controlled guarded benchmark took `98.6s` instead of `95.4s`, an observed increment of about `32ms` per simulated game on the recorded machine. The focused warm BGE measurement added a median `137ms` for 101 definition texts across a 25-card board. A separate [20-board comparison at the current 30,000-candidate default](../scripts/generated/concept-ranking-30k-smoke-comparison.json) also produced zero paired deltas across every gameplay and safety metric. These are broad safety regressions, not evidence that the bridge never affects a real weak clue.
+
+An [unrestricted MiniLM operative experiment](../scripts/generated/concept-ranking-unrestricted-cross-model-comparison.json) increased correct cards per turn by `0.079` but also increased wrong-team hits by `0.57` per game, neutral hits by `0.49`, and assassin rate by `0.06`. It failed all three transfer safety gates. Production therefore enables the bridge only for BGE-small and preserves direct ranking for every other operative model. The final [100-board guarded cross-model comparison](../scripts/generated/concept-ranking-cross-model-comparison.json) confirms that requesting concept ranking with a MiniLM operative produces the exact direct baseline, with zero paired deltas across correct cards, wrong-team hits, neutral hits, assassin rate, fallbacks, stalls, and turns.
+
 ## 📦 Model and index assets
 
 | 📦 Asset | 🎯 Role | 📍 Source |
@@ -205,6 +244,7 @@ Low-sim fill means a guess that reaches the declared clue number has centered si
 | 🧠 Model | Embed board words | Browser model cache |
 | 📚 Clue words | Candidate vocabulary | [`scripts/generated/clue-words.json`](../scripts/generated/clue-words.json) |
 | 📐 Int8 vectors | Precomputed clue embeddings | `public/data/model-lab/` |
+| 🔗 Sense definitions | Guarded operative bridges | `public/data/concepts/` |
 | 🎯 Corpus mean | Center board and clue vectors | Model manifest |
 | 📊 Frequencies | Reward familiar clues | Generated clue metadata |
 
@@ -226,10 +266,14 @@ Generated Italian clues also receive a pairwise `0.23` similarity penalty for lo
 |---|---|---|
 | ✅ `npm run check` | Smoke result + build | Both output lanes |
 | 🧠 `npm run evaluate:embeddings` | [`embedding-model-comparison.json`](../scripts/generated/embedding-model-comparison.json) | Human target/avoid fit |
+| 🔗 `npm run evaluate:concept-ranking` | [`concept-ranking-evaluation.json`](../scripts/generated/concept-ranking-evaluation.json) | JOUST, human fit, transfer |
 | 📚 `npm run evaluate:candidates` | [`candidate-coverage.json`](../scripts/generated/candidate-coverage.json) | Human clue coverage |
 | 💬 `npm run evaluate:explanations -- --max-cost-usd 0.08` | [`recommendation-explanation-evaluation.json`](../scripts/generated/recommendation-explanation-evaluation.json) | Plain-language explanation quality and model cost |
 | ⏱️ `npm run benchmark:picker` | [`model-picker-benchmark.json`](../scripts/generated/model-picker-benchmark.json) | Controlled scoring cost |
 | 🎮 `npm run benchmark:play` | [`play-policy-benchmark.md`](../scripts/generated/play-policy-benchmark.md) | Full-game clue and operative policy |
+| 🔗 `npm run benchmark:compare` | [`concept-ranking-full-game-comparison.json`](../scripts/generated/concept-ranking-full-game-comparison.json) | Concept full-game effects |
+| 🔬 `npm run benchmark:compare` | [`concept-ranking-30k-smoke-comparison.json`](../scripts/generated/concept-ranking-30k-smoke-comparison.json) | Current-default smoke comparison |
+| 🛡️ `npm run benchmark:compare` | [`concept-ranking-cross-model-comparison.json`](../scripts/generated/concept-ranking-cross-model-comparison.json) | Guarded cross-model fallback |
 | 📊 `npm run benchmark:compare` | Comparison JSON | Paired bootstrap and promotion gates |
 | 📐 `npm run benchmark:calibrate-similarity` | Calibration JSON | Comparable score geometry |
 | 👥 `npm run calibration:build` | Calibration round JSON | Blinded human tasks |
@@ -240,6 +284,7 @@ Generated Italian clues also receive a pairwise `0.23` similarity penalty for lo
 | 🌐 `npm run experiment:api-index` | Gitignored API index | Cost-capped hosted model |
 | 👥 `npm run evaluate:api-embeddings` | [`api-embedding-comparison.json`](../scripts/generated/api-embedding-comparison.json) | Hosted human fit |
 | 🏗️ `npm run generate:data` | Words + model shards | Generated asset parity |
+| 🔗 `npm run generate:concepts` | WordNet concept shards | Relation-data parity |
 | 🇮🇹 `npm run generate:italian` | Italian pool + E5 shards | Pinned language assets |
 | 🔤 `npm run evaluate:italian` | [`italian-embedding-feasibility.json`](../scripts/generated/italian-embedding-feasibility.json) | Semantics + morphology |
 
@@ -275,6 +320,8 @@ The first 1,024-dimensional `text-embedding-3-large` experiment improved human c
 - [`src/locales.js`](../src/locales.js) · English and Italian Train and Play interface copy
 - [`src/app.js`](../src/app.js) · board lifecycle, team perspectives, and rendered recommendations
 - [`src/play/bots.js`](../src/play/bots.js) · Play clue selection and public-only operative guesses
+- [`src/play/concept-data.js`](../src/play/concept-data.js) · lazy WordNet board and clue-shard loading
+- [`src/play/concept-ranking.js`](../src/play/concept-ranking.js) · guarded sense-bridge scoring and direct fallback
 - [`src/play/game-state.js`](../src/play/game-state.js) · Play rules, event history, public projection, and completed-turn replay
 - [`src/play/mode.js`](../src/play/mode.js) · Play rendering, model orchestration, and completion-gated operative score review
 - [`src/play/settings.js`](../src/play/settings.js) · validated Play bot defaults and overrides

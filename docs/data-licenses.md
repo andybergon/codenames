@@ -1,5 +1,16 @@
 # Data licenses and attribution
 
+## Princeton WordNet concept data
+
+The English operative concept bridge uses Princeton WordNet 3.0 sense definitions generated into `public/data/concepts/`. The checked data covers 56,118 of 100,000 selectable English clues and 792 of 800 English board terms, removes usage examples, and keeps at most six ordered definitions per lemma. Terms without an entry retain direct embedding ranking.
+
+- **Source:** Princeton WordNet 3.0
+- **Archive SHA-256:** `cbda5ea6eef7f36a97a43d4a75f85e07fccbb4f23657d27b4ccbc93e2646ab59`
+- **License:** [WordNet 3.0](../public/data/concepts/LICENSE.md)
+- **Refresh:** `WORDNET_ARCHIVE=<path>/wordnet.zip npm run generate:concepts`
+
+The runtime lazily loads the board dictionary and the clue's first-letter shard. It does not call a hosted knowledge graph or send clue and board data to a paid model.
+
 ## Italian Train and Play beta
 
 ### Board words

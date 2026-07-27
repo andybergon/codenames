@@ -14,6 +14,7 @@ import {
   validateStoredGame,
 } from "./game-state.js";
 import {
+  PLAY_CONCEPT_RANKING,
   PLAY_CLUE_REPEAT_POLICY,
   PLAY_OPERATIVE_NOISE,
 } from "./settings.js";
@@ -28,7 +29,7 @@ const REPLAYABLE_RULES_VERSIONS = new Set([
   LEGACY_PLAY_RULES_VERSION,
   PLAY_RULES_VERSION,
 ]);
-const SETTINGS_VERSION = 3;
+const SETTINGS_VERSION = 4;
 const MAX_SHARE_LENGTH = 12_000;
 const MAX_ACTIONS = 512;
 const MAX_DIAGNOSTIC_BYTES = 12_288;
@@ -183,6 +184,7 @@ export function encodePlayGame(
       settings.bonusGuesses,
       settings.clueRepeatPolicy,
       settings.operativeNoise,
+      settings.operativeConcepts,
     ],
     WORD_REUSE_CODE[validated.wordReusePolicy],
     validated.developerMode === true ? 1 : 0,
@@ -387,6 +389,7 @@ function decodeParsedCompletedGame(parsed) {
     missedTargetTiming: botSettings.missedTargetTiming,
     clueRepeatPolicy: botSettings.clueRepeatPolicy,
     operativeNoise: botSettings.operativeNoise,
+    operativeConcepts: botSettings.operativeConcepts,
   };
   const history = restoreDeveloperDiagnostics(
     validated.history,
@@ -538,7 +541,9 @@ function validLegacyPayloadShape(payload) {
 
 function decodeSettings(rawSettings, settingsVersion) {
   const currentSettings =
-    settingsVersion === SETTINGS_VERSION && rawSettings.length === 9;
+    settingsVersion === SETTINGS_VERSION && rawSettings.length === 10;
+  const versionThreeSettings =
+    settingsVersion === 3 && rawSettings.length === 9;
   const versionTwoSettings =
     settingsVersion === 2 && rawSettings.length === 8;
   const versionOneSettings =
@@ -547,6 +552,7 @@ function decodeSettings(rawSettings, settingsVersion) {
     settingsVersion === 0 && [6, 7].includes(rawSettings.length);
   if (
     !currentSettings &&
+    !versionThreeSettings &&
     !versionTwoSettings &&
     !versionOneSettings &&
     !legacySettings
@@ -558,16 +564,23 @@ function decodeSettings(rawSettings, settingsVersion) {
   if (!MISSED_TARGET_TIMINGS.has(missedTargetTiming)) {
     throw new Error("Play game contains unsupported settings.");
   }
-  const clueRepeatPolicy = currentSettings || versionTwoSettings
+  const clueRepeatPolicy =
+    currentSettings || versionThreeSettings || versionTwoSettings
     ? rawSettings[7]
     : PLAY_CLUE_REPEAT_POLICY.NEVER;
   if (!CLUE_REPEAT_POLICIES.has(clueRepeatPolicy)) {
     throw new Error("Play game contains unsupported settings.");
   }
-  const operativeNoise = currentSettings
+  const operativeNoise = currentSettings || versionThreeSettings
     ? rawSettings[8]
     : PLAY_OPERATIVE_NOISE.STANDARD;
   if (!Object.values(PLAY_OPERATIVE_NOISE).includes(operativeNoise)) {
+    throw new Error("Play game contains unsupported settings.");
+  }
+  const operativeConcepts = currentSettings
+    ? rawSettings[9]
+    : PLAY_CONCEPT_RANKING.DIRECT;
+  if (!Object.values(PLAY_CONCEPT_RANKING).includes(operativeConcepts)) {
     throw new Error("Play game contains unsupported settings.");
   }
   return {
@@ -580,6 +593,7 @@ function decodeSettings(rawSettings, settingsVersion) {
     bonusGuesses: rawSettings[includesTiming ? 6 : 5],
     clueRepeatPolicy,
     operativeNoise,
+    operativeConcepts,
   };
 }
 

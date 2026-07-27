@@ -1,0 +1,432 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-07-27T03:49:54.252Z",
+  "baseline": {
+    "path": ".tmp/final-cross-direct-full.json",
+    "methodology": {
+      "boardCount": 100,
+      "boardOffset": 0,
+      "split": "custom",
+      "gamesPerPolicy": 100,
+      "pairedBoards": true,
+      "comparisonOnly": true,
+      "wordSet": "official",
+      "language": "en",
+      "modelId": "bge-small",
+      "model": "Xenova/bge-small-en-v1.5",
+      "provider": "local",
+      "dimensions": 384,
+      "indexDirectory": "public/data/model-lab/bge-small",
+      "candidateCount": 10000,
+      "resultsPerTargetSize": 6,
+      "boardSeed": "Eight deterministic bytes: ASCII CODE followed by a big-endian 1-based board index.",
+      "decisionSeed": "Matches Play runtime: board seed, turn number, and history length for each action.",
+      "clueSelection": "Prefer the highest-scoring multi clue when it is within 5 points of the best clue; otherwise choose the best clue.",
+      "bonusGuesses": "Pass after reaching the declared clue number.",
+      "operative": "The bot guesser sees only public clue and unrevealed-card data from Xenova/all-MiniLM-L6-v2.",
+      "operativeRanking": "Every turn uses centered direct clue-to-card similarity.",
+      "operativeAggression": "Policy comparison uses dynamic for the clue-policy rows and holds hybrid clue scoring fixed across all three operative modes.",
+      "operativeNoise": "Operative candidates retain their exact association-score order.",
+      "missedTargetTiming": "Clue ranking uses late missed-target timing. The fresh-target bias is based on unresolved intended targets from prior clues and fades as never-targeted friendly cards run out.",
+      "repeatedClues": "The spymaster excludes every clue previously given by the same team before analysis, ranking, and fallback selection.",
+      "stalledGameResolution": "After two consecutive passes, the next operative takes its highest-ranked available guess. This keeps cross-model simulations bounded and is counted separately.",
+      "operativeAggressionModes": {
+        "conservative": "Uses the highest similarity and separation thresholds and does not adapt to score.",
+        "aggressive": "Uses the former production thresholds and pursues the declared clue number unless confidence is extremely low.",
+        "dynamic": "Uses public remaining-agent counts to lower thresholds for a possible win or urgent comeback and raise them with a comfortable lead."
+      },
+      "operativeModelId": "minilm-l6",
+      "operativeModel": "Xenova/all-MiniLM-L6-v2",
+      "maxActionsPerGame": 100,
+      "similarityCalibration": {
+        "scale": 1,
+        "offset": 0,
+        "rawGeometry": {
+          "clueSamples": 128,
+          "boardWordSamples": 128,
+          "pairSamples": 16384,
+          "mean": 0.012755,
+          "standardDeviation": 0.083213,
+          "minimum": -0.307545,
+          "p05": -0.104427,
+          "median": 0.003957,
+          "p95": 0.160136,
+          "maximum": 0.992276
+        },
+        "calibratedGeometry": {
+          "clueSamples": 128,
+          "boardWordSamples": 128,
+          "pairSamples": 16384,
+          "mean": 0.012755,
+          "standardDeviation": 0.083213,
+          "minimum": -0.307545,
+          "p05": -0.104427,
+          "median": 0.003957,
+          "p95": 0.160136,
+          "maximum": 0.992276
+        },
+        "note": "Scale and offset are applied to clue-board and board-board similarities before scoring. Cross-model operative runs retain the operative model's native scale."
+      },
+      "rules": "Every simulation uses the production Play state machine. Games that exceed the action bound remain in the report as stalls.",
+      "fallback": "If the production analyzer has no ranked suggestion, use the legal indexed clue closest to one remaining agent, number 1, and count the turn.",
+      "firstHalf": "For each completed game, take the first ceiling(total clue turns / 2) clue turns, then aggregate their clue numbers.",
+      "funObjective": {
+        "definition": "A 0-100 proxy balancing ambitious clues, productive guesses, close finishes, and a playable game length.",
+        "caution": "The Fun Index ranks deterministic self-play experiments. Human embedding agreement remains a separate validity guardrail.",
+        "version": 1,
+        "weights": {
+          "ambition": 0.3,
+          "momentum": 0.3,
+          "suspense": 0.25,
+          "flow": 0.15
+        },
+        "targets": {
+          "multiClueRate": [
+            0.2,
+            0.6
+          ],
+          "firstHalfMeanClueNumber": [
+            1.2,
+            2.2
+          ],
+          "correctCardsPerTurn": [
+            1,
+            1.65
+          ],
+          "closeFinishRate": [
+            0.35,
+            0.75
+          ],
+          "idealTurnsPerGame": [
+            8,
+            12
+          ],
+          "playableTurnsPerGame": [
+            6,
+            16
+          ]
+        },
+        "guardrails": {
+          "assassinRate": 0.02,
+          "wrongTeamHitsPerGame": 0.15,
+          "neutralHitsPerGame": 0.35,
+          "fallbackClueRate": 0.01,
+          "stallRate": 0
+        }
+      },
+      "policies": {
+        "current": "Worth + current risk adjustment + state-dependent clue-number bonus + 18 x margin.",
+        "hybrid": "0.35 x Worth + 25 x expected net + 10 x success + 6 x margin + risk adjustment."
+      }
+    }
+  },
+  "methodology": {
+    "pairedByBoard": true,
+    "bootstrapUnit": "board",
+    "bootstrapIterations": 10000,
+    "confidence": 0.95,
+    "seed": "CODE-STATS"
+  },
+  "candidates": [
+    {
+      "id": "guarded-concept",
+      "methodology": {
+        "boardCount": 100,
+        "boardOffset": 0,
+        "split": "custom",
+        "gamesPerPolicy": 100,
+        "pairedBoards": true,
+        "comparisonOnly": true,
+        "wordSet": "official",
+        "language": "en",
+        "modelId": "bge-small",
+        "model": "Xenova/bge-small-en-v1.5",
+        "provider": "local",
+        "dimensions": 384,
+        "indexDirectory": "public/data/model-lab/bge-small",
+        "candidateCount": 10000,
+        "resultsPerTargetSize": 6,
+        "boardSeed": "Eight deterministic bytes: ASCII CODE followed by a big-endian 1-based board index.",
+        "decisionSeed": "Matches Play runtime: board seed, turn number, and history length for each action.",
+        "clueSelection": "Prefer the highest-scoring multi clue when it is within 5 points of the best clue; otherwise choose the best clue.",
+        "bonusGuesses": "Pass after reaching the declared clue number.",
+        "operative": "The bot guesser sees only public clue and unrevealed-card data from Xenova/all-MiniLM-L6-v2.",
+        "operativeRanking": "The requested concept ranker is unavailable for this model or calibration, so every turn uses centered direct clue-to-card similarity.",
+        "operativeAggression": "Policy comparison uses dynamic for the clue-policy rows and holds hybrid clue scoring fixed across all three operative modes.",
+        "operativeNoise": "Operative candidates retain their exact association-score order.",
+        "missedTargetTiming": "Clue ranking uses late missed-target timing. The fresh-target bias is based on unresolved intended targets from prior clues and fades as never-targeted friendly cards run out.",
+        "repeatedClues": "The spymaster excludes every clue previously given by the same team before analysis, ranking, and fallback selection.",
+        "stalledGameResolution": "After two consecutive passes, the next operative takes its highest-ranked available guess. This keeps cross-model simulations bounded and is counted separately.",
+        "operativeAggressionModes": {
+          "conservative": "Uses the highest similarity and separation thresholds and does not adapt to score.",
+          "aggressive": "Uses the former production thresholds and pursues the declared clue number unless confidence is extremely low.",
+          "dynamic": "Uses public remaining-agent counts to lower thresholds for a possible win or urgent comeback and raise them with a comfortable lead."
+        },
+        "operativeModelId": "minilm-l6",
+        "operativeModel": "Xenova/all-MiniLM-L6-v2",
+        "maxActionsPerGame": 100,
+        "similarityCalibration": {
+          "scale": 1,
+          "offset": 0,
+          "rawGeometry": {
+            "clueSamples": 128,
+            "boardWordSamples": 128,
+            "pairSamples": 16384,
+            "mean": 0.012755,
+            "standardDeviation": 0.083213,
+            "minimum": -0.307545,
+            "p05": -0.104427,
+            "median": 0.003957,
+            "p95": 0.160136,
+            "maximum": 0.992276
+          },
+          "calibratedGeometry": {
+            "clueSamples": 128,
+            "boardWordSamples": 128,
+            "pairSamples": 16384,
+            "mean": 0.012755,
+            "standardDeviation": 0.083213,
+            "minimum": -0.307545,
+            "p05": -0.104427,
+            "median": 0.003957,
+            "p95": 0.160136,
+            "maximum": 0.992276
+          },
+          "note": "Scale and offset are applied to clue-board and board-board similarities before scoring. Cross-model operative runs retain the operative model's native scale."
+        },
+        "rules": "Every simulation uses the production Play state machine. Games that exceed the action bound remain in the report as stalls.",
+        "fallback": "If the production analyzer has no ranked suggestion, use the legal indexed clue closest to one remaining agent, number 1, and count the turn.",
+        "firstHalf": "For each completed game, take the first ceiling(total clue turns / 2) clue turns, then aggregate their clue numbers.",
+        "funObjective": {
+          "definition": "A 0-100 proxy balancing ambitious clues, productive guesses, close finishes, and a playable game length.",
+          "caution": "The Fun Index ranks deterministic self-play experiments. Human embedding agreement remains a separate validity guardrail.",
+          "version": 1,
+          "weights": {
+            "ambition": 0.3,
+            "momentum": 0.3,
+            "suspense": 0.25,
+            "flow": 0.15
+          },
+          "targets": {
+            "multiClueRate": [
+              0.2,
+              0.6
+            ],
+            "firstHalfMeanClueNumber": [
+              1.2,
+              2.2
+            ],
+            "correctCardsPerTurn": [
+              1,
+              1.65
+            ],
+            "closeFinishRate": [
+              0.35,
+              0.75
+            ],
+            "idealTurnsPerGame": [
+              8,
+              12
+            ],
+            "playableTurnsPerGame": [
+              6,
+              16
+            ]
+          },
+          "guardrails": {
+            "assassinRate": 0.02,
+            "wrongTeamHitsPerGame": 0.15,
+            "neutralHitsPerGame": 0.35,
+            "fallbackClueRate": 0.01,
+            "stallRate": 0
+          }
+        },
+        "policies": {
+          "current": "Worth + current risk adjustment + state-dependent clue-number bonus + 18 x margin.",
+          "hybrid": "0.35 x Worth + 25 x expected net + 10 x success + 6 x margin + risk adjustment."
+        }
+      },
+      "comparison": {
+        "pairedBoards": 100,
+        "bootstrapIterations": 10000,
+        "metrics": {
+          "correctCardsPerTurn": {
+            "baseline": 1.009722,
+            "candidate": 1.009722,
+            "delta": {
+              "estimate": 0,
+              "lower": 0,
+              "upper": 0
+            }
+          },
+          "wrongTeamHitsPerGame": {
+            "baseline": 0.37,
+            "candidate": 0.37,
+            "delta": {
+              "estimate": 0,
+              "lower": 0,
+              "upper": 0
+            }
+          },
+          "neutralHitsPerGame": {
+            "baseline": 0.91,
+            "candidate": 0.91,
+            "delta": {
+              "estimate": 0,
+              "lower": 0,
+              "upper": 0
+            }
+          },
+          "assassinRate": {
+            "baseline": 0.04,
+            "candidate": 0.04,
+            "delta": {
+              "estimate": 0,
+              "lower": 0,
+              "upper": 0
+            }
+          },
+          "fallbackClueRate": {
+            "baseline": 0,
+            "candidate": 0,
+            "delta": {
+              "estimate": 0,
+              "lower": 0,
+              "upper": 0
+            }
+          },
+          "stallRate": {
+            "baseline": 0,
+            "candidate": 0,
+            "delta": {
+              "estimate": 0,
+              "lower": 0,
+              "upper": 0
+            }
+          },
+          "meanTurnsPerGame": {
+            "baseline": 14.4,
+            "candidate": 14.4,
+            "delta": {
+              "estimate": 0,
+              "lower": 0,
+              "upper": 0
+            }
+          }
+        }
+      },
+      "promotion": {
+        "thresholds": {
+          "assassinDeltaUpper": 0.05,
+          "wrongTeamDeltaUpper": 0.15,
+          "neutralDeltaUpper": 0.15,
+          "fallbackRate": 0.01,
+          "correctNonInferiority": -0.05
+        },
+        "gates": {
+          "zeroStalls": {
+            "passed": true,
+            "actual": 0,
+            "maximum": 0
+          },
+          "assassinNonInferiority": {
+            "passed": true,
+            "actual": {
+              "estimate": 0,
+              "lower": 0,
+              "upper": 0
+            },
+            "maximumUpperBound": 0.05,
+            "candidateRate": {
+              "estimate": 0.04,
+              "lower": 0.015663,
+              "upper": 0.098371
+            }
+          },
+          "wrongTeamNonInferiority": {
+            "passed": true,
+            "actual": {
+              "estimate": 0,
+              "lower": 0,
+              "upper": 0
+            },
+            "maximumUpperBound": 0.15,
+            "candidateRate": 0.37
+          },
+          "neutralNonInferiority": {
+            "passed": true,
+            "actual": {
+              "estimate": 0,
+              "lower": 0,
+              "upper": 0
+            },
+            "maximumUpperBound": 0.15
+          },
+          "fallback": {
+            "passed": true,
+            "actual": 0,
+            "maximum": 0.01
+          },
+          "correctNonInferiority": {
+            "passed": true,
+            "actual": {
+              "estimate": 0,
+              "lower": 0,
+              "upper": 0
+            },
+            "minimumLowerBound": -0.05
+          },
+          "correctSuperiority": {
+            "passed": false,
+            "actual": {
+              "estimate": 0,
+              "lower": 0,
+              "upper": 0
+            },
+            "minimumLowerBound": 0
+          }
+        },
+        "playSafetyPassed": true,
+        "playPromotionPassed": true,
+        "correctSuperiorityObserved": false,
+        "candidateSafetyEvidence": {
+          "games": 100,
+          "assassin": {
+            "eventCount": 4,
+            "eventsPerGame": 0.04,
+            "gamesWithEvent": 4,
+            "gameRateInterval": {
+              "estimate": 0.04,
+              "lower": 0.015663,
+              "upper": 0.098371
+            },
+            "zeroEventUpperBound": null
+          },
+          "wrongTeam": {
+            "eventCount": 37,
+            "eventsPerGame": 0.37,
+            "gamesWithEvent": 32,
+            "gameRateInterval": {
+              "estimate": 0.32,
+              "lower": 0.236691,
+              "upper": 0.416626
+            },
+            "zeroEventUpperBound": null
+          },
+          "neutral": {
+            "eventCount": 91,
+            "eventsPerGame": 0.91,
+            "gamesWithEvent": 60,
+            "gameRateInterval": {
+              "estimate": 0.6,
+              "lower": 0.502003,
+              "upper": 0.690599
+            },
+            "zeroEventUpperBound": null
+          }
+        },
+        "humanCalibrationRequired": true
+      }
+    }
+  ]
+}

@@ -25,6 +25,10 @@ import {
   shouldBotTakeAnotherGuess,
 } from "../src/play/bots.js";
 import {
+  scoreOperativeAssociation,
+  shouldUseConceptRanking,
+} from "../src/play/concept-ranking.js";
+import {
   GAME_END_REASON,
   GAME_PHASE,
   PLAYER_ROLE,
@@ -59,6 +63,7 @@ import {
   PLAY_CLUE_REPEAT_POLICY,
   PLAY_MISSED_TARGET_TIMING,
   PLAY_OPERATIVE_AGGRESSION,
+  PLAY_CONCEPT_RANKING,
   PLAY_OPERATIVE_NOISE,
   normalizePlayBotSettings,
 } from "../src/play/settings.js";
@@ -112,6 +117,36 @@ const italianPlayTransferBenchmark = JSON.parse(
     "utf8",
   ),
 );
+const conceptRankingEvaluation = JSON.parse(
+  await readFile(
+    "scripts/generated/concept-ranking-evaluation.json",
+    "utf8",
+  ),
+);
+const conceptFullGameComparison = JSON.parse(
+  await readFile(
+    "scripts/generated/concept-ranking-full-game-comparison.json",
+    "utf8",
+  ),
+);
+const concept30kSmokeComparison = JSON.parse(
+  await readFile(
+    "scripts/generated/concept-ranking-30k-smoke-comparison.json",
+    "utf8",
+  ),
+);
+const conceptCrossModelComparison = JSON.parse(
+  await readFile(
+    "scripts/generated/concept-ranking-cross-model-comparison.json",
+    "utf8",
+  ),
+);
+const unrestrictedConceptCrossModelComparison = JSON.parse(
+  await readFile(
+    "scripts/generated/concept-ranking-unrestricted-cross-model-comparison.json",
+    "utf8",
+  ),
+);
 
 assert.equal(playPolicyBenchmark.methodology.boardCount, 100);
 assert.equal(playPolicyBenchmark.methodology.pairedBoards, true);
@@ -120,6 +155,85 @@ assert.equal(playPolicyBenchmark.methodology.funObjective.version, 1);
 assert.equal(
   playPolicyBenchmark.methodology.operativeAggression.includes("dynamic"),
   true,
+);
+assert.equal(
+  conceptRankingEvaluation.fixture,
+  "JOUST → medieval tournament → MATCH / CROWN / GLOVE / BELT, where PIANO was guessed before those stronger human associations.",
+);
+const evaluatedJoustRanking = conceptRankingEvaluation.models
+  .find(({ id }) => id === "bge-small")
+  .joust.offsets["0.05"]
+  .map(({ word }) => word);
+assert.deepEqual(
+  new Set(evaluatedJoustRanking.slice(0, 4)),
+  new Set(["MATCH", "CROWN", "GLOVE", "BELT"]),
+);
+assert.equal(evaluatedJoustRanking.at(-1), "PIANO");
+const productionConceptEvaluation =
+  conceptRankingEvaluation.models.find(
+    ({ id }) => id === "bge-small",
+  );
+assert.equal(
+  Object.hasOwn(productionConceptEvaluation, "improvementExamples"),
+  false,
+);
+assert.deepEqual(
+  productionConceptEvaluation.originalFixtures.map(
+    ({ clue }) => clue,
+  ),
+  ["PALEOGRAPHY", "HERALDRY", "SPECTER", "THESPIAN", "SEANCE"],
+);
+for (const fixture of productionConceptEvaluation.originalFixtures) {
+  assert.equal(fixture.activated, true);
+  assert.equal(fixture.directTargetHits, 0);
+  assert.equal(fixture.guardedTargetHits, fixture.clueNumber);
+}
+assert.match(
+  conceptRankingEvaluation.source.humanDatasets.licenseNote,
+  /not redistributed/,
+);
+assert.equal(
+  conceptFullGameComparison.candidates[0].promotion
+    .playSafetyPassed,
+  true,
+);
+assert.equal(
+  concept30kSmokeComparison.baseline.methodology.candidateCount,
+  30_000,
+);
+assert.equal(
+  concept30kSmokeComparison.candidates[0].comparison.pairedBoards,
+  20,
+);
+assert.equal(
+  concept30kSmokeComparison.candidates[0].promotion
+    .playSafetyPassed,
+  true,
+);
+for (const metric of Object.values(
+  concept30kSmokeComparison.candidates[0].comparison.metrics,
+)) {
+  assert.equal(metric.delta.estimate, 0);
+}
+assert.equal(
+  conceptCrossModelComparison.candidates[0].promotion
+    .playSafetyPassed,
+  true,
+);
+for (const metric of Object.values(
+  conceptCrossModelComparison.candidates[0].comparison.metrics,
+)) {
+  assert.equal(metric.delta.estimate, 0);
+}
+assert.match(
+  conceptCrossModelComparison.candidates[0].methodology
+    .operativeRanking,
+  /unavailable.*direct clue-to-card similarity/,
+);
+assert.equal(
+  unrestrictedConceptCrossModelComparison.candidates[0]
+    .promotion.playSafetyPassed,
+  false,
 );
 assert.deepEqual(
   Object.keys(playPolicyBenchmark.operativeAggression).sort(),
@@ -1087,6 +1201,85 @@ assert.throws(
   /Unknown Play clue policy/,
 );
 
+const JOUST_CONCEPT_RANKING_FIXTURE = {
+  description:
+    "JOUST → medieval tournament → MATCH / CROWN / GLOVE / BELT, where PIANO was guessed before those stronger human associations.",
+  candidates: [
+    {
+      word: "PIANO",
+      directSimilarity: 0.1927,
+      conceptSimilarity: 0.1837,
+    },
+    {
+      word: "MATCH",
+      directSimilarity: 0.1407,
+      conceptSimilarity: 0.4148,
+    },
+    {
+      word: "CROWN",
+      directSimilarity: 0.0361,
+      conceptSimilarity: 0.2729,
+    },
+    {
+      word: "GLOVE",
+      directSimilarity: -0.0017,
+      conceptSimilarity: 0.2614,
+    },
+    {
+      word: "BELT",
+      directSimilarity: -0.093,
+      conceptSimilarity: 0.3027,
+    },
+  ],
+};
+assert.equal(
+  shouldUseConceptRanking(
+    JOUST_CONCEPT_RANKING_FIXTURE.candidates.map(
+      ({ directSimilarity }) => ({
+        similarity: directSimilarity,
+      }),
+    ),
+    4,
+  ),
+  true,
+);
+const joustRanking = JOUST_CONCEPT_RANKING_FIXTURE.candidates
+  .map(
+    ({
+      conceptSimilarity,
+      directSimilarity,
+      word,
+    }) => ({
+      word,
+      score: scoreOperativeAssociation(
+        directSimilarity,
+        conceptSimilarity,
+      ),
+    }),
+  )
+  .sort((left, right) => right.score - left.score);
+assert.deepEqual(
+  joustRanking.map(({ word }) => word),
+  ["MATCH", "BELT", "CROWN", "GLOVE", "PIANO"],
+);
+assert.equal(
+  chooseBotGuess({
+    aggression: PLAY_OPERATIVE_AGGRESSION.AGGRESSIVE,
+    candidates: joustRanking.map((candidate, layoutId) => ({
+      layoutId,
+      similarity:
+        JOUST_CONCEPT_RANKING_FIXTURE.candidates.find(
+          ({ word }) => word === candidate.word,
+        ).directSimilarity,
+      rankingScore: candidate.score,
+    })),
+    guessesMade: 0,
+    clueNumber: 4,
+    random: () => 0.5,
+  }),
+  0,
+);
+
 assert.equal(
   chooseBotGuess({
     aggression: PLAY_OPERATIVE_AGGRESSION.AGGRESSIVE,
@@ -1359,6 +1552,10 @@ assert.equal(
   PLAY_OPERATIVE_NOISE.STANDARD,
 );
 assert.equal(
+  upgradedStoredGame.botSettings.operativeConcepts,
+  PLAY_CONCEPT_RANKING.DIRECT,
+);
+assert.equal(
   normalizePlayBotSettings({
     missedTargetTiming: "unknown",
   }).missedTargetTiming,
@@ -1387,6 +1584,12 @@ assert.equal(
     operativeNoise: PLAY_OPERATIVE_NOISE.STANDARD,
   }).operativeNoise,
   PLAY_OPERATIVE_NOISE.STANDARD,
+);
+assert.equal(
+  normalizePlayBotSettings({
+    operativeConcepts: PLAY_CONCEPT_RANKING.DIRECT,
+  }).operativeConcepts,
+  PLAY_CONCEPT_RANKING.DIRECT,
 );
 assert.equal(upgradedStoredGame.botSettings.bonusGuesses, PLAY_BONUS_POLICY.PASS);
 assert.equal(
@@ -1684,6 +1887,10 @@ assert.equal(
   "allow",
 );
 assert.equal(sharedCompletedGame.botSettings.operativeNoise, "none");
+assert.equal(
+  sharedCompletedGame.botSettings.operativeConcepts,
+  PLAY_CONCEPT_RANKING.GUARDED,
+);
 assert.equal(sharedCompletedGame.developerMode, false);
 assert.equal(
   sharedCompletedGame.history[0].developerMode,
@@ -1703,7 +1910,7 @@ assert.deepEqual(
   {
     formatVersion: 3,
     rulesVersion: 2,
-    settingsVersion: 3,
+    settingsVersion: 4,
     compatibility: "full",
   },
 );
@@ -1776,6 +1983,18 @@ const versionTwoGame = decodeCompletedGame(
 );
 assert.equal(versionTwoGame.shareMetadata.formatVersion, 2);
 assert.equal(versionTwoGame.winner, simulated.winner);
+const versionThreeSettingsPayload = structuredClone(currentPayload);
+versionThreeSettingsPayload[2] = 3;
+versionThreeSettingsPayload[7] = currentPayload[7].slice(0, 9);
+const versionThreeSettingsGame = decodeCompletedGame(
+  Buffer.from(JSON.stringify(versionThreeSettingsPayload)).toString(
+    "base64url",
+  ),
+);
+assert.equal(
+  versionThreeSettingsGame.botSettings.operativeConcepts,
+  PLAY_CONCEPT_RANKING.DIRECT,
+);
 const versionTwoSettingsPayload = structuredClone(currentPayload);
 versionTwoSettingsPayload[2] = 2;
 versionTwoSettingsPayload[7] = currentPayload[7].slice(0, 8);
@@ -1786,6 +2005,10 @@ assert.equal(versionTwoSettingsGame.botSettings.clueRepeatPolicy, "allow");
 assert.equal(
   versionTwoSettingsGame.botSettings.operativeNoise,
   PLAY_OPERATIVE_NOISE.STANDARD,
+);
+assert.equal(
+  versionTwoSettingsGame.botSettings.operativeConcepts,
+  PLAY_CONCEPT_RANKING.DIRECT,
 );
 const versionOneSettingsPayload = structuredClone(currentPayload);
 versionOneSettingsPayload[2] = 1;
@@ -1802,6 +2025,10 @@ assert.equal(
 assert.equal(
   versionOneSettingsGame.botSettings.operativeNoise,
   PLAY_OPERATIVE_NOISE.STANDARD,
+);
+assert.equal(
+  versionOneSettingsGame.botSettings.operativeConcepts,
+  PLAY_CONCEPT_RANKING.DIRECT,
 );
 const unsupportedClueRepeatPayload = structuredClone(currentPayload);
 unsupportedClueRepeatPayload[7][7] = "unknown";
@@ -1820,6 +2047,17 @@ assert.throws(
   () =>
     decodeCompletedGame(
       Buffer.from(JSON.stringify(unsupportedNoisePayload)).toString(
+        "base64url",
+      ),
+    ),
+  /unsupported settings/,
+);
+const unsupportedConceptPayload = structuredClone(currentPayload);
+unsupportedConceptPayload[7][9] = "unknown";
+assert.throws(
+  () =>
+    decodeCompletedGame(
+      Buffer.from(JSON.stringify(unsupportedConceptPayload)).toString(
         "base64url",
       ),
     ),
@@ -1856,6 +2094,10 @@ assert.equal(legacyCompletedGame.botSettings.clueRepeatPolicy, "never");
 assert.equal(
   legacyCompletedGame.botSettings.operativeNoise,
   PLAY_OPERATIVE_NOISE.STANDARD,
+);
+assert.equal(
+  legacyCompletedGame.botSettings.operativeConcepts,
+  PLAY_CONCEPT_RANKING.DIRECT,
 );
 assert.equal(legacyCompletedGame.developerMode, false);
 assert.equal(legacyCompletedGame.shareMetadata.formatVersion, 1);

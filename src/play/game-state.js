@@ -7,6 +7,7 @@ import {
 import { isForbiddenClue, normalizeTerm } from "../model.js";
 import { LANGUAGE } from "../word-data.js";
 import {
+  PLAY_CONCEPT_RANKING,
   PLAY_OPERATIVE_NOISE,
   normalizePlayBotSettings,
 } from "./settings.js";
@@ -544,14 +545,17 @@ export function validateStoredGame(value) {
   const language = Object.values(LANGUAGE).includes(value.language)
     ? value.language
     : LANGUAGE.ENGLISH;
-  const storedBotSettings =
-    value.botSettings &&
+  const storedBotSettings = {
+    ...(value.botSettings ?? {}),
+    ...(value.botSettings &&
     Object.hasOwn(value.botSettings, "operativeNoise")
-      ? value.botSettings
-      : {
-          ...(value.botSettings ?? {}),
-          operativeNoise: PLAY_OPERATIVE_NOISE.STANDARD,
-        };
+      ? {}
+      : { operativeNoise: PLAY_OPERATIVE_NOISE.STANDARD }),
+    ...(value.botSettings &&
+    Object.hasOwn(value.botSettings, "operativeConcepts")
+      ? {}
+      : { operativeConcepts: PLAY_CONCEPT_RANKING.DIRECT }),
+  };
   const normalizedBotSettings = normalizePlayBotSettings(
     storedBotSettings,
     language,

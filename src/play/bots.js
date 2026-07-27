@@ -266,7 +266,7 @@ export function evaluateBotGuess({
     .map((candidate) => ({
       ...candidate,
       botScore:
-        candidate.similarity +
+        (candidate.rankingScore ?? candidate.similarity) +
         operativeNoiseAdjustment(noise, random),
     }))
     .sort((left, right) => right.botScore - left.botScore);

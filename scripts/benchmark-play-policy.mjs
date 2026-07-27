@@ -31,6 +31,10 @@ import {
   scorePlayClue,
 } from "../src/play/bots.js";
 import {
+  CONCEPT_RANKING_MODEL_ID,
+  buildConceptualGuessCandidates,
+} from "../src/play/concept-ranking.js";
+import {
   DEFAULT_PLAY_BOT_SETTINGS,
   PLAY_BONUS_POLICY,
   PLAY_CLUE_REPEAT_POLICY,
@@ -58,7 +62,9 @@ import { PLAY_FUN_OBJECTIVE, scorePlayFun } from "./play-fun-score.mjs";
 import { writePlayPolicySummary } from "./play-policy-summary.mjs";
 
 const ROOT = resolve(fileURLToPath(new URL("..", import.meta.url)));
-env.cacheDir = resolve(ROOT, ".cache/huggingface");
+env.cacheDir =
+  process.env.HF_CACHE_DIR ?? resolve(ROOT, ".cache/huggingface");
+env.allowRemoteModels = process.env.ALLOW_REMOTE_MODELS !== "0";
 const DEFAULT_BOARD_COUNT = 100;
 const DEFAULT_OUTPUT = "scripts/generated/play-policy-benchmark.json";
 const DEFAULT_SUMMARY_OUTPUT = "scripts/generated/play-policy-benchmark.md";
@@ -69,6 +75,8 @@ const OPERATIVE_AGGRESSIONS = Object.values(PLAY_OPERATIVE_AGGRESSION);
 const OPERATIVE_NOISE_VALUES = Object.values(PLAY_OPERATIVE_NOISE);
 const MISSED_TARGET_TIMINGS = Object.values(PLAY_MISSED_TARGET_TIMING);
 const CLUE_REPEAT_POLICIES = Object.values(PLAY_CLUE_REPEAT_POLICY);
+const OPERATIVE_RANKINGS = ["concept", "direct"];
+const conceptDefinitionPromises = new Map();
 const BENCHMARK_SPLITS = Object.freeze({
   smoke: { boardOffset: 0, boards: 20 },
   calibration: { boardOffset: 20, boards: 100 },
@@ -140,6 +148,13 @@ const operativeContext = await loadOperativeContext({
   manifest,
   modelId: options.operativeModel,
 });
+const conceptRankingEnabled =
+  options.operativeRanking === "concept" &&
+  options.language === LANGUAGE.ENGLISH &&
+  options.operativeModel === "same" &&
+  options.modelId === CONCEPT_RANKING_MODEL_ID &&
+  similarityCalibration.scale === 1 &&
+  similarityCalibration.offset === 0;
 const resultsByPolicy = new Map(
   activePolicies.map((policy) => [policy, []]),
 );
@@ -308,13 +323,19 @@ const report = {
         ? "Pass after reaching the declared clue number."
         : "Match Play runtime by allowing a number-plus-one guess.",
     operative:
-      `The bot guesser sees only centered clue-to-unrevealed-word similarities from ${operativeContext.model}.`,
+      `The bot guesser sees only public clue and unrevealed-card data from ${operativeContext.model}.`,
+    operativeRanking:
+      conceptRankingEnabled
+        ? "Weak multi-card clues use the local WordNet sense bridge when every direct card similarity is below 0.20. Other turns retain exact direct ranking."
+        : options.operativeRanking === "concept"
+          ? "The requested concept ranker is unavailable for this model or calibration, so every turn uses centered direct clue-to-card similarity."
+          : "Every turn uses centered direct clue-to-card similarity.",
     operativeAggression:
       `Policy comparison uses ${options.operativeAggression} for the clue-policy rows and holds hybrid clue scoring fixed across all three operative modes.`,
     operativeNoise:
       options.operativeNoise === PLAY_OPERATIVE_NOISE.NONE
-        ? "Operative candidates are ranked by similarity with no score adjustment."
-        : "Operative candidates receive a deterministic seeded adjustment from -0.0275 to +0.0275.",
+        ? "Operative candidates retain their exact association-score order."
+        : "Operative association scores receive a deterministic seeded adjustment from -0.0275 to +0.0275.",
     missedTargetTiming:
       `Clue ranking uses ${options.missedTargetTiming} missed-target timing. The fresh-target bias is based on unresolved intended targets from prior clues and fades as never-targeted friendly cards run out.`,
     repeatedClues:
@@ -327,7 +348,7 @@ const report = {
           "The spymaster may reuse earlier clues.",
       }[options.clueRepeatPolicy],
     stalledGameResolution:
-      "After two consecutive passes, the next operative takes its highest-similarity available guess. This keeps cross-model simulations bounded and is counted separately.",
+      "After two consecutive passes, the next operative takes its highest-ranked available guess. This keeps cross-model simulations bounded and is counted separately.",
     operativeAggressionModes: {
       conservative:
         "Uses the highest similarity and separation thresholds and does not adapt to score.",
@@ -580,26 +601,48 @@ async function simulateGame({
       game.currentTurn.clue,
       operativeContext,
     );
-    const candidates = game.cards
-      .map((card, index) => ({
-        layoutId: card.layoutId,
-        done: card.done,
-        similarity:
-          options.operativeModel === "same"
-            ? calibrateSimilarity(
-                dotVectors(
-                  clueVector,
-                  operativeContext.boardVectors[index],
-                ),
-                similarityCalibration,
-              )
-            : dotVectors(
+    const directCandidates = game.cards.map((card, index) => ({
+      layoutId: card.layoutId,
+      done: card.done,
+      similarity:
+        options.operativeModel === "same"
+          ? calibrateSimilarity(
+              dotVectors(
                 clueVector,
                 operativeContext.boardVectors[index],
               ),
-      }))
+              similarityCalibration,
+            )
+          : dotVectors(
+              clueVector,
+              operativeContext.boardVectors[index],
+            ),
+    }));
+    const rankedCandidates =
+      conceptRankingEnabled
+        ? await buildConceptualGuessCandidates({
+            boardVectors: operativeContext.boardVectors,
+            cards: game.cards.map(
+              ({ done, layoutId, word }) => ({
+                done,
+                layoutId,
+                word,
+              }),
+            ),
+            centeringMean: operativeContext.centeringMean,
+            clue: game.currentTurn.clue,
+            clueVector,
+            clueNumber: game.currentTurn.number,
+            definitions:
+              await loadBenchmarkConceptDefinitions(
+                game.currentTurn.clue,
+              ),
+            embeddingOptions: operativeContext.embeddingOptions,
+          })
+        : directCandidates;
+    const candidates = rankedCandidates
       .filter((candidate) => !candidate.done)
-      .map(({ layoutId, similarity }) => ({ layoutId, similarity }));
+      .map(({ done: _done, ...candidate }) => candidate);
     const reachedDeclaredNumber =
       game.currentTurn.guesses.length >= game.currentTurn.number;
     const guessesMade = game.currentTurn.guesses.length;
@@ -624,7 +667,11 @@ async function simulateGame({
     const forcedProgress = layoutId === null && consecutivePasses >= 2;
     if (forcedProgress) {
       layoutId = candidates.reduce((best, candidate) =>
-        !best || candidate.similarity > best.similarity ? candidate : best,
+        !best ||
+        (candidate.rankingScore ?? candidate.similarity) >
+          (best.rankingScore ?? best.similarity)
+          ? candidate
+          : best,
       ).layoutId;
       forcedProgressGuesses += 1;
     }
@@ -1127,6 +1174,7 @@ function parseOptions(args) {
     bonusGuesses: PLAY_BONUS_POLICY.PASS,
     operativeAggression: DEFAULT_PLAY_BOT_SETTINGS.operativeAggression,
     operativeNoise: DEFAULT_PLAY_BOT_SETTINGS.operativeNoise,
+    operativeRanking: "concept",
     reportDetail: "full",
     output: DEFAULT_OUTPUT,
     summaryOutput: null,
@@ -1220,6 +1268,11 @@ function parseOptions(args) {
         throw new Error(`${option} must be none or standard.`);
       }
       values.operativeNoise = value;
+    } else if (option === "--operative-ranking") {
+      if (!OPERATIVE_RANKINGS.includes(value)) {
+        throw new Error(`${option} must be concept or direct.`);
+      }
+      values.operativeRanking = value;
     } else if (option === "--report-detail") {
       if (!["compact", "full"].includes(value)) {
         throw new Error(`${option} must be compact or full.`);
@@ -1461,6 +1514,34 @@ function dotVectors(left, right) {
     total += left[index] * right[index];
   }
   return total;
+}
+
+async function loadBenchmarkConceptDefinitions(clue) {
+  const normalized = normalizeTerm(clue);
+  const shard = /^[a-z]/u.test(normalized)
+    ? normalized[0]
+    : "other";
+  const [board, clueEntries] = await Promise.all([
+    loadConceptFile("board.json"),
+    loadConceptFile(`${shard}.json`),
+  ]);
+  return new Map([
+    ...Object.entries(board.entries ?? {}),
+    ...Object.entries(clueEntries.entries ?? {}),
+  ]);
+}
+
+function loadConceptFile(file) {
+  if (!conceptDefinitionPromises.has(file)) {
+    conceptDefinitionPromises.set(
+      file,
+      readFile(
+        resolve(ROOT, "public/data/concepts", file),
+        "utf8",
+      ).then(JSON.parse),
+    );
+  }
+  return conceptDefinitionPromises.get(file);
 }
 
 async function embedLocalBoardWords(words, activeManifest, activeClueIndex) {

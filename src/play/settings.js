@@ -33,6 +33,11 @@ export const PLAY_OPERATIVE_NOISE = Object.freeze({
   STANDARD: "standard",
 });
 
+export const PLAY_CONCEPT_RANKING = Object.freeze({
+  GUARDED: "guarded",
+  DIRECT: "direct",
+});
+
 export const PLAY_MISSED_TARGET_TIMING = Object.freeze({
   LATE: "late",
   BALANCED: "balanced",
@@ -47,6 +52,7 @@ export const DEFAULT_PLAY_BOT_SETTINGS = Object.freeze({
   multiTolerance: 5,
   missedTargetTiming: PLAY_MISSED_TARGET_TIMING.LATE,
   operativeAggression: PLAY_OPERATIVE_AGGRESSION.DYNAMIC,
+  operativeConcepts: PLAY_CONCEPT_RANKING.GUARDED,
   operativeNoise: PLAY_OPERATIVE_NOISE.NONE,
   bonusGuesses: PLAY_BONUS_POLICY.PASS,
 });
@@ -67,6 +73,9 @@ const OPERATIVE_AGGRESSIONS = new Set(
 );
 const OPERATIVE_NOISE_VALUES = new Set(
   Object.values(PLAY_OPERATIVE_NOISE),
+);
+const CONCEPT_RANKING_VALUES = new Set(
+  Object.values(PLAY_CONCEPT_RANKING),
 );
 const MISSED_TARGET_TIMINGS = new Set(
   Object.values(PLAY_MISSED_TARGET_TIMING),
@@ -111,6 +120,9 @@ export function normalizePlayBotSettings(
     operativeAggression: OPERATIVE_AGGRESSIONS.has(value.operativeAggression)
       ? value.operativeAggression
       : DEFAULT_PLAY_BOT_SETTINGS.operativeAggression,
+    operativeConcepts: CONCEPT_RANKING_VALUES.has(value.operativeConcepts)
+      ? value.operativeConcepts
+      : DEFAULT_PLAY_BOT_SETTINGS.operativeConcepts,
     operativeNoise: OPERATIVE_NOISE_VALUES.has(value.operativeNoise)
       ? value.operativeNoise
       : DEFAULT_PLAY_BOT_SETTINGS.operativeNoise,

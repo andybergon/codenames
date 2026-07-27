@@ -1446,7 +1446,7 @@ test("Play exposes and saves bot policy settings", async ({ page }) => {
 
   const settings = page.locator(".play-settings");
   await expect(settings).toContainText(
-    "Official, fully random, BGE-small, 30k, human-like, never repeat team clues, fresh targets first, dynamic operative, deterministic guesses, stop at number",
+    "Official, fully random, BGE-small, 30k, human-like, never repeat team clues, fresh targets first, dynamic operative, concept bridges, deterministic guesses, stop at number",
   );
   await expect(settings).not.toHaveAttribute("open", "");
   await expect(settings.locator(".play-settings-toggle")).toContainText("Edit");
@@ -1490,7 +1490,7 @@ test("Play exposes and saves bot policy settings", async ({ page }) => {
   );
   await expect(allBotSettings.locator("#play-bot-model")).toHaveCount(1);
   await expect(spymasterSettings.locator("select")).toHaveCount(5);
-  await expect(operativeSettings.locator("select")).toHaveCount(3);
+  await expect(operativeSettings.locator("select")).toHaveCount(4);
   await expect(developerSettings.locator("#play-developer-mode")).not.toBeChecked();
 
   await expect(page.locator("#play-bot-model")).toHaveValue("bge-small");
@@ -1503,8 +1503,11 @@ test("Play exposes and saves bot policy settings", async ({ page }) => {
     "dynamic",
   );
   await expect(page.locator("#play-operative-noise")).toHaveValue("none");
+  await expect(page.locator("#play-operative-concepts")).toHaveValue(
+    "guarded",
+  );
   await expect(page.locator("#play-bonus-guesses")).toHaveValue("pass");
-  await expect(settings.locator(".play-setting-label .info-button")).toHaveCount(11);
+  await expect(settings.locator(".play-setting-label .info-button")).toHaveCount(12);
   await expect(
     page.getByRole("button", {
       name: "About developer mode",
@@ -1552,8 +1555,10 @@ test("Play exposes and saves bot policy settings", async ({ page }) => {
 
   await page.getByRole("button", { name: "Extended 800", exact: true }).click();
   await expect(settings).toContainText(
-    "Extended, fully random, BGE-small, 30k, human-like, never repeat team clues, fresh targets first, dynamic operative, deterministic guesses, stop at number",
+    "Extended, fully random, BGE-small, 30k, human-like, never repeat team clues, fresh targets first, dynamic operative, concept bridges, deterministic guesses, stop at number",
   );
+  await page.locator("#play-operative-concepts").selectOption("direct");
+  await expect(settings).toContainText("direct similarity");
   await page.locator("#play-bot-model").selectOption("minilm-l6");
   await page.locator("#play-bot-candidates").selectOption("30000");
   await page.locator("#play-clue-policy").selectOption("current");
@@ -1580,6 +1585,7 @@ test("Play exposes and saves bot policy settings", async ({ page }) => {
     missedTargetTiming: "balanced",
     operativeAggression: "conservative",
     operativeNoise: "standard",
+    operativeConcepts: "direct",
     bonusGuesses: "allow",
   });
   expect(storedGame.botSettings).not.toHaveProperty("wordReusePolicy");
@@ -2046,6 +2052,9 @@ test("Developer live analysis orders the board by operative score", async ({
   await page.locator("#play-live-diagnostics").check();
   await expect(scoreOrder).toBeVisible();
   await expect(scoreOrder).toBeEnabled();
+  await expect(
+    cards.first().locator(".play-card-operative-score"),
+  ).toHaveAttribute("title", "Operative association score");
   await scoreOrder.click();
   await expect(scoreOrder).toHaveAttribute("aria-pressed", "true");
 

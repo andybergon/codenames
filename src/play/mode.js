@@ -78,6 +78,7 @@ import {
 import {
   PLAY_BONUS_POLICY,
   PLAY_CLUE_REPEAT_POLICY,
+  PLAY_CONCEPT_RANKING,
   PLAY_MISSED_TARGET_TIMING,
   PLAY_OPERATIVE_AGGRESSION,
   PLAY_OPERATIVE_NOISE,
@@ -93,6 +94,11 @@ import {
   setWordReusePolicy,
   wordReuseStatus,
 } from "./word-reuse.js";
+import { loadConceptDefinitions } from "./concept-data.js";
+import {
+  CONCEPT_RANKING_MODEL_ID,
+  buildConceptualGuessCandidates,
+} from "./concept-ranking.js";
 
 const RESULTS_PER_SIZE = 6;
 const BOT_WAIT_DETAIL_DELAY = 1800;
@@ -258,6 +264,18 @@ const BOT_SETTING_INFO = Object.freeze({
     },
     note: "Dynamic adapts to the public score, becoming bolder when behind and more selective when ahead. Conservative passes more readily when the next word is only loosely related. Aggressive is more willing to keep guessing toward the clue number.",
   },
+  operativeConcepts: {
+    id: "operative-concepts",
+    label: "Concept bridges",
+    table: {
+      headers: ["🔗 Setting", "🧠 Ranking", "📦 Scope"],
+      rows: [
+        ["✅ On", "Guarded bridge", "English BGE"],
+        ["🛑 Off", "Direct only", "Every model"],
+      ],
+    },
+    note: "On uses generated Princeton WordNet sense definitions only for weak multi-card English clues with BGE-small. The definitions are generated data, not clue-specific rules. Other models and stronger direct matches keep exact direct ranking.",
+  },
   operativeNoise: {
     id: "operative-noise",
     label: "Guess variation",
@@ -269,7 +287,7 @@ const BOT_SETTING_INFO = Object.freeze({
         ["🎲 Standard", "±0.028", "Seeded variation"],
       ],
     },
-    note: "Standard adds a reproducible offset to each candidate and can reorder words whose similarities are within 0.055. Off ranks candidates by cosine similarity alone. Neither setting changes the passing thresholds.",
+    note: "Standard adds a reproducible offset to each candidate and can reorder words whose association scores are within 0.055. Off keeps the exact association-score order. Neither setting changes the passing thresholds.",
   },
   bonusGuesses: {
     id: "extra-guess",
@@ -353,6 +371,12 @@ export function createPlayMode(options = {}) {
     operativeAggression: document.querySelector("#play-operative-aggression"),
     operativeAggressionInfo: document.querySelector(
       "#play-operative-aggression-info",
+    ),
+    operativeConcepts: document.querySelector(
+      "#play-operative-concepts",
+    ),
+    operativeConceptsInfo: document.querySelector(
+      "#play-operative-concepts-info",
     ),
     operativeNoise: document.querySelector("#play-operative-noise"),
     operativeNoiseInfo: document.querySelector(
@@ -443,6 +467,10 @@ export function createPlayMode(options = {}) {
     [
       elements.operativeAggressionInfo,
       BOT_SETTING_INFO.operativeAggression,
+    ],
+    [
+      elements.operativeConceptsInfo,
+      BOT_SETTING_INFO.operativeConcepts,
     ],
     [
       elements.operativeNoiseInfo,
@@ -608,6 +636,7 @@ export function createPlayMode(options = {}) {
     [elements.multiTolerance, "multiTolerance", Number],
     [elements.missedTargetTiming, "missedTargetTiming", String],
     [elements.operativeAggression, "operativeAggression", String],
+    [elements.operativeConcepts, "operativeConcepts", String],
     [elements.operativeNoise, "operativeNoise", String],
     [elements.bonusGuesses, "bonusGuesses", String],
   ]) {
@@ -806,6 +835,8 @@ export function createPlayMode(options = {}) {
       selectedBotSettings.missedTargetTiming;
     elements.operativeAggression.value =
       selectedBotSettings.operativeAggression;
+    elements.operativeConcepts.value =
+      selectedBotSettings.operativeConcepts;
     elements.operativeNoise.value =
       selectedBotSettings.operativeNoise;
     elements.bonusGuesses.value = selectedBotSettings.bonusGuesses;
@@ -1549,6 +1580,7 @@ export function createPlayMode(options = {}) {
                 done: false,
               })),
               clue: turn.clue,
+              clueNumber: turn.number,
               language: gameAtStart.language ?? LANGUAGE.ENGLISH,
             }),
           ),
@@ -1558,9 +1590,9 @@ export function createPlayMode(options = {}) {
         }
         postGameScores = scores.map((candidates) =>
           Object.fromEntries(
-            candidates.map(({ layoutId, similarity }) => [
+            candidates.map(({ layoutId, rankingScore, similarity }) => [
               layoutId,
-              similarity,
+              rankingScore ?? similarity,
             ]),
           ),
         );
@@ -1587,34 +1619,56 @@ export function createPlayMode(options = {}) {
         manifestPromises.set(modelId, promise);
       }
       const model = modelOption(modelId);
-      const terms = [
-        ...gameAtStart.cards.map((card) => card.word),
-        ...turnsAtStart.map((turn) => turn.clue),
-      ];
+      const terms = gameAtStart.cards.map((card) => card.word);
+      const embeddingOptions = {
+        model: model.model,
+        revision: model.revision,
+        inputPrefix: model.inputPrefix,
+        onRetry: onLoadRetry,
+      };
       const [manifest, vectors] = await Promise.all([
         manifestPromises.get(modelId),
-        embedTerms(terms, {
-          model: model.model,
-          revision: model.revision,
-          inputPrefix: model.inputPrefix,
-          onRetry: onLoadRetry,
-        }),
+        embedTerms(terms, embeddingOptions),
       ]);
       if (runId !== postGameAnalysisRun || game !== gameAtStart) {
         return;
       }
 
       const centered = centerEmbeddings(vectors, manifest.centering.mean);
-      const cardVectors = centered.slice(0, gameAtStart.cards.length);
-      const clueVectors = centered.slice(gameAtStart.cards.length);
-      postGameScores = clueVectors.map((clueVector) =>
-        Object.fromEntries(
-          gameAtStart.cards.map((card, index) => [
-            card.layoutId,
-            dotVectors(clueVector, cardVectors[index]),
-          ]),
-        ),
-      );
+      postGameScores = [];
+      for (const turn of turnsAtStart) {
+        const candidates = await buildConceptualGuessCandidates({
+          boardVectors: centered,
+          cards: gameAtStart.cards.map(({ layoutId, word }) => ({
+            layoutId,
+            word,
+            done: false,
+          })),
+          centeringMean: manifest.centering.mean,
+          clue: turn.clue,
+          clueNumber: turn.number,
+          embeddingOptions,
+          includeRevealed: true,
+          loadDefinitions:
+            (gameAtStart.language ?? LANGUAGE.ENGLISH) ===
+              LANGUAGE.ENGLISH &&
+            modelId === CONCEPT_RANKING_MODEL_ID &&
+            gameAtStart.botSettings.operativeConcepts ===
+              PLAY_CONCEPT_RANKING.GUARDED
+              ? () => loadConceptDefinitions(turn.clue)
+              : undefined,
+        });
+        postGameScores.push(
+          Object.fromEntries(
+            candidates.map(
+              ({ layoutId, rankingScore, similarity }) => [
+                layoutId,
+                rankingScore ?? similarity,
+              ],
+            ),
+          ),
+        );
+      }
       postGameAnalysisState = "ready";
       postGameAnalysisMessage = "";
     } catch (error) {
@@ -1858,7 +1912,10 @@ export function createPlayMode(options = {}) {
 
   async function buildBotGuessCandidates(
     clue,
-    { includeRevealed = false } = {},
+    {
+      clueNumber = game?.currentTurn?.number ?? 1,
+      includeRevealed = false,
+    } = {},
   ) {
     if (game && guessCandidateExecutor) {
       return guessCandidateExecutor({
@@ -1868,6 +1925,7 @@ export function createPlayMode(options = {}) {
           done: includeRevealed ? false : done,
         })),
         clue,
+        clueNumber,
         language: gameLanguage(),
       });
     }
@@ -1875,21 +1933,51 @@ export function createPlayMode(options = {}) {
       return [];
     }
     const model = modelOption(activeModelId);
-    const vectors = await embedTerms([clue], {
+    const embeddingOptions = {
       model: model.model,
       revision: model.revision,
       inputPrefix: model.inputPrefix,
-    });
-    const clueVector = centerEmbeddings(vectors, clueIndex.centering.mean)[0];
-
-    return game.cards
-      .map((card, index) => ({
-        layoutId: card.layoutId,
-        done: card.done,
-        similarity: dotVectors(clueVector, boardVectors[index]),
-      }))
+    };
+    const candidates =
+      gameLanguage() === LANGUAGE.ENGLISH &&
+      activeModelId === CONCEPT_RANKING_MODEL_ID &&
+      game.botSettings.operativeConcepts ===
+        PLAY_CONCEPT_RANKING.GUARDED
+        ? await buildConceptualGuessCandidates({
+            boardVectors,
+            cards: game.cards.map(
+              ({ done, layoutId, word }) => ({
+                done,
+                layoutId,
+                word,
+              }),
+            ),
+            centeringMean: clueIndex.centering.mean,
+            clue,
+            clueNumber,
+            embeddingOptions,
+            includeRevealed,
+            loadDefinitions: () =>
+              loadConceptDefinitions(clue),
+          })
+        : await buildConceptualGuessCandidates({
+            boardVectors,
+            cards: game.cards.map(
+              ({ done, layoutId, word }) => ({
+                done,
+                layoutId,
+                word,
+              }),
+            ),
+            centeringMean: clueIndex.centering.mean,
+            clue,
+            clueNumber: 1,
+            embeddingOptions,
+            includeRevealed,
+          });
+    return candidates
       .filter((candidate) => includeRevealed || !candidate.done)
-      .map(({ layoutId, similarity }) => ({ layoutId, similarity }));
+      .map(({ done: _done, ...candidate }) => candidate);
   }
 
   function gameLanguage() {
@@ -3159,10 +3247,21 @@ function developerSuggestionDecision(suggestion, game) {
 }
 
 function serializeOperativeScores(candidates) {
-  return candidates.map(({ layoutId, similarity }) => ({
+  return candidates.map(
+    ({
+      conceptSimilarity,
+      layoutId,
+      rankingScore,
+      similarity,
+    }) => ({
     layoutId,
-    similarity,
-  }));
+    similarity: rankingScore ?? similarity,
+    directSimilarity: similarity,
+    ...(Number.isFinite(conceptSimilarity)
+      ? { conceptSimilarity }
+      : {}),
+  }),
+  );
 }
 
 function serializeOperativeDecision(decision, game) {
@@ -3175,9 +3274,19 @@ function serializeOperativeDecision(decision, game) {
     reason: decision.reason,
     thresholds: { ...decision.thresholds },
     ranked: decision.ranked.map(
-      ({ layoutId, similarity, botScore }) => ({
+      ({
+        conceptSimilarity,
+        layoutId,
+        rankingScore,
+        similarity,
+        botScore,
+      }) => ({
         layoutId,
         similarity,
+        rankingScore: rankingScore ?? similarity,
+        ...(Number.isFinite(conceptSimilarity)
+          ? { conceptSimilarity }
+          : {}),
         botScore,
       }),
     ),
@@ -3299,6 +3408,14 @@ function settingsLabel(
       ? "variedGuesses"
       : "deterministicGuesses",
   ).toLocaleLowerCase(language);
+  const operativeConcepts = translate(
+    language,
+    language === LANGUAGE.ENGLISH &&
+      settings.modelId === CONCEPT_RANKING_MODEL_ID &&
+      settings.operativeConcepts === PLAY_CONCEPT_RANKING.GUARDED
+      ? "conceptBridges"
+      : "directSimilarity",
+  ).toLocaleLowerCase(language);
   const bonus =
     settings.bonusGuesses === PLAY_BONUS_POLICY.PASS
       ? translate(language, "stopAtNumber").toLocaleLowerCase(language)
@@ -3311,7 +3428,7 @@ function settingsLabel(
     wordReusePolicy === PLAY_WORD_REUSE_POLICY.AVOID_RECENT
       ? translate(language, "avoidRecent").toLocaleLowerCase(language)
       : translate(language, "fullyRandom").toLocaleLowerCase(language);
-  return `${words}, ${reuse}, ${model.label}, ${settings.candidateCount / 1000}k, ${style}, ${clueReuse}, ${missedTargets}, ${aggression}, ${operativeNoise}, ${bonus}`;
+  return `${words}, ${reuse}, ${model.label}, ${settings.candidateCount / 1000}k, ${style}, ${clueReuse}, ${missedTargets}, ${aggression}, ${operativeConcepts}, ${operativeNoise}, ${bonus}`;
 }
 
 function localizePlayError(message, language) {
