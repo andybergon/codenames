@@ -84,7 +84,7 @@ Worth is a `0–99` score combining expected net, margin, centroid fit, weakest-
 
 ## 💬 Semantic explanations
 
-Train makes no hosted request while rendering recommendations. Selecting **Explain** sends only that clue, its intended targets, and the active English or Italian language through [`api/explain-recommendations.js`](../api/explain-recommendations.js), and GPT-5.4 nano returns one semantic sentence in that language. Completed Play reviews offer the same explicit action for each clue and each guess. A guess request contains the clue and that one guessed word. Developer-only live analysis exposes the same actions before completion. The browser caches successful results per language for the tab, so revisiting the same clue-word combination does not create another paid request.
+Train makes no hosted request while rendering recommendations. Selecting **Explain** sends only that clue, its intended targets, and the active English or Italian language through [`api/explain-recommendations.js`](../api/explain-recommendations.js), and GPT-5.4 nano returns one semantic sentence in that language. In completed Play reviews, selecting a full clue or guess row is a free local action that reveals one paid **Explain** action on that row. Clue selections group their `For` target words, while a guess request contains the clue and that one guessed word. Developer-only live analysis exposes the same interaction before completion. The browser caches successful results per language for the tab, so revisiting the same clue-word combination does not create another paid request.
 
 The prompt is owned by [`server/recommendation-explanation-prompt.js`](../server/recommendation-explanation-prompt.js):
 
@@ -118,7 +118,7 @@ The risk sentence follows the scoring contract:
 
 The default table shows the explicit **Explain** action followed by the local risk sentence. After a successful request, the generated sentence replaces the action. **Score details** reveals Worth, expected net, estimated hit, closest-danger similarity, margin, fit, and cohesion.
 
-Completed Play games relabel the game log as **Post-game analysis** and use the same action beside clues with recorded intended targets. The action is absent during active play, and Play does not construct its request until the completed game has already revealed those targets.
+Completed Play games relabel the game log as **Post-game analysis** and expose explanations only after a clue or guess row is selected. The action is absent during ordinary active play, and Play does not construct its request until the completed game has already revealed those targets and the player explicitly selects **Explain**.
 
 ## 🛣️ Output lanes
 

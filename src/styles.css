@@ -3166,10 +3166,11 @@ h3 {
 .play-card-annotations {
   position: absolute;
   inset: 4px;
-  display: flex;
-  align-items: flex-start;
-  flex-direction: column;
-  gap: 2px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 2px 4px;
   pointer-events: none;
 }
 
@@ -3185,11 +3186,15 @@ h3 {
 }
 
 .play-card-marker.is-target {
+  grid-area: 1 / 2;
+  justify-self: end;
   background: var(--ink);
   color: var(--on-ink);
 }
 
 .play-card-marker.is-guess {
+  grid-area: 1 / 1;
+  justify-self: start;
   background: var(--green-soft);
   color: var(--green);
 }
@@ -3200,8 +3205,9 @@ h3 {
 }
 
 .play-card-operative-score {
-  align-self: flex-end;
-  margin-top: auto;
+  grid-area: 3 / 2;
+  align-self: end;
+  justify-self: end;
   border: 1px solid color-mix(in srgb, var(--ink) 18%, transparent);
   background: color-mix(in srgb, var(--surface) 88%, transparent);
   color: var(--ink);
@@ -3668,17 +3674,9 @@ button.play-card:not(:disabled):hover {
   text-transform: uppercase;
 }
 
-.play-history-turn-actions {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 6px;
-}
-
 .play-history-actions {
   display: grid;
-  gap: 2px;
+  gap: 0;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -3686,7 +3684,7 @@ button.play-card:not(:disabled):hover {
 
 .play-history-action {
   min-width: 0;
-  padding: 3px 0;
+  padding: 0;
   color: var(--muted);
   font-size: 0.78rem;
   line-height: 1.35;
@@ -3698,6 +3696,14 @@ button.play-card:not(:disabled):hover {
   margin-left: 12px;
   border-left: 1px solid var(--line);
   padding-left: 10px;
+}
+
+.play-history-turn.is-reviewable
+  .play-history-action[data-action="turn-passed"] {
+  display: flex;
+  min-height: 28px;
+  align-items: center;
+  padding-left: 16px;
 }
 
 .play-history-action-label {
@@ -3713,16 +3719,78 @@ button.play-card:not(:disabled):hover {
   gap: 4px;
 }
 
-.play-history-guess-summary .explain-recommendation-button {
-  margin-left: 2px;
+.play-history-event-summary {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
 }
 
-.play-history-event-summary {
+.play-history-clue-line,
+.play-history-targets-line {
+  display: flex;
   min-width: 0;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.play-history-selectable-row {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  align-items: flex-start;
+  gap: 4px;
+  border-radius: 7px;
+}
+
+.play-history-selectable-row:hover,
+.play-history-selectable-row:focus-within {
+  background: var(--subtle-fill);
+}
+
+.play-history-selectable-row.is-selected {
+  background: var(--blue-soft);
+  box-shadow: inset 0 0 0 1px var(--blue);
+}
+
+.play-history-row-select {
+  min-width: 0;
+  min-height: 28px;
+  flex: 1 1 auto;
+  align-self: stretch;
+  border: 0;
+  border-radius: 6px;
+  padding: 2px 6px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  line-height: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.play-history-row-select:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 1px;
+}
+
+.play-history-inline-actions {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  padding: 0 4px 0 0;
+}
+
+.play-history-inline-actions[hidden] {
+  display: none;
 }
 
 .play-history-explanation {
   margin-top: 6px;
+}
+
+.play-history-explanation:has(> .explanation-targets[hidden]) {
+  display: none;
 }
 
 .play-history-guess-explanation {
@@ -3742,12 +3810,6 @@ button.play-card:not(:disabled):hover {
   padding: 0 6px;
   font-size: 0.74rem;
   line-height: 1.35;
-}
-
-.play-history-action.has-clue-actions
-  > .play-history-explanation
-  .explanation-targets {
-  margin-top: 0;
 }
 
 .play-history-turn[data-side="blue"] {
@@ -3869,20 +3931,32 @@ button.play-card:not(:disabled):hover {
   box-shadow: inset 0 0 0 1px var(--line);
 }
 
-.play-history-clue {
+.play-history-turn.is-reviewable {
   cursor: pointer;
 }
 
-.play-history-clue-action,
-.play-history-turn-actions .explain-recommendation-button {
+.play-history-turn-review {
+  width: 100%;
+  min-height: 24px;
+  border: 0;
+  border-radius: 5px;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.play-history-viewing {
   display: inline-flex;
   align-items: center;
-  min-height: 26px;
-  border: 1px solid var(--input-line);
+  min-height: 24px;
+  border: 1px solid var(--blue);
   border-radius: 999px;
   padding: 3px 8px;
-  background: var(--subtle-fill-soft);
-  color: var(--ink);
+  background: var(--blue-soft);
+  color: var(--blue-text);
   font-size: 0.74rem;
   font-weight: 900;
   letter-spacing: 0;
@@ -3890,17 +3964,9 @@ button.play-card:not(:disabled):hover {
   text-transform: none;
 }
 
-.play-history-clue:focus-visible {
-  outline: 2px solid var(--ink);
+.play-history-turn-review:focus-visible {
+  outline: 2px solid var(--blue);
   outline-offset: 2px;
-}
-
-.play-history-clue:hover,
-.play-history-clue:focus-visible,
-.play-history-clue[aria-pressed="true"] {
-  border-color: var(--blue);
-  background: var(--blue-soft);
-  color: var(--blue-text);
 }
 
 @media (min-width: 1181px) {
@@ -4369,6 +4435,45 @@ button.play-card:not(:disabled):hover {
 }
 
 @media (max-width: 520px) {
+  .play-card-annotations {
+    inset: 3px;
+    column-gap: 2px;
+  }
+
+  .play-card-marker {
+    padding: 1px 3px;
+    font-size: 0.48rem;
+  }
+
+  .play-card[data-intended="true"][data-guessed="true"] {
+    min-height: 88px;
+  }
+
+  .play-card[data-intended="true"][data-guessed="true"]
+    .play-card-annotations {
+    display: flex;
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 1px;
+  }
+
+  .play-card[data-intended="true"][data-guessed="true"]
+    .play-card-marker.is-guess {
+    order: 1;
+  }
+
+  .play-card[data-intended="true"][data-guessed="true"]
+    .play-card-marker.is-target {
+    order: 2;
+  }
+
+  .play-card[data-intended="true"][data-guessed="true"]
+    .play-card-operative-score {
+    align-self: flex-end;
+    order: 3;
+    margin-top: auto;
+  }
+
   .topbar {
     grid-template-areas:
       "title title"

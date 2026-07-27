@@ -1665,12 +1665,25 @@ test("Developer mode reuses turn analysis and retains score diagnostics", async 
   );
   await expect(page.locator(".play-card[data-intended='true']")).toHaveCount(2);
   await expect(
-    page.locator("#play-history-list .play-history-clue"),
+    page.locator("#play-history-list .play-history-turn-review"),
   ).toHaveCount(1);
   await expect(
     page.locator("#play-history-list .explain-recommendation-button"),
   ).toHaveCount(1);
+  await expect(
+    page.locator("#play-history-list .explain-recommendation-button"),
+  ).toBeHidden();
   expect(explanationRequests).toHaveLength(0);
+  await page
+    .locator("#play-history-list .play-history-row-select")
+    .click();
+  await expect(
+    page.locator("#play-history-list .play-history-row-select"),
+  ).toHaveAttribute("aria-pressed", "true");
+  expect(explanationRequests).toHaveLength(0);
+  await expect(
+    page.locator("#play-history-list .explain-recommendation-button"),
+  ).toBeVisible();
   await page
     .locator("#play-history-list .explain-recommendation-button")
     .click();
@@ -2566,7 +2579,7 @@ test("Play enforces operative and spymaster information views", async ({ page })
   await expect(page.locator("#forward-play-action svg.lucide-redo-2")).toHaveCount(1);
   await expect(page.locator("#share-play-game svg.lucide-share-2")).toHaveCount(1);
   await expect(page.locator("#leave-play-game svg.lucide-refresh-cw")).toHaveCount(1);
-  const clueInput = page.getByRole("textbox", { name: "Clue", exact: true });
+  const clueInput = page.locator("#play-clue-input");
   const clearClue = page.getByRole("button", { name: "Clear clue", exact: true });
   await expect(clearClue).toBeHidden();
   await clueInput.fill("garden");
@@ -2948,7 +2961,7 @@ test("starting a second Play game clears the previous clue and analysis", async 
   await expect(page.locator("#play-history-list")).toContainText(
     "Clue: HIBERNATION 2",
   );
-  await expect(page.locator("#play-history-list")).toContainText("Guessed", {
+  await expect(page.locator("#play-history-list")).toContainText("Guess:", {
     timeout: 15_000,
   });
 
@@ -3518,10 +3531,10 @@ test("Play game log color-codes each guessed card as a word pill", async ({ page
       .locator("#play-history-list .play-history-action")
       .allTextContents(),
   ).toEqual([
-    "Guessed WORD0",
-    "Guessed WORD1",
-    "Guessed WORD2",
-    "Guessed WORD3",
+    "Guess: WORD0",
+    "Guess: WORD1",
+    "Guess: WORD2",
+    "Guess: WORD3",
   ]);
 });
 
@@ -3580,9 +3593,9 @@ test("Play game log groups actions by turn and switches between views", async ({
     await timeline.locator(".play-history-action").allTextContents(),
   ).toEqual([
     "Clue: OCEAN 2",
-    "Guessed WORD0",
+    "Guess: WORD0",
     "Clue: FIRE 1",
-    "Passed",
+    "Pass",
   ]);
   const firstTurn = timeline.locator('.play-history-turn[data-turn="1"]');
   await expect(firstTurn.locator(".play-history-action")).toHaveCount(2);
@@ -3619,7 +3632,7 @@ test("Play game log groups actions by turn and switches between views", async ({
     await page
       .locator("#play-history-blue-list .play-history-action")
       .allTextContents(),
-  ).toEqual(["Clue: OCEAN 2", "Guessed WORD0"]);
+  ).toEqual(["Clue: OCEAN 2", "Guess: WORD0"]);
   await expect(
     page.locator("#play-history-blue-list .play-clue-pill"),
   ).toHaveText("OCEAN");
@@ -3633,7 +3646,7 @@ test("Play game log groups actions by turn and switches between views", async ({
     await page
       .locator("#play-history-red-list .play-history-action")
       .allTextContents(),
-  ).toEqual(["Clue: FIRE 1", "Passed"]);
+  ).toEqual(["Clue: FIRE 1", "Pass"]);
 
   await timelineView.click();
   await expect(timelineView).toHaveAttribute("aria-pressed", "true");
@@ -3891,7 +3904,9 @@ test("completed Play sessions replay turns and explain clues and guesses", async
   await expect(page.locator("#play-post-game-analysis")).toBeVisible();
   await expect(page.locator("#play-analysis-summary")).toHaveCount(0);
   await expect(page.locator("#play-analysis-status")).toHaveCount(0);
-  await expect(page.locator("#play-history-list .play-history-clue")).toHaveCount(2);
+  await expect(
+    page.locator("#play-history-list .play-history-turn-review"),
+  ).toHaveCount(2);
   await expect(
     page.locator("#play-history-list .explain-recommendation-button"),
   ).toHaveCount(4);
@@ -3905,8 +3920,9 @@ test("completed Play sessions replay turns and explain clues and guesses", async
   });
   await expect(firstClue).toHaveAttribute("aria-pressed", "true");
   await expect(secondClue).toHaveAttribute("aria-pressed", "false");
-  await expect(firstClue).toHaveText("Viewing");
-  await expect(secondClue).toHaveText("Review");
+  await expect(firstClue.locator(".play-history-viewing")).toHaveText("Viewing");
+  await expect(secondClue.locator(".play-history-viewing")).toHaveCount(0);
+  await expect(page.locator("#play-history-list")).not.toContainText("Review");
   const initialTurnRows = await page
     .locator("#play-history-list")
     .evaluate((list) =>
@@ -3920,23 +3936,141 @@ test("completed Play sessions replay turns and explain clues and guesses", async
     expect.objectContaining({
       turn: "0",
       selected: true,
-      text: expect.stringContaining("Guessed WORD0"),
+      text: expect.stringContaining("Guess: WORD0"),
     }),
     expect.objectContaining({
       turn: "1",
       selected: false,
-      text: expect.stringContaining("Guessed WORD24"),
+      text: expect.stringContaining("Guess: WORD24"),
     }),
   ]);
-  expect(initialTurnRows[0].text).toContain("Passed");
+  expect(initialTurnRows[0].text).toContain("Pass");
   expect(initialTurnRows[1].text).toContain("Blue won by assassin");
+  const historyList = page.locator("#play-history-list");
+  await historyList.evaluate((list) => {
+    list.scrollTop = 40;
+  });
+  const beforeTurnSelection = await historyList.evaluate((list) => ({
+    scrollTop: list.scrollTop,
+    turns: [...list.querySelectorAll(".play-history-turn")].map((turn) => {
+      const turnBounds = turn.getBoundingClientRect();
+      const headingBounds = turn
+        .querySelector(".play-history-turn-heading")
+        .getBoundingClientRect();
+      const actionsBounds = turn
+        .querySelector(".play-history-actions")
+        .getBoundingClientRect();
+      return {
+        turn: turn.getAttribute("data-analysis-turn"),
+        height: Math.round(turnBounds.height * 100) / 100,
+        headingHeight: Math.round(headingBounds.height * 100) / 100,
+        actionsOffset:
+          Math.round((actionsBounds.top - turnBounds.top) * 100) / 100,
+      };
+    }),
+  }));
+  await secondClue.click();
+  const afterTurnSelection = await historyList.evaluate((list) => ({
+    scrollTop: list.scrollTop,
+    turns: [...list.querySelectorAll(".play-history-turn")].map((turn) => {
+      const turnBounds = turn.getBoundingClientRect();
+      const headingBounds = turn
+        .querySelector(".play-history-turn-heading")
+        .getBoundingClientRect();
+      const actionsBounds = turn
+        .querySelector(".play-history-actions")
+        .getBoundingClientRect();
+      return {
+        turn: turn.getAttribute("data-analysis-turn"),
+        height: Math.round(turnBounds.height * 100) / 100,
+        headingHeight: Math.round(headingBounds.height * 100) / 100,
+        actionsOffset:
+          Math.round((actionsBounds.top - turnBounds.top) * 100) / 100,
+      };
+    }),
+  }));
+  expect(afterTurnSelection.scrollTop).toBe(beforeTurnSelection.scrollTop);
+  expect(afterTurnSelection.turns).toEqual(beforeTurnSelection.turns);
+  await firstClue.click();
+  await page
+    .locator(
+      '#play-history-list .play-history-turn[data-analysis-turn="1"] [data-action="game-ended"]',
+    )
+    .click();
+  await expect(firstClue).toHaveAttribute("aria-pressed", "false");
+  await expect(secondClue).toHaveAttribute("aria-pressed", "true");
+  await expect(secondClue.locator(".play-history-viewing")).toHaveText("Viewing");
+  await firstClue.click();
+  await expect(firstClue).toHaveAttribute("aria-pressed", "true");
+  await expect(secondClue).toHaveAttribute("aria-pressed", "false");
   for (const viewport of [
     { width: 390, height: 844 },
     { width: 768, height: 1024 },
     { width: 1440, height: 900 },
   ]) {
     await page.setViewportSize(viewport);
+    const headingHeights = await page
+      .locator("#play-history-list .play-history-turn-review")
+      .evaluateAll((headings) =>
+        headings.map(
+          (heading) =>
+            Math.round(heading.getBoundingClientRect().height * 100) / 100,
+        ),
+      );
+    expect(
+      Math.max(...headingHeights) - Math.min(...headingHeights),
+      `turn heading height shift at ${viewport.width}px`,
+    ).toBeLessThanOrEqual(0.01);
     await secondClue.hover();
+    const annotationLayout = await page
+      .locator('.play-card[data-layout-id="0"]')
+      .evaluate((card) => {
+        const annotations = card.querySelector(".play-card-annotations");
+        const target = card.querySelector(".play-card-marker.is-target");
+        const guess = card.querySelector(".play-card-marker.is-guess");
+        const word = card.querySelector(".play-card-word");
+        word.textContent = "SNOWMAN";
+        const annotationBounds = annotations.getBoundingClientRect();
+        const targetBounds = target.getBoundingClientRect();
+        const guessBounds = guess.getBoundingClientRect();
+        const wordBounds = word.getBoundingClientRect();
+        const overlaps = (left, right) =>
+          left.left < right.right &&
+          left.right > right.left &&
+          left.top < right.bottom &&
+          left.bottom > right.top;
+        return {
+          guessTopLeft:
+            Math.abs(guessBounds.left - annotationBounds.left) <= 1 &&
+            Math.abs(guessBounds.top - annotationBounds.top) <= 1,
+          targetPositioned:
+            window.innerWidth <= 520
+              ? Math.abs(targetBounds.left - annotationBounds.left) <= 1 &&
+                targetBounds.top >= guessBounds.bottom - 1
+              : Math.abs(targetBounds.right - annotationBounds.right) <= 1 &&
+                Math.abs(targetBounds.top - annotationBounds.top) <= 1,
+          markersSeparate: !overlaps(guessBounds, targetBounds),
+          wordSeparate:
+            !overlaps(wordBounds, guessBounds) &&
+            !overlaps(wordBounds, targetBounds),
+        };
+      });
+    expect(
+      annotationLayout.guessTopLeft,
+      `guess marker position at ${viewport.width}px`,
+    ).toBe(true);
+    expect(
+      annotationLayout.targetPositioned,
+      `target marker position at ${viewport.width}px`,
+    ).toBe(true);
+    expect(
+      annotationLayout.markersSeparate,
+      `marker overlap at ${viewport.width}px`,
+    ).toBe(true);
+    expect(
+      annotationLayout.wordSeparate,
+      `marker and word overlap at ${viewport.width}px`,
+    ).toBe(true);
     const hoveredSecondTurnRows = await page
       .locator("#play-history-list")
       .evaluate((list) =>
@@ -3982,13 +4116,13 @@ test("completed Play sessions replay turns and explain clues and guesses", async
     /is-done/,
   );
   await expect(page.locator("#play-history-list")).toContainText(
-    "Clue: FIRST 2, intended WORD0 + WORD1",
+    "Clue: FIRST 2For WORD0 + WORD1",
   );
   await expect(page.locator("#play-history-list")).toContainText(
-    "Guessed WORD0",
+    "Guess: WORD0",
   );
   await expect(page.locator("#play-history-list")).toContainText(
-    "Clue: SECOND 1, intended WORD9",
+    "Clue: SECOND 1For WORD9",
   );
   const blueSummary = page
     .locator(
@@ -4021,29 +4155,49 @@ test("completed Play sessions replay turns and explain clues and guesses", async
     .getByRole("button", {
       name: "Explain why FIRST connects WORD0, WORD1",
       exact: true,
+      includeHidden: true,
     });
   const redExplainButton = page
     .locator("#play-history-list")
     .getByRole("button", {
       name: "Explain why SECOND connects WORD9",
       exact: true,
+      includeHidden: true,
     });
-  await expect(blueExplainButton).toBeVisible();
-  await expect(redExplainButton).toBeVisible();
   const blueGuessExplainButton = page
     .locator("#play-history-list")
     .getByRole("button", {
       name: "Explain why WORD0 was a plausible guess for FIRST",
       exact: true,
+      includeHidden: true,
     });
   const redGuessExplainButton = page
     .locator("#play-history-list")
     .getByRole("button", {
       name: "Explain why WORD24 was a plausible guess for SECOND",
       exact: true,
+      includeHidden: true,
     });
-  await expect(blueGuessExplainButton).toBeVisible();
-  await expect(redGuessExplainButton).toBeVisible();
+  const blueClueSelection = page.getByRole("button", {
+    name: "Select clue FIRST for WORD0, WORD1",
+    exact: true,
+  });
+  const redClueSelection = page.getByRole("button", {
+    name: "Select clue SECOND for WORD9",
+    exact: true,
+  });
+  const blueGuessSelection = page.getByRole("button", {
+    name: "Select guess WORD0 for clue FIRST",
+    exact: true,
+  });
+  const redGuessSelection = page.getByRole("button", {
+    name: "Select guess WORD24 for clue SECOND",
+    exact: true,
+  });
+  await expect(blueExplainButton).toBeHidden();
+  await expect(redExplainButton).toBeHidden();
+  await expect(blueGuessExplainButton).toBeHidden();
+  await expect(redGuessExplainButton).toBeHidden();
   await expect(blueGuessExplainButton).toHaveText("Explain");
   await expect(redGuessExplainButton).toHaveText("Explain");
   expect(explanationRequests).toHaveLength(0);
@@ -4053,94 +4207,206 @@ test("completed Play sessions replay turns and explain clues and guesses", async
     { width: 1440, height: 900 },
   ]) {
     await page.setViewportSize(viewport);
-    const actionLayout = await redSummary.evaluate((summary) => {
-      const item = summary.closest("li");
-      const turn = item.closest(".play-history-turn");
-      const heading = turn.querySelector(".play-history-turn-heading");
-      const review = heading.querySelector(".play-history-clue-action");
-      const explain = heading.querySelector(".explain-recommendation-button");
-      const reviewBounds = review.getBoundingClientRect();
-      const explainBounds = explain.getBoundingClientRect();
-      const headingBounds = heading.getBoundingClientRect();
-      const summaryBounds = summary.getBoundingClientRect();
-      const turnBounds = turn.getBoundingClientRect();
-      const reviewStyle = getComputedStyle(review);
-      const explainStyle = getComputedStyle(explain);
+    await redClueSelection.click();
+    await expect(firstClue).toHaveAttribute("aria-pressed", "false");
+    await expect(secondClue).toHaveAttribute("aria-pressed", "true");
+    await expect(
+      page.locator("#play-clue-display .play-clue-pill"),
+    ).toHaveText("SECOND");
+    await expect(redClueSelection).toHaveAttribute("aria-pressed", "true");
+    await expect(redExplainButton).toBeVisible();
+    await expect(redGuessExplainButton).toBeHidden();
+    const idleGuessLayout = await redGuessSelection.evaluate((selector) => {
+      const row = selector.closest(".play-history-selectable-row");
+      const selectorBounds = selector.getBoundingClientRect();
+      const rowBounds = row.getBoundingClientRect();
       return {
-        sameRow:
-          Math.abs(
-            reviewBounds.top +
-              reviewBounds.height / 2 -
-              (explainBounds.top + explainBounds.height / 2),
-          ) <= 1,
-        sameHeight: Math.abs(reviewBounds.height - explainBounds.height) <= 1,
-        sameStyle:
-          reviewStyle.borderRadius === explainStyle.borderRadius &&
-          reviewStyle.backgroundColor === explainStyle.backgroundColor &&
-          reviewStyle.fontSize === explainStyle.fontSize,
-        actionsFit:
-          reviewBounds.left >= turnBounds.left - 1 &&
-          explainBounds.right <= turnBounds.right + 1,
-        actionsInHeading:
-          reviewBounds.top >= headingBounds.top - 1 &&
-          explainBounds.bottom <= headingBounds.bottom + 1,
-        actionsAboveClue:
-          reviewBounds.bottom <= summaryBounds.top + 1 &&
-          explainBounds.bottom <= summaryBounds.top + 1,
+        selectorFillsRow:
+          Math.abs(selectorBounds.left - rowBounds.left) <= 1 &&
+          Math.abs(selectorBounds.right - rowBounds.right) <= 1 &&
+          Math.abs(selectorBounds.top - rowBounds.top) <= 1 &&
+          Math.abs(selectorBounds.bottom - rowBounds.bottom) <= 1,
+        rowFits: row.scrollWidth <= row.clientWidth + 1,
       };
     });
-    expect(actionLayout.sameRow, `action row at ${viewport.width}px`).toBe(true);
-    expect(actionLayout.sameHeight, `action height at ${viewport.width}px`).toBe(true);
-    expect(actionLayout.sameStyle, `action style at ${viewport.width}px`).toBe(true);
-    expect(actionLayout.actionsFit, `action clipping at ${viewport.width}px`).toBe(
-      true,
-    );
     expect(
-      actionLayout.actionsInHeading,
-      `turn action alignment at ${viewport.width}px`,
+      idleGuessLayout.selectorFillsRow,
+      `idle guess hit area at ${viewport.width}px`,
     ).toBe(true);
     expect(
-      actionLayout.actionsAboveClue,
-      `turn actions above clue at ${viewport.width}px`,
+      idleGuessLayout.rowFits,
+      `idle guess row clipping at ${viewport.width}px`,
     ).toBe(true);
-    const guessLayout = await page.evaluate(() => {
-      const rows = [
-        ...document.querySelectorAll(
-          "#play-history-list .play-history-guess-summary",
+    await redGuessSelection.click();
+    await expect(redGuessSelection).toHaveAttribute("aria-pressed", "true");
+    await expect(redClueSelection).toHaveAttribute("aria-pressed", "false");
+    await expect(redGuessExplainButton).toBeVisible();
+    await expect(redExplainButton).toBeHidden();
+    await redGuessSelection.hover();
+    const selectedGuessLayout = await redGuessSelection.evaluate((selector) => {
+      const row = selector.closest(".play-history-selectable-row");
+      const action = row.querySelector(".play-history-inline-actions");
+      const selectorBounds = selector.getBoundingClientRect();
+      const actionBounds = action.getBoundingClientRect();
+      const rowBounds = row.getBoundingClientRect();
+      return {
+        rowFits: row.scrollWidth <= row.clientWidth + 1,
+        selectionStartsRow: Math.abs(selectorBounds.left - rowBounds.left) <= 1,
+        actionInsideRow:
+          actionBounds.left >= selectorBounds.right - 1 &&
+          actionBounds.right <= rowBounds.right + 1 &&
+          actionBounds.top >= rowBounds.top - 1 &&
+          actionBounds.bottom <= rowBounds.bottom + 1,
+        rowOwnsHoverFill:
+          getComputedStyle(row).backgroundColor !== "rgba(0, 0, 0, 0)" &&
+          getComputedStyle(selector).backgroundColor === "rgba(0, 0, 0, 0)" &&
+          getComputedStyle(action).backgroundColor === "rgba(0, 0, 0, 0)",
+      };
+    });
+    expect(
+      selectedGuessLayout.rowFits,
+      `selected guess row clipping at ${viewport.width}px`,
+    ).toBe(true);
+    expect(
+      selectedGuessLayout.selectionStartsRow,
+      `selected guess hit area at ${viewport.width}px`,
+    ).toBe(true);
+    expect(
+      selectedGuessLayout.actionInsideRow,
+      `selected guess action placement at ${viewport.width}px`,
+    ).toBe(true);
+    expect(
+      selectedGuessLayout.rowOwnsHoverFill,
+      `selected guess hover coverage at ${viewport.width}px`,
+    ).toBe(true);
+    const actionSpacing = await blueGuessSelection.evaluate((selector) => {
+      const list = selector.closest(".play-history-actions");
+      const actions = [
+        ...list.querySelectorAll(
+          '.play-history-action[data-action="card-guessed"], .play-history-action[data-action="turn-passed"]',
         ),
       ];
+      const selectableActions = actions.filter((action) =>
+        action.querySelector(".play-history-selectable-row"),
+      );
       return {
-        rowsFit: rows.every((row) => row.scrollWidth <= row.clientWidth + 1),
-        buttonsInline: rows.every((row) => {
-          const card = row.querySelector(".play-history-card");
-          const button = row.querySelector(".explain-recommendation-button");
-          if (!card || !button) {
-            return false;
-          }
-          const cardBounds = card.getBoundingClientRect();
-          const buttonBounds = button.getBoundingClientRect();
-          return (
-            Math.abs(
-              cardBounds.top +
-                cardBounds.height / 2 -
-                (buttonBounds.top + buttonBounds.height / 2),
-            ) <= 1
-          );
-        }),
+        maximumGap: Math.max(
+          0,
+          ...actions.slice(1).map((action, index) => {
+            const previousBounds = actions[index].getBoundingClientRect();
+            const bounds = action.getBoundingClientRect();
+            return bounds.top - previousBounds.bottom;
+          }),
+        ),
+        maximumBlockPadding: Math.max(
+          ...actions.map((action) => {
+            const styles = getComputedStyle(action);
+            return Math.max(
+              Number.parseFloat(styles.paddingTop),
+              Number.parseFloat(styles.paddingBottom),
+            );
+          }),
+        ),
+        maximumUnusedHeight: Math.max(
+          0,
+          ...selectableActions.map((action) => {
+            const row = action.querySelector(".play-history-selectable-row");
+            return (
+              action.getBoundingClientRect().height -
+              row.getBoundingClientRect().height
+            );
+          }),
+        ),
       };
     });
     expect(
-      guessLayout.rowsFit,
-      `guess row clipping at ${viewport.width}px`,
-    ).toBe(true);
+      actionSpacing.maximumGap,
+      `history action gap at ${viewport.width}px`,
+    ).toBeLessThanOrEqual(1);
     expect(
-      guessLayout.buttonsInline,
-      `guess action wrapping at ${viewport.width}px`,
-    ).toBe(true);
+      actionSpacing.maximumBlockPadding,
+      `history action padding at ${viewport.width}px`,
+    ).toBe(0);
+    expect(
+      actionSpacing.maximumUnusedHeight,
+      `empty explanation spacing at ${viewport.width}px`,
+    ).toBeLessThanOrEqual(1);
+    const actionAlignment = await page
+      .locator("#play-history-list .play-history-turn")
+      .evaluateAll((turns) =>
+        turns.map((turn) => {
+          const pass = turn.querySelector(
+            '.play-history-action[data-action="turn-passed"] .play-history-action-label',
+          );
+          const guesses = [
+            ...turn.querySelectorAll(
+              '.play-history-action[data-action="card-guessed"] .play-history-action-label',
+            ),
+          ];
+          return pass
+            ? Math.max(
+                0,
+                ...guesses.map(
+                  (guess) =>
+                    Math.abs(
+                      guess.getBoundingClientRect().left -
+                        pass.getBoundingClientRect().left,
+                    ),
+                ),
+              )
+            : 0;
+        }),
+      );
+    expect(
+      Math.max(...actionAlignment),
+      `guess and pass alignment at ${viewport.width}px`,
+    ).toBeLessThanOrEqual(0.5);
+    const actionRowSpacing = await page
+      .locator("#play-history-list .play-history-turn")
+      .evaluateAll((turns) =>
+        turns.flatMap((turn) => {
+          const labels = [
+            ...turn.querySelectorAll(
+              '.play-history-action[data-action="card-guessed"] .play-history-action-label, .play-history-action[data-action="turn-passed"] .play-history-action-label',
+            ),
+          ];
+          return labels.slice(1).map((label, index) => {
+            const previousBounds = labels[index].getBoundingClientRect();
+            const bounds = label.getBoundingClientRect();
+            return (
+              bounds.top +
+              bounds.height / 2 -
+              (previousBounds.top + previousBounds.height / 2)
+            );
+          });
+        }),
+      );
+    expect(
+      Math.max(...actionRowSpacing) - Math.min(...actionRowSpacing),
+      `guess and pass row spacing at ${viewport.width}px`,
+    ).toBeLessThanOrEqual(0.5);
+    await blueGuessSelection.click();
+    await expect(firstClue).toHaveAttribute("aria-pressed", "true");
+    await expect(secondClue).toHaveAttribute("aria-pressed", "false");
+    await expect(blueGuessSelection).toHaveAttribute("aria-pressed", "true");
+    await expect(blueGuessExplainButton).toBeVisible();
+    await expect(redGuessSelection).toHaveAttribute("aria-pressed", "false");
+    await expect(redGuessExplainButton).toBeHidden();
+    await expect(
+      page.locator(
+        "#play-history-list .play-history-selectable-row.is-selected",
+      ),
+    ).toHaveCount(1);
+    expect(explanationRequests).toHaveLength(0);
   }
   const teamsView = page.getByRole("button", { name: "↔️ By team", exact: true });
   const timelineView = page.getByRole("button", { name: "🕒 Timeline", exact: true });
   await teamsView.click();
+  await expect(
+    page.locator(
+      "#play-history-team-lists .play-history-selectable-row.is-selected",
+    ),
+  ).toHaveCount(1);
   for (const viewport of [
     { width: 390, height: 844, columns: 1 },
     { width: 768, height: 1024, columns: 2 },
@@ -4154,41 +4420,46 @@ test("completed Play sessions replay turns and explain clues and guesses", async
       );
       const heading = turn.querySelector(".play-history-turn-heading");
       const summary = turn.querySelector(".play-history-event-summary");
-      const controls = turn.querySelector(".play-history-turn-actions");
+      const viewing = turn.querySelector(".play-history-viewing");
       const headingBounds = heading.getBoundingClientRect();
       const summaryBounds = summary.getBoundingClientRect();
-      const controlsBounds = controls.getBoundingClientRect();
+      const viewingBounds = viewing.getBoundingClientRect();
       const turnBounds = turn.getBoundingClientRect();
       return {
         columns: getComputedStyle(teamLists).gridTemplateColumns.split(" ").length,
-        controlsFit:
-          controlsBounds.left >= turnBounds.left - 1 &&
-          controlsBounds.right <= turnBounds.right + 1,
-        controlsInHeading:
-          controlsBounds.top >= headingBounds.top - 1 &&
-          controlsBounds.bottom <= headingBounds.bottom + 1,
-        controlsAboveClue: controlsBounds.bottom <= summaryBounds.top + 1,
+        headingFits:
+          headingBounds.left >= turnBounds.left - 1 &&
+          headingBounds.right <= turnBounds.right + 1,
+        viewingInHeading:
+          viewingBounds.top >= headingBounds.top - 1 &&
+          viewingBounds.bottom <= headingBounds.bottom + 1,
+        viewingAboveClue: viewingBounds.bottom <= summaryBounds.top + 1,
       };
     });
     expect(teamLayout.columns, `analysis columns at ${viewport.width}px`).toBe(
       viewport.columns,
     );
-    expect(teamLayout.controlsFit, `team actions fit at ${viewport.width}px`).toBe(
+    expect(teamLayout.headingFits, `turn heading fit at ${viewport.width}px`).toBe(
       true,
     );
     expect(
-      teamLayout.controlsInHeading,
-      `team action alignment at ${viewport.width}px`,
+      teamLayout.viewingInHeading,
+      `viewing alignment at ${viewport.width}px`,
     ).toBe(true);
     expect(
-      teamLayout.controlsAboveClue,
-      `team actions above clue at ${viewport.width}px`,
+      teamLayout.viewingAboveClue,
+      `viewing above clue at ${viewport.width}px`,
     ).toBe(true);
   }
   await timelineView.click();
+  await blueClueSelection.click();
   await blueExplainButton.click();
-  await redExplainButton.click();
+  await blueGuessSelection.click();
+  expect(explanationRequests).toHaveLength(1);
   await blueGuessExplainButton.click();
+  await redClueSelection.click();
+  await redExplainButton.click();
+  await redGuessSelection.click();
   await redGuessExplainButton.click();
   const explanations = page.locator(
     "#play-history-list .play-history-explanation .explanation-targets",
@@ -4252,8 +4523,6 @@ test("completed Play sessions replay turns and explain clues and guesses", async
       ];
       const summaries = [...history.querySelectorAll(".play-history-event-summary")];
       const historyBounds = history.getBoundingClientRect();
-      const action = history.querySelector(".play-history-clue-action");
-      const actionBounds = action.getBoundingClientRect();
       const pillBounds = explanations.flatMap((explanation) =>
         [...explanation.querySelectorAll(".play-clue-pill, .play-history-card")].map(
           (pill) => pill.getBoundingClientRect(),
@@ -4280,10 +4549,15 @@ test("completed Play sessions replay turns and explain clues and guesses", async
               right.top < left.bottom,
           ),
         ),
-        explanationsBelowActions: explanations.every(
-          (explanation) =>
-            explanation.getBoundingClientRect().top >= actionBounds.bottom - 1,
-        ),
+        explanationsBelowHeadings: explanations.every((explanation) => {
+          const heading = explanation
+            .closest(".play-history-turn")
+            .querySelector(".play-history-turn-heading");
+          return (
+            explanation.getBoundingClientRect().top >=
+            heading.getBoundingClientRect().bottom - 1
+          );
+        }),
       };
     });
     expect(layout.pageOverflows, `page overflow at ${viewport.width}px`).toBe(false);
@@ -4292,8 +4566,8 @@ test("completed Play sessions replay turns and explain clues and guesses", async
     );
     expect(layout.summariesFit, `summary clipping at ${viewport.width}px`).toBe(true);
     expect(
-      layout.explanationsBelowActions,
-      `explanation action overlap at ${viewport.width}px`,
+      layout.explanationsBelowHeadings,
+      `explanation heading overlap at ${viewport.width}px`,
     ).toBe(true);
     expect(
       layout.pillsOverlapAcrossLines,
@@ -4329,8 +4603,8 @@ test("completed Play sessions replay turns and explain clues and guesses", async
     { turn: "0", selected: false },
     { turn: "1", selected: true },
   ]);
-  await expect(firstClue).toHaveText("Review");
-  await expect(secondClue).toHaveText("Viewing");
+  await expect(firstClue.locator(".play-history-viewing")).toHaveCount(0);
+  await expect(secondClue.locator(".play-history-viewing")).toHaveText("Viewing");
   await expect(
     page.locator("#play-clue-display .play-clue-pill"),
   ).toHaveText("SECOND");

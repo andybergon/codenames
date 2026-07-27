@@ -516,6 +516,7 @@ export function createPlayMode(options = {}) {
   let shareFeedbackTimer = 0;
   let postGameTurns = [];
   let selectedPostGameTurn = 0;
+  let selectedHistoryExplanation = null;
   let postGameScores = [];
   let postGameAnalysisState = "idle";
   let postGameAnalysisMessage = "";
@@ -1260,6 +1261,7 @@ export function createPlayMode(options = {}) {
     postGameAnalysisRun += 1;
     postGameTurns = [];
     selectedPostGameTurn = 0;
+    selectedHistoryExplanation = null;
     postGameScores = [];
     postGameAnalysisState = "idle";
     postGameAnalysisMessage = "";
@@ -1497,6 +1499,7 @@ export function createPlayMode(options = {}) {
           (scores) => Object.keys(scores).length === game.cards.length,
         );
       if (latestClueChanged) {
+        selectedHistoryExplanation = null;
         postGameAnalysisState = "idle";
       }
       if (hasCompleteSavedScores) {
@@ -2747,9 +2750,7 @@ export function createPlayMode(options = {}) {
 
   function createHistoryTurn(turn, { showSide }) {
     const item = document.createElement("li");
-    const heading = document.createElement("div");
     const header = document.createElement("div");
-    const turnActions = document.createElement("div");
     const actions = document.createElement("ol");
     const turnIndex =
       turnAnalysisEnabled() && Number.isInteger(turn.turn)
@@ -2758,6 +2759,8 @@ export function createPlayMode(options = {}) {
               candidate.turn === turn.turn && candidate.side === turn.side,
           )
         : -1;
+    const clueEvent = turn.events.find((event) => event.type === "clue-given");
+    const heading = document.createElement(turnIndex >= 0 ? "button" : "div");
     item.className = "play-history-turn";
     item.dataset.side = turn.side;
     item.dataset.turn = String(turn.turn);
@@ -2767,8 +2770,62 @@ export function createPlayMode(options = {}) {
         "is-selected",
         turnIndex === selectedPostGameTurn,
       );
+      item.classList.add("is-reviewable");
+      heading.type = "button";
+      heading.setAttribute(
+        "aria-label",
+        translate(gameLanguage(), "reviewTurn", {
+          turn: turnIndex + 1,
+          side: localizedSideLabel(turn.side),
+          clue: clueEvent?.clue,
+          number: clueEvent?.number,
+        }),
+      );
+      heading.setAttribute(
+        "aria-pressed",
+        String(turnIndex === selectedPostGameTurn),
+      );
+      let pointerPreviewed = false;
+      let focusPreviewed = false;
+      const updatePreview = () =>
+        previewHistoryTurn(
+          turnIndex,
+          pointerPreviewed || focusPreviewed,
+        );
+      item.addEventListener("pointerenter", () => {
+        pointerPreviewed = true;
+        updatePreview();
+      });
+      item.addEventListener("pointerleave", () => {
+        pointerPreviewed = false;
+        updatePreview();
+      });
+      heading.addEventListener("focus", () => {
+        focusPreviewed = true;
+        updatePreview();
+      });
+      heading.addEventListener("blur", () => {
+        focusPreviewed = false;
+        updatePreview();
+      });
+      heading.addEventListener("click", (event) => {
+        event.stopPropagation();
+        selectHistoryTurn(turnIndex);
+      });
+      item.addEventListener("click", (event) => {
+        if (
+          event.target instanceof Element &&
+          event.target.closest("button, a")
+        ) {
+          return;
+        }
+        selectHistoryTurn(turnIndex);
+      });
     }
-    heading.className = "play-history-turn-heading";
+    heading.className =
+      turnIndex >= 0
+        ? "play-history-turn-heading play-history-turn-review"
+        : "play-history-turn-heading";
     header.className = "play-history-turn-header";
     header.textContent = showSide
       ? `${sideEmoji(turn.side)} ${localizedSideLabel(turn.side)} · ${translate(
@@ -2777,23 +2834,40 @@ export function createPlayMode(options = {}) {
           { turn: turn.turn },
         )}`
       : translate(gameLanguage(), "historyTurnNumber", { turn: turn.turn });
-    turnActions.className = "play-history-turn-actions";
+    heading.append(header);
+    if (turnIndex === selectedPostGameTurn) {
+      const viewing = document.createElement("span");
+      viewing.className = "play-history-viewing";
+      viewing.textContent = translate(gameLanguage(), "viewing");
+      heading.append(viewing);
+    }
     actions.className = "play-history-actions";
-    const clueEvent = turn.events.find((event) => event.type === "clue-given");
     actions.append(
       ...turn.events.map((event) =>
-        createHistoryItem(event, turnIndex, turnActions, clueEvent),
+        createHistoryItem(event, turnIndex, clueEvent),
       ),
     );
-    heading.append(header, turnActions);
     item.append(heading, actions);
     return item;
+  }
+
+  function selectHistoryTurn(turnIndex, explanation = null) {
+    const scrollPositions = [
+      elements.historyList,
+      elements.historyBlueList,
+      elements.historyRedList,
+    ].map((list) => [list, list.scrollTop]);
+    selectedPostGameTurn = turnIndex;
+    selectedHistoryExplanation = explanation;
+    renderGame();
+    for (const [list, scrollTop] of scrollPositions) {
+      list.scrollTop = scrollTop;
+    }
   }
 
   function createHistoryItem(
     event,
     turnIndex = -1,
-    turnActions = null,
     clueEvent = null,
   ) {
     const item = document.createElement("li");
@@ -2810,110 +2884,67 @@ export function createPlayMode(options = {}) {
               .filter(Boolean)
           : [];
       const intendedWords = intendedTargets.map(({ word }) => word);
-      if (turnIndex >= 0) {
-        const button = document.createElement("button");
-        const summary = document.createElement("div");
-        const selected = turnIndex === selectedPostGameTurn;
-        button.type = "button";
-        button.className = "play-history-clue play-history-clue-action";
-        button.textContent = translate(
-          gameLanguage(),
-          selected ? "viewing" : "review",
-        );
-        summary.className = "play-history-event-summary";
-        appendHistoryClueSummary(summary, event, intendedTargets);
-        button.setAttribute(
-          "aria-label",
-          translate(gameLanguage(), "reviewTurn", {
-            turn: turnIndex + 1,
-            side: localizedSideLabel(event.side),
-            clue: event.clue,
-            number: event.number,
-          }),
-        );
-        button.setAttribute("aria-pressed", String(selected));
-        let pointerPreviewed = false;
-        let focusPreviewed = false;
-        const updatePreview = () =>
-          previewHistoryTurn(
-            turnIndex,
-            pointerPreviewed || focusPreviewed,
-          );
-        button.addEventListener("pointerenter", () => {
-          pointerPreviewed = true;
-          updatePreview();
-        });
-        button.addEventListener("pointerleave", () => {
-          pointerPreviewed = false;
-          updatePreview();
-        });
-        button.addEventListener("focus", () => {
-          focusPreviewed = true;
-          updatePreview();
-        });
-        button.addEventListener("blur", () => {
-          focusPreviewed = false;
-          updatePreview();
-        });
-        button.addEventListener("click", () => {
-          selectedPostGameTurn = turnIndex;
-          renderGame();
-        });
-        turnActions?.append(button);
-        item.append(summary);
-      } else {
-        const summary = document.createElement("div");
-        summary.className = "play-history-event-summary";
-        appendHistoryClueSummary(summary, event, intendedTargets);
-        item.append(summary);
-      }
+      const summary = document.createElement("div");
+      summary.className = "play-history-event-summary";
+      appendHistoryClueSummary(summary, event, intendedTargets);
       if (analysisEnabled && intendedWords.length) {
-        const explanation = createRecommendationExplanationControl(
+        appendHistoryExplanationSelection(
+          item,
+          summary,
           {
             clue: event.clue,
             targets: intendedTargets,
           },
           {
-            wordPills: true,
-            language: gameLanguage(),
-            buttonContainer: turnIndex >= 0 ? turnActions : null,
+            selectionKey: `${turnIndex}:clue`,
+            selectionLabel: translate(
+              gameLanguage(),
+              "selectClueExplanation",
+              {
+                clue: event.clue,
+                targets: intendedWords.join(", "),
+              },
+            ),
+            turnIndex,
           },
         );
-        explanation.classList.add("play-history-explanation");
-        if (turnIndex >= 0) {
-          item.classList.add("has-clue-actions");
-        }
-        item.append(explanation);
+      } else {
+        item.append(summary);
       }
     } else if (event.type === "card-guessed") {
       const guessSummary = document.createElement("div");
       guessSummary.className = "play-history-guess-summary";
       guessSummary.append(
         createHistoryActionLabel("historyGuessAction"),
-        " ",
+        ": ",
         createHistoryCardPill(event.word, event.team),
       );
-      item.append(guessSummary);
       if (turnAnalysisEnabled() && clueEvent?.clue) {
         const guessedCard =
           game.cards.find((card) => card.layoutId === event.layoutId) ?? event;
-        const explanation = createRecommendationExplanationControl(
+        appendHistoryExplanationSelection(
+          item,
+          guessSummary,
           {
             clue: clueEvent.clue,
             targets: [guessedCard],
           },
           {
-            wordPills: true,
-            language: gameLanguage(),
             explanationType: "guess",
-            buttonContainer: guessSummary,
+            selectionKey: `${turnIndex}:guess:${event.layoutId}`,
+            selectionLabel: translate(
+              gameLanguage(),
+              "selectGuessExplanation",
+              {
+                clue: clueEvent.clue,
+                guess: event.word,
+              },
+            ),
+            turnIndex,
           },
         );
-        explanation.classList.add(
-          "play-history-explanation",
-          "play-history-guess-explanation",
-        );
-        item.append(explanation);
+      } else {
+        item.append(guessSummary);
       }
     } else if (event.type === "turn-passed") {
       item.append(createHistoryActionLabel("historyPassAction"));
@@ -2951,24 +2982,86 @@ export function createPlayMode(options = {}) {
   }
 
   function appendHistoryClueSummary(container, event, intendedTargets) {
-    container.append(
+    const clueLine = document.createElement("span");
+    clueLine.className = "play-history-clue-line";
+    clueLine.append(
       createHistoryActionLabel("historyClueAction"),
       ": ",
       createCluePill(event.clue),
       " ",
       createClueNumberPill(event.number),
     );
+    container.append(clueLine);
     if (intendedTargets.length) {
-      container.append(
-        translate(gameLanguage(), "intendedTargets", { words: "" }),
+      const targetsLine = document.createElement("span");
+      targetsLine.className = "play-history-targets-line";
+      targetsLine.append(
+        createHistoryActionLabel("historyTargetsAction"),
+        " ",
       );
       intendedTargets.forEach((target, index) => {
         if (index > 0) {
-          container.append(" + ");
+          targetsLine.append(" + ");
         }
-        container.append(createHistoryCardPill(target.word, target.team));
+        targetsLine.append(createHistoryCardPill(target.word, target.team));
       });
+      container.append(targetsLine);
     }
+  }
+
+  function appendHistoryExplanationSelection(
+    item,
+    summary,
+    suggestion,
+    {
+      explanationType = "clue",
+      selectionKey,
+      selectionLabel,
+      turnIndex,
+    },
+  ) {
+    const row = document.createElement("div");
+    const selector = document.createElement("button");
+    const actionSlot = document.createElement("span");
+    const explanation = createRecommendationExplanationControl(suggestion, {
+      wordPills: true,
+      language: gameLanguage(),
+      explanationType,
+      buttonContainer: actionSlot,
+    });
+    const explainButton = actionSlot.querySelector(
+      ".explain-recommendation-button",
+    );
+    explanation.classList.add("play-history-explanation");
+    if (explanationType === "guess") {
+      explanation.classList.add("play-history-guess-explanation");
+    }
+    if (!explainButton) {
+      item.append(summary, explanation);
+      return;
+    }
+
+    row.className = "play-history-selectable-row";
+    row.classList.toggle(
+      "is-selected",
+      selectedHistoryExplanation === selectionKey,
+    );
+    selector.type = "button";
+    selector.className = "play-history-row-select";
+    selector.setAttribute("aria-label", selectionLabel);
+    selector.setAttribute(
+      "aria-pressed",
+      String(selectedHistoryExplanation === selectionKey),
+    );
+    selector.append(summary);
+    actionSlot.className = "play-history-inline-actions";
+    actionSlot.hidden = selectedHistoryExplanation !== selectionKey;
+    selector.addEventListener("click", (event) => {
+      event.stopPropagation();
+      selectHistoryTurn(turnIndex, selectionKey);
+    });
+    row.append(selector, actionSlot);
+    item.append(row, explanation);
   }
 
   function createHistoryActionLabel(key) {

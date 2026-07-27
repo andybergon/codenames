@@ -6,17 +6,6 @@
 
 ## 🔴 High
 
-- 🎛️ Review the placement and presentation of explanation actions.
-  - The clue action sits in the turn header, visually separated from its clue, while dense turns repeat one inline Explain button for every guess.
-  - Create several compact mockups to test before changing production, including icon-only actions with accessible labels and tooltips, plus placements adjacent to clue and guess pills.
-  - Compare the options in completed-game and developer live analysis at 390x844, 768x1024, and 1440x900. Preserve the explicit paid-action boundary and the clue-plus-selected-words network payload.
-  - Mockup fixture: `tests/fixtures/explanation-actions.html`, with current, icon-only, compact adjacent, footer selected-row, and inline selected-item treatments.
-  - The user-proposed inline treatment shows no Explain actions initially. Selecting a clue or guess is free, then one paid Explain button appears on that line.
-  - Inline clue-row follow-up compares three treatments: one-line whole row with `Targets`, clue-only selection with `Targets` below, and a grouped two-line selection with `For` below. All retain the clue-plus-target-words request.
-  - Current clue-row recommendation: group the clue and `For` target words as one two-line selection. It keeps the whole request scope visible without the one-line crowding or the clue-only ambiguity.
-  - Verified all five treatments in the real UI at 390x844, 768x1024, and 1440x900 with no horizontal overflow. Focused Playwright coverage checks tooltip visibility, explicit-click behavior, and free selection before the paid action.
-  - Recommendation for review: prefer inline selected-item for zero idle clutter, same-line association, and the clearest paid boundary. Icon-only remains the one-click fallback. Production remains unchanged pending a user choice.
-
 - 🔗 Add multi-hop concept reasoning to clue-to-card ranking.
   - Direct embedding similarity misses human association chains that pass through an unstated bridge concept.
   - Regression example: `JOUST → medieval tournament → MATCH / CROWN / GLOVE / BELT`; `PIANO` was guessed before those stronger human associations.

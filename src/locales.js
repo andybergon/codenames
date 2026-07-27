@@ -285,8 +285,13 @@ const COPY = Object.freeze({
     historyGuessLead: ({ side }) => `${side} guessed `,
     historyTurnNumber: ({ turn }) => `Turn ${turn}`,
     historyClueAction: "Clue",
-    historyGuessAction: "Guessed",
-    historyPassAction: "Passed",
+    historyGuessAction: "Guess",
+    historyPassAction: "Pass",
+    historyTargetsAction: "For",
+    selectClueExplanation: ({ clue, targets }) =>
+      `Select clue ${clue} for ${targets}`,
+    selectGuessExplanation: ({ clue, guess }) =>
+      `Select guess ${guess} for clue ${clue}`,
     teamCard: ({ word, team }) => `${word}, ${team} card`,
     cardRole: ({ team }) => `${team} card`,
     noGameActions: "No game actions yet.",
@@ -624,7 +629,12 @@ const COPY = Object.freeze({
     historyTurnNumber: ({ turn }) => `Turno ${turn}`,
     historyClueAction: "Indizio",
     historyGuessAction: "Scelta",
-    historyPassAction: "Passato",
+    historyPassAction: "Passa",
+    historyTargetsAction: "Per",
+    selectClueExplanation: ({ clue, targets }) =>
+      `Seleziona l'indizio ${clue} per ${targets}`,
+    selectGuessExplanation: ({ clue, guess }) =>
+      `Seleziona la scelta ${guess} per l'indizio ${clue}`,
     teamCard: ({ word, team }) => `${word}, carta ${team}`,
     cardRole: ({ team }) => `Carta ${team}`,
     noGameActions: "Nessuna azione di gioco.",
