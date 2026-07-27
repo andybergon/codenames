@@ -2856,6 +2856,7 @@ test("Play keeps game creation actions prominent across responsive states", asyn
 });
 
 test("Play validates human clues and resumes the saved seat", async ({ page }) => {
+  await useTestPlayAnalysis(page);
   await page.goto("/?mode=play");
   await page.locator('[data-play-seat="blue:spymaster"]').click();
   await page.getByRole("button", { name: "Start new game", exact: true }).click();
@@ -2881,6 +2882,7 @@ test("Play validates human clues and resumes the saved seat", async ({ page }) =
   await expect(page.locator("#play-human-seat .play-seat-identity")).toHaveText(
     "🔵 Blue 🕵️ Spymaster",
   );
+  await expect(page.locator("#play-game")).toBeVisible();
 });
 
 test("Play identifies a saved game in another language before resuming it", async ({
@@ -5386,4 +5388,323 @@ test("model picker uses the fixed benchmark and shows one time per combination",
   await expect(page.locator(".pareto-point.is-recommended")).toHaveCount(1);
   await expect(page.locator(".pareto-ticks").getByText("0 ms", { exact: true })).toHaveCount(0);
   await expect(page.locator(".pareto-ticks")).toContainText(`${Math.round(fastest)} ms`);
+});
+
+test("analytics review authenticates, filters, reviews games, and stays responsive", async ({
+  page,
+}) => {
+  let authenticated = false;
+  let savedReview = null;
+  let savedAnnotation = null;
+  const now = "2026-07-27T10:00:00.000Z";
+  const replay = completedShareGame();
+  const summary = {
+    analyticsId: "41",
+    gameId: "g_reviewfixture",
+    developerMode: false,
+    phase: "complete",
+    turnNumber: 1,
+    actionCount: 2,
+    language: "en",
+    winner: "red",
+    endReason: "assassin",
+    firstSeenAt: now,
+    lastSeenAt: now,
+    completedAt: now,
+    reviewStatus: "unreviewed",
+    labels: [],
+    feedbackCount: 1,
+  };
+  await page.route("**/api/play-analytics**", async (route) => {
+    const request = route.request();
+    const url = new URL(request.url());
+    const body = request.postDataJSON?.() ?? {};
+    if (request.method() === "POST" && body.action === "authenticate") {
+      authenticated = body.key === "review-key";
+      await route.fulfill({ status: authenticated ? 204 : 401 });
+      return;
+    }
+    if (!authenticated) {
+      await route.fulfill({
+        status: 401,
+        contentType: "application/json",
+        body: JSON.stringify({ code: "auth_required" }),
+      });
+      return;
+    }
+    if (request.method() === "POST" && body.action === "annotation") {
+      savedAnnotation = body;
+      await route.fulfill({
+        status: 201,
+        contentType: "application/json",
+        body: JSON.stringify({
+          annotation: {
+            id: "annotation-1",
+            scopeType: body.scope.type,
+            scopeKey: `turn:${body.scope.turn}:blue`,
+            turnNumber: body.scope.turn,
+            actionIndex: null,
+            actionType: null,
+            note: body.note,
+            createdAt: now,
+            updatedAt: now,
+          },
+        }),
+      });
+      return;
+    }
+    if (request.method() === "PATCH") {
+      savedReview = body;
+      await route.fulfill({
+        contentType: "application/json",
+        body: JSON.stringify({
+          review: {
+            analyticsId: "41",
+            reviewStatus: body.reviewStatus,
+            labels: body.labels,
+            note: body.note,
+            updatedAt: now,
+          },
+        }),
+      });
+      return;
+    }
+    if (url.searchParams.get("game")) {
+      await route.fulfill({
+        contentType: "application/json",
+        body: JSON.stringify({
+          game: {
+            ...summary,
+            snapshotSequence: 8,
+            snapshotCode: "fixture",
+            replayStatus: "valid",
+            wordSet: "official",
+            formatVersion: 3,
+            rulesVersion: 2,
+            settingsVersion: 2,
+            reviewNote: "Earlier whole-game note.",
+            reviewUpdatedAt: null,
+            game: replay,
+            feedback: [
+              {
+                id: "feedback-1",
+                gameId: summary.gameId,
+                snapshotSequence: 8,
+                scopeType: "action",
+                scopeKey: "1:blue:clue-given:FIRST",
+                turnNumber: 1,
+                actionIndex: 0,
+                actionType: "clue-given",
+                category: "clue",
+                note: "This clue felt surprising.",
+                createdAt: now,
+              },
+            ],
+            annotations: [],
+          },
+        }),
+      });
+      return;
+    }
+    expect(url.searchParams.get("cohort")).toBe("player");
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({ games: [summary] }),
+    });
+  });
+
+  await page.goto("/?mode=analytics");
+  await expect(page.locator("#app-title")).toHaveText("Codenames");
+  await expect(page).toHaveTitle("Codenames");
+  await expect(page.locator("#analytics-review-auth")).toBeVisible();
+  await page.locator("#analytics-review-key").fill("review-key");
+  await page.getByRole("button", { name: "Open review" }).click();
+  await expect(page.locator(".analytics-review-game")).toHaveCount(1);
+  const storedGame = page.locator(".analytics-review-game");
+  await expect(
+    storedGame.getByText("unreviewed", { exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    storedGame.locator(".analytics-review-badge"),
+  ).toHaveText(["1 feedback"]);
+  await storedGame.click();
+  await expect(
+    page.getByRole("heading", { name: `Game ${summary.gameId}` }),
+  ).toBeVisible();
+  await expect(
+    page.locator(".analytics-review-board .play-card"),
+  ).toHaveCount(25);
+  await expect(
+    page.locator(".analytics-review-timeline .play-history-turn"),
+  ).toHaveCount(1);
+  await expect(
+    page.locator(".analytics-review-timeline .play-history-action"),
+  ).toHaveCount(2);
+  await expect(
+    page.locator(".analytics-review-timeline .play-clue-pill"),
+  ).toHaveText("FIRST");
+  await expect(
+    page.locator(
+      '.analytics-review-board .play-card[data-layout-id="24"]',
+    ),
+  ).toHaveClass(/is-done/);
+  await expect(
+    page.locator(".analytics-review-board-state"),
+  ).toHaveText("After Turn 1: guessed WORD24");
+  await page
+    .getByRole("button", {
+      name: "View board after Turn 1: clue FIRST 1",
+      exact: true,
+    })
+    .click();
+  await expect(
+    page.locator(
+      '.analytics-review-board .play-card[data-layout-id="24"]',
+    ),
+  ).not.toHaveClass(/is-done/);
+  await expect(
+    page.locator(".analytics-review-board-state"),
+  ).toHaveText("After Turn 1: clue FIRST 1");
+  await page
+    .getByRole("button", {
+      name: "View board after Turn 1: guessed WORD24",
+      exact: true,
+    })
+    .click();
+  await expect(
+    page.locator(
+      '.analytics-review-board .play-card[data-layout-id="24"]',
+    ),
+  ).toHaveClass(/is-done/);
+  await expect(
+    page.locator(".analytics-review-feedback-item").first(),
+  ).toContainText("This clue felt surprising.");
+  await expect(
+    page.locator(".analytics-review-form"),
+  ).toContainText("Earlier whole-game note.");
+
+  const review = page.locator(".analytics-review-form");
+  await expect(review.getByRole("heading", { name: "Review" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Internal review" }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole("heading", { name: "Add scoped note" }),
+  ).toHaveCount(0);
+  await expect(
+    review.getByLabel("Note scope").locator("option"),
+  ).toHaveText([
+    "Whole game",
+    "Turn 1",
+    "Turn 1: clue FIRST 1",
+    "Turn 1: guessed WORD24",
+  ]);
+  await review.getByLabel("Status").selectOption("actionable");
+  await review.getByLabel("Labels").fill("clue, policy");
+  await review.getByLabel("Note scope").selectOption("turn:1");
+  await review
+    .getByLabel("Note (optional)")
+    .fill("Review this opening turn.");
+  await page.getByRole("button", { name: "Save review" }).click();
+  await expect.poll(() => savedReview?.reviewStatus).toBe("actionable");
+  expect(savedReview.labels).toEqual(["clue", "policy"]);
+  expect(savedReview.note).toBe("Earlier whole-game note.");
+  await expect.poll(() => savedAnnotation?.note).toBe(
+    "Review this opening turn.",
+  );
+  expect(savedAnnotation.scope).toEqual({ type: "turn", turn: 1 });
+  await expect(
+    page
+      .locator(".analytics-review-form .analytics-review-feedback-item")
+      .last(),
+  ).toContainText("Review this opening turn.");
+  await expect(
+    page.locator(
+      ".analytics-review-detail-header .analytics-review-badge",
+    ),
+  ).toHaveText("actionable");
+
+  for (const viewport of [
+    { width: 390, height: 844 },
+    { width: 768, height: 1024 },
+    { width: 1440, height: 900 },
+  ]) {
+    await page.setViewportSize(viewport);
+    const layout = await page.evaluate(() => ({
+      pageOverflows:
+        document.documentElement.scrollWidth >
+        document.documentElement.clientWidth,
+      detailOverflows:
+        document.querySelector(".analytics-review-detail").scrollWidth >
+        document.querySelector(".analytics-review-detail").clientWidth,
+      boardColumns: getComputedStyle(
+        document.querySelector(".analytics-review-board"),
+      ).gridTemplateColumns.split(" ").length,
+      sectionOrder: [
+        ".analytics-review-overview",
+        ".analytics-review-timeline",
+        ".analytics-review-feedback",
+        ".analytics-review-form",
+      ].map((selector) =>
+        [...document.querySelector(".analytics-review-detail").children].indexOf(
+          document.querySelector(selector),
+        ),
+      ),
+    }));
+    expect(layout.pageOverflows, `page overflow at ${viewport.width}px`).toBe(
+      false,
+    );
+    expect(
+      layout.detailOverflows,
+      `detail overflow at ${viewport.width}px`,
+    ).toBe(false);
+    expect(layout.boardColumns).toBe(5);
+    expect(layout.sectionOrder).toEqual([1, 2, 3, 4]);
+  }
+});
+
+test("completed local games accept scoped player feedback", async ({ page }) => {
+  const completed = {
+    ...completedShareGame(),
+    origin: "local",
+    analyticsSequence: 6,
+  };
+  await page.addInitScript((session) => {
+    localStorage.setItem(
+      "codenames-play-session-v1",
+      JSON.stringify(session),
+    );
+    window.__feedbackSubmissions = [];
+    window.__codenamesPlayModeOptions = {
+      analyticsSync: {
+        record() {},
+        async submitFeedback(_game, feedback) {
+          window.__feedbackSubmissions.push(feedback);
+          return { id: "feedback-local" };
+        },
+      },
+    };
+  }, completed);
+
+  await page.goto("/");
+  await page.getByRole("button", { name: "Review finished game" }).click();
+  await expect(
+    page.getByRole("button", { name: "Send game feedback" }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Send game feedback" }).click();
+  await page.locator("#play-feedback-category").selectOption("ux");
+  await page
+    .locator("#play-feedback-note")
+    .fill("The ending was hard to understand.");
+  await page.getByRole("button", { name: "Send feedback" }).click();
+  await expect(page.locator("#play-feedback-status")).toHaveText(
+    "Thanks, feedback sent.",
+  );
+  expect(await page.evaluate(() => window.__feedbackSubmissions)).toEqual([
+    {
+      scope: { type: "game" },
+      category: "ux",
+      note: "The ending was hard to understand.",
+    },
+  ]);
 });

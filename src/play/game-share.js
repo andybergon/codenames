@@ -4,6 +4,7 @@ import {
   encodeBoardParam,
 } from "../board-share.js";
 import {
+  GAME_ORIGIN,
   GAME_PHASE,
   PLAYER_ROLE,
   actorForSeat,
@@ -302,6 +303,7 @@ function decodeParsedCompletedGame(parsed) {
     developerMode,
     humanSeat: { side, role },
     language: board.language,
+    origin: GAME_ORIGIN.SHARED,
     seed,
     wordSet: board.wordSet,
     wordReusePolicy,
@@ -756,6 +758,7 @@ function reconstructHistoricalGame({
     developerMode: parsed.developerMode,
     humanSeat: { side, role },
     language: board.language,
+    origin: GAME_ORIGIN.SHARED,
     seed: parsed.seed,
     wordSet: board.wordSet,
     wordReusePolicy,

@@ -9,8 +9,10 @@ replay.
 Board-only `?mode=train&b=<code>` links remain a separate Train format. They do
 not include Play progress or history.
 
-The export is local-first. Creating or opening a link does not upload the game
-to Codenames or another service.
+Creating or opening a link does not upload that shared game. Locally created
+Play games use the same compact export as their automatic analytics snapshot
+after the first completed turn. See [Play analytics](play-analytics.md) for
+the collection boundary, storage model, cookies, and review workflow.
 
 ## Export contract
 
@@ -44,9 +46,8 @@ The three logical versions serve different compatibility needs:
 - Rules version changes when identical actions could produce a different game.
 - Settings version changes when setting positions or meanings change.
 
-A raw deployment or commit identifier can be stored alongside future feedback
-for debugging, but it is not a migration key. Compatibility depends on the
-logical contract versions so routine builds do not create new file formats.
+Compatibility depends on the logical contract versions so routine builds do
+not create new file formats.
 
 Developer-game links retain the `developerMode` provenance marker but omit raw
 diagnostics. Starting state, settings, and ordered actions are sufficient to
@@ -129,20 +130,14 @@ The archive and active session remain in that browser profile. Clearing site
 data or using another device removes access unless the link was copied
 elsewhere.
 
-## Future feedback storage
+## Feedback storage
 
-A server-backed feedback feature can keep a completed export as its immutable
-game payload and store feedback separately with a generated record ID. That
-avoids creating a second game schema and lets the server validate a submission
-by decoding and replaying it.
+Completed locally created games offer explicit game, turn, and action feedback.
+Feedback is stored separately from the latest game snapshot, scoped with stable
+replay coordinates, and shown alongside the matching action in the review UI.
+The server validates every scope against the stored replay before inserting it.
 
-The server boundary should require an explicit submit action. A useful record
-would contain the completed-game code, free-form feedback, creation time, and
-optional app build identifier. Player identity should remain absent unless a
-separate product decision and consent flow require it.
-
-Do not persist account IDs, IP addresses, semantic-explanation responses, or
-live-game activity as part of this feature. The consent copy must disclose that
-the completed export includes player-written clues. Treat contributed games as
-diagnostic and calibration evidence, not replacement ground truth for the
-frozen benchmark datasets.
+The analytics participant cookie is pseudonymous. The tables do not store
+account IDs or raw IP addresses. Treat collected games and feedback as
+diagnostic evidence, not replacement ground truth for the frozen benchmark
+datasets.

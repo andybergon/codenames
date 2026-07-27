@@ -35,6 +35,7 @@ import {
 } from "../src/play/concept-shards.js";
 import {
   GAME_END_REASON,
+  GAME_ORIGIN,
   GAME_PHASE,
   PLAYER_ROLE,
   actorForSeat,
@@ -49,6 +50,7 @@ import {
   publicGameView,
   randomHumanSeat,
   recordCurrentClueDeveloperDiagnostics,
+  replayPlayActionStates,
   restorePlayGame,
   undoPlayGame,
   unresolvedIntendedTargetIds,
@@ -62,6 +64,7 @@ import {
   encodeCompletedGame,
   encodePlayGame,
 } from "../src/play/game-share.js";
+import { savePlaySession } from "../src/play/session-store.js";
 import {
   DEFAULT_PLAY_BOT_SETTINGS,
   PLAY_BONUS_POLICY,
@@ -834,6 +837,28 @@ replayGame = guessCard(replayGame, {
   layoutId: replayAssassin.layoutId,
   actor: "human",
 });
+const replayActionStates = replayPlayActionStates(replayGame);
+assert.equal(replayActionStates.length, 8);
+assert.equal(
+  replayActionStates[0].game.cards.every((card) => !card.done),
+  true,
+);
+assert.equal(
+  replayActionStates[1].game.cards.find(
+    (card) => card.layoutId === firstBlue.layoutId,
+  ).done,
+  true,
+);
+assert.equal(
+  replayActionStates[2].game.phase,
+  GAME_PHASE.AWAITING_CLUE,
+);
+assert.equal(
+  replayActionStates.at(-1).game.cards.find(
+    (card) => card.layoutId === replayAssassin.layoutId,
+  ).done,
+  true,
+);
 const replayTurns = replayCompletedClueTurns(replayGame);
 assert.equal(replayTurns.length, 3);
 assert.deepEqual(replayTurns[0].intendedLayoutIds, [firstBlue.layoutId]);
@@ -1585,6 +1610,7 @@ assert.equal(
 const upgradedStoredGame = validateStoredGame({
   ...game,
   botSettings: undefined,
+  origin: undefined,
 });
 assert.equal(upgradedStoredGame.botSettings.modelId, "bge-small");
 assert.equal(
@@ -1599,6 +1625,8 @@ assert.equal(
   upgradedStoredGame.botSettings.clueRepeatPolicy,
   PLAY_CLUE_REPEAT_POLICY.NEVER,
 );
+assert.equal(upgradedStoredGame.origin, GAME_ORIGIN.UNKNOWN);
+assert.equal(upgradedStoredGame.analyticsSequence, 0);
 assert.equal(
   upgradedStoredGame.botSettings.operativeNoise,
   PLAY_OPERATIVE_NOISE.STANDARD,
@@ -1853,6 +1881,8 @@ assert.equal(restoredItalianGame.botSettings.modelId, ITALIAN_MODEL_ID);
 const activeGameCode = encodePlayGame(italianGame);
 const sharedActiveGame = decodePlayGame(activeGameCode);
 assert.equal(sharedActiveGame.phase, GAME_PHASE.AWAITING_GUESS);
+assert.equal(italianGame.origin, GAME_ORIGIN.LOCAL);
+assert.equal(sharedActiveGame.origin, GAME_ORIGIN.SHARED);
 assert.equal(sharedActiveGame.language, LANGUAGE.ITALIAN);
 assert.equal(sharedActiveGame.currentTurn.clue, "OCEANO");
 assert.deepEqual(
@@ -1863,6 +1893,26 @@ assert.throws(
   () => decodeCompletedGame(activeGameCode),
   /not complete/,
 );
+
+const previousWindow = globalThis.window;
+let persistedSession = null;
+globalThis.window = {
+  localStorage: {
+    setItem(_key, value) {
+      persistedSession = JSON.parse(value);
+    },
+  },
+};
+try {
+  assert.equal(savePlaySession(italianGame), true);
+  assert.equal(italianGame.analyticsSequence, 1);
+  assert.equal(persistedSession.analyticsSequence, 1);
+  const replayed = restorePlayGame(italianGame);
+  assert.equal(replayed.analyticsSequence, 1);
+  assert.equal(replayed.origin, GAME_ORIGIN.LOCAL);
+} finally {
+  globalThis.window = previousWindow;
+}
 
 const seededA = createSeededRandom("same");
 const seededB = createSeededRandom("same");

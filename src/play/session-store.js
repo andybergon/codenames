@@ -13,6 +13,10 @@ const MAX_COMPLETED_GAME_CHARACTERS = 262_144;
 
 export function savePlaySession(game) {
   try {
+    game.analyticsSequence =
+      (Number.isSafeInteger(game.analyticsSequence)
+        ? game.analyticsSequence
+        : 0) + 1;
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(game));
     return true;
   } catch {

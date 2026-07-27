@@ -29,10 +29,17 @@ export const GAME_END_REASON = Object.freeze({
   ASSASSIN: "assassin",
 });
 
+export const GAME_ORIGIN = Object.freeze({
+  LOCAL: "local",
+  SHARED: "shared",
+  UNKNOWN: "unknown",
+});
+
 const SIDES = new Set(Object.values(SIDE));
 const PLAYER_ROLES = new Set(Object.values(PLAYER_ROLE));
 const ACTORS = new Set(["human", "bot"]);
 const PLAY_ACTION_TYPES = new Set(["clue-given", "card-guessed", "turn-passed"]);
+const GAME_ORIGINS = new Set(Object.values(GAME_ORIGIN));
 
 export function randomHumanSeat(random = Math.random) {
   return {
@@ -65,6 +72,7 @@ export function createPlayGame({
   developerMode = false,
   humanSeat,
   language = LANGUAGE.ENGLISH,
+  origin = GAME_ORIGIN.LOCAL,
   seed,
   wordSet,
   wordReusePolicy,
@@ -77,9 +85,14 @@ export function createPlayGame({
 
   const normalizedBotSettings = normalizePlayBotSettings(botSettings, language);
   const normalizedDeveloperMode = developerMode === true;
+  const normalizedOrigin = GAME_ORIGINS.has(origin)
+    ? origin
+    : GAME_ORIGIN.UNKNOWN;
   return {
     schemaVersion: 1,
     developerMode: normalizedDeveloperMode,
+    origin: normalizedOrigin,
+    analyticsSequence: 0,
     seed: String(seed ?? ""),
     language,
     wordSet,
@@ -350,42 +363,70 @@ export function restorePlayGame(game) {
   );
 }
 
+export function replayPlayActionStates(game) {
+  const actions = game.history.filter((event) =>
+    PLAY_ACTION_TYPES.has(event.type),
+  );
+  let restored = createReplayGame(game);
+  return actions.map((event, actionIndex) => {
+    restored = applyPlayAction(restored, event);
+    return {
+      actionIndex,
+      event,
+      game: {
+        ...restored,
+        analyticsSequence: game.analyticsSequence,
+      },
+    };
+  });
+}
+
 function replayPlayActions(game, actions) {
-  let restored = createPlayGame({
+  let restored = createReplayGame(game);
+  for (const event of actions) {
+    restored = applyPlayAction(restored, event);
+  }
+  return {
+    ...restored,
+    analyticsSequence: game.analyticsSequence,
+  };
+}
+
+function createReplayGame(game) {
+  return createPlayGame({
     botSettings: game.botSettings,
     cards: game.cards,
     developerMode: game.developerMode,
     humanSeat: game.humanSeat,
     language: game.language,
+    origin: game.origin,
     seed: game.seed,
     wordSet: game.wordSet,
     wordReusePolicy: game.wordReusePolicy,
   });
+}
 
-  for (const event of actions) {
-    if (event.type === "clue-given") {
-      restored = giveClue(restored, {
-        clue: event.clue,
-        number: event.number,
-        actor: event.actor,
-        intendedLayoutIds: event.intendedLayoutIds,
-        developerDiagnostics: event.developerDiagnostics,
-      });
-    } else if (event.type === "card-guessed") {
-      restored = guessCard(restored, {
-        layoutId: event.layoutId,
-        actor: event.actor,
-        developerDiagnostics: event.developerDiagnostics,
-      });
-    } else {
-      restored = passTurn(restored, {
-        actor: event.actor,
-        developerDiagnostics: event.developerDiagnostics,
-      });
-    }
+function applyPlayAction(game, event) {
+  if (event.type === "clue-given") {
+    return giveClue(game, {
+      clue: event.clue,
+      number: event.number,
+      actor: event.actor,
+      intendedLayoutIds: event.intendedLayoutIds,
+      developerDiagnostics: event.developerDiagnostics,
+    });
   }
-
-  return restored;
+  if (event.type === "card-guessed") {
+    return guessCard(game, {
+      layoutId: event.layoutId,
+      actor: event.actor,
+      developerDiagnostics: event.developerDiagnostics,
+    });
+  }
+  return passTurn(game, {
+    actor: event.actor,
+    developerDiagnostics: event.developerDiagnostics,
+  });
 }
 
 export function publicGameView(game) {
@@ -563,6 +604,14 @@ export function validateStoredGame(value) {
   return {
     ...value,
     developerMode: value.developerMode === true,
+    origin: GAME_ORIGINS.has(value.origin)
+      ? value.origin
+      : GAME_ORIGIN.UNKNOWN,
+    analyticsSequence:
+      Number.isSafeInteger(value.analyticsSequence) &&
+      value.analyticsSequence >= 0
+        ? value.analyticsSequence
+        : 0,
     history: value.history.map((event) =>
       event.type === "game-started"
         ? {

@@ -13,6 +13,7 @@ import {
 } from "lucide";
 import MODEL_PICKER_BENCHMARK from "../scripts/generated/model-picker-benchmark.json" with { type: "json" };
 import { createCalibrationMode } from "./calibration/mode.js";
+import { createAnalyticsReviewMode } from "./analytics/mode.js";
 import {
   BOARD_ORDER,
   createGeneratedBoardState,
@@ -271,6 +272,8 @@ const elements = {
   appModeSwitch: document.querySelector(".app-mode-switch"),
   appModeButtons: [...document.querySelectorAll("[data-app-mode]")],
   calibrationMode: document.querySelector("#calibration-mode"),
+  analyticsReviewMode: document.querySelector("#analytics-review-mode"),
+  languageSwitch: document.querySelector(".app-language-switch"),
   trainModeLoading: document.querySelector("#train-mode-loading"),
   trainerWorkspace: document.querySelector("#trainer-workspace"),
   modelLab: document.querySelector("#model-lab"),
@@ -286,6 +289,7 @@ const playMode = createPlayMode({
   },
 });
 const calibrationMode = createCalibrationMode();
+const analyticsReviewMode = createAnalyticsReviewMode();
 
 elements.modelLabModel.addEventListener("change", (event) => {
   if (boardLanguage === LANGUAGE.ITALIAN) {
@@ -732,6 +736,7 @@ function render() {
 function readAppMode() {
   const mode = new URL(window.location.href).searchParams.get("mode");
   if (mode === "calibrate") return "calibrate";
+  if (mode === "analytics") return "analytics";
   return mode === "train" ? "train" : "play";
 }
 
@@ -783,17 +788,24 @@ function renderAppMode() {
   const isPlay = appMode === "play";
   const isTrain = appMode === "train";
   const isCalibration = appMode === "calibrate";
-  applyStaticLocale(isCalibration ? LANGUAGE.ENGLISH : appLanguage);
+  const isAnalytics = appMode === "analytics";
+  applyStaticLocale(
+    isCalibration || isAnalytics ? LANGUAGE.ENGLISH : appLanguage,
+  );
   renderBoardLanguageControl();
   const isTrainerLoading = isTrain && !trainerInitialized;
   elements.trainModeLoading.hidden = !isTrainerLoading;
   elements.trainerWorkspace.hidden = !isTrain || isTrainerLoading;
   elements.modelLab.hidden = !isTrain || isTrainerLoading;
   elements.playMode.hidden = !isPlay;
-  elements.appModeSwitch.hidden = isCalibration;
-  elements.appTitle.textContent = isCalibration ? "Codenames calibration" : "Codenames";
-  document.title = isCalibration ? "Codenames calibration" : "Codenames";
+  elements.appModeSwitch.hidden = isCalibration || isAnalytics;
+  elements.languageSwitch.hidden = isCalibration || isAnalytics;
+  elements.appTitle.textContent = isCalibration
+    ? "Codenames calibration"
+    : "Codenames";
+  document.title = elements.appTitle.textContent;
   void calibrationMode.setActive(isCalibration);
+  void analyticsReviewMode.setActive(isAnalytics);
   for (const button of elements.appModeButtons) {
     button.setAttribute("aria-pressed", String(button.dataset.appMode === appMode));
   }

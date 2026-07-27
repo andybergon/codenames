@@ -24,7 +24,8 @@ The first model load is cached by the browser. Italian Train and Play load about
 ## Docs
 
 - [Clue engine](docs/clue-engine.md) explains the embedding pipeline, legality filter, scoring contract, model assets, and evaluation commands.
-- [Play game sharing](docs/play-game-sharing.md) defines the portable active and completed game export, local archive, validation, and future feedback-storage boundary.
+- [Play game sharing](docs/play-game-sharing.md) defines the portable active and completed game export, local archive, and validation boundary.
+- [Play analytics](docs/play-analytics.md) defines automatic snapshot ingestion, anonymous browser ownership, player feedback, and the internal review UI.
 - [Data licenses and attribution](docs/data-licenses.md) records Italian board, corpus, and model provenance.
 - [Play clue number analysis](docs/play-clue-number-analysis.md) records the controlled Play-policy evidence.
 - [Play fun optimization](docs/play-fun-optimization.md) defines the Fun Index and hosted-model promotion gates.
@@ -92,6 +93,7 @@ The Play implementation keeps rules, bot choices, persistence, and rendering sep
 - `src/play/concept-ranking.js` adds a guarded local WordNet sense bridge for weak English multi-card clues.
 - `src/play/bots.js` chooses bot clues and guesses. The operative API accepts only public association scores and never receives card roles or intended targets.
 - `src/play/session-store.js` persists the resumable game under `codenames-play-session-v1` and the bounded completed archive under `codenames-play-completed-v1`.
+- `src/play/analytics.js` owns eligible local-game uploads, retry coalescing, and player-feedback submission. `server/play-analytics-service.js` validates replay and owns the `analytics_` tables.
 - `src/developer-settings.js` persists the separate Developer mode preference under `codenames-developer-settings-v1`.
 - `src/play/word-reuse.js` owns new-board reuse policy, bounded local history, exhaustion fallback, and reset behavior.
 - `src/play/mode.js` owns Play setup, rendering, model orchestration, bot pacing, resume/backward/forward controls, and post-game score overlays.

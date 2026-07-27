@@ -39,6 +39,7 @@ import {
 } from "./bots.js";
 import {
   GAME_END_REASON,
+  GAME_ORIGIN,
   GAME_PHASE,
   PLAYER_ROLE,
   actorForSeat,
@@ -99,6 +100,7 @@ import {
   CONCEPT_RANKING_MODEL_ID,
   buildConceptualGuessCandidates,
 } from "./concept-ranking.js";
+import { createPlayAnalyticsSync } from "./analytics.js";
 
 const RESULTS_PER_SIZE = 6;
 const BOT_WAIT_DETAIL_DELAY = 1800;
@@ -443,6 +445,15 @@ export function createPlayMode(options = {}) {
       "#play-post-game-analysis-status",
     ),
     conceptBridges: document.querySelector("#play-concept-bridges"),
+    feedbackActions: document.querySelector("#play-feedback-actions"),
+    feedbackGame: document.querySelector("#play-feedback-game"),
+    feedbackForm: document.querySelector("#play-feedback-form"),
+    feedbackTarget: document.querySelector("#play-feedback-target"),
+    feedbackCategory: document.querySelector("#play-feedback-category"),
+    feedbackNote: document.querySelector("#play-feedback-note"),
+    feedbackCancel: document.querySelector("#cancel-play-feedback"),
+    feedbackSubmit: document.querySelector("#submit-play-feedback"),
+    feedbackStatus: document.querySelector("#play-feedback-status"),
     historyLabel: document.querySelector("#play-history-heading-label"),
     historyCount: document.querySelector("#play-history-count"),
     historyViewButtons: [...document.querySelectorAll("[data-play-history-view]")],
@@ -484,6 +495,8 @@ export function createPlayMode(options = {}) {
   }
 
   let active = false;
+  const analyticsSync =
+    options.analyticsSync ?? createPlayAnalyticsSync();
   let selectedLanguage = initialLanguage;
   let savedGame = loadPlaySession();
   let selectedHumanSeat = savedGame
@@ -513,7 +526,7 @@ export function createPlayMode(options = {}) {
       });
     } else {
       savedGame = game;
-      savePlaySession(game);
+      persistPlayGame(game);
     }
     selectedLanguage = game.language;
     selectedHumanSeat = { ...game.humanSeat };
@@ -522,6 +535,9 @@ export function createPlayMode(options = {}) {
       game.botSettings,
       game.language,
     );
+  }
+  if (savedGame) {
+    analyticsSync.record(savedGame, { flush: true });
   }
   let analysis = { [SIDE.BLUE]: null, [SIDE.RED]: null };
   let boardVectors = null;
@@ -551,6 +567,8 @@ export function createPlayMode(options = {}) {
   let postGameConceptBridges = [];
   let postGameAnalysisState = "idle";
   let postGameAnalysisMessage = "";
+  let feedbackScope = null;
+  let feedbackSending = false;
   let liveDiagnosticsVisible = false;
   let liveDiagnosticsRun = 0;
   let liveDiagnosticsState = {
@@ -613,7 +631,7 @@ export function createPlayMode(options = {}) {
       !savedGame.developerMode
     ) {
       savedGame = markPlayGameAsDeveloper(savedGame);
-      savePlaySession(savedGame);
+      persistPlayGame(savedGame, { flush: true });
     }
     renderSetup();
   });
@@ -629,6 +647,15 @@ export function createPlayMode(options = {}) {
     resetPostGameAnalysis();
     renderGame();
     ensurePostGameAnalysis();
+  });
+
+  elements.feedbackGame.addEventListener("click", () => {
+    openFeedbackForm({ type: "game" });
+  });
+  elements.feedbackCancel.addEventListener("click", closeFeedbackForm);
+  elements.feedbackForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+    void submitPlayerFeedback();
   });
 
   for (const [element, key, transform] of [
@@ -1092,7 +1119,7 @@ export function createPlayMode(options = {}) {
         ? translate(selectedLanguage, "blueStarts")
         : "",
     );
-    savePlaySession(game);
+    persistPlayGame(game);
     showActiveGame();
     ensureAnalysis();
   }
@@ -1260,7 +1287,7 @@ export function createPlayMode(options = {}) {
     botActionAfterHistoryMove = true;
     resetPostGameAnalysis();
     resetAnalysis(translate(gameLanguage(), "movedBack"));
-    savePlaySession(game);
+    persistPlayGame(game, { flush: true });
     renderGame();
     ensureAnalysis();
     ensurePostGameAnalysis();
@@ -1276,7 +1303,7 @@ export function createPlayMode(options = {}) {
     botActionAfterHistoryMove = true;
     resetPostGameAnalysis();
     resetAnalysis(translate(gameLanguage(), "restoredForward"));
-    savePlaySession(game);
+    persistPlayGame(game, { flush: true });
     renderGame();
     ensureAnalysis();
     ensurePostGameAnalysis();
@@ -1318,9 +1345,21 @@ export function createPlayMode(options = {}) {
     };
   }
 
+  function persistPlayGame(target, { flush = false } = {}) {
+    const saved = savePlaySession(target);
+    if (saved) {
+      analyticsSync.record(target, { flush });
+    }
+    return saved;
+  }
+
   function commitGame() {
     savedGame = game;
-    savePlaySession(game);
+    persistPlayGame(game, {
+      flush:
+        game.phase === GAME_PHASE.AWAITING_CLUE ||
+        game.phase === GAME_PHASE.COMPLETE,
+    });
     if (game.phase === GAME_PHASE.COMPLETE) {
       completedGames = archiveCompletedPlayGame(game);
     }
@@ -1902,7 +1941,11 @@ export function createPlayMode(options = {}) {
       }
       forwardHistory = [];
       savedGame = game;
-      savePlaySession(game);
+      persistPlayGame(game, {
+        flush:
+          game.phase === GAME_PHASE.AWAITING_CLUE ||
+          game.phase === GAME_PHASE.COMPLETE,
+      });
     } catch (error) {
       statusMessage = error instanceof Error ? error.message : String(error);
       statusMessageIsError = true;
@@ -2537,7 +2580,7 @@ export function createPlayMode(options = {}) {
           operativeScores,
         });
         savedGame = game;
-        savePlaySession(game);
+        persistPlayGame(game);
         liveDiagnosticsState = {
           candidates: operativeScores,
           key,
@@ -2559,8 +2602,87 @@ export function createPlayMode(options = {}) {
       });
   }
 
+  function canCollectPlayerFeedback() {
+    return (
+      game?.phase === GAME_PHASE.COMPLETE &&
+      game.origin === GAME_ORIGIN.LOCAL
+    );
+  }
+
+  function openFeedbackForm(scope) {
+    if (!canCollectPlayerFeedback()) return;
+    feedbackScope = scope;
+    elements.feedbackForm.hidden = false;
+    elements.feedbackStatus.textContent = "";
+    elements.feedbackTarget.textContent =
+      scope.type === "game"
+        ? translate(gameLanguage(), "feedbackForGame")
+        : scope.type === "turn"
+          ? translate(gameLanguage(), "feedbackForTurn", {
+              turn: scope.turn,
+            })
+          : translate(gameLanguage(), "feedbackForAction", {
+              action: localizedFeedbackAction(scope.actionType),
+              turn: scope.turn,
+            });
+    elements.feedbackNote.focus({ preventScroll: true });
+  }
+
+  function closeFeedbackForm() {
+    if (feedbackSending) return;
+    feedbackScope = null;
+    elements.feedbackForm.hidden = true;
+    elements.feedbackStatus.textContent = "";
+  }
+
+  async function submitPlayerFeedback() {
+    if (!feedbackScope || !game || feedbackSending) return;
+    feedbackSending = true;
+    elements.feedbackSubmit.disabled = true;
+    elements.feedbackCancel.disabled = true;
+    elements.feedbackStatus.textContent = "";
+    try {
+      await analyticsSync.submitFeedback(game, {
+        scope: feedbackScope,
+        category: elements.feedbackCategory.value,
+        note: elements.feedbackNote.value,
+      });
+      elements.feedbackNote.value = "";
+      elements.feedbackStatus.textContent = translate(
+        gameLanguage(),
+        "feedbackSent",
+      );
+    } catch {
+      elements.feedbackStatus.textContent = translate(
+        gameLanguage(),
+        "feedbackFailed",
+      );
+    } finally {
+      feedbackSending = false;
+      elements.feedbackSubmit.disabled = false;
+      elements.feedbackCancel.disabled = false;
+    }
+  }
+
+  function localizedFeedbackAction(actionType) {
+    const key = {
+      "clue-given": "historyClueAction",
+      "card-guessed": "historyGuessAction",
+      "turn-passed": "historyPassAction",
+    }[actionType];
+    return key
+      ? translate(gameLanguage(), key).toLocaleLowerCase(gameLanguage())
+      : actionType;
+  }
+
   function renderPostGameAnalysis(selectedTurn) {
-    elements.postGameAnalysis.hidden = !selectedTurn;
+    const feedbackAvailable = canCollectPlayerFeedback();
+    elements.postGameAnalysis.hidden = !selectedTurn && !feedbackAvailable;
+    elements.feedbackActions.hidden = !feedbackAvailable;
+    if (!feedbackAvailable) {
+      feedbackScope = null;
+      elements.feedbackForm.hidden = true;
+    }
     if (!selectedTurn) {
       elements.conceptBridges.hidden = true;
       elements.conceptBridges.replaceChildren();
@@ -2577,7 +2699,6 @@ export function createPlayMode(options = {}) {
     );
     elements.postGameAnalysisStatus.textContent = postGameAnalysisMessage;
     renderConceptBridges(selectedTurn);
-
     elements.postGameOutcome.textContent =
       game.phase === GAME_PHASE.COMPLETE
         ? `${sideEmoji(game.winner)} ${translate(
@@ -2820,9 +2941,26 @@ export function createPlayMode(options = {}) {
   }
 
   function renderHistory(history) {
-    const visible = history.filter((event) =>
-      ["clue-given", "card-guessed", "turn-passed", "game-ended"].includes(event.type),
-    );
+    let actionIndex = 0;
+    const visible = history.flatMap((event) => {
+      if (![
+        "clue-given",
+        "card-guessed",
+        "turn-passed",
+        "game-ended",
+      ].includes(event.type)) {
+        return [];
+      }
+      if (!["clue-given", "card-guessed", "turn-passed"].includes(event.type)) {
+        return [event];
+      }
+      const visibleEvent = {
+        ...event,
+        analyticsActionIndex: actionIndex,
+      };
+      actionIndex += 1;
+      return [visibleEvent];
+    });
     elements.historyLabel.textContent = translate(
       gameLanguage(),
       game.phase === GAME_PHASE.COMPLETE
@@ -3018,12 +3156,29 @@ export function createPlayMode(options = {}) {
       heading.append(viewing);
     }
     actions.className = "play-history-actions";
+    let turnFeedback = null;
+    if (canCollectPlayerFeedback() && Number.isInteger(turn.turn)) {
+      turnFeedback = document.createElement("button");
+      turnFeedback.type = "button";
+      turnFeedback.className = "play-feedback-link";
+      turnFeedback.textContent = translate(
+        gameLanguage(),
+        "sendTurnFeedback",
+      );
+      turnFeedback.addEventListener("click", () => {
+        openFeedbackForm({ type: "turn", turn: turn.turn });
+      });
+    }
     actions.append(
       ...turn.events.map((event) =>
         createHistoryItem(event, turnIndex, clueEvent),
       ),
     );
-    item.append(heading, actions);
+    item.append(
+      heading,
+      ...(turnFeedback ? [turnFeedback] : []),
+      actions,
+    );
     return item;
   }
 
@@ -3134,6 +3289,27 @@ export function createPlayMode(options = {}) {
             : "everyAgent",
         ),
       })}`;
+    }
+    if (
+      canCollectPlayerFeedback() &&
+      Number.isInteger(event.analyticsActionIndex)
+    ) {
+      const feedback = document.createElement("button");
+      feedback.type = "button";
+      feedback.className = "play-feedback-link play-feedback-action-link";
+      feedback.textContent = translate(
+        gameLanguage(),
+        "sendActionFeedback",
+      );
+      feedback.addEventListener("click", () => {
+        openFeedbackForm({
+          type: "action",
+          turn: event.turn,
+          actionIndex: event.analyticsActionIndex,
+          actionType: event.type,
+        });
+      });
+      item.append(feedback);
     }
     return item;
   }

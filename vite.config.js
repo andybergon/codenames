@@ -3,6 +3,7 @@ import {
   handleCalibrationSyncRequest,
   isLoopbackAddress,
 } from "./server/calibration-sync-service.js";
+import { handlePlayAnalyticsRequest } from "./server/play-analytics-service.js";
 import { handleRecommendationExplanationRequest } from "./server/recommendation-explanation-service.js";
 
 export default defineConfig(({ mode }) => {
@@ -13,6 +14,12 @@ export default defineConfig(({ mode }) => {
       calibrationSyncApi({
         databaseUrl: env.DATABASE_URL,
         syncSecret: env.CALIBRATION_SYNC_SECRET,
+      }),
+      playAnalyticsApi({
+        databaseUrl: env.DATABASE_URL,
+        reviewSecret:
+          env.ANALYTICS_REVIEW_SECRET ||
+          env.CALIBRATION_SYNC_SECRET,
       }),
     ],
   };
@@ -82,7 +89,57 @@ function calibrationSyncApi({ databaseUrl, syncSecret }) {
   };
 }
 
-async function readJsonBody(request, response, methods = ["POST"]) {
+function playAnalyticsApi({ databaseUrl, reviewSecret }) {
+  return {
+    name: "codenames-play-analytics-api",
+    configureServer(server) {
+      server.middlewares.use(
+        "/api/play-analytics",
+        async (request, response) => {
+          const body = await readJsonBody(
+            request,
+            response,
+            ["POST", "PATCH"],
+            24_576,
+          );
+          if (body === null) return;
+          const result = await handlePlayAnalyticsRequest({
+            method: request.method,
+            body,
+            headers: request.headers,
+            url: request.url,
+            databaseUrl,
+            reviewSecret,
+            secureCookie: false,
+            trustLocalClient: isLoopbackAddress(
+              request.socket?.remoteAddress,
+            ),
+          });
+          response.statusCode = result.status;
+          for (const [name, value] of Object.entries(result.headers ?? {})) {
+            response.setHeader(name, value);
+          }
+          if (result.body === null) {
+            response.end();
+            return;
+          }
+          response.setHeader(
+            "Content-Type",
+            "application/json; charset=utf-8",
+          );
+          response.end(JSON.stringify(result.body));
+        },
+      );
+    },
+  };
+}
+
+async function readJsonBody(
+  request,
+  response,
+  methods = ["POST"],
+  maxBodyBytes = 8_192,
+) {
   if (!methods.includes(request.method)) {
     return {};
   }
@@ -93,7 +150,7 @@ async function readJsonBody(request, response, methods = ["POST"]) {
     const buffer = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
     chunks.push(buffer);
     byteLength += buffer.byteLength;
-    if (byteLength > 8_192) {
+    if (byteLength > maxBodyBytes) {
       response.statusCode = 413;
       response.setHeader("Cache-Control", "private, no-store");
       response.setHeader("Content-Type", "application/json; charset=utf-8");

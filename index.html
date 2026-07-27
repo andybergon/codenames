@@ -872,6 +872,57 @@
                   class="play-concept-bridges"
                   hidden
                 ></div>
+                <div id="play-feedback-actions" class="play-feedback-actions" hidden>
+                  <button
+                    id="play-feedback-game"
+                    class="button secondary"
+                    type="button"
+                    data-i18n="sendGameFeedback"
+                  >
+                    Send game feedback
+                  </button>
+                </div>
+                <form id="play-feedback-form" class="play-feedback-form" hidden>
+                  <strong id="play-feedback-target"></strong>
+                  <label>
+                    <span data-i18n="feedbackCategory">Category</span>
+                    <select id="play-feedback-category">
+                      <option value="bug" data-i18n="feedbackBug">Bug</option>
+                      <option value="clue" data-i18n="feedbackClue">Clue</option>
+                      <option value="bot" data-i18n="feedbackBot">Bot behavior</option>
+                      <option value="balance" data-i18n="feedbackBalance">Game balance</option>
+                      <option value="ux" data-i18n="feedbackUx">Interface</option>
+                      <option value="other" data-i18n="feedbackOther">Other</option>
+                    </select>
+                  </label>
+                  <label>
+                    <span data-i18n="feedbackNote">What happened? (optional)</span>
+                    <textarea
+                      id="play-feedback-note"
+                      maxlength="2000"
+                      rows="3"
+                    ></textarea>
+                  </label>
+                  <div class="play-feedback-form-actions">
+                    <button
+                      id="cancel-play-feedback"
+                      class="button ghost"
+                      type="button"
+                      data-i18n="cancel"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      id="submit-play-feedback"
+                      class="button primary"
+                      type="submit"
+                      data-i18n="sendFeedback"
+                    >
+                      Send feedback
+                    </button>
+                  </div>
+                  <p id="play-feedback-status" role="status" aria-live="polite"></p>
+                </form>
               </section>
 
             </aside>
@@ -932,6 +983,13 @@
         id="calibration-mode"
         class="calibration-mode"
         aria-label="Human calibration"
+        hidden
+      ></section>
+
+      <section
+        id="analytics-review-mode"
+        class="analytics-review-mode"
+        aria-label="Play analytics review"
         hidden
       ></section>
 
