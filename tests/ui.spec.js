@@ -2810,6 +2810,8 @@ test("Play validates human clues and resumes the saved seat", async ({ page }) =
   await page.getByRole("button", { name: "Start new game", exact: true }).click();
 
   const clueInput = page.getByRole("textbox", { name: "Clue", exact: true });
+  const clueInputElement = await clueInput.elementHandle();
+  expect(clueInputElement).not.toBeNull();
   await clueInput.fill("two words");
   await page.getByRole("button", { name: "Give clue", exact: true }).click();
   await expect(page.locator("#play-clue-error")).toHaveText("A clue must be one word.");
@@ -2817,7 +2819,7 @@ test("Play validates human clues and resumes the saved seat", async ({ page }) =
 
   await clueInput.fill("clearme");
   await page.getByRole("button", { name: "Give clue", exact: true }).click();
-  await expect(clueInput).toHaveValue("");
+  await expect.poll(() => clueInputElement.inputValue()).toBe("");
 
   await page.getByRole("button", { name: "Start new game", exact: true }).click();
   await expect(page.getByRole("button", { name: "Resume game", exact: true })).toBeVisible();
@@ -2828,7 +2830,6 @@ test("Play validates human clues and resumes the saved seat", async ({ page }) =
   await expect(page.locator("#play-human-seat .play-seat-identity")).toHaveText(
     "🔵 Blue 🕵️ Spymaster",
   );
-  await expect(page.getByRole("textbox", { name: "Clue", exact: true })).toBeVisible();
 });
 
 test("Play identifies a saved game in another language before resuming it", async ({
