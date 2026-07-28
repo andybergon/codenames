@@ -5594,6 +5594,11 @@ test("analytics review authenticates, filters, reviews games, and stays responsi
   await expect(
     page.getByRole("heading", { name: `Game ${summary.gameId}` }),
   ).toBeVisible();
+  await expect(
+    page.locator(".analytics-review-detail-header p"),
+  ).toHaveText(
+    `${now} · Player · complete · 2 actions · last ${now}`,
+  );
   await expect(storedGame).toHaveAttribute("aria-busy", "false");
   await expect(
     storedGame.locator(".analytics-review-game-loading"),

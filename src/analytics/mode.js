@@ -268,12 +268,12 @@ export function createAnalyticsReviewMode({
     header.className = "analytics-review-detail-header";
     heading.textContent = `Game ${selected.gameId}`;
     metadata.textContent = [
+      selected.firstSeenAt,
       selected.developerMode ? "Developer" : "Player",
       ...(selected.localMode ? ["Local"] : []),
       selected.phase,
       `${selected.actionCount} actions`,
-      `first ${formatDate(selected.firstSeenAt)}`,
-      `last ${formatDate(selected.lastSeenAt)}`,
+      `last ${selected.lastSeenAt}`,
     ].join(" · ");
     title.append(heading, metadata);
     header.append(title, badge(selected.reviewStatus));
