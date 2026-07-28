@@ -53,11 +53,15 @@ export async function buildConceptualGuessCandidates({
       clue,
       clueDefinitions,
     );
-    const cardRanges = cards.map((card) =>
+    const cardDefinitions = cards.map(
+      (card) =>
+        activeDefinitions.get(normalizeConceptTerm(card.word)) ?? [],
+    );
+    const cardRanges = cards.map((card, index) =>
       appendConceptTerms(
         conceptTerms,
         card.word,
-        activeDefinitions.get(normalizeConceptTerm(card.word)) ?? [],
+        cardDefinitions[index],
       ),
     );
     const conceptRaw = await embed(conceptTerms, embeddingOptions);
@@ -76,17 +80,25 @@ export async function buildConceptualGuessCandidates({
         range.start,
         range.end,
       );
-      const conceptSimilarity = maximumConceptSimilarity(
+      const conceptBridge = maximumConceptBridge(
         clueConceptVectors,
         cardConceptVectors,
+        clueDefinitions,
+        cardDefinitions[index],
+      );
+      const conceptSimilarity = conceptBridge?.similarity ?? null;
+      const rankingScore = scoreOperativeAssociation(
+        candidate.similarity,
+        conceptSimilarity,
       );
       return {
         ...candidate,
         conceptSimilarity,
-        rankingScore: scoreOperativeAssociation(
-          candidate.similarity,
-          conceptSimilarity,
-        ),
+        ...(conceptBridge &&
+        rankingScore > candidate.similarity
+          ? { conceptBridge }
+          : {}),
+        rankingScore,
       };
     });
   } catch {
@@ -128,6 +140,20 @@ export function maximumConceptSimilarity(
   clueConceptVectors,
   cardConceptVectors,
 ) {
+  return (
+    maximumConceptBridge(
+      clueConceptVectors,
+      cardConceptVectors,
+    )?.similarity ?? null
+  );
+}
+
+export function maximumConceptBridge(
+  clueConceptVectors,
+  cardConceptVectors,
+  clueDefinitions = [],
+  cardDefinitions = [],
+) {
   if (
     clueConceptVectors.length === 0 ||
     cardConceptVectors.length === 0
@@ -135,15 +161,34 @@ export function maximumConceptSimilarity(
     return null;
   }
   let maximum = Number.NEGATIVE_INFINITY;
-  for (const clueVector of clueConceptVectors) {
-    for (const cardVector of cardConceptVectors) {
-      maximum = Math.max(
-        maximum,
-        dotVectors(clueVector, cardVector),
+  let strongestClueIndex = 0;
+  let strongestCardIndex = 0;
+  for (
+    let clueIndex = 0;
+    clueIndex < clueConceptVectors.length;
+    clueIndex += 1
+  ) {
+    for (
+      let cardIndex = 0;
+      cardIndex < cardConceptVectors.length;
+      cardIndex += 1
+    ) {
+      const similarity = dotVectors(
+        clueConceptVectors[clueIndex],
+        cardConceptVectors[cardIndex],
       );
+      if (similarity > maximum) {
+        maximum = similarity;
+        strongestClueIndex = clueIndex;
+        strongestCardIndex = cardIndex;
+      }
     }
   }
-  return maximum;
+  return {
+    similarity: maximum,
+    clueSense: clueDefinitions[strongestClueIndex] ?? "",
+    cardSense: cardDefinitions[strongestCardIndex] ?? "",
+  };
 }
 
 export function conceptTexts(term, definitions) {

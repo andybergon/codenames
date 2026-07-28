@@ -6,6 +6,14 @@
 
 ## 🔴 High
 
+- 🧠 Evaluate learned bridge representations and rerankers for operative ranking.
+  - Compare the generated-gloss bridge against BGE-aligned WordNet vectors, AutoExtend, LMMS, ARES, a guarded ConceptNet ensemble, pairwise cross-encoders, and listwise rerankers.
+  - Ablate a bridge alone, a reranker alone, and a bounded `direct BGE → bridge expansion → rerank` pipeline.
+  - Current embedding result: calibrated same-model development favored Cohere and tied Voyage with BGE, but both failed the primary MiniLM-L6 transfer gates, so BGE stays in production and the held-out test remains locked.
+  - Measure download size, first-activation latency, memory, human alignment, cross-model safety, and full-game effects before promotion.
+  - Preserve local offline operation and the operative public-information boundary. Treat hosted rerankers only as capped comparison benchmarks.
+  - Require any candidate to pass calibrated development, cross-model transfer, and human gates before unlocking the held-out test.
+
 - 🛡️ Regenerate the clue vocabulary with consistent profanity filtering.
   - The WordNet-backed first 88,563 words currently bypass `better_profanity`; only the experimental fallback applies it.
   - Regenerate all affected shards, reports, and the stable-prefix baseline together after reviewing benign false positives.
@@ -34,10 +42,6 @@
 
 - 📊 Calibrate Play bots and Worth from recorded outcomes.
   - Aggregate archived outcome summaries and fit bot confidence, multi tolerance, and Worth coefficients against actual play.
-
-- 🧠 Evaluate a more game-specific semantic embedding or reranker.
-  - Current: calibrated same-model development favored Cohere and tied Voyage with BGE, but both failed the primary MiniLM-L6 transfer gates, so BGE stays in production and the held-out test remains locked.
-  - Require any future candidate to pass calibrated development, cross-model transfer, and human gates before unlocking the held-out test.
 
 - 🧹 Bound Model picker caches so exploration cannot retain every loaded model and index.
   - Index promises, parsed shards, model pipelines, and term vectors currently remain cached for the page lifetime.

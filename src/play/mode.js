@@ -104,6 +104,7 @@ const RESULTS_PER_SIZE = 6;
 const BOT_WAIT_DETAIL_DELAY = 1800;
 const BOT_ACTION_DELAY = 720;
 const BOT_ACTION_AFTER_UNDO_DELAY = 5000;
+const CONCEPT_BRIDGE_DISPLAY_LIMIT = 6;
 const PLAY_BOARD_ORDER = Object.freeze({
   TABLE: "table",
   TEAMS: "teams",
@@ -441,6 +442,7 @@ export function createPlayMode(options = {}) {
     postGameAnalysisStatus: document.querySelector(
       "#play-post-game-analysis-status",
     ),
+    conceptBridges: document.querySelector("#play-concept-bridges"),
     historyLabel: document.querySelector("#play-history-heading-label"),
     historyCount: document.querySelector("#play-history-count"),
     historyViewButtons: [...document.querySelectorAll("[data-play-history-view]")],
@@ -546,6 +548,7 @@ export function createPlayMode(options = {}) {
   let selectedPostGameTurn = 0;
   let selectedHistoryExplanation = null;
   let postGameScores = [];
+  let postGameConceptBridges = [];
   let postGameAnalysisState = "idle";
   let postGameAnalysisMessage = "";
   let liveDiagnosticsVisible = false;
@@ -1294,6 +1297,7 @@ export function createPlayMode(options = {}) {
     selectedPostGameTurn = 0;
     selectedHistoryExplanation = null;
     postGameScores = [];
+    postGameConceptBridges = [];
     postGameAnalysisState = "idle";
     postGameAnalysisMessage = "";
   }
@@ -1524,6 +1528,11 @@ export function createPlayMode(options = {}) {
           ),
         ),
       );
+      const savedConceptBridges = nextTurns.map((turn) =>
+        conceptBridgeMap(
+          turn.developerDiagnostics?.operativeScores ?? [],
+        ),
+      );
       const hasCompleteSavedScores =
         savedScores.length > 0 &&
         savedScores.every(
@@ -1535,9 +1544,11 @@ export function createPlayMode(options = {}) {
       }
       if (hasCompleteSavedScores) {
         postGameScores = savedScores;
+        postGameConceptBridges = savedConceptBridges;
         postGameAnalysisState = "ready";
       } else if (postGameAnalysisState !== "ready") {
         postGameScores = savedScores;
+        postGameConceptBridges = savedConceptBridges;
       }
     }
   }
@@ -1596,6 +1607,7 @@ export function createPlayMode(options = {}) {
             ]),
           ),
         );
+        postGameConceptBridges = scores.map(conceptBridgeMap);
         postGameAnalysisState = "ready";
         postGameAnalysisMessage = "";
         renderGame();
@@ -1636,6 +1648,7 @@ export function createPlayMode(options = {}) {
 
       const centered = centerEmbeddings(vectors, manifest.centering.mean);
       postGameScores = [];
+      postGameConceptBridges = [];
       for (const turn of turnsAtStart) {
         const candidates = await buildConceptualGuessCandidates({
           boardVectors: centered,
@@ -1668,6 +1681,7 @@ export function createPlayMode(options = {}) {
             ),
           ),
         );
+        postGameConceptBridges.push(conceptBridgeMap(candidates));
       }
       postGameAnalysisState = "ready";
       postGameAnalysisMessage = "";
@@ -2548,6 +2562,8 @@ export function createPlayMode(options = {}) {
   function renderPostGameAnalysis(selectedTurn) {
     elements.postGameAnalysis.hidden = !selectedTurn;
     if (!selectedTurn) {
+      elements.conceptBridges.hidden = true;
+      elements.conceptBridges.replaceChildren();
       return;
     }
     elements.historicalReviewNote.hidden =
@@ -2560,6 +2576,7 @@ export function createPlayMode(options = {}) {
       postGameAnalysisState === "error",
     );
     elements.postGameAnalysisStatus.textContent = postGameAnalysisMessage;
+    renderConceptBridges(selectedTurn);
 
     elements.postGameOutcome.textContent =
       game.phase === GAME_PHASE.COMPLETE
@@ -2577,6 +2594,77 @@ export function createPlayMode(options = {}) {
             },
           )}`
         : translate(gameLanguage(), "developerGame");
+  }
+
+  function renderConceptBridges(selectedTurn) {
+    const bridgeByLayoutId =
+      postGameConceptBridges[selectedPostGameTurn] ?? {};
+    const turnScores = postGameScores[selectedPostGameTurn] ?? {};
+    const bridges = Object.entries(bridgeByLayoutId)
+      .map(([layoutId, bridge]) => ({
+        bridge,
+        card: game.cards.find(
+          (candidate) => candidate.layoutId === Number(layoutId),
+        ),
+        score: turnScores[layoutId],
+      }))
+      .filter(({ bridge, card }) =>
+        Boolean(
+          bridge?.clueSense &&
+            bridge?.cardSense &&
+            card,
+        ),
+      )
+      .sort(
+        (left, right) =>
+          compareScoreDescending(left.score, right.score) ||
+          left.card.layoutId - right.card.layoutId,
+      );
+    elements.conceptBridges.hidden = bridges.length === 0;
+    if (bridges.length === 0) {
+      elements.conceptBridges.replaceChildren();
+      return;
+    }
+
+    const heading = document.createElement("div");
+    heading.className = "play-concept-bridges-heading";
+    const title = document.createElement("strong");
+    title.textContent = translate(gameLanguage(), "conceptBridgeHeading");
+    const count = document.createElement("span");
+    count.textContent = translate(gameLanguage(), "conceptBridgeCount", {
+      count: bridges.length,
+    });
+    heading.append(title, count);
+
+    const help = document.createElement("p");
+    help.className = "play-concept-bridges-help";
+    help.textContent = translate(gameLanguage(), "conceptBridgeHelp", {
+      clue: selectedTurn.clue,
+    });
+
+    const list = document.createElement("ul");
+    list.className = "play-concept-bridges-list";
+    for (const { bridge, card } of bridges.slice(
+      0,
+      CONCEPT_BRIDGE_DISPLAY_LIMIT,
+    )) {
+      const item = document.createElement("li");
+      const cardName = document.createElement("strong");
+      cardName.textContent = card.word;
+      const path = document.createElement("span");
+      path.textContent = `${bridge.clueSense} → ${bridge.cardSense}`;
+      item.append(cardName, path);
+      list.append(item);
+    }
+
+    const extraCount = bridges.length - list.children.length;
+    const extra = document.createElement("p");
+    extra.className = "play-concept-bridges-extra";
+    extra.hidden = extraCount === 0;
+    extra.textContent = translate(gameLanguage(), "moreConceptBridges", {
+      count: extraCount,
+    });
+    elements.conceptBridges.replaceChildren(heading, help, list, extra);
   }
 
   function turnAnalysisEnabled() {
@@ -3247,8 +3335,22 @@ function developerSuggestionDecision(suggestion, game) {
 }
 
 function serializeOperativeScores(candidates) {
+  const retainedConceptBridgeIds = new Set(
+    [...candidates]
+      .filter(({ conceptBridge }) => conceptBridge)
+      .sort(
+        (left, right) =>
+          compareScoreDescending(
+            left.rankingScore ?? left.similarity,
+            right.rankingScore ?? right.similarity,
+          ) || left.layoutId - right.layoutId,
+      )
+      .slice(0, CONCEPT_BRIDGE_DISPLAY_LIMIT)
+      .map(({ layoutId }) => layoutId),
+  );
   return candidates.map(
     ({
+      conceptBridge,
       conceptSimilarity,
       layoutId,
       rankingScore,
@@ -3260,7 +3362,34 @@ function serializeOperativeScores(candidates) {
     ...(Number.isFinite(conceptSimilarity)
       ? { conceptSimilarity }
       : {}),
+    ...(conceptBridge && retainedConceptBridgeIds.has(layoutId)
+      ? {
+          conceptBridge: {
+            clueSense: conceptBridge.clueSense,
+            cardSense: conceptBridge.cardSense,
+            similarity: conceptBridge.similarity,
+          },
+        }
+      : {}),
   }),
+  );
+}
+
+function conceptBridgeMap(candidates) {
+  return Object.fromEntries(
+    candidates
+      .filter(
+        ({ conceptBridge }) =>
+          conceptBridge?.clueSense && conceptBridge?.cardSense,
+      )
+      .map(({ layoutId, conceptBridge }) => [
+        layoutId,
+        {
+          clueSense: conceptBridge.clueSense,
+          cardSense: conceptBridge.cardSense,
+          similarity: conceptBridge.similarity,
+        },
+      ]),
   );
 }
 

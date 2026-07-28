@@ -3760,10 +3760,28 @@ test("completed Play sessions replay turns and explain clues and guesses", async
   await page.addInitScript(() => {
     window.__codenamesPlayModeOptions = {
       ...window.__codenamesPlayModeOptions,
-      guessCandidateExecutor({ cards }) {
+      guessCandidateExecutor({ cards, clue }) {
         return cards.map((card, index) => ({
           layoutId: card.layoutId,
           similarity: 0.9 - index * 0.02,
+          ...((clue === "FIRST" && card.layoutId === 0) ||
+          (clue === "SECOND" && card.layoutId === 9)
+            ? {
+                rankingScore: 0.96,
+                conceptSimilarity: 1.01,
+                conceptBridge: {
+                  clueSense:
+                    clue === "FIRST"
+                      ? "the opening stage in a sequence"
+                      : "the next stage after the first",
+                  cardSense:
+                    clue === "FIRST"
+                      ? "the initial item in an ordered set"
+                      : "an item occupying position two",
+                  similarity: 1.01,
+                },
+              }
+            : {}),
         }));
       },
     };
@@ -3911,6 +3929,14 @@ test("completed Play sessions replay turns and explain clues and guesses", async
   await expect(page.locator('.play-card[data-team="friendly"]')).toHaveCount(9);
   await expect(page.locator('.play-card[data-team="enemy"]')).toHaveCount(8);
   await expect(page.locator("#play-post-game-analysis")).toBeVisible();
+  await expect(page.locator("#play-concept-bridges")).toBeVisible();
+  await expect(page.locator("#play-concept-bridges")).toContainText("WORD0");
+  await expect(page.locator("#play-concept-bridges")).toContainText(
+    "the opening stage in a sequence",
+  );
+  await expect(page.locator("#play-concept-bridges")).not.toContainText(
+    "position two",
+  );
   await expect(page.locator("#play-analysis-summary")).toHaveCount(0);
   await expect(page.locator("#play-analysis-status")).toHaveCount(0);
   await expect(
@@ -4030,6 +4056,22 @@ test("completed Play sessions replay turns and explain clues and guesses", async
       Math.max(...headingHeights) - Math.min(...headingHeights),
       `turn heading height shift at ${viewport.width}px`,
     ).toBeLessThanOrEqual(0.01);
+    const bridgeLayout = await page.locator("#play-concept-bridges").evaluate(
+      (bridges) => ({
+        fits: bridges.scrollWidth <= bridges.clientWidth + 1,
+        rowsFit: [...bridges.querySelectorAll("li")].every(
+          (row) => row.scrollWidth <= row.clientWidth + 1,
+        ),
+      }),
+    );
+    expect(
+      bridgeLayout.fits,
+      `concept bridge clipping at ${viewport.width}px`,
+    ).toBe(true);
+    expect(
+      bridgeLayout.rowsFit,
+      `concept bridge row clipping at ${viewport.width}px`,
+    ).toBe(true);
     await secondClue.hover();
     const annotationLayout = await page
       .locator('.play-card[data-layout-id="0"]')
@@ -4638,6 +4680,14 @@ test("completed Play sessions replay turns and explain clues and guesses", async
     page.locator(".play-card[data-operative-score]"),
   ).toHaveCount(25, { timeout: 45_000 });
   await expect(page.locator("#play-post-game-analysis-status")).toBeHidden();
+  await expect(page.locator("#play-concept-bridges")).toBeVisible();
+  await expect(page.locator("#play-concept-bridges")).toContainText("WORD9");
+  await expect(page.locator("#play-concept-bridges")).toContainText(
+    "an item occupying position two",
+  );
+  await expect(page.locator("#play-concept-bridges")).not.toContainText(
+    "opening stage",
+  );
 
   for (const viewport of [
     { width: 390, height: 844 },

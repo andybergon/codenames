@@ -1,8 +1,19 @@
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { mkdir, readFile, stat, writeFile } from "node:fs/promises";
+import {
+  mkdir,
+  readFile,
+  readdir,
+  stat,
+  unlink,
+  writeFile,
+} from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import {
+  CONCEPT_SHARD_COUNT,
+  conceptShardForTerm,
+} from "../src/play/concept-shards.js";
 import { CLUE_BANK, EXTENDED_WORDS } from "../src/word-data.js";
 import { buildClueCandidates } from "./clue-candidates.mjs";
 
@@ -78,6 +89,7 @@ for (const part of PARTS_OF_SPEECH) {
 }
 
 await mkdir(OUTPUT_DIRECTORY, { recursive: true });
+await clearGeneratedShards();
 const boardEntries = Object.fromEntries(
   EXTENDED_WORDS.map((word) => normalizeTerm(word))
     .filter((word) => entries.has(word))
@@ -89,7 +101,7 @@ await writeJson(resolve(OUTPUT_DIRECTORY, "board.json"), {
 
 const shardEntries = new Map();
 for (const [term, definitions] of entries) {
-  const shard = shardForTerm(term);
+  const shard = conceptShardForTerm(term);
   if (!shardEntries.has(shard)) {
     shardEntries.set(shard, {});
   }
@@ -109,18 +121,22 @@ for (const [shard, shardPayload] of [...shardEntries].sort()) {
 }
 
 await writeJson(resolve(OUTPUT_DIRECTORY, "manifest.json"), {
-  version: 1,
+  version: 2,
   source: {
     name: "Princeton WordNet 3.0",
     archiveSha256,
     license: "WordNet 3.0",
   },
   method:
-    "Selectable English clue and board terms with up to six ordered sense definitions per normalized lemma: four noun, two verb, then adjective or adverb when capacity remains. Usage examples are removed.",
+    "Selectable English clue and board terms with up to six ordered sense definitions per normalized lemma: four noun, two verb, then adjective or adverb when capacity remains. Usage examples are removed. Clue entries use 256 deterministic FNV-1a hash shards.",
   selectableClues: selectableClues.length,
   boardFile: "board.json",
   boardEntries: Object.keys(boardEntries).length,
   entries: entries.size,
+  shardStrategy: {
+    algorithm: "fnv1a-32",
+    buckets: CONCEPT_SHARD_COUNT,
+  },
   shards,
 });
 
@@ -179,9 +195,16 @@ function normalizeTerm(value) {
     .replace(/\s+/gu, " ");
 }
 
-function shardForTerm(term) {
-  const first = term[0];
-  return /^[a-z]$/u.test(first) ? first : "other";
+async function clearGeneratedShards() {
+  const retained = new Set(["board.json", "manifest.json"]);
+  const files = await readdir(OUTPUT_DIRECTORY);
+  await Promise.all(
+    files
+      .filter(
+        (file) => file.endsWith(".json") && !retained.has(file),
+      )
+      .map((file) => unlink(resolve(OUTPUT_DIRECTORY, file))),
+  );
 }
 
 async function writeJson(path, value) {

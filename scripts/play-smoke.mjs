@@ -25,9 +25,14 @@ import {
   shouldBotTakeAnotherGuess,
 } from "../src/play/bots.js";
 import {
+  maximumConceptBridge,
   scoreOperativeAssociation,
   shouldUseConceptRanking,
 } from "../src/play/concept-ranking.js";
+import {
+  CONCEPT_SHARD_COUNT,
+  conceptShardForTerm,
+} from "../src/play/concept-shards.js";
 import {
   GAME_END_REASON,
   GAME_PHASE,
@@ -123,6 +128,16 @@ const conceptRankingEvaluation = JSON.parse(
     "utf8",
   ),
 );
+const conceptManifest = JSON.parse(
+  await readFile("public/data/concepts/manifest.json", "utf8"),
+);
+const joustConceptShard = conceptShardForTerm("joust");
+const joustConceptData = JSON.parse(
+  await readFile(
+    `public/data/concepts/${joustConceptShard}.json`,
+    "utf8",
+  ),
+);
 const conceptFullGameComparison = JSON.parse(
   await readFile(
     "scripts/generated/concept-ranking-full-game-comparison.json",
@@ -159,6 +174,43 @@ assert.equal(
 assert.equal(
   conceptRankingEvaluation.fixture,
   "JOUST → medieval tournament → MATCH / CROWN / GLOVE / BELT, where PIANO was guessed before those stronger human associations.",
+);
+assert.equal(conceptManifest.version, 2);
+assert.deepEqual(conceptManifest.shardStrategy, {
+  algorithm: "fnv1a-32",
+  buckets: CONCEPT_SHARD_COUNT,
+});
+assert.equal(
+  Object.keys(conceptManifest.shards).length,
+  CONCEPT_SHARD_COUNT,
+);
+assert.equal(joustConceptShard.length, 2);
+assert.ok(joustConceptData.entries.joust.length > 0);
+assert.equal(
+  Object.values(conceptManifest.shards).reduce(
+    (total, shard) => total + shard.entries,
+    0,
+  ),
+  conceptManifest.entries,
+);
+assert.deepEqual(
+  maximumConceptBridge(
+    [
+      [1, 0],
+      [0, 1],
+    ],
+    [
+      [0, 1],
+      [1, 0],
+    ],
+    ["first clue sense", "second clue sense"],
+    ["first card sense", "second card sense"],
+  ),
+  {
+    similarity: 1,
+    clueSense: "first clue sense",
+    cardSense: "second card sense",
+  },
 );
 const evaluatedJoustRanking = conceptRankingEvaluation.models
   .find(({ id }) => id === "bge-small")

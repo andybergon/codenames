@@ -1,5 +1,6 @@
 import { createJsonLoader } from "../clue-index.js";
 import { normalizeConceptTerm } from "./concept-ranking.js";
+import { conceptShardForTerm } from "./concept-shards.js";
 
 const fetchJson = createJsonLoader();
 const conceptPromises = new Map();
@@ -9,7 +10,7 @@ export async function loadConceptDefinitions(
   { baseUrl = defaultBaseUrl(), onRetry } = {},
 ) {
   const normalizedClue = normalizeConceptTerm(clue);
-  const shard = shardForTerm(normalizedClue);
+  const shard = conceptShardForTerm(normalizedClue);
   const [board, clueEntries] = await Promise.all([
     loadConceptFile(new URL("board.json", baseUrl), {
       label: "board concept data",
@@ -40,8 +41,4 @@ function loadConceptFile(url, options) {
 
 function defaultBaseUrl() {
   return new URL("/data/concepts/", location.origin);
-}
-
-function shardForTerm(term) {
-  return /^[a-z]/u.test(term) ? term[0] : "other";
 }

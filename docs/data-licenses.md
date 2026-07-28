@@ -9,7 +9,7 @@ The English operative concept bridge uses Princeton WordNet 3.0 sense definition
 - **License:** [WordNet 3.0](../public/data/concepts/LICENSE.md)
 - **Refresh:** `WORDNET_ARCHIVE=<path>/wordnet.zip npm run generate:concepts`
 
-The runtime lazily loads the board dictionary and the clue's first-letter shard. It does not call a hosted knowledge graph or send clue and board data to a paid model.
+The runtime lazily loads the board dictionary and one of 256 deterministic FNV-1a hash shards for the clue. It does not call a hosted knowledge graph or send clue and board data to a paid model.
 
 ## Italian Train and Play beta
 

@@ -239,6 +239,13 @@ const COPY = Object.freeze({
     liveAnalysis: "Live turn analysis",
     postGameAnalysis: "Post-game analysis",
     turnAnalysis: "Turn analysis",
+    conceptBridgeHeading: "Concept bridges",
+    conceptBridgeHelp: ({ clue }) =>
+      `WordNet sense pairs that raised the operative ranking for ${clue}.`,
+    conceptBridgeCount: ({ count }) =>
+      `${count} ${count === 1 ? "card" : "cards"} boosted`,
+    moreConceptBridges: ({ count }) =>
+      `${count} more lower-ranked ${count === 1 ? "bridge" : "bridges"}`,
     gameLogView: "Game log view",
     timeline: "Timeline",
     byTeam: "By team",
@@ -586,6 +593,13 @@ const COPY = Object.freeze({
     liveAnalysis: "Analisi del turno in tempo reale",
     postGameAnalysis: "Analisi post-partita",
     turnAnalysis: "Analisi del turno",
+    conceptBridgeHeading: "Ponti concettuali",
+    conceptBridgeHelp: ({ clue }) =>
+      `Coppie di significati WordNet che hanno migliorato la posizione dell'agente per ${clue}.`,
+    conceptBridgeCount: ({ count }) =>
+      `${count} ${count === 1 ? "carta favorita" : "carte favorite"}`,
+    moreConceptBridges: ({ count }) =>
+      `${count} ${count === 1 ? "altro ponte" : "altri ponti"} con punteggio inferiore`,
     gameLogView: "Vista registro partita",
     timeline: "Cronologia",
     byTeam: "Per squadra",

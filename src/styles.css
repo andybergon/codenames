@@ -3612,6 +3612,72 @@ button.play-card:not(:disabled):hover {
   display: none;
 }
 
+.play-concept-bridges {
+  border-top: 1px solid var(--hairline);
+  margin-top: 10px;
+  min-width: 0;
+  padding-top: 10px;
+}
+
+.play-concept-bridges[hidden] {
+  display: none;
+}
+
+.play-concept-bridges-heading {
+  align-items: baseline;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  justify-content: space-between;
+}
+
+.play-concept-bridges-heading strong {
+  font-size: 0.78rem;
+}
+
+.play-concept-bridges-heading span,
+.play-concept-bridges-help,
+.play-concept-bridges-extra {
+  color: var(--muted);
+  font-size: 0.7rem;
+}
+
+.play-concept-bridges-help,
+.play-concept-bridges-extra {
+  line-height: 1.4;
+  margin: 4px 0 0;
+}
+
+.play-concept-bridges-list {
+  display: grid;
+  gap: 6px;
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+}
+
+.play-concept-bridges-list li {
+  background: color-mix(in srgb, var(--accent) 7%, var(--panel));
+  border: 1px solid color-mix(in srgb, var(--accent) 20%, var(--line));
+  border-radius: 7px;
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  padding: 6px 8px;
+}
+
+.play-concept-bridges-list strong {
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+}
+
+.play-concept-bridges-list span {
+  color: var(--muted);
+  font-size: 0.7rem;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
 .play-history {
   min-width: 0;
   grid-column: 1 / -1;
