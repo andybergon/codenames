@@ -1,0 +1,89 @@
+{
+  "version": 1,
+  "generatedAt": "2026-07-28T04:55:00.000Z",
+  "methodology": {
+    "fixtures": 6,
+    "targetSlots": 14,
+    "modes": [
+      "direct public clue-card ranking",
+      "ranking with every local Princeton WordNet definition appended to the public clue and cards"
+    ],
+    "codenamesInstruction": "Rank cards by how strongly a human Codenames player would associate each card with the clue. Indirect thematic, cultural, functional, and wordplay relationships count.",
+    "promotionUse": "Fixed regression screen only. Human, full-game, transfer, latency, memory, licensing, and cost gates remain required for promotion."
+  },
+  "models": [
+    {
+      "id": "gte-multilingual-reranker-base",
+      "model": "onnx-community/gte-multilingual-reranker-base",
+      "revision": "ee64367e35a2db0da46bb6497e13a18f8bd585cb",
+      "license": "Apache-2.0",
+      "cachedAssetBytes": 340860928,
+      "interface": "pairwise",
+      "joust": {
+        "direct": [
+          "CROWN",
+          "MATCH",
+          "BELT",
+          "PIANO",
+          "GLOVE"
+        ],
+        "wordnet": [
+          "MATCH",
+          "CROWN",
+          "BELT",
+          "GLOVE",
+          "PIANO"
+        ]
+      },
+      "targetHits": {
+        "direct": 12,
+        "wordnet": 11,
+        "maximum": 14
+      },
+      "result": "WordNet repairs JOUST, but expanded evidence loses a target on PALEOGRAPHY, HERALDRY, and SEANCE."
+    },
+    {
+      "id": "jina-reranker-v3",
+      "model": "jinaai/jina-reranker-v3-mlx",
+      "revision": "1d19fe38ae4e6658221479747c1152d6136dd6ab",
+      "license": "CC-BY-NC-4.0",
+      "cachedAssetBytes": 1218043904,
+      "interface": "instructed listwise",
+      "joust": {
+        "direct": [
+          "MATCH",
+          "CROWN",
+          "BELT",
+          "GLOVE",
+          "PIANO"
+        ],
+        "wordnet": [
+          "BELT",
+          "MATCH",
+          "CROWN",
+          "GLOVE",
+          "PIANO"
+        ]
+      },
+      "targetHits": {
+        "direct": 14,
+        "wordnet": 14,
+        "maximum": 14
+      },
+      "result": "Clears every fixed fixture with and without WordNet, but the noncommercial license and 1.22 GB local asset block production."
+    }
+  ],
+  "namedHostedModels": [
+    {
+      "id": "cohere-rerank-v4.0-fast",
+      "status": "not-run",
+      "reason": "No Cohere credential is configured. No account or secret was created as part of the evaluation."
+    },
+    {
+      "id": "cohere-rerank-v4.0-pro",
+      "status": "not-run",
+      "reason": "No Cohere credential is configured. No account or secret was created as part of the evaluation."
+    }
+  ],
+  "hostedProxyReport": "hosted-listwise-reranker-evaluation.json"
+}

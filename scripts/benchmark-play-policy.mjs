@@ -85,9 +85,24 @@ const OPERATIVE_RANKINGS = [
   "concept-rerank",
   "direct",
 ];
-const RERANKER_MODEL = "Xenova/ms-marco-MiniLM-L-6-v2";
-const RERANKER_REVISION =
-  "a09144355adeed5f58c8ed011d209bf8ee5a1fec";
+const BENCHMARK_RERANKERS = Object.freeze({
+  "minilm-ms-marco": {
+    model: "Xenova/ms-marco-MiniLM-L-6-v2",
+    revision: "a09144355adeed5f58c8ed011d209bf8ee5a1fec",
+  },
+  "mixedbread-xsmall-v1": {
+    model: "mixedbread-ai/mxbai-rerank-xsmall-v1",
+    revision: "b5c6e9da73abc3711f593f705371cdbe9e0fe422",
+  },
+});
+const RERANKER_ID =
+  process.env.BENCHMARK_RERANKER_ID ?? "minilm-ms-marco";
+const RERANKER_DEFINITION = BENCHMARK_RERANKERS[RERANKER_ID];
+if (!RERANKER_DEFINITION) {
+  throw new Error(
+    `Unknown BENCHMARK_RERANKER_ID ${RERANKER_ID}. Expected ${Object.keys(BENCHMARK_RERANKERS).join(", ")}.`,
+  );
+}
 const RERANKER_SHORTLIST_SIZE = 8;
 const RERANKER_ADJUSTMENT_CAP = 0.04;
 const conceptDefinitionPromises = new Map();
@@ -353,6 +368,15 @@ const report = {
         : options.operativeRanking !== "direct"
           ? "The requested concept ranker is unavailable for this model or calibration, so every turn uses centered direct clue-to-card similarity."
           : "Every turn uses centered direct clue-to-card similarity.",
+    reranker: benchmarkReranker
+      ? {
+          id: RERANKER_ID,
+          model: RERANKER_DEFINITION.model,
+          revision: RERANKER_DEFINITION.revision,
+          shortlistSize: RERANKER_SHORTLIST_SIZE,
+          adjustmentCap: RERANKER_ADJUSTMENT_CAP,
+        }
+      : null,
     operativeAggression:
       `Policy comparison uses ${options.operativeAggression} for the clue-policy rows and holds hybrid clue scoring fixed across all three operative modes.`,
     operativeNoise:
@@ -1572,16 +1596,18 @@ function loadConceptFile(file) {
 }
 
 async function loadBenchmarkReranker() {
-  console.log(`Loading local benchmark reranker ${RERANKER_MODEL}...`);
+  console.log(
+    `Loading local benchmark reranker ${RERANKER_ID} (${RERANKER_DEFINITION.model})...`,
+  );
   const [tokenizer, model] = await Promise.all([
-    AutoTokenizer.from_pretrained(RERANKER_MODEL, {
-      revision: RERANKER_REVISION,
+    AutoTokenizer.from_pretrained(RERANKER_DEFINITION.model, {
+      revision: RERANKER_DEFINITION.revision,
     }),
     AutoModelForSequenceClassification.from_pretrained(
-      RERANKER_MODEL,
+      RERANKER_DEFINITION.model,
       {
         dtype: "q8",
-        revision: RERANKER_REVISION,
+        revision: RERANKER_DEFINITION.revision,
       },
     ),
   ]);

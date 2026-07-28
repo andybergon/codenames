@@ -7,8 +7,12 @@ import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = resolve(fileURLToPath(new URL("..", import.meta.url)));
-const MODEL = "Xenova/ms-marco-MiniLM-L-6-v2";
-const REVISION = "a09144355adeed5f58c8ed011d209bf8ee5a1fec";
+const MODEL =
+  process.env.RERANKER_MODEL ??
+  "Xenova/ms-marco-MiniLM-L-6-v2";
+const REVISION =
+  process.env.RERANKER_REVISION ??
+  "a09144355adeed5f58c8ed011d209bf8ee5a1fec";
 
 env.cacheDir =
   process.env.HF_CACHE_DIR ?? resolve(ROOT, ".cache/huggingface");

@@ -13,9 +13,15 @@ The runtime lazily loads the board dictionary and one of 256 deterministic FNV-1
 
 ## Operative reranker benchmark
 
-The non-production reranker ablation uses `Xenova/ms-marco-MiniLM-L-6-v2` at revision `a09144355adeed5f58c8ed011d209bf8ee5a1fec`. The upstream `cross-encoder/ms-marco-MiniLM-L6-v2` model is Apache-2.0. Its quantized ONNX weights stay in the local Hugging Face cache and are not checked into this repository or loaded by Play.
+The non-production local sweep uses pinned quantized artifacts that stay in local caches and are never loaded by Play:
 
-The checked report retains only aggregate Codenames metrics, model metadata, size, latency, and memory. Human dataset rows and model weights remain local.
+- `Xenova/ms-marco-MiniLM-L-6-v2` at `a09144355adeed5f58c8ed011d209bf8ee5a1fec`, Apache-2.0 upstream.
+- `mixedbread-ai/mxbai-rerank-xsmall-v1` at `b5c6e9da73abc3711f593f705371cdbe9e0fe422`, Apache-2.0.
+- `Xenova/bge-reranker-base` at `280bcc27a84e0b898c251e06fddb25171bd9b101`, MIT upstream.
+- `onnx-community/bge-reranker-v2-m3-ONNX` at `6f5ff65298512715a1e669753bc754d2bc8f367b`, Apache-2.0 upstream.
+- `onnx-community/gte-multilingual-reranker-base` at `ee64367e35a2db0da46bb6497e13a18f8bd585cb`, Apache-2.0 upstream.
+
+The fixed comparison also runs `jinaai/jina-reranker-v3-mlx` at `1d19fe38ae4e6658221479747c1152d6136dd6ab`. Its CC BY-NC 4.0 license blocks production use. The checked reports retain only aggregate human metrics, original project fixtures, model metadata, size, latency, memory, and capped hosted usage. Human dataset rows and model weights remain local.
 
 ## Italian Train and Play beta
 

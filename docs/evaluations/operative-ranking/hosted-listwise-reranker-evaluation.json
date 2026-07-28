@@ -1,0 +1,203 @@
+{
+  "version": 1,
+  "generatedAt": "2026-07-28T04:15:24.282Z",
+  "methodology": {
+    "model": "gpt-5.4-nano-2026-03-17",
+    "fixtureCount": 6,
+    "modes": [
+      "direct public clue-card list",
+      "WordNet-expanded public clue-card list"
+    ],
+    "prompt": "Rank each public card list by human Codenames association, including indirect thematic, cultural, functional, and wordplay relationships.",
+    "automaticRuntimeEligible": false,
+    "reason": "Hosted listwise inference is comparison-only because Play must remain offline, local-first, bounded, and free per turn.",
+    "pricingCheckedAt": "2026-07-28"
+  },
+  "cost": {
+    "capUsd": 0.005,
+    "projectedMaxCostUsd": 0.002581,
+    "billedCostUsd": 0.0008,
+    "usage": {
+      "direct": {
+        "inputTokens": 368,
+        "outputTokens": 156
+      },
+      "wordnet": {
+        "inputTokens": 1681,
+        "outputTokens": 156
+      }
+    }
+  },
+  "fixtures": [
+    {
+      "id": "joust",
+      "clue": "JOUST",
+      "targets": [
+        "MATCH",
+        "CROWN",
+        "GLOVE",
+        "BELT"
+      ],
+      "direct": {
+        "ranking": [
+          "MATCH",
+          "CROWN",
+          "GLOVE",
+          "BELT",
+          "PIANO"
+        ],
+        "targetHits": 4
+      },
+      "wordnet": {
+        "ranking": [
+          "MATCH",
+          "CROWN",
+          "GLOVE",
+          "BELT",
+          "PIANO"
+        ],
+        "targetHits": 4
+      }
+    },
+    {
+      "id": "paleography",
+      "clue": "PALEOGRAPHY",
+      "targets": [
+        "PAPER",
+        "JOURNAL"
+      ],
+      "direct": {
+        "ranking": [
+          "PAPER",
+          "JOURNAL",
+          "SHAKESPEARE",
+          "VINYL",
+          "TEETH"
+        ],
+        "targetHits": 2
+      },
+      "wordnet": {
+        "ranking": [
+          "PAPER",
+          "JOURNAL",
+          "SHAKESPEARE",
+          "TEETH",
+          "VINYL"
+        ],
+        "targetHits": 2
+      }
+    },
+    {
+      "id": "heraldry",
+      "clue": "HERALDRY",
+      "targets": [
+        "CROWN",
+        "EAGLE"
+      ],
+      "direct": {
+        "ranking": [
+          "CROWN",
+          "EAGLE",
+          "WEAPON",
+          "SIEGE",
+          "SORCERER"
+        ],
+        "targetHits": 2
+      },
+      "wordnet": {
+        "ranking": [
+          "CROWN",
+          "EAGLE",
+          "WEAPON",
+          "SIEGE",
+          "SORCERER"
+        ],
+        "targetHits": 2
+      }
+    },
+    {
+      "id": "specter",
+      "clue": "SPECTER",
+      "targets": [
+        "GHOST",
+        "SHADOW"
+      ],
+      "direct": {
+        "ranking": [
+          "GHOST",
+          "SHADOW",
+          "MIRROR",
+          "RADAR",
+          "GENIUS"
+        ],
+        "targetHits": 2
+      },
+      "wordnet": {
+        "ranking": [
+          "GHOST",
+          "SHADOW",
+          "GENIUS",
+          "MIRROR",
+          "RADAR"
+        ],
+        "targetHits": 2
+      }
+    },
+    {
+      "id": "thespian",
+      "clue": "THESPIAN",
+      "targets": [
+        "PLAY",
+        "ACTOR"
+      ],
+      "direct": {
+        "ranking": [
+          "PLAY",
+          "ACTOR",
+          "AGENT",
+          "ALIEN",
+          "SURGEON"
+        ],
+        "targetHits": 2
+      },
+      "wordnet": {
+        "ranking": [
+          "PLAY",
+          "ACTOR",
+          "AGENT",
+          "SURGEON",
+          "ALIEN"
+        ],
+        "targetHits": 2
+      }
+    },
+    {
+      "id": "seance",
+      "clue": "SEANCE",
+      "targets": [
+        "GHOST",
+        "SPIRIT"
+      ],
+      "direct": {
+        "ranking": [
+          "GHOST",
+          "SPIRIT",
+          "UNDERTAKER",
+          "SCORPION",
+          "OASIS"
+        ],
+        "targetHits": 2
+      },
+      "wordnet": {
+        "ranking": [
+          "GHOST",
+          "SPIRIT",
+          "SCORPION",
+          "OASIS",
+          "UNDERTAKER"
+        ],
+        "targetHits": 2
+      }
+    }
+  ]
+}

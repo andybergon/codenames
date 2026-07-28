@@ -127,7 +127,7 @@ const italianPlayTransferBenchmark = JSON.parse(
 );
 const conceptRankingEvaluation = JSON.parse(
   await readFile(
-    "scripts/generated/concept-ranking-evaluation.json",
+    "docs/evaluations/operative-ranking/concept-ranking-evaluation.json",
     "utf8",
   ),
 );
@@ -143,37 +143,49 @@ const joustConceptData = JSON.parse(
 );
 const conceptFullGameComparison = JSON.parse(
   await readFile(
-    "scripts/generated/concept-ranking-full-game-comparison.json",
+    "docs/evaluations/operative-ranking/concept-ranking-full-game-comparison.json",
     "utf8",
   ),
 );
 const concept30kSmokeComparison = JSON.parse(
   await readFile(
-    "scripts/generated/concept-ranking-30k-smoke-comparison.json",
+    "docs/evaluations/operative-ranking/concept-ranking-30k-smoke-comparison.json",
     "utf8",
   ),
 );
 const conceptCrossModelComparison = JSON.parse(
   await readFile(
-    "scripts/generated/concept-ranking-cross-model-comparison.json",
+    "docs/evaluations/operative-ranking/concept-ranking-cross-model-comparison.json",
     "utf8",
   ),
 );
 const unrestrictedConceptCrossModelComparison = JSON.parse(
   await readFile(
-    "scripts/generated/concept-ranking-unrestricted-cross-model-comparison.json",
+    "docs/evaluations/operative-ranking/concept-ranking-unrestricted-cross-model-comparison.json",
     "utf8",
   ),
 );
 const bridgeRerankerFullGameComparison = JSON.parse(
   await readFile(
-    "scripts/generated/bridge-reranker-full-game-comparison.json",
+    "docs/evaluations/operative-ranking/bridge-reranker-full-game-comparison.json",
     "utf8",
   ),
 );
 const bridgeRerankerCrossModelComparison = JSON.parse(
   await readFile(
-    "scripts/generated/bridge-reranker-cross-model-comparison.json",
+    "docs/evaluations/operative-ranking/bridge-reranker-cross-model-comparison.json",
+    "utf8",
+  ),
+);
+const mixedbreadRerankerFullGameComparison = JSON.parse(
+  await readFile(
+    "docs/evaluations/operative-ranking/mixedbread-bridge-reranker-full-game-comparison.json",
+    "utf8",
+  ),
+);
+const hostedListwiseRerankerEvaluation = JSON.parse(
+  await readFile(
+    "docs/evaluations/operative-ranking/hosted-listwise-reranker-evaluation.json",
     "utf8",
   ),
 );
@@ -236,27 +248,39 @@ assert.deepEqual(
   new Set(["MATCH", "CROWN", "GLOVE", "BELT"]),
 );
 assert.equal(evaluatedJoustRanking.at(-1), "PIANO");
-assert.equal(conceptRankingEvaluation.version, 4);
+assert.equal(conceptRankingEvaluation.version, 5);
+const miniLmReranker = conceptRankingEvaluation.rerankerEvaluations.find(
+  ({ id }) => id === "minilm-ms-marco",
+);
 assert.equal(
-  conceptRankingEvaluation.rerankerEvaluation.paidCostUsd,
+  miniLmReranker.paidCostUsd,
   0,
 );
 assert.equal(
-  conceptRankingEvaluation.rerankerEvaluation.directReranker.joust[0]
-    .word,
+  miniLmReranker.directReranker.joust[0].word,
   "PIANO",
 );
+const mixedbreadReranker =
+  conceptRankingEvaluation.rerankerEvaluations.find(
+    ({ id }) => id === "mixedbread-xsmall-v1",
+  );
+assert.equal(
+  mixedbreadReranker.directReranker.joust.at(-1).word,
+  "PIANO",
+);
+assert.equal(
+  conceptRankingEvaluation.approaches.hostedLlmReranker.paidCostUsd,
+  0.0008,
+);
 assert.ok(
-  conceptRankingEvaluation.rerankerEvaluation.directReranker.datasets
+  miniLmReranker.directReranker.datasets
     .culturalCodes.targetRecallAtCount <
     conceptRankingEvaluation.models.find(
       ({ id }) => id === "bge-small",
     ).guarded["0.05"]["0.2"].culturalCodes.targetRecallAtCount,
 );
 const rerankedJoust =
-  conceptRankingEvaluation.rerankerEvaluation.pipelines[
-    "0.04"
-  ].joust.map(({ word }) => word);
+  miniLmReranker.pipelines["0.04"].joust.map(({ word }) => word);
 assert.deepEqual(
   new Set(rerankedJoust.slice(0, 4)),
   new Set(["MATCH", "CROWN", "GLOVE", "BELT"]),
@@ -265,11 +289,25 @@ assert.equal(rerankedJoust.at(-1), "PIANO");
 for (const comparison of [
   bridgeRerankerFullGameComparison,
   bridgeRerankerCrossModelComparison,
+  mixedbreadRerankerFullGameComparison,
 ]) {
   const metrics = comparison.candidates[0].comparison.metrics;
   for (const metric of Object.values(metrics)) {
     assert.equal(metric.delta.estimate, 0);
   }
+}
+assert.equal(
+  mixedbreadRerankerFullGameComparison.candidates[0].methodology
+    .reranker.id,
+  "mixedbread-xsmall-v1",
+);
+assert.ok(
+  hostedListwiseRerankerEvaluation.cost.billedCostUsd <
+    hostedListwiseRerankerEvaluation.cost.capUsd,
+);
+for (const fixture of hostedListwiseRerankerEvaluation.fixtures) {
+  assert.equal(fixture.direct.targetHits, fixture.targets.length);
+  assert.equal(fixture.wordnet.targetHits, fixture.targets.length);
 }
 const productionConceptEvaluation =
   conceptRankingEvaluation.models.find(

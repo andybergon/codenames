@@ -29,7 +29,7 @@ import { centerEmbeddings } from "../src/embeddings.js";
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const REPORT_PATH = resolve(
   ROOT,
-  "scripts/generated/concept-ranking-evaluation.json",
+  "docs/evaluations/operative-ranking/concept-ranking-evaluation.json",
 );
 const CONCEPT_DIRECTORY = resolve(ROOT, "public/data/concepts");
 const MODEL_DEFINITIONS = [
@@ -76,12 +76,52 @@ const OFFSETS = [0, 0.025, 0.05, 0.075, 0.1];
 const ACTIVATION_CEILINGS = [0.2, 0.22, 0.25, 0.3];
 const GUARDED_OFFSETS = [0.05, 0.075, 0.1];
 const BATCH_SIZE = 128;
-const RERANKER_BATCH_SIZE = 128;
-const RERANKER_MODEL = "Xenova/ms-marco-MiniLM-L-6-v2";
-const RERANKER_REVISION =
-  "a09144355adeed5f58c8ed011d209bf8ee5a1fec";
 const RERANKER_SHORTLIST_SIZE = 8;
 const RERANKER_ADJUSTMENT_CAPS = [0.005, 0.01, 0.02, 0.04];
+const RERANKER_DEFINITIONS = [
+  {
+    id: "minilm-ms-marco",
+    model: "Xenova/ms-marco-MiniLM-L-6-v2",
+    revision: "a09144355adeed5f58c8ed011d209bf8ee5a1fec",
+    license: "Apache-2.0",
+    trainingTask: "MS MARCO passage relevance",
+    humanSampleStride: 1,
+    batchSize: 128,
+  },
+  {
+    id: "mixedbread-xsmall-v1",
+    model: "mixedbread-ai/mxbai-rerank-xsmall-v1",
+    revision: "b5c6e9da73abc3711f593f705371cdbe9e0fe422",
+    license: "Apache-2.0",
+    trainingTask: "English retrieval reranking",
+    humanSampleStride: 1,
+    batchSize: 128,
+  },
+  {
+    id: "bge-reranker-base",
+    model: "Xenova/bge-reranker-base",
+    revision: "280bcc27a84e0b898c251e06fddb25171bd9b101",
+    license: "MIT",
+    trainingTask: "English and Chinese retrieval reranking",
+    humanSampleStride: 8,
+    batchSize: 32,
+  },
+  {
+    id: "bge-reranker-v2-m3",
+    model: "onnx-community/bge-reranker-v2-m3-ONNX",
+    revision: "6f5ff65298512715a1e669753bc754d2bc8f367b",
+    license: "Apache-2.0",
+    trainingTask: "Multilingual retrieval reranking",
+    humanSampleStride: 8,
+    batchSize: 16,
+  },
+];
+const REQUESTED_RERANKER_IDS = new Set(
+  (process.env.RERANKER_IDS ?? RERANKER_DEFINITIONS.map(({ id }) => id).join(","))
+    .split(",")
+    .map((id) => id.trim())
+    .filter(Boolean),
+);
 const execFileAsync = promisify(execFile);
 
 env.cacheDir =
@@ -104,7 +144,7 @@ const terms = [
   ]),
 ].sort();
 const modelReports = [];
-let rerankerEvaluation = null;
+const rerankerEvaluations = [];
 
 for (const definition of MODEL_DEFINITIONS) {
   const manifest = JSON.parse(
@@ -160,10 +200,27 @@ for (const definition of MODEL_DEFINITIONS) {
     ]),
   );
   if (definition.id === "bge-small") {
-    rerankerEvaluation = await evaluateRerankerAblations({
-      context,
-      datasets,
-    });
+    for (const rerankerDefinition of RERANKER_DEFINITIONS) {
+      if (!REQUESTED_RERANKER_IDS.has(rerankerDefinition.id)) {
+        continue;
+      }
+      const sampledDatasets = Object.fromEntries(
+        Object.entries(datasets).map(([name, turns]) => [
+          name,
+          turns.filter(
+            (_turn, index) =>
+              index % rerankerDefinition.humanSampleStride === 0,
+          ),
+        ]),
+      );
+      rerankerEvaluations.push(
+        await evaluateRerankerAblations({
+          context,
+          datasets: sampledDatasets,
+          definition: rerankerDefinition,
+        }),
+      );
+    }
   }
   modelReports.push({
     id: definition.id,
@@ -207,7 +264,7 @@ for (const definition of MODEL_DEFINITIONS) {
 }
 
 const report = {
-  version: 4,
+  version: 5,
   fixture:
     "JOUST → medieval tournament → MATCH / CROWN / GLOVE / BELT, where PIANO was guessed before those stronger human associations.",
   source: {
@@ -229,10 +286,8 @@ const report = {
     },
     pairwiseCrossEncoder: {
       description:
-        "A local MS MARCO MiniLM cross-encoder scores each raw clue-card pair without WordNet evidence.",
-      model: RERANKER_MODEL,
-      revision: RERANKER_REVISION,
-      license: "Apache-2.0",
+        "Pinned local cross-encoders score each raw clue-card pair without WordNet evidence. Larger candidates use deterministic human-data samples before any promotion run.",
+      candidates: RERANKER_DEFINITIONS,
     },
     boundedBridgeRerank: {
       description:
@@ -241,10 +296,12 @@ const report = {
       adjustmentCaps: RERANKER_ADJUSTMENT_CAPS,
     },
     hostedLlmReranker: {
-      status: "screened-without-paid-run",
+      status: "capped-comparison-complete",
       reason:
-        "The local cross-encoder supplies the requested learned-reranker comparison without sending public game data to a service. Hosted listwise rerankers remain ineligible for automatic local-first turns.",
-      paidCostUsd: 0,
+        "GPT-5.4 nano ranks six original public fixture boards with and without WordNet evidence. Hosted ranking remains ineligible for automatic local-first turns.",
+      paidCostUsd: 0.0008,
+      report:
+        "docs/evaluations/operative-ranking/hosted-listwise-reranker-evaluation.json",
     },
   },
   candidateScreen: [
@@ -291,21 +348,35 @@ const report = {
         "Prior standalone evaluation improved human recall but failed Fun and transfer gates; its CC BY-SA artifact remains unsuitable for redistribution without review.",
     },
     {
-      candidate: "pairwise MiniLM cross-encoder",
+      candidate: "local pairwise cross-encoders",
       representation: "learned direct reranker",
       status: "evaluated",
       reason:
-        "Small Apache-2.0 local ONNX model provides an offline pairwise ablation.",
+        "MiniLM and Mixedbread use full human data. BGE base and BGE v2-m3 use deterministic one-in-eight human samples after failing direct JOUST.",
+    },
+    {
+      candidate: "GTE multilingual reranker",
+      representation: "learned direct reranker",
+      status: "fixed-screen-only",
+      reason:
+        "Its custom ONNX architecture was run on all six original fixtures. Direct ranking fails JOUST, while all-definition WordNet input repairs JOUST but loses targets on three other fixtures.",
+    },
+    {
+      candidate: "Jina reranker v3",
+      representation: "instructed listwise reranker",
+      status: "license-blocked",
+      reason:
+        "It clears all six original fixtures with and without WordNet, but CC BY-NC 4.0 and a 1.22 GB local asset block production.",
     },
     {
       candidate: "hosted listwise reranker",
       representation: "learned listwise reranker",
       status: "comparison-only",
       reason:
-        "Automatic turns must stay offline, bounded, and free per turn; no paid call was needed after the local ablation.",
+        "A two-request GPT-5.4 nano fixture run cost $0.0008 under a $0.005 hard cap. Automatic turns must stay offline, bounded, and free per turn.",
     },
   ],
-  rerankerEvaluation,
+  rerankerEvaluations,
   selected: {
     approach: "wordnetSenseBridge",
     modelId: "bge-small",
@@ -314,7 +385,7 @@ const report = {
     minimumClueNumber: 2,
     otherModelBehavior: "direct",
     rationale:
-      "Retain the runtime WordNet bridge. The direct cross-encoder fails JOUST and every human-alignment gate. The best bounded bridge-rerank pipeline still depends on WordNet, adds a second 23.9 MB model, and produces no full-game improvement for only marginal aggregate movement.",
+      "Retain the runtime WordNet bridge. Mixedbread is the only production-eligible direct reranker that clears JOUST, but it trails WordNet on both full human datasets. Adding it after WordNet produces zero 20-board full-game deltas while adding a 95.9 MB cache and about 547 MB resident peak. Larger local models add more cost without stronger evidence, Jina is noncommercial, and hosted listwise ranking violates the offline automatic-turn boundary.",
   },
   models: modelReports,
 };
@@ -938,22 +1009,29 @@ function quantizedDot(vectors, row, vector, manifest) {
   return total / manifest.quantization.scale;
 }
 
-async function evaluateRerankerAblations({ context, datasets }) {
+async function evaluateRerankerAblations({
+  context,
+  datasets,
+  definition,
+}) {
   const pairs = collectEvaluationPairs(datasets);
   const cacheDirectory = resolve(
     env.cacheDir,
-    ...RERANKER_MODEL.split("/"),
+    ...definition.model.split("/"),
+  );
+  console.log(
+    `Loading ${definition.id} for ${pairs.length.toLocaleString("en-US")} unique pairs.`,
   );
   const loadStartedAt = performance.now();
   const [tokenizer, model] = await Promise.all([
-    AutoTokenizer.from_pretrained(RERANKER_MODEL, {
-      revision: RERANKER_REVISION,
+    AutoTokenizer.from_pretrained(definition.model, {
+      revision: definition.revision,
     }),
     AutoModelForSequenceClassification.from_pretrained(
-      RERANKER_MODEL,
+      definition.model,
       {
         dtype: "q8",
-        revision: RERANKER_REVISION,
+        revision: definition.revision,
       },
     ),
   ]);
@@ -970,6 +1048,17 @@ async function evaluateRerankerAblations({ context, datasets }) {
       passage: word,
     })),
     tokenizer,
+    batchSize: definition.batchSize,
+  });
+  await rescoreFixedGroups({
+    model,
+    scores: directScores,
+    tokenizer,
+    transform: ({ clue, word }) => ({
+      key: pairKey(clue, word),
+      query: clue,
+      passage: word,
+    }),
   });
   const bridgeEvidence = new Map(
     pairs.map(({ clue, word }) => [
@@ -995,6 +1084,23 @@ async function evaluateRerankerAblations({ context, datasets }) {
     model,
     pairs: expandedPairs,
     tokenizer,
+    batchSize: definition.batchSize,
+  });
+  await rescoreFixedGroups({
+    model,
+    scores: expandedScores,
+    tokenizer,
+    transform: ({ clue, word }) => {
+      const key = pairKey(clue, word);
+      const evidence = bridgeEvidence.get(key);
+      return evidence
+        ? {
+            key,
+            query: `${clue}: ${evidence.clueSense}`,
+            passage: `${word}: ${evidence.cardSense}`,
+          }
+        : null;
+    },
   });
 
   const directReranker = {
@@ -1051,13 +1157,23 @@ async function evaluateRerankerAblations({ context, datasets }) {
   if (typeof model.dispose === "function") {
     await model.dispose();
   }
-  const isolatedActivation = await measureRerankerActivation();
+  const isolatedActivation = await measureRerankerActivation(
+    definition,
+  );
 
   return {
-    model: RERANKER_MODEL,
-    revision: RERANKER_REVISION,
-    license: "Apache-2.0",
-    trainingTask: "MS MARCO passage relevance",
+    id: definition.id,
+    model: definition.model,
+    revision: definition.revision,
+    license: definition.license,
+    trainingTask: definition.trainingTask,
+    humanSampleStride: definition.humanSampleStride,
+    turns: Object.fromEntries(
+      Object.entries(datasets).map(([name, turns]) => [
+        name,
+        turns.length,
+      ]),
+    ),
     pairCount: pairs.length,
     bridgeExpandedPairCount: expandedPairs.length,
     shortlistSize: RERANKER_SHORTLIST_SIZE,
@@ -1105,6 +1221,7 @@ function collectEvaluationPairs(datasets) {
 }
 
 async function scoreRerankerPairs({
+  batchSize,
   label,
   model,
   pairs,
@@ -1114,11 +1231,11 @@ async function scoreRerankerPairs({
   for (
     let start = 0;
     start < pairs.length;
-    start += RERANKER_BATCH_SIZE
+    start += batchSize
   ) {
     const batch = pairs.slice(
       start,
-      start + RERANKER_BATCH_SIZE,
+      start + batchSize,
     );
     const inputs = await tokenizer(
       batch.map(({ query }) => query),
@@ -1135,7 +1252,7 @@ async function scoreRerankerPairs({
     });
     if (
       start > 0 &&
-      start % (RERANKER_BATCH_SIZE * 200) === 0
+      start % (batchSize * 200) === 0
     ) {
       console.log(
         `Scored ${start.toLocaleString("en-US")}/${pairs.length.toLocaleString("en-US")} ${label} pairs.`,
@@ -1143,6 +1260,38 @@ async function scoreRerankerPairs({
     }
   }
   return scores;
+}
+
+async function rescoreFixedGroups({
+  model,
+  scores,
+  tokenizer,
+  transform,
+}) {
+  const groups = [
+    {
+      clue: "joust",
+      candidates: JOUST_WORDS,
+    },
+    ...ORIGINAL_FIXTURES,
+  ];
+  for (const { candidates, clue } of groups) {
+    const pairs = candidates
+      .map((word) => transform({ clue, word }))
+      .filter(Boolean);
+    const inputs = await tokenizer(
+      pairs.map(({ query }) => query),
+      {
+        text_pair: pairs.map(({ passage }) => passage),
+        padding: true,
+        truncation: true,
+      },
+    );
+    const logits = (await model(inputs)).logits.tolist();
+    pairs.forEach(({ key }, index) => {
+      scores.set(key, logits[index][0]);
+    });
+  }
 }
 
 function strongestBridgeEvidence(context, clue, word) {
@@ -1388,7 +1537,7 @@ async function directorySize(path) {
   }
 }
 
-async function measureRerankerActivation() {
+async function measureRerankerActivation(definition) {
   const { stdout } = await execFileAsync(
     process.execPath,
     [
@@ -1400,6 +1549,8 @@ async function measureRerankerActivation() {
         ...process.env,
         ALLOW_REMOTE_MODELS: "0",
         HF_CACHE_DIR: env.cacheDir,
+        RERANKER_MODEL: definition.model,
+        RERANKER_REVISION: definition.revision,
       },
     },
   );
