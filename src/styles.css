@@ -2270,12 +2270,40 @@ h3 {
 
 .analytics-review-game:hover,
 .analytics-review-game:focus-visible,
-.analytics-review-game[data-selected="true"] {
+.analytics-review-game[data-selected="true"],
+.analytics-review-game[data-loading="true"] {
   border-radius: 7px;
   background: var(--subtle-fill);
 }
 
-.analytics-review-game > span {
+.analytics-review-game[data-loading="true"] {
+  cursor: progress;
+}
+
+.analytics-review-game-title,
+.analytics-review-game-loading {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.analytics-review-game-title {
+  justify-content: space-between;
+  min-width: 0;
+}
+
+.analytics-review-game-title strong {
+  overflow-wrap: anywhere;
+}
+
+.analytics-review-game-loading {
+  flex: 0 0 auto;
+  color: var(--muted);
+  font-size: 0.66rem;
+  font-weight: 800;
+}
+
+.analytics-review-game-metadata {
   color: var(--muted);
   font-size: 0.7rem;
 }

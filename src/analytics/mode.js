@@ -41,6 +41,8 @@ export function createAnalyticsReviewMode({
   let nextCursor = null;
   let gamesCollapsed = false;
   let timelineCollapsed = false;
+  let loadingGameId = null;
+  let gameLoadRequest = 0;
 
   elements.authForm.addEventListener("submit", (event) => {
     event.preventDefault();
@@ -84,6 +86,11 @@ export function createAnalyticsReviewMode({
   }
 
   async function loadGames({ append = false } = {}) {
+    if (!append) {
+      gameLoadRequest += 1;
+      loadingGameId = null;
+      elements.detail.removeAttribute("aria-busy");
+    }
     const scrollTop = elements.list.scrollTop;
     elements.list.setAttribute("aria-busy", "true");
     elements.listStatus.textContent = "";
@@ -144,13 +151,19 @@ export function createAnalyticsReviewMode({
   }
 
   async function loadGame(analyticsId) {
+    const requestId = ++gameLoadRequest;
+    loadingGameId = analyticsId;
+    renderList();
     elements.detail.setAttribute("aria-busy", "true");
     const result = await request(
       "GET",
       null,
       `?game=${encodeURIComponent(analyticsId)}`,
     );
+    if (requestId !== gameLoadRequest) return;
+    loadingGameId = null;
     elements.detail.removeAttribute("aria-busy");
+    renderList();
     if (!result.ok) {
       elements.detail.textContent =
         result.body?.error ?? "The game could not be loaded.";
@@ -175,14 +188,21 @@ export function createAnalyticsReviewMode({
     }
     const gameButtons = games.map((game) => {
       const button = document.createElement("button");
+      const titleRow = document.createElement("span");
       const heading = document.createElement("strong");
       const metadata = document.createElement("span");
       const badges = document.createElement("span");
+      const isLoading = loadingGameId === game.analyticsId;
       button.type = "button";
       button.className = "analytics-review-game";
+      button.disabled = isLoading;
+      button.dataset.loading = String(isLoading);
       button.dataset.selected = String(
         selected?.analyticsId === game.analyticsId,
       );
+      button.setAttribute("aria-busy", String(isLoading));
+      titleRow.className = "analytics-review-game-title";
+      metadata.className = "analytics-review-game-metadata";
       heading.textContent = `${game.language.toUpperCase()} · ${
         game.phase === "complete" ? game.winner ?? "Complete" : game.phase
       }`;
@@ -200,8 +220,12 @@ export function createAnalyticsReviewMode({
           ? [badge(`${game.feedbackCount} feedback`)]
           : []),
       );
+      titleRow.append(heading);
+      if (isLoading) {
+        titleRow.append(gameLoadingStatus());
+      }
       button.append(
-        heading,
+        titleRow,
         metadata,
         ...(badges.childElementCount ? [badges] : []),
       );
@@ -687,6 +711,19 @@ function badge(text) {
   item.className = "analytics-review-badge";
   item.textContent = text;
   return item;
+}
+
+function gameLoadingStatus() {
+  const status = document.createElement("span");
+  const spinner = document.createElement("span");
+  const label = document.createElement("span");
+  status.className = "analytics-review-game-loading";
+  status.setAttribute("role", "status");
+  spinner.className = "play-turn-spinner";
+  spinner.setAttribute("aria-hidden", "true");
+  label.textContent = "Loading";
+  status.append(spinner, label);
+  return status;
 }
 
 function feedbackItem(feedback) {

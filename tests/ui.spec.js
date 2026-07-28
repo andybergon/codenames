@@ -5396,6 +5396,8 @@ test("analytics review authenticates, filters, reviews games, and stays responsi
   let authenticated = false;
   let savedReview = null;
   let savedAnnotation = null;
+  let releaseGameDetail = null;
+  let delayGameDetail = true;
   const listCursors = [];
   const now = "2026-07-27T10:00:00.000Z";
   const replay = completedShareGame();
@@ -5485,6 +5487,12 @@ test("analytics review authenticates, filters, reviews games, and stays responsi
       return;
     }
     if (url.searchParams.get("game")) {
+      if (delayGameDetail) {
+        delayGameDetail = false;
+        await new Promise((resolve) => {
+          releaseGameDetail = resolve;
+        });
+      }
       await route.fulfill({
         contentType: "application/json",
         body: JSON.stringify({
@@ -5567,10 +5575,29 @@ test("analytics review authenticates, filters, reviews games, and stays responsi
   await expect(page.locator("#analytics-review-list")).toBeHidden();
   await page.getByRole("button", { name: "Show games" }).click();
   await expect(page.locator("#analytics-review-list")).toBeVisible();
+  await page.setViewportSize({ width: 390, height: 844 });
   await storedGame.click();
+  await expect.poll(() => releaseGameDetail !== null).toBe(true);
+  await expect(storedGame).toHaveAttribute("aria-busy", "true");
+  await expect(
+    storedGame.locator(".analytics-review-game-loading"),
+  ).toHaveText("Loading");
+  await expect(
+    storedGame.locator(".play-turn-spinner"),
+  ).toBeVisible();
+  expect(
+    await storedGame.evaluate(
+      (button) => button.scrollWidth <= button.clientWidth,
+    ),
+  ).toBe(true);
+  releaseGameDetail();
   await expect(
     page.getByRole("heading", { name: `Game ${summary.gameId}` }),
   ).toBeVisible();
+  await expect(storedGame).toHaveAttribute("aria-busy", "false");
+  await expect(
+    storedGame.locator(".analytics-review-game-loading"),
+  ).toHaveCount(0);
   await expect(
     page.locator(".analytics-review-board .play-card"),
   ).toHaveCount(25);
