@@ -68,7 +68,9 @@ Open `?mode=analytics` to review stored games. The default cohort excludes
 Developer and loopback-local games. Developer and Local remain independent,
 overlapping filters, so a local Developer game appears in either cohort.
 Filters also cover phase and review status. The game list uses opaque cursor
-pagination ordered by `(last_seen_at, id)` and loads 40 rows at a time.
+pagination ordered by `(last_seen_at, id)` and loads 40 rows at a time. Each
+entry shows its last-seen time, game ID, cohort, phase, action count, and
+current turn; selecting it opens the board directly.
 
 A game detail shows its board, replayable timeline, player feedback, and one
 bottom Review panel in that order. On wide screens, the timeline sits to the

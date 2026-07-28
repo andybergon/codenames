@@ -206,9 +206,13 @@ export function createAnalyticsReviewMode({
       heading.textContent = `${game.language.toUpperCase()} · ${
         game.phase === "complete" ? game.winner ?? "Complete" : game.phase
       }`;
-      metadata.textContent = `${game.actionCount} actions · turn ${
+      metadata.textContent = `${formatAnalyticsTimestamp(
+        game.lastSeenAt,
+      )} · Game ${game.gameId} · ${
+        game.developerMode ? "Developer" : "Player"
+      } · ${game.phase} · ${game.actionCount} actions · current turn ${
         game.turnNumber
-      } · ${formatDate(game.lastSeenAt)}`;
+      }`;
       badges.className = "analytics-review-badges";
       badges.append(
         ...(game.reviewStatus === "unreviewed"
@@ -261,29 +265,11 @@ export function createAnalyticsReviewMode({
       elements.detail.replaceChildren(empty);
       return;
     }
-    const header = document.createElement("div");
-    const title = document.createElement("div");
-    const heading = document.createElement("h2");
-    const metadata = document.createElement("p");
-    header.className = "analytics-review-detail-header";
-    heading.textContent = `Game ${selected.gameId}`;
-    metadata.textContent = [
-      selected.firstSeenAt,
-      selected.developerMode ? "Developer" : "Player",
-      ...(selected.localMode ? ["Local"] : []),
-      selected.phase,
-      `${selected.actionCount} actions`,
-      `last ${selected.lastSeenAt}`,
-    ].join(" · ");
-    title.append(heading, metadata);
-    header.append(title, badge(selected.reviewStatus));
-
     const overview = buildGameOverview();
     const timeline = buildTimeline();
     const feedback = buildFeedbackSummary();
     const review = buildReviewSection();
     elements.detail.replaceChildren(
-      header,
       overview,
       timeline,
       feedback,
@@ -425,12 +411,6 @@ export function createAnalyticsReviewMode({
       save.disabled = false;
       if (annotationResult && !annotationResult.ok) {
         renderList();
-        const detailBadge = elements.detail.querySelector(
-          ".analytics-review-detail-header .analytics-review-badge",
-        );
-        if (detailBadge) {
-          detailBadge.textContent = selected.reviewStatus;
-        }
         message.textContent =
           annotationResult.body?.error ??
           "Review saved, but the note could not be added.";
@@ -457,7 +437,6 @@ export function createAnalyticsReviewMode({
   function buildGameOverview() {
     const section = document.createElement("section");
     const heading = document.createElement("h3");
-    const context = document.createElement("p");
     section.className = "analytics-review-overview";
     heading.textContent = "Board";
     section.append(heading);
@@ -470,15 +449,13 @@ export function createAnalyticsReviewMode({
     }
     const selectedState = actionStates[selectedActionIndex] ?? null;
     const boardState = selectedState?.game ?? selected.game;
-    section.dataset.actionIndex = String(selectedActionIndex);
-    context.className = "analytics-review-board-state";
-    context.setAttribute("aria-live", "polite");
-    context.textContent = selectedState
+    const boardStateLabel = selectedState
       ? `After ${actionLabel(selectedState.event)}`
       : "Stored board state";
+    section.dataset.actionIndex = String(selectedActionIndex);
     const board = document.createElement("div");
     board.className = "analytics-review-board play-board-grid";
-    board.setAttribute("aria-label", context.textContent);
+    board.setAttribute("aria-label", boardStateLabel);
     board.append(
       ...boardState.cards.map((card) => {
         const item = document.createElement("button");
@@ -501,7 +478,7 @@ export function createAnalyticsReviewMode({
         return item;
       }),
     );
-    section.append(context, board);
+    section.append(board);
     return section;
   }
 
@@ -900,9 +877,7 @@ function teamLabel(team) {
   return "Assassin";
 }
 
-function formatDate(value) {
-  return new Intl.DateTimeFormat(undefined, {
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(new Date(value));
+function formatAnalyticsTimestamp(value) {
+  const iso = new Date(value).toISOString();
+  return `${iso.slice(0, 10)} ${iso.slice(11, 16)} UTC`;
 }

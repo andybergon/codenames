@@ -5557,6 +5557,12 @@ test("analytics review authenticates, filters, reviews games, and stays responsi
   await expect(
     storedGame.locator(".analytics-review-badge"),
   ).toHaveText(["1 feedback"]);
+  await expect(
+    storedGame.locator(".analytics-review-game-metadata"),
+  ).toHaveText(
+    "2026-07-27 10:00 UTC · Game g_reviewfixture · Player · " +
+      "complete · 2 actions · current turn 1",
+  );
   await page
     .locator("#analytics-review-cohort")
     .selectOption("local");
@@ -5592,13 +5598,11 @@ test("analytics review authenticates, filters, reviews games, and stays responsi
   ).toBe(true);
   releaseGameDetail();
   await expect(
-    page.getByRole("heading", { name: `Game ${summary.gameId}` }),
+    page.getByRole("heading", { name: "Board", exact: true }),
   ).toBeVisible();
   await expect(
-    page.locator(".analytics-review-detail-header p"),
-  ).toHaveText(
-    `${now} · Player · complete · 2 actions · last ${now}`,
-  );
+    page.locator(".analytics-review-detail-header"),
+  ).toHaveCount(0);
   await expect(storedGame).toHaveAttribute("aria-busy", "false");
   await expect(
     storedGame.locator(".analytics-review-game-loading"),
@@ -5630,7 +5634,13 @@ test("analytics review authenticates, filters, reviews games, and stays responsi
   ).toHaveClass(/is-done/);
   await expect(
     page.locator(".analytics-review-board-state"),
-  ).toHaveText("After Turn 1: guessed WORD24");
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole("button", {
+      name: "Viewing board after Turn 1: guessed WORD24",
+      exact: true,
+    }),
+  ).toHaveAttribute("aria-pressed", "true");
   await page
     .getByRole("button", {
       name: "View board after Turn 1: clue FIRST 1",
@@ -5643,8 +5653,11 @@ test("analytics review authenticates, filters, reviews games, and stays responsi
     ),
   ).not.toHaveClass(/is-done/);
   await expect(
-    page.locator(".analytics-review-board-state"),
-  ).toHaveText("After Turn 1: clue FIRST 1");
+    page.getByRole("button", {
+      name: "Viewing board after Turn 1: clue FIRST 1",
+      exact: true,
+    }),
+  ).toHaveAttribute("aria-pressed", "true");
   await page
     .getByRole("button", {
       name: "View board after Turn 1: guessed WORD24",
@@ -5699,10 +5712,8 @@ test("analytics review authenticates, filters, reviews games, and stays responsi
       .last(),
   ).toContainText("Review this opening turn.");
   await expect(
-    page.locator(
-      ".analytics-review-detail-header .analytics-review-badge",
-    ),
-  ).toHaveText("actionable");
+    storedGame.locator(".analytics-review-badge"),
+  ).toHaveText(["actionable", "1 feedback"]);
 
   for (const viewport of [
     { width: 390, height: 844 },
@@ -5753,7 +5764,7 @@ test("analytics review authenticates, filters, reviews games, and stays responsi
       `detail overflow at ${viewport.width}px`,
     ).toBe(false);
     expect(layout.boardColumns).toBe(5);
-    expect(layout.sectionOrder).toEqual([1, 2, 3, 4]);
+    expect(layout.sectionOrder).toEqual([0, 1, 2, 3]);
     expect(
       layout.timelineRightOfBoard,
       `timeline side placement at ${viewport.width}px`,
