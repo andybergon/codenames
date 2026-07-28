@@ -2104,7 +2104,7 @@ h3 {
 
 .analytics-review-auth form,
 .analytics-review-toolbar,
-.analytics-review-list,
+.analytics-review-games-panel,
 .analytics-review-detail {
   border: 1px solid var(--line);
   border-radius: 10px;
@@ -2165,12 +2165,91 @@ h3 {
   gap: 12px;
 }
 
+.analytics-review-layout[data-games-collapsed="true"] {
+  grid-template-columns: auto minmax(0, 1fr);
+}
+
+.analytics-review-games-panel {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  align-self: start;
+  max-height: calc(100vh - 190px);
+  overflow: hidden;
+}
+
+.analytics-review-panel-heading,
+.analytics-review-timeline .play-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.analytics-review-panel-heading {
+  padding: 10px 8px 2px;
+}
+
+.analytics-review-panel-heading h2 {
+  margin: 0;
+  font-size: 0.82rem;
+}
+
+.analytics-review-collapse-button {
+  min-height: 30px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 4px 8px;
+  background: var(--subtle-fill-soft);
+  color: var(--ink);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+.analytics-review-collapse-button:hover,
+.analytics-review-collapse-button:focus-visible {
+  background: var(--subtle-fill);
+}
+
+.analytics-review-games-panel[data-collapsed="true"] {
+  width: fit-content;
+}
+
+.analytics-review-games-panel[data-collapsed="true"]
+  .analytics-review-panel-heading {
+  padding: 8px;
+}
+
+.analytics-review-games-panel[data-collapsed="true"] h2,
+.analytics-review-games-panel[data-collapsed="true"]
+  .analytics-review-list,
+.analytics-review-games-panel[data-collapsed="true"]
+  .analytics-review-list-status {
+  display: none;
+}
+
 .analytics-review-list {
   display: grid;
   align-content: start;
-  max-height: calc(100vh - 190px);
   overflow-y: auto;
   padding: 8px;
+}
+
+.analytics-review-list-status {
+  margin: 0;
+  padding: 0 10px 8px;
+  color: var(--muted);
+  font-size: 0.7rem;
+}
+
+.analytics-review-list-status:empty {
+  display: none;
+}
+
+.analytics-review-load-more {
+  width: calc(100% - 12px);
+  margin: 8px 6px;
 }
 
 .analytics-review-game {
@@ -2321,6 +2400,44 @@ h3 {
   margin-bottom: 5px;
 }
 
+.analytics-review-timeline[data-collapsed="true"] {
+  align-content: start;
+}
+
+@media (min-width: 1180px) {
+  .analytics-review-detail {
+    grid-template-columns: minmax(0, 1fr) minmax(285px, 0.42fr);
+    align-items: start;
+  }
+
+  .analytics-review-detail-header,
+  .analytics-review-feedback,
+  .analytics-review-form {
+    grid-column: 1 / -1;
+  }
+
+  .analytics-review-overview {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .analytics-review-timeline {
+    grid-column: 2;
+    grid-row: 2;
+    max-height: calc(100vh - 260px);
+    overflow-y: auto;
+  }
+
+  .analytics-review-detail[data-timeline-collapsed="true"] {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .analytics-review-timeline[data-collapsed="true"]
+    .play-history-title {
+    display: none;
+  }
+}
+
 .analytics-review-history-action {
   display: block;
   width: 100%;
@@ -2352,7 +2469,11 @@ h3 {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .analytics-review-list {
+  .analytics-review-layout[data-games-collapsed="true"] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .analytics-review-games-panel {
     max-height: 230px;
   }
 }

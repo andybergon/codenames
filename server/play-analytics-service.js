@@ -18,6 +18,8 @@ const MAX_FEEDBACK_NOTE_LENGTH = 2_000;
 const MAX_REVIEW_NOTE_LENGTH = 5_000;
 const MAX_LABELS = 20;
 const MAX_LABEL_LENGTH = 40;
+const DEFAULT_LIST_LIMIT = 40;
+const MAX_LIST_LIMIT = 100;
 const FEEDBACK_CATEGORIES = new Set([
   "bug",
   "clue",
@@ -85,7 +87,10 @@ export async function handlePlayAnalyticsRequest({
         cookies[PLAY_ANALYTICS_COOKIE],
       );
       const participantKey = existingParticipant ?? randomUUID();
-      const snapshot = validateSnapshot(body);
+      const snapshot = {
+        ...validateSnapshot(body),
+        localMode: trustLocalClient,
+      };
       const result = await store.upsertGame(participantKey, snapshot);
       return {
         ...jsonResult(200, {
@@ -168,8 +173,15 @@ export async function handlePlayAnalyticsRequest({
         } catch {}
         return jsonResult(200, { game: { ...gameRow, game } });
       }
+      const filters = validateFilters(requestUrl.searchParams);
+      const listedGames = await store.listGames(filters);
+      const games = listedGames.slice(0, filters.limit);
       return jsonResult(200, {
-        games: await store.listGames(validateFilters(requestUrl.searchParams)),
+        games,
+        nextCursor:
+          listedGames.length > filters.limit
+            ? encodeListCursor(games.at(-1))
+            : null,
       });
     }
 
@@ -247,6 +259,7 @@ export function createNeonPlayAnalyticsStore(databaseUrl) {
             snapshot_code,
             replay_status,
             developer_mode,
+            local_mode,
             phase,
             turn_number,
             action_count,
@@ -268,6 +281,7 @@ export function createNeonPlayAnalyticsStore(databaseUrl) {
             ${snapshot.snapshotCode},
             'valid',
             ${snapshot.developerMode},
+            ${snapshot.localMode},
             ${snapshot.phase},
             ${snapshot.turnNumber},
             ${snapshot.actionCount},
@@ -288,6 +302,8 @@ export function createNeonPlayAnalyticsStore(databaseUrl) {
             snapshot_code = EXCLUDED.snapshot_code,
             replay_status = EXCLUDED.replay_status,
             developer_mode = EXCLUDED.developer_mode,
+            local_mode =
+              analytics_games.local_mode OR EXCLUDED.local_mode,
             phase = EXCLUDED.phase,
             turn_number = EXCLUDED.turn_number,
             action_count = EXCLUDED.action_count,
@@ -305,6 +321,10 @@ export function createNeonPlayAnalyticsStore(databaseUrl) {
             AND (
               analytics_games.snapshot_hash <> EXCLUDED.snapshot_hash
               OR analytics_games.developer_mode <> EXCLUDED.developer_mode
+              OR (
+                NOT analytics_games.local_mode
+                AND EXCLUDED.local_mode
+              )
             )
           RETURNING id, snapshot_sequence
         )
@@ -376,6 +396,7 @@ export function createNeonPlayAnalyticsStore(databaseUrl) {
           g.id,
           g.game_id,
           g.developer_mode,
+          g.local_mode,
           g.phase,
           g.turn_number,
           g.action_count,
@@ -399,14 +420,23 @@ export function createNeonPlayAnalyticsStore(databaseUrl) {
         WHERE
           (${filters.developerMode}::boolean IS NULL
             OR g.developer_mode = ${filters.developerMode})
+          AND (${filters.localMode}::boolean IS NULL
+            OR g.local_mode = ${filters.localMode})
           AND (${filters.phase}::text IS NULL OR g.phase = ${filters.phase})
           AND (
             ${filters.reviewStatus}::text IS NULL
             OR COALESCE(r.review_status, 'unreviewed') =
               ${filters.reviewStatus}
           )
-        ORDER BY g.last_seen_at DESC
-        LIMIT ${filters.limit}
+          AND (
+            ${filters.cursorLastSeenAt}::timestamptz IS NULL
+            OR (g.last_seen_at, g.id) < (
+              ${filters.cursorLastSeenAt}::timestamptz,
+              ${filters.cursorAnalyticsId}::bigint
+            )
+          )
+        ORDER BY g.last_seen_at DESC, g.id DESC
+        LIMIT ${filters.limit + 1}
       `;
       return rows.map(toGameSummary);
     },
@@ -516,6 +546,7 @@ async function ensureTables(sql, databaseUrl) {
         snapshot_code TEXT NOT NULL,
         replay_status TEXT NOT NULL DEFAULT 'valid',
         developer_mode BOOLEAN NOT NULL DEFAULT FALSE,
+        local_mode BOOLEAN NOT NULL DEFAULT FALSE,
         phase TEXT NOT NULL,
         turn_number INTEGER NOT NULL,
         action_count INTEGER NOT NULL,
@@ -537,12 +568,21 @@ async function ensureTables(sql, databaseUrl) {
       )
     `;
     await sql`
-      CREATE INDEX IF NOT EXISTS analytics_games_last_seen_idx
-      ON analytics_games (last_seen_at DESC)
+      ALTER TABLE analytics_games
+      ADD COLUMN IF NOT EXISTS local_mode BOOLEAN NOT NULL DEFAULT FALSE
     `;
     await sql`
-      CREATE INDEX IF NOT EXISTS analytics_games_cohort_phase_idx
-      ON analytics_games (developer_mode, phase, last_seen_at DESC)
+      CREATE INDEX IF NOT EXISTS analytics_games_last_seen_id_idx
+      ON analytics_games (last_seen_at DESC, id DESC)
+    `;
+    await sql`
+      CREATE INDEX IF NOT EXISTS analytics_games_cohort_page_idx
+      ON analytics_games (
+        developer_mode,
+        local_mode,
+        last_seen_at DESC,
+        id DESC
+      )
     `;
     await sql`
       CREATE TABLE IF NOT EXISTS analytics_game_reviews (
@@ -803,8 +843,13 @@ function validateFilters(params) {
   const cohort = params.get("cohort") ?? "player";
   const phase = params.get("phase");
   const reviewStatus = params.get("status");
-  const limit = Math.min(Math.max(Number(params.get("limit")) || 100, 1), 200);
-  if (!["player", "developer", "all"].includes(cohort)) {
+  const requestedLimit =
+    Number(params.get("limit")) || DEFAULT_LIST_LIMIT;
+  const limit = Math.min(
+    Math.max(Math.trunc(requestedLimit), 1),
+    MAX_LIST_LIMIT,
+  );
+  if (!["player", "developer", "local", "all"].includes(cohort)) {
     throw new PlayAnalyticsValidationError("Cohort filter is invalid.");
   }
   if (
@@ -818,13 +863,57 @@ function validateFilters(params) {
       "Review-status filter is invalid.",
     );
   }
+  const cursor = decodeListCursor(params.get("cursor"));
   return {
     developerMode:
-      cohort === "all" ? null : cohort === "developer",
+      cohort === "player"
+        ? false
+        : cohort === "developer"
+          ? true
+          : null,
+    localMode:
+      cohort === "player"
+        ? false
+        : cohort === "local"
+          ? true
+          : null,
     phase: phase || null,
     reviewStatus: reviewStatus || null,
     limit,
+    cursorLastSeenAt: cursor?.lastSeenAt ?? null,
+    cursorAnalyticsId: cursor?.analyticsId ?? null,
   };
+}
+
+function encodeListCursor(game) {
+  return Buffer.from(
+    JSON.stringify([game.lastSeenAt, game.analyticsId]),
+  ).toString("base64url");
+}
+
+function decodeListCursor(value) {
+  if (!value) return null;
+  try {
+    const [lastSeenAt, analyticsId, ...extra] = JSON.parse(
+      Buffer.from(value, "base64url").toString("utf8"),
+    );
+    const timestamp = new Date(lastSeenAt);
+    if (
+      extra.length ||
+      !Number.isFinite(timestamp.getTime()) ||
+      !/^[1-9]\d*$/.test(String(analyticsId))
+    ) {
+      throw new Error("Invalid cursor");
+    }
+    return {
+      lastSeenAt: timestamp.toISOString(),
+      analyticsId: String(analyticsId),
+    };
+  } catch {
+    throw new PlayAnalyticsValidationError(
+      "Analytics list cursor is invalid.",
+    );
+  }
 }
 
 function validateAnalyticsId(value) {
@@ -938,6 +1027,7 @@ function toGameSummary(row) {
     analyticsId: String(row.id),
     gameId: row.game_id,
     developerMode: row.developer_mode,
+    localMode: row.local_mode,
     phase: row.phase,
     turnNumber: row.turn_number,
     actionCount: row.action_count,

@@ -1,6 +1,7 @@
 import { replayPlayActionStates } from "../play/game-state.js";
 
 const DEFAULT_ENDPOINT = "/api/play-analytics";
+const LIST_PAGE_SIZE = 40;
 const ACTION_TYPES = new Set([
   "clue-given",
   "card-guessed",
@@ -25,7 +26,11 @@ export function createAnalyticsReviewMode({
     phase: root.querySelector("#analytics-review-phase"),
     status: root.querySelector("#analytics-review-status-filter"),
     refresh: root.querySelector("#analytics-review-refresh"),
+    layout: root.querySelector(".analytics-review-layout"),
+    gamesPanel: root.querySelector("#analytics-review-games-panel"),
+    gamesToggle: root.querySelector("#analytics-review-games-toggle"),
     list: root.querySelector("#analytics-review-list"),
+    listStatus: root.querySelector("#analytics-review-list-status"),
     detail: root.querySelector("#analytics-review-detail"),
   };
   let initialized = false;
@@ -33,6 +38,9 @@ export function createAnalyticsReviewMode({
   let selected = null;
   let actionStates = [];
   let selectedActionIndex = -1;
+  let nextCursor = null;
+  let gamesCollapsed = false;
+  let timelineCollapsed = false;
 
   elements.authForm.addEventListener("submit", (event) => {
     event.preventDefault();
@@ -46,6 +54,10 @@ export function createAnalyticsReviewMode({
     filter.addEventListener("change", () => void loadGames());
   }
   elements.refresh.addEventListener("click", () => void loadGames());
+  elements.gamesToggle.addEventListener("click", () => {
+    gamesCollapsed = !gamesCollapsed;
+    renderGamesCollapseState();
+  });
 
   return {
     async setActive(active) {
@@ -71,16 +83,20 @@ export function createAnalyticsReviewMode({
     await loadGames();
   }
 
-  async function loadGames() {
+  async function loadGames({ append = false } = {}) {
+    const scrollTop = elements.list.scrollTop;
     elements.list.setAttribute("aria-busy", "true");
+    elements.listStatus.textContent = "";
     const query = new URLSearchParams({
       cohort: elements.cohort.value,
+      limit: String(LIST_PAGE_SIZE),
       ...(elements.phase.value
         ? { phase: elements.phase.value }
         : {}),
       ...(elements.status.value
         ? { status: elements.status.value }
         : {}),
+      ...(append && nextCursor ? { cursor: nextCursor } : {}),
     });
     const result = await request("GET", null, `?${query}`);
     elements.list.removeAttribute("aria-busy");
@@ -92,15 +108,31 @@ export function createAnalyticsReviewMode({
     if (!result.ok) {
       elements.auth.hidden = true;
       elements.content.hidden = false;
-      elements.list.textContent =
+      elements.listStatus.textContent =
         result.body?.error ?? "Analytics games could not be loaded.";
       return;
     }
     elements.auth.hidden = true;
     elements.content.hidden = false;
-    games = result.body.games ?? [];
+    const loadedGames = result.body.games ?? [];
+    games = append
+      ? [
+          ...games,
+          ...loadedGames.filter(
+            (loaded) =>
+              !games.some(
+                (game) => game.analyticsId === loaded.analyticsId,
+              ),
+          ),
+        ]
+      : loadedGames;
+    nextCursor = result.body.nextCursor ?? null;
     renderList();
+    if (append) {
+      elements.list.scrollTop = scrollTop;
+    }
     if (
+      !append &&
       selected &&
       !games.some(
         (game) => game.analyticsId === selected.analyticsId,
@@ -141,44 +173,60 @@ export function createAnalyticsReviewMode({
       elements.list.replaceChildren(empty);
       return;
     }
-    elements.list.replaceChildren(
-      ...games.map((game) => {
-        const button = document.createElement("button");
-        const heading = document.createElement("strong");
-        const metadata = document.createElement("span");
-        const badges = document.createElement("span");
-        button.type = "button";
-        button.className = "analytics-review-game";
-        button.dataset.selected = String(
-          selected?.analyticsId === game.analyticsId,
-        );
-        heading.textContent = `${game.language.toUpperCase()} · ${
-          game.phase === "complete" ? game.winner ?? "Complete" : game.phase
-        }`;
-        metadata.textContent = `${game.actionCount} actions · turn ${
-          game.turnNumber
-        } · ${formatDate(game.lastSeenAt)}`;
-        badges.className = "analytics-review-badges";
-        badges.append(
-          ...(game.reviewStatus === "unreviewed"
-            ? []
-            : [badge(game.reviewStatus)]),
-          ...(game.developerMode ? [badge("Developer")] : []),
-          ...(game.feedbackCount
-            ? [badge(`${game.feedbackCount} feedback`)]
-            : []),
-        );
-        button.append(
-          heading,
-          metadata,
-          ...(badges.childElementCount ? [badges] : []),
-        );
-        button.addEventListener("click", () => {
-          void loadGame(game.analyticsId);
+    const gameButtons = games.map((game) => {
+      const button = document.createElement("button");
+      const heading = document.createElement("strong");
+      const metadata = document.createElement("span");
+      const badges = document.createElement("span");
+      button.type = "button";
+      button.className = "analytics-review-game";
+      button.dataset.selected = String(
+        selected?.analyticsId === game.analyticsId,
+      );
+      heading.textContent = `${game.language.toUpperCase()} · ${
+        game.phase === "complete" ? game.winner ?? "Complete" : game.phase
+      }`;
+      metadata.textContent = `${game.actionCount} actions · turn ${
+        game.turnNumber
+      } · ${formatDate(game.lastSeenAt)}`;
+      badges.className = "analytics-review-badges";
+      badges.append(
+        ...(game.reviewStatus === "unreviewed"
+          ? []
+          : [badge(game.reviewStatus)]),
+        ...(game.developerMode ? [badge("Developer")] : []),
+        ...(game.localMode ? [badge("Local")] : []),
+        ...(game.feedbackCount
+          ? [badge(`${game.feedbackCount} feedback`)]
+          : []),
+      );
+      button.append(
+        heading,
+        metadata,
+        ...(badges.childElementCount ? [badges] : []),
+      );
+      button.addEventListener("click", () => {
+        void loadGame(game.analyticsId);
+      });
+      return button;
+    });
+    if (nextCursor) {
+      const loadMore = document.createElement("button");
+      loadMore.type = "button";
+      loadMore.className =
+        "button secondary analytics-review-load-more";
+      loadMore.textContent = "Load more games";
+      loadMore.addEventListener("click", () => {
+        loadMore.disabled = true;
+        loadMore.textContent = "Loading games…";
+        void loadGames({ append: true }).finally(() => {
+          loadMore.disabled = false;
+          loadMore.textContent = "Load more games";
         });
-        return button;
-      }),
-    );
+      });
+      gameButtons.push(loadMore);
+    }
+    elements.list.replaceChildren(...gameButtons);
   }
 
   function renderDetail() {
@@ -197,6 +245,7 @@ export function createAnalyticsReviewMode({
     heading.textContent = `Game ${selected.gameId}`;
     metadata.textContent = [
       selected.developerMode ? "Developer" : "Player",
+      ...(selected.localMode ? ["Local"] : []),
       selected.phase,
       `${selected.actionCount} actions`,
       `first ${formatDate(selected.firstSeenAt)}`,
@@ -215,6 +264,9 @@ export function createAnalyticsReviewMode({
       timeline,
       feedback,
       review,
+    );
+    elements.detail.dataset.timelineCollapsed = String(
+      timelineCollapsed,
     );
   }
 
@@ -456,15 +508,36 @@ export function createAnalyticsReviewMode({
     const title = document.createElement("div");
     const heading = document.createElement("h3");
     const count = document.createElement("span");
+    const toggle = document.createElement("button");
     section.className = "analytics-review-timeline";
+    section.dataset.collapsed = String(timelineCollapsed);
     headingRow.className =
       "play-section-heading play-history-heading";
     title.className = "play-history-title";
     heading.textContent = "Game timeline";
     count.textContent = `${actionStates.length} events`;
+    toggle.type = "button";
+    toggle.className = "analytics-review-collapse-button";
+    toggle.setAttribute("aria-expanded", String(!timelineCollapsed));
+    toggle.textContent = timelineCollapsed
+      ? "Show timeline"
+      : "Hide timeline";
+    toggle.addEventListener("click", () => {
+      timelineCollapsed = !timelineCollapsed;
+      const timeline = elements.detail.querySelector(
+        ".analytics-review-timeline",
+      );
+      timeline?.replaceWith(buildTimeline());
+      elements.detail.dataset.timelineCollapsed = String(
+        timelineCollapsed,
+      );
+    });
     title.append(heading, count);
-    headingRow.append(title);
+    headingRow.append(title, toggle);
     section.append(headingRow);
+    if (timelineCollapsed) {
+      return section;
+    }
     if (!actionStates.length) {
       const empty = document.createElement("p");
       empty.className = "analytics-review-empty";
@@ -536,6 +609,22 @@ export function createAnalyticsReviewMode({
     return item;
   }
 
+  function renderGamesCollapseState() {
+    elements.layout.dataset.gamesCollapsed = String(
+      gamesCollapsed,
+    );
+    elements.gamesPanel.dataset.collapsed = String(
+      gamesCollapsed,
+    );
+    elements.gamesToggle.setAttribute(
+      "aria-expanded",
+      String(!gamesCollapsed),
+    );
+    elements.gamesToggle.textContent = gamesCollapsed
+      ? "Show games"
+      : "Hide games";
+  }
+
   async function request(method, body, suffix = "") {
     try {
       const response = await fetchImpl(`${endpoint}${suffix}`, {
@@ -573,13 +662,20 @@ function buildShell() {
     </section>
     <div id="analytics-review-content" hidden>
       <div class="analytics-review-toolbar">
-        <label>Cohort<select id="analytics-review-cohort"><option value="player">Players</option><option value="developer">Developer</option><option value="all">All</option></select></label>
+        <label>Cohort<select id="analytics-review-cohort"><option value="player">Players</option><option value="developer">Developer</option><option value="local">Local</option><option value="all">All</option></select></label>
         <label>Phase<select id="analytics-review-phase"><option value="">All</option><option value="complete">Complete</option><option value="awaiting-clue">Between turns</option><option value="awaiting-guess">In turn</option></select></label>
         <label>Status<select id="analytics-review-status-filter"><option value="">All</option><option value="unreviewed">Unreviewed</option><option value="reviewing">Reviewing</option><option value="actionable">Actionable</option><option value="resolved">Resolved</option><option value="ignored">Ignored</option></select></label>
         <button id="analytics-review-refresh" class="button secondary" type="button">Refresh</button>
       </div>
       <div class="analytics-review-layout">
-        <aside id="analytics-review-list" class="analytics-review-list" aria-label="Stored games"></aside>
+        <aside id="analytics-review-games-panel" class="analytics-review-games-panel">
+          <div class="analytics-review-panel-heading">
+            <h2>Games</h2>
+            <button id="analytics-review-games-toggle" class="analytics-review-collapse-button" type="button" aria-expanded="true">Hide games</button>
+          </div>
+          <div id="analytics-review-list" class="analytics-review-list" aria-label="Stored games"></div>
+          <p id="analytics-review-list-status" class="analytics-review-list-status" role="status"></p>
+        </aside>
         <article id="analytics-review-detail" class="analytics-review-detail"><p class="analytics-review-empty">Choose a game to review.</p></article>
       </div>
     </div>`;

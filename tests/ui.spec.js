@@ -5396,12 +5396,14 @@ test("analytics review authenticates, filters, reviews games, and stays responsi
   let authenticated = false;
   let savedReview = null;
   let savedAnnotation = null;
+  const listCursors = [];
   const now = "2026-07-27T10:00:00.000Z";
   const replay = completedShareGame();
   const summary = {
     analyticsId: "41",
     gameId: "g_reviewfixture",
     developerMode: false,
+    localMode: false,
     phase: "complete",
     turnNumber: 1,
     actionCount: 2,
@@ -5414,6 +5416,19 @@ test("analytics review authenticates, filters, reviews games, and stays responsi
     reviewStatus: "unreviewed",
     labels: [],
     feedbackCount: 1,
+  };
+  const secondSummary = {
+    ...summary,
+    analyticsId: "40",
+    gameId: "g_secondfixture",
+    feedbackCount: 0,
+  };
+  const localSummary = {
+    ...summary,
+    analyticsId: "39",
+    gameId: "g_localfixture",
+    localMode: true,
+    feedbackCount: 0,
   };
   await page.route("**/api/play-analytics**", async (route) => {
     const request = route.request();
@@ -5506,10 +5521,17 @@ test("analytics review authenticates, filters, reviews games, and stays responsi
       });
       return;
     }
-    expect(url.searchParams.get("cohort")).toBe("player");
+    const cohort = url.searchParams.get("cohort");
+    listCursors.push(url.searchParams.get("cursor"));
     await route.fulfill({
       contentType: "application/json",
-      body: JSON.stringify({ games: [summary] }),
+      body: JSON.stringify(
+        cohort === "local"
+          ? { games: [localSummary], nextCursor: null }
+          : url.searchParams.get("cursor") === "cursor-2"
+            ? { games: [secondSummary], nextCursor: null }
+            : { games: [summary], nextCursor: "cursor-2" },
+      ),
     });
   });
 
@@ -5520,13 +5542,31 @@ test("analytics review authenticates, filters, reviews games, and stays responsi
   await page.locator("#analytics-review-key").fill("review-key");
   await page.getByRole("button", { name: "Open review" }).click();
   await expect(page.locator(".analytics-review-game")).toHaveCount(1);
-  const storedGame = page.locator(".analytics-review-game");
+  const storedGame = page.locator(".analytics-review-game").first();
   await expect(
     storedGame.getByText("unreviewed", { exact: true }),
   ).toHaveCount(0);
   await expect(
     storedGame.locator(".analytics-review-badge"),
   ).toHaveText(["1 feedback"]);
+  await page
+    .locator("#analytics-review-cohort")
+    .selectOption("local");
+  await expect(page.locator(".analytics-review-game")).toHaveCount(1);
+  await expect(
+    page.locator(".analytics-review-game .analytics-review-badge"),
+  ).toHaveText("Local");
+  await page
+    .locator("#analytics-review-cohort")
+    .selectOption("player");
+  await expect(page.locator(".analytics-review-game")).toHaveCount(1);
+  await page.getByRole("button", { name: "Load more games" }).click();
+  await expect(page.locator(".analytics-review-game")).toHaveCount(2);
+  expect(listCursors).toContain("cursor-2");
+  await page.getByRole("button", { name: "Hide games" }).click();
+  await expect(page.locator("#analytics-review-list")).toBeHidden();
+  await page.getByRole("button", { name: "Show games" }).click();
+  await expect(page.locator("#analytics-review-list")).toBeVisible();
   await storedGame.click();
   await expect(
     page.getByRole("heading", { name: `Game ${summary.gameId}` }),
@@ -5540,6 +5580,14 @@ test("analytics review authenticates, filters, reviews games, and stays responsi
   await expect(
     page.locator(".analytics-review-timeline .play-history-action"),
   ).toHaveCount(2);
+  await page.getByRole("button", { name: "Hide timeline" }).click();
+  await expect(
+    page.locator(".analytics-review-timeline .play-history-list"),
+  ).toHaveCount(0);
+  await page.getByRole("button", { name: "Show timeline" }).click();
+  await expect(
+    page.locator(".analytics-review-timeline .play-history-list"),
+  ).toBeVisible();
   await expect(
     page.locator(".analytics-review-timeline .play-clue-pill"),
   ).toHaveText("FIRST");
@@ -5650,6 +5698,20 @@ test("analytics review authenticates, filters, reviews games, and stays responsi
           document.querySelector(selector),
         ),
       ),
+      timelineRightOfBoard:
+        document
+          .querySelector(".analytics-review-timeline")
+          .getBoundingClientRect().left >=
+        document
+          .querySelector(".analytics-review-overview")
+          .getBoundingClientRect().right - 1,
+      timelineBelowBoard:
+        document
+          .querySelector(".analytics-review-timeline")
+          .getBoundingClientRect().top >=
+        document
+          .querySelector(".analytics-review-overview")
+          .getBoundingClientRect().bottom - 1,
     }));
     expect(layout.pageOverflows, `page overflow at ${viewport.width}px`).toBe(
       false,
@@ -5660,6 +5722,14 @@ test("analytics review authenticates, filters, reviews games, and stays responsi
     ).toBe(false);
     expect(layout.boardColumns).toBe(5);
     expect(layout.sectionOrder).toEqual([1, 2, 3, 4]);
+    expect(
+      layout.timelineRightOfBoard,
+      `timeline side placement at ${viewport.width}px`,
+    ).toBe(viewport.width === 1440);
+    expect(
+      layout.timelineBelowBoard,
+      `timeline stacked placement at ${viewport.width}px`,
+    ).toBe(viewport.width !== 1440);
   }
 });
 

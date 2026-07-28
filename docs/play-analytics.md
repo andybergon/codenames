@@ -19,6 +19,9 @@ server replays it before accepting the write.
 - Developer games upload through the same path with `developer_mode = true`.
   Automatic snapshots omit local Developer diagnostics, keeping the request
   within the normal 12,000-character share-code limit.
+- Snapshots accepted through the loopback Vite API receive
+  `local_mode = true`. This marks development runs without conflating them
+  with Developer-mode games. Production clients cannot set this marker.
 
 Each saved session owns an incrementing `analyticsSequence`. It advances on
 every local persistence operation, including undo and forward restoration, so
@@ -45,7 +48,8 @@ a high-priority product requirement in `TODO.md`.
 All tables use the `analytics_` prefix:
 
 - `analytics_games`: one row per participant and locally created game. It owns
-  the compact snapshot plus the small set of indexed review fields.
+  the compact snapshot plus the small set of indexed review fields, including
+  independent Developer and loopback-local cohort markers.
 - `analytics_game_reviews`: one optional internal status and label set per
   stored game. The legacy game-note column remains readable for compatibility.
 - `analytics_review_annotations`: internal notes scoped to a game, turn, or
@@ -61,9 +65,15 @@ not that the browser emitted a reliable quit event.
 ## Review UI
 
 Open `?mode=analytics` to review stored games. The default cohort excludes
-Developer games. Filters cover cohort, phase, and review status. A game detail
-shows its board, replayable timeline, player feedback, and one bottom Review
-panel in that order. The board and grouped timeline reuse Play's post-game
+Developer and loopback-local games. Developer and Local remain independent,
+overlapping filters, so a local Developer game appears in either cohort.
+Filters also cover phase and review status. The game list uses opaque cursor
+pagination ordered by `(last_seen_at, id)` and loads 40 rows at a time.
+
+A game detail shows its board, replayable timeline, player feedback, and one
+bottom Review panel in that order. On wide screens, the timeline sits to the
+right of the board. The game chooser and timeline can be collapsed
+independently. The board and grouped timeline reuse Play's post-game
 presentation. Selecting a clue, guess, or pass reconstructs the board
 immediately after that action. The panel combines status and labels with an
 optional note scoped to the whole game, a turn, or an action. Unreviewed games
@@ -73,7 +83,13 @@ not an expected workflow.
 Production review authentication uses an HTTP-only
 `codenames_play_analytics_admin` cookie. Set `ANALYTICS_REVIEW_SECRET` for a
 dedicated key. When it is absent, the API reuses `CALIBRATION_SYNC_SECRET`.
-Loopback Vite clients bypass the key for local development.
+Loopback Vite clients bypass the key for local development and stamp accepted
+snapshots as Local.
+
+The list query fetches one extra row to detect the next page. Supporting
+indexes end in `(last_seen_at DESC, id DESC)`, so paging does not require a
+large offset scan. Collection remains one monotonic upsert per participant and
+game, with feedback and review writes isolated in their own tables.
 
 ## Verification
 

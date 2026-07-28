@@ -16,10 +16,10 @@
 
 - 🔐 Add informed consent and privacy controls for Play analytics.
   - Initial analytics collection may ship without a banner, but treat that as a temporary privacy gap and keep this item high priority.
-  - Current collection begins after one completed turn, stores replayable snapshots under a random HTTP-only browser cookie, and includes Developer games as a separate cohort.
+  - Current collection begins after one completed turn, stores replayable snapshots under a random HTTP-only browser cookie, and keeps Developer and loopback-local games as separate cohorts.
   - Explain that active and completed snapshots include player-written clues, the hidden key, intended targets, settings, and full action history.
   - Add an explicit opt-in or other reviewed lawful collection boundary, plus stop-sharing and delete-my-shared-games controls.
-  - Document retention, anonymous-cookie behavior, Developer-game handling, and whether transient IP-based abuse protection is used. Do not persist raw IP addresses.
+  - Document retention, anonymous-cookie behavior, Developer and Local cohort handling, and whether transient IP-based abuse protection is used. Do not persist raw IP addresses.
 
 - 🛡️ Regenerate the clue vocabulary with consistent profanity filtering.
   - The WordNet-backed first 88,563 words currently bypass `better_profanity`; only the experimental fallback applies it.

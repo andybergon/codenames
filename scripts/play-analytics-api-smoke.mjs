@@ -44,6 +44,12 @@ const storeFactory = () => ({
       ...snapshot,
       participantKey,
       analyticsId: existing?.analyticsId ?? String(nextId++),
+      firstSeenAt:
+        existing?.firstSeenAt ??
+        new Date(Date.UTC(2026, 6, 1, 0, 0, nextId)).toISOString(),
+      lastSeenAt:
+        existing?.lastSeenAt ??
+        new Date(Date.UTC(2026, 6, 1, 0, 0, nextId)).toISOString(),
     };
     games.set(key, record);
     return {
@@ -69,8 +75,21 @@ const storeFactory = () => ({
     return [...games.values()]
       .filter(
         (game) =>
-          filters.developerMode === null ||
-          game.developerMode === filters.developerMode,
+          (filters.developerMode === null ||
+            game.developerMode === filters.developerMode) &&
+          (filters.localMode === null ||
+            game.localMode === filters.localMode) &&
+          (filters.phase === null || game.phase === filters.phase) &&
+          (filters.cursorLastSeenAt === null ||
+            game.lastSeenAt < filters.cursorLastSeenAt ||
+            (game.lastSeenAt === filters.cursorLastSeenAt &&
+              BigInt(game.analyticsId) <
+                BigInt(filters.cursorAnalyticsId))),
+      )
+      .sort(
+        (left, right) =>
+          right.lastSeenAt.localeCompare(left.lastSeenAt) ||
+          Number(right.analyticsId) - Number(left.analyticsId),
       )
       .map((game) => ({
         ...game,
@@ -82,10 +101,9 @@ const storeFactory = () => ({
             entry.participantKey === game.participantKey &&
             entry.gameId === game.gameId,
         ).length,
-        firstSeenAt: new Date().toISOString(),
-        lastSeenAt: new Date().toISOString(),
         completedAt: null,
-      }));
+      }))
+      .slice(0, filters.limit + 1);
   },
   async getGame(analyticsId) {
     const game = [...games.values()].find(
@@ -107,8 +125,6 @@ const storeFactory = () => ({
       annotations: annotations.filter(
         (entry) => entry.analyticsId === game.analyticsId,
       ),
-      firstSeenAt: new Date().toISOString(),
-      lastSeenAt: new Date().toISOString(),
       completedAt: null,
     };
   },
@@ -217,6 +233,20 @@ assert.notEqual(
 );
 assert.equal(games.size, 2);
 
+const localGame = await request({
+  body: snapshot,
+  trustLocalClient: true,
+});
+assert.equal(localGame.status, 200);
+assert.equal(games.size, 3);
+assert.equal(
+  [...games.values()].find(
+    (storedGame) =>
+      storedGame.analyticsId === localGame.body.analyticsId,
+  ).localMode,
+  true,
+);
+
 const invalidReplay = await request({
   body: { ...snapshot, snapshotCode: `${snapshot.snapshotCode}x` },
   cookie: participantCookie,
@@ -261,8 +291,61 @@ const listed = await request({
 assert.equal(listed.status, 200);
 assert.equal(listed.body.games.length, 2);
 assert.ok(
-  listed.body.games.every((storedGame) => !storedGame.developerMode),
+  listed.body.games.every(
+    (storedGame) =>
+      !storedGame.developerMode && !storedGame.localMode,
+  ),
 );
+assert.equal(listed.body.nextCursor, null);
+
+const localGames = await request({
+  method: "GET",
+  cookie: adminCookie,
+  url: "/api/play-analytics?cohort=local",
+});
+assert.equal(localGames.status, 200);
+assert.equal(localGames.body.games.length, 1);
+assert.equal(localGames.body.games[0].localMode, true);
+
+const firstPage = await request({
+  method: "GET",
+  cookie: adminCookie,
+  url: "/api/play-analytics?cohort=all&limit=1",
+});
+assert.equal(firstPage.status, 200);
+assert.equal(firstPage.body.games.length, 1);
+assert.ok(firstPage.body.nextCursor);
+const secondPage = await request({
+  method: "GET",
+  cookie: adminCookie,
+  url:
+    "/api/play-analytics?cohort=all&limit=1&cursor=" +
+    encodeURIComponent(firstPage.body.nextCursor),
+});
+assert.equal(secondPage.status, 200);
+assert.equal(secondPage.body.games.length, 1);
+assert.notEqual(
+  secondPage.body.games[0].analyticsId,
+  firstPage.body.games[0].analyticsId,
+);
+assert.ok(secondPage.body.nextCursor);
+const thirdPage = await request({
+  method: "GET",
+  cookie: adminCookie,
+  url:
+    "/api/play-analytics?cohort=all&limit=1&cursor=" +
+    encodeURIComponent(secondPage.body.nextCursor),
+});
+assert.equal(thirdPage.status, 200);
+assert.equal(thirdPage.body.games.length, 1);
+assert.equal(thirdPage.body.nextCursor, null);
+
+const invalidCursor = await request({
+  method: "GET",
+  cookie: adminCookie,
+  url: "/api/play-analytics?cursor=invalid",
+});
+assert.equal(invalidCursor.status, 400);
 
 const analyticsId = listed.body.games[0].analyticsId;
 const reviewed = await request({
