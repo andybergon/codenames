@@ -1,5 +1,5 @@
 {
-  "version": 3,
+  "version": 4,
   "fixture": "JOUST → medieval tournament → MATCH / CROWN / GLOVE / BELT, where PIANO was guessed before those stronger human associations.",
   "source": {
     "concepts": "Princeton WordNet 3.0",
@@ -108,11 +108,643 @@
         0.1
       ]
     },
+    "pairwiseCrossEncoder": {
+      "description": "A local MS MARCO MiniLM cross-encoder scores each raw clue-card pair without WordNet evidence.",
+      "model": "Xenova/ms-marco-MiniLM-L-6-v2",
+      "revision": "a09144355adeed5f58c8ed011d209bf8ee5a1fec",
+      "license": "Apache-2.0"
+    },
+    "boundedBridgeRerank": {
+      "description": "Direct BGE activates the existing WordNet expansion, then a local cross-encoder adds a capped adjustment within the top bridge shortlist.",
+      "shortlistSize": 8,
+      "adjustmentCaps": [
+        0.005,
+        0.01,
+        0.02,
+        0.04
+      ]
+    },
     "hostedLlmReranker": {
-      "status": "rejected-before-paid-run",
-      "reason": "Automatic bot turns require bounded local latency, offline behavior, and zero per-turn spend. A hosted reranker would also add a server dependency to public clue and board data.",
+      "status": "screened-without-paid-run",
+      "reason": "The local cross-encoder supplies the requested learned-reranker comparison without sending public game data to a service. Hosted listwise rerankers remain ineligible for automatic local-first turns.",
       "paidCostUsd": 0
     }
+  },
+  "candidateScreen": [
+    {
+      "candidate": "runtime WordNet glosses",
+      "representation": "explicit BGE-aligned senses",
+      "status": "evaluated",
+      "reason": "Current local bridge and comparison baseline."
+    },
+    {
+      "candidate": "precomputed BGE WordNet vectors",
+      "representation": "explicit BGE-aligned senses",
+      "status": "score-equivalent",
+      "reason": "Changes packaging and first-use work, not ranking quality, because it stores the same centered vectors used by the runtime gloss bridge."
+    },
+    {
+      "candidate": "AutoExtend",
+      "representation": "learned static synsets",
+      "status": "not comparable",
+      "reason": "Requires training from an input word-vector space and has no ready BGE-small-aligned artifact."
+    },
+    {
+      "candidate": "LMMS",
+      "representation": "learned contextual senses",
+      "status": "not promoted",
+      "reason": "Uses a separate transformer sense space and would add a second large runtime model before Codenames-specific evidence."
+    },
+    {
+      "candidate": "ARES",
+      "representation": "learned contextual senses",
+      "status": "license-blocked",
+      "reason": "The published sense embeddings are CC BY-NC-SA 4.0."
+    },
+    {
+      "candidate": "ConceptNet Numberbatch",
+      "representation": "guarded graph ensemble",
+      "status": "not promoted",
+      "reason": "Prior standalone evaluation improved human recall but failed Fun and transfer gates; its CC BY-SA artifact remains unsuitable for redistribution without review."
+    },
+    {
+      "candidate": "pairwise MiniLM cross-encoder",
+      "representation": "learned direct reranker",
+      "status": "evaluated",
+      "reason": "Small Apache-2.0 local ONNX model provides an offline pairwise ablation."
+    },
+    {
+      "candidate": "hosted listwise reranker",
+      "representation": "learned listwise reranker",
+      "status": "comparison-only",
+      "reason": "Automatic turns must stay offline, bounded, and free per turn; no paid call was needed after the local ablation."
+    }
+  ],
+  "rerankerEvaluation": {
+    "model": "Xenova/ms-marco-MiniLM-L-6-v2",
+    "revision": "a09144355adeed5f58c8ed011d209bf8ee5a1fec",
+    "license": "Apache-2.0",
+    "trainingTask": "MS MARCO passage relevance",
+    "pairCount": 107624,
+    "bridgeExpandedPairCount": 93960,
+    "shortlistSize": 8,
+    "cachedAssetBytes": 23856961,
+    "cachedLoadLatencyMs": 44.3993,
+    "isolatedActivation": {
+      "cachedLoadLatencyMs": 61.2474,
+      "firstInferenceLatencyMs": 5.1104,
+      "residentLoadDeltaBytes": 100679680,
+      "residentPeakDeltaBytes": 104660992
+    },
+    "latency": {
+      "directPairs": 25,
+      "bridgePairs": 8,
+      "directTurnMedianMs": 4.2897,
+      "bridgeShortlistMedianMs": 5.7341
+    },
+    "directReranker": {
+      "datasets": {
+        "culturalCodes": {
+          "scoredGuessTurns": 7625,
+          "scoredTargetTurns": 7703,
+          "firstGuessAccuracy": 0.4243,
+          "guessRecallAtHumanCount": 0.4187,
+          "targetRecallAtCount": 0.4839,
+          "exactTargetSetAccuracy": 0.4248,
+          "avoidWordRate": 0.1193,
+          "pairwiseTargetAccuracy": 0.8099
+        },
+        "connector": {
+          "scoredGuessTurns": 0,
+          "scoredTargetTurns": 2250,
+          "firstGuessAccuracy": null,
+          "guessRecallAtHumanCount": null,
+          "targetRecallAtCount": 0.4458,
+          "exactTargetSetAccuracy": 0.2062,
+          "avoidWordRate": 0,
+          "pairwiseTargetAccuracy": 0.753
+        }
+      },
+      "joust": [
+        {
+          "word": "PIANO",
+          "score": -10.45
+        },
+        {
+          "word": "BELT",
+          "score": -10.7527
+        },
+        {
+          "word": "CROWN",
+          "score": -10.8204
+        },
+        {
+          "word": "GLOVE",
+          "score": -10.8653
+        },
+        {
+          "word": "MATCH",
+          "score": -10.874
+        }
+      ],
+      "originalFixtures": [
+        {
+          "clue": "PALEOGRAPHY",
+          "targets": [
+            "PAPER",
+            "JOURNAL"
+          ],
+          "top": [
+            "JOURNAL",
+            "PAPER"
+          ],
+          "targetHits": 2
+        },
+        {
+          "clue": "HERALDRY",
+          "targets": [
+            "CROWN",
+            "EAGLE"
+          ],
+          "top": [
+            "CROWN",
+            "WEAPON"
+          ],
+          "targetHits": 1
+        },
+        {
+          "clue": "SPECTER",
+          "targets": [
+            "GHOST",
+            "SHADOW"
+          ],
+          "top": [
+            "GENIUS",
+            "GHOST"
+          ],
+          "targetHits": 1
+        },
+        {
+          "clue": "THESPIAN",
+          "targets": [
+            "PLAY",
+            "ACTOR"
+          ],
+          "top": [
+            "ALIEN",
+            "SURGEON"
+          ],
+          "targetHits": 0
+        },
+        {
+          "clue": "SEANCE",
+          "targets": [
+            "GHOST",
+            "SPIRIT"
+          ],
+          "top": [
+            "GHOST",
+            "UNDERTAKER"
+          ],
+          "targetHits": 1
+        }
+      ]
+    },
+    "pipelines": {
+      "0.005": {
+        "datasets": {
+          "culturalCodes": {
+            "scoredGuessTurns": 7625,
+            "scoredTargetTurns": 7703,
+            "firstGuessAccuracy": 0.5246,
+            "guessRecallAtHumanCount": 0.5197,
+            "targetRecallAtCount": 0.5918,
+            "exactTargetSetAccuracy": 0.5308,
+            "avoidWordRate": 0.0944,
+            "pairwiseTargetAccuracy": 0.8561
+          },
+          "connector": {
+            "scoredGuessTurns": 0,
+            "scoredTargetTurns": 2250,
+            "firstGuessAccuracy": null,
+            "guessRecallAtHumanCount": null,
+            "targetRecallAtCount": 0.5364,
+            "exactTargetSetAccuracy": 0.252,
+            "avoidWordRate": 0,
+            "pairwiseTargetAccuracy": 0.8282
+          }
+        },
+        "joust": [
+          {
+            "word": "MATCH",
+            "score": 0.3733
+          },
+          {
+            "word": "BELT",
+            "score": 0.2632
+          },
+          {
+            "word": "GLOVE",
+            "score": 0.2187
+          },
+          {
+            "word": "CROWN",
+            "score": 0.211
+          },
+          {
+            "word": "PIANO",
+            "score": 0.1694
+          }
+        ],
+        "originalFixtures": [
+          {
+            "clue": "PALEOGRAPHY",
+            "targets": [
+              "PAPER",
+              "JOURNAL"
+            ],
+            "top": [
+              "PAPER",
+              "JOURNAL"
+            ],
+            "targetHits": 2
+          },
+          {
+            "clue": "HERALDRY",
+            "targets": [
+              "CROWN",
+              "EAGLE"
+            ],
+            "top": [
+              "EAGLE",
+              "CROWN"
+            ],
+            "targetHits": 2
+          },
+          {
+            "clue": "SPECTER",
+            "targets": [
+              "GHOST",
+              "SHADOW"
+            ],
+            "top": [
+              "GHOST",
+              "SHADOW"
+            ],
+            "targetHits": 2
+          },
+          {
+            "clue": "THESPIAN",
+            "targets": [
+              "PLAY",
+              "ACTOR"
+            ],
+            "top": [
+              "PLAY",
+              "ACTOR"
+            ],
+            "targetHits": 2
+          },
+          {
+            "clue": "SEANCE",
+            "targets": [
+              "GHOST",
+              "SPIRIT"
+            ],
+            "top": [
+              "GHOST",
+              "SPIRIT"
+            ],
+            "targetHits": 2
+          }
+        ]
+      },
+      "0.01": {
+        "datasets": {
+          "culturalCodes": {
+            "scoredGuessTurns": 7625,
+            "scoredTargetTurns": 7703,
+            "firstGuessAccuracy": 0.5246,
+            "guessRecallAtHumanCount": 0.5197,
+            "targetRecallAtCount": 0.5919,
+            "exactTargetSetAccuracy": 0.531,
+            "avoidWordRate": 0.0941,
+            "pairwiseTargetAccuracy": 0.8562
+          },
+          "connector": {
+            "scoredGuessTurns": 0,
+            "scoredTargetTurns": 2250,
+            "firstGuessAccuracy": null,
+            "guessRecallAtHumanCount": null,
+            "targetRecallAtCount": 0.5376,
+            "exactTargetSetAccuracy": 0.2524,
+            "avoidWordRate": 0,
+            "pairwiseTargetAccuracy": 0.8285
+          }
+        },
+        "joust": [
+          {
+            "word": "MATCH",
+            "score": 0.3747
+          },
+          {
+            "word": "BELT",
+            "score": 0.2682
+          },
+          {
+            "word": "GLOVE",
+            "score": 0.2137
+          },
+          {
+            "word": "CROWN",
+            "score": 0.2065
+          },
+          {
+            "word": "PIANO",
+            "score": 0.1645
+          }
+        ],
+        "originalFixtures": [
+          {
+            "clue": "PALEOGRAPHY",
+            "targets": [
+              "PAPER",
+              "JOURNAL"
+            ],
+            "top": [
+              "PAPER",
+              "JOURNAL"
+            ],
+            "targetHits": 2
+          },
+          {
+            "clue": "HERALDRY",
+            "targets": [
+              "CROWN",
+              "EAGLE"
+            ],
+            "top": [
+              "EAGLE",
+              "CROWN"
+            ],
+            "targetHits": 2
+          },
+          {
+            "clue": "SPECTER",
+            "targets": [
+              "GHOST",
+              "SHADOW"
+            ],
+            "top": [
+              "GHOST",
+              "SHADOW"
+            ],
+            "targetHits": 2
+          },
+          {
+            "clue": "THESPIAN",
+            "targets": [
+              "PLAY",
+              "ACTOR"
+            ],
+            "top": [
+              "PLAY",
+              "ACTOR"
+            ],
+            "targetHits": 2
+          },
+          {
+            "clue": "SEANCE",
+            "targets": [
+              "GHOST",
+              "SPIRIT"
+            ],
+            "top": [
+              "GHOST",
+              "SPIRIT"
+            ],
+            "targetHits": 2
+          }
+        ]
+      },
+      "0.02": {
+        "datasets": {
+          "culturalCodes": {
+            "scoredGuessTurns": 7625,
+            "scoredTargetTurns": 7703,
+            "firstGuessAccuracy": 0.5245,
+            "guessRecallAtHumanCount": 0.5196,
+            "targetRecallAtCount": 0.5919,
+            "exactTargetSetAccuracy": 0.5315,
+            "avoidWordRate": 0.094,
+            "pairwiseTargetAccuracy": 0.8563
+          },
+          "connector": {
+            "scoredGuessTurns": 0,
+            "scoredTargetTurns": 2250,
+            "firstGuessAccuracy": null,
+            "guessRecallAtHumanCount": null,
+            "targetRecallAtCount": 0.536,
+            "exactTargetSetAccuracy": 0.2524,
+            "avoidWordRate": 0,
+            "pairwiseTargetAccuracy": 0.8283
+          }
+        },
+        "joust": [
+          {
+            "word": "MATCH",
+            "score": 0.3775
+          },
+          {
+            "word": "BELT",
+            "score": 0.2782
+          },
+          {
+            "word": "GLOVE",
+            "score": 0.2037
+          },
+          {
+            "word": "CROWN",
+            "score": 0.1975
+          },
+          {
+            "word": "PIANO",
+            "score": 0.1548
+          }
+        ],
+        "originalFixtures": [
+          {
+            "clue": "PALEOGRAPHY",
+            "targets": [
+              "PAPER",
+              "JOURNAL"
+            ],
+            "top": [
+              "PAPER",
+              "JOURNAL"
+            ],
+            "targetHits": 2
+          },
+          {
+            "clue": "HERALDRY",
+            "targets": [
+              "CROWN",
+              "EAGLE"
+            ],
+            "top": [
+              "EAGLE",
+              "CROWN"
+            ],
+            "targetHits": 2
+          },
+          {
+            "clue": "SPECTER",
+            "targets": [
+              "GHOST",
+              "SHADOW"
+            ],
+            "top": [
+              "GHOST",
+              "SHADOW"
+            ],
+            "targetHits": 2
+          },
+          {
+            "clue": "THESPIAN",
+            "targets": [
+              "PLAY",
+              "ACTOR"
+            ],
+            "top": [
+              "ACTOR",
+              "PLAY"
+            ],
+            "targetHits": 2
+          },
+          {
+            "clue": "SEANCE",
+            "targets": [
+              "GHOST",
+              "SPIRIT"
+            ],
+            "top": [
+              "SPIRIT",
+              "GHOST"
+            ],
+            "targetHits": 2
+          }
+        ]
+      },
+      "0.04": {
+        "datasets": {
+          "culturalCodes": {
+            "scoredGuessTurns": 7625,
+            "scoredTargetTurns": 7703,
+            "firstGuessAccuracy": 0.5246,
+            "guessRecallAtHumanCount": 0.5199,
+            "targetRecallAtCount": 0.5921,
+            "exactTargetSetAccuracy": 0.5319,
+            "avoidWordRate": 0.0939,
+            "pairwiseTargetAccuracy": 0.8563
+          },
+          "connector": {
+            "scoredGuessTurns": 0,
+            "scoredTargetTurns": 2250,
+            "firstGuessAccuracy": null,
+            "guessRecallAtHumanCount": null,
+            "targetRecallAtCount": 0.5376,
+            "exactTargetSetAccuracy": 0.2529,
+            "avoidWordRate": 0,
+            "pairwiseTargetAccuracy": 0.828
+          }
+        },
+        "joust": [
+          {
+            "word": "MATCH",
+            "score": 0.3831
+          },
+          {
+            "word": "BELT",
+            "score": 0.2982
+          },
+          {
+            "word": "GLOVE",
+            "score": 0.1837
+          },
+          {
+            "word": "CROWN",
+            "score": 0.1794
+          },
+          {
+            "word": "PIANO",
+            "score": 0.1355
+          }
+        ],
+        "originalFixtures": [
+          {
+            "clue": "PALEOGRAPHY",
+            "targets": [
+              "PAPER",
+              "JOURNAL"
+            ],
+            "top": [
+              "PAPER",
+              "JOURNAL"
+            ],
+            "targetHits": 2
+          },
+          {
+            "clue": "HERALDRY",
+            "targets": [
+              "CROWN",
+              "EAGLE"
+            ],
+            "top": [
+              "EAGLE",
+              "CROWN"
+            ],
+            "targetHits": 2
+          },
+          {
+            "clue": "SPECTER",
+            "targets": [
+              "GHOST",
+              "SHADOW"
+            ],
+            "top": [
+              "GHOST",
+              "SHADOW"
+            ],
+            "targetHits": 2
+          },
+          {
+            "clue": "THESPIAN",
+            "targets": [
+              "PLAY",
+              "ACTOR"
+            ],
+            "top": [
+              "ACTOR",
+              "PLAY"
+            ],
+            "targetHits": 2
+          },
+          {
+            "clue": "SEANCE",
+            "targets": [
+              "GHOST",
+              "SPIRIT"
+            ],
+            "top": [
+              "SPIRIT",
+              "GHOST"
+            ],
+            "targetHits": 2
+          }
+        ]
+      }
+    },
+    "paidCostUsd": 0
   },
   "selected": {
     "approach": "wordnetSenseBridge",
@@ -121,7 +753,7 @@
     "activationCeiling": 0.2,
     "minimumClueNumber": 2,
     "otherModelBehavior": "direct",
-    "rationale": "The bridge activates only for multi-card clues whose best direct match is below 0.20. The 0.05 offset is the most conservative tested calibration that places all four preserved JOUST associations before PIANO."
+    "rationale": "Retain the runtime WordNet bridge. The direct cross-encoder fails JOUST and every human-alignment gate. The best bounded bridge-rerank pipeline still depends on WordNet, adds a second 23.9 MB model, and produces no full-game improvement for only marginal aggregate movement."
   },
   "models": [
     {
@@ -133,13 +765,13 @@
         "culturalCodes": 7703,
         "connector": 2250
       },
-      "embeddingLatencyMs": 11435.8512,
+      "embeddingLatencyMs": 12331.0053,
       "warmTurnLatencyMs": {
         "cardCount": 25,
         "conceptTexts": 101,
-        "directMedian": 1.5853,
-        "conceptMedian": 108.6709,
-        "addedMedian": 107.0857
+        "directMedian": 1.6029,
+        "conceptMedian": 116.14,
+        "addedMedian": 114.5371
       },
       "direct": {
         "culturalCodes": {
@@ -985,13 +1617,13 @@
         "culturalCodes": 1926,
         "connector": 563
       },
-      "embeddingLatencyMs": 6696.8181,
+      "embeddingLatencyMs": 7250.3197,
       "warmTurnLatencyMs": {
         "cardCount": 25,
         "conceptTexts": 101,
-        "directMedian": 0.859,
-        "conceptMedian": 63.0321,
-        "addedMedian": 62.173
+        "directMedian": 1.1253,
+        "conceptMedian": 69.0597,
+        "addedMedian": 67.9344
       },
       "direct": {
         "culturalCodes": {

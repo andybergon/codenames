@@ -1,7 +1,19 @@
-import { env, pipeline } from "@huggingface/transformers";
-import { readFile, writeFile } from "node:fs/promises";
+import {
+  AutoModelForSequenceClassification,
+  AutoTokenizer,
+  env,
+  pipeline,
+} from "@huggingface/transformers";
+import { execFile } from "node:child_process";
+import {
+  readFile,
+  readdir,
+  stat,
+  writeFile,
+} from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { performance } from "node:perf_hooks";
+import { promisify } from "node:util";
 import { fileURLToPath } from "node:url";
 import { loadHumanEmbeddingBenchmark } from "./human-embedding-benchmark.mjs";
 import { DEFAULT_BOARD } from "../src/word-data.js";
@@ -64,6 +76,13 @@ const OFFSETS = [0, 0.025, 0.05, 0.075, 0.1];
 const ACTIVATION_CEILINGS = [0.2, 0.22, 0.25, 0.3];
 const GUARDED_OFFSETS = [0.05, 0.075, 0.1];
 const BATCH_SIZE = 128;
+const RERANKER_BATCH_SIZE = 128;
+const RERANKER_MODEL = "Xenova/ms-marco-MiniLM-L-6-v2";
+const RERANKER_REVISION =
+  "a09144355adeed5f58c8ed011d209bf8ee5a1fec";
+const RERANKER_SHORTLIST_SIZE = 8;
+const RERANKER_ADJUSTMENT_CAPS = [0.005, 0.01, 0.02, 0.04];
+const execFileAsync = promisify(execFile);
 
 env.cacheDir =
   process.env.HF_CACHE_DIR ?? resolve(ROOT, ".cache/huggingface");
@@ -85,6 +104,7 @@ const terms = [
   ]),
 ].sort();
 const modelReports = [];
+let rerankerEvaluation = null;
 
 for (const definition of MODEL_DEFINITIONS) {
   const manifest = JSON.parse(
@@ -139,6 +159,12 @@ for (const definition of MODEL_DEFINITIONS) {
       ),
     ]),
   );
+  if (definition.id === "bge-small") {
+    rerankerEvaluation = await evaluateRerankerAblations({
+      context,
+      datasets,
+    });
+  }
   modelReports.push({
     id: definition.id,
     model: manifest.model,
@@ -181,7 +207,7 @@ for (const definition of MODEL_DEFINITIONS) {
 }
 
 const report = {
-  version: 3,
+  version: 4,
   fixture:
     "JOUST → medieval tournament → MATCH / CROWN / GLOVE / BELT, where PIANO was guessed before those stronger human associations.",
   source: {
@@ -201,13 +227,85 @@ const report = {
       guardedActivationCeilings: ACTIVATION_CEILINGS,
       guardedOffsets: GUARDED_OFFSETS,
     },
+    pairwiseCrossEncoder: {
+      description:
+        "A local MS MARCO MiniLM cross-encoder scores each raw clue-card pair without WordNet evidence.",
+      model: RERANKER_MODEL,
+      revision: RERANKER_REVISION,
+      license: "Apache-2.0",
+    },
+    boundedBridgeRerank: {
+      description:
+        "Direct BGE activates the existing WordNet expansion, then a local cross-encoder adds a capped adjustment within the top bridge shortlist.",
+      shortlistSize: RERANKER_SHORTLIST_SIZE,
+      adjustmentCaps: RERANKER_ADJUSTMENT_CAPS,
+    },
     hostedLlmReranker: {
-      status: "rejected-before-paid-run",
+      status: "screened-without-paid-run",
       reason:
-        "Automatic bot turns require bounded local latency, offline behavior, and zero per-turn spend. A hosted reranker would also add a server dependency to public clue and board data.",
+        "The local cross-encoder supplies the requested learned-reranker comparison without sending public game data to a service. Hosted listwise rerankers remain ineligible for automatic local-first turns.",
       paidCostUsd: 0,
     },
   },
+  candidateScreen: [
+    {
+      candidate: "runtime WordNet glosses",
+      representation: "explicit BGE-aligned senses",
+      status: "evaluated",
+      reason:
+        "Current local bridge and comparison baseline.",
+    },
+    {
+      candidate: "precomputed BGE WordNet vectors",
+      representation: "explicit BGE-aligned senses",
+      status: "score-equivalent",
+      reason:
+        "Changes packaging and first-use work, not ranking quality, because it stores the same centered vectors used by the runtime gloss bridge.",
+    },
+    {
+      candidate: "AutoExtend",
+      representation: "learned static synsets",
+      status: "not comparable",
+      reason:
+        "Requires training from an input word-vector space and has no ready BGE-small-aligned artifact.",
+    },
+    {
+      candidate: "LMMS",
+      representation: "learned contextual senses",
+      status: "not promoted",
+      reason:
+        "Uses a separate transformer sense space and would add a second large runtime model before Codenames-specific evidence.",
+    },
+    {
+      candidate: "ARES",
+      representation: "learned contextual senses",
+      status: "license-blocked",
+      reason:
+        "The published sense embeddings are CC BY-NC-SA 4.0.",
+    },
+    {
+      candidate: "ConceptNet Numberbatch",
+      representation: "guarded graph ensemble",
+      status: "not promoted",
+      reason:
+        "Prior standalone evaluation improved human recall but failed Fun and transfer gates; its CC BY-SA artifact remains unsuitable for redistribution without review.",
+    },
+    {
+      candidate: "pairwise MiniLM cross-encoder",
+      representation: "learned direct reranker",
+      status: "evaluated",
+      reason:
+        "Small Apache-2.0 local ONNX model provides an offline pairwise ablation.",
+    },
+    {
+      candidate: "hosted listwise reranker",
+      representation: "learned listwise reranker",
+      status: "comparison-only",
+      reason:
+        "Automatic turns must stay offline, bounded, and free per turn; no paid call was needed after the local ablation.",
+    },
+  ],
+  rerankerEvaluation,
   selected: {
     approach: "wordnetSenseBridge",
     modelId: "bge-small",
@@ -216,7 +314,7 @@ const report = {
     minimumClueNumber: 2,
     otherModelBehavior: "direct",
     rationale:
-      "The bridge activates only for multi-card clues whose best direct match is below 0.20. The 0.05 offset is the most conservative tested calibration that places all four preserved JOUST associations before PIANO.",
+      "Retain the runtime WordNet bridge. The direct cross-encoder fails JOUST and every human-alignment gate. The best bounded bridge-rerank pipeline still depends on WordNet, adds a second 23.9 MB model, and produces no full-game improvement for only marginal aggregate movement.",
   },
   models: modelReports,
 };
@@ -838,6 +936,474 @@ function quantizedDot(vectors, row, vector, manifest) {
     total += vectors[vectorOffset + dimension] * vector[dimension];
   }
   return total / manifest.quantization.scale;
+}
+
+async function evaluateRerankerAblations({ context, datasets }) {
+  const pairs = collectEvaluationPairs(datasets);
+  const cacheDirectory = resolve(
+    env.cacheDir,
+    ...RERANKER_MODEL.split("/"),
+  );
+  const loadStartedAt = performance.now();
+  const [tokenizer, model] = await Promise.all([
+    AutoTokenizer.from_pretrained(RERANKER_MODEL, {
+      revision: RERANKER_REVISION,
+    }),
+    AutoModelForSequenceClassification.from_pretrained(
+      RERANKER_MODEL,
+      {
+        dtype: "q8",
+        revision: RERANKER_REVISION,
+      },
+    ),
+  ]);
+  const cachedLoadLatencyMs = round(
+    performance.now() - loadStartedAt,
+  );
+
+  const directScores = await scoreRerankerPairs({
+    label: "raw clue-card",
+    model,
+    pairs: pairs.map(({ clue, word }) => ({
+      key: pairKey(clue, word),
+      query: clue,
+      passage: word,
+    })),
+    tokenizer,
+  });
+  const bridgeEvidence = new Map(
+    pairs.map(({ clue, word }) => [
+      pairKey(clue, word),
+      strongestBridgeEvidence(context, clue, word),
+    ]),
+  );
+  const expandedPairs = pairs.flatMap(({ clue, word }) => {
+    const key = pairKey(clue, word);
+    const evidence = bridgeEvidence.get(key);
+    return evidence
+      ? [
+          {
+            key,
+            query: `${clue}: ${evidence.clueSense}`,
+            passage: `${word}: ${evidence.cardSense}`,
+          },
+        ]
+      : [];
+  });
+  const expandedScores = await scoreRerankerPairs({
+    label: "bridge-expanded",
+    model,
+    pairs: expandedPairs,
+    tokenizer,
+  });
+
+  const directReranker = {
+    datasets: scoreDatasets(
+      datasets,
+      (clue, word) =>
+        directScores.get(pairKey(clue, word)) ??
+        Number.NEGATIVE_INFINITY,
+    ),
+    joust: rankWords(
+      "joust",
+      JOUST_WORDS,
+      (clue, word) =>
+        directScores.get(pairKey(clue, word)) ??
+        Number.NEGATIVE_INFINITY,
+    ).map(roundRankingRow),
+    originalFixtures: evaluateRerankerFixtures(
+      directScores,
+      null,
+    ),
+  };
+  const pipelines = Object.fromEntries(
+    RERANKER_ADJUSTMENT_CAPS.map((adjustmentCap) => [
+      adjustmentCap,
+      {
+        datasets: scorePipelineDatasets(datasets, context, {
+          adjustmentCap,
+          expandedScores,
+        }),
+        joust: rankPipelineWords(
+          "joust",
+          JOUST_WORDS,
+          2,
+          context,
+          expandedScores,
+          { adjustmentCap },
+        ).map(roundRankingRow),
+        originalFixtures: evaluateRerankerFixtures(
+          expandedScores,
+          {
+            adjustmentCap,
+            context,
+          },
+        ),
+      },
+    ]),
+  );
+  const latency = await measureRerankerLatency({
+    expandedPairs,
+    model,
+    tokenizer,
+  });
+  const cachedAssetBytes = await directorySize(cacheDirectory);
+  if (typeof model.dispose === "function") {
+    await model.dispose();
+  }
+  const isolatedActivation = await measureRerankerActivation();
+
+  return {
+    model: RERANKER_MODEL,
+    revision: RERANKER_REVISION,
+    license: "Apache-2.0",
+    trainingTask: "MS MARCO passage relevance",
+    pairCount: pairs.length,
+    bridgeExpandedPairCount: expandedPairs.length,
+    shortlistSize: RERANKER_SHORTLIST_SIZE,
+    cachedAssetBytes,
+    cachedLoadLatencyMs,
+    isolatedActivation,
+    latency,
+    directReranker,
+    pipelines,
+    paidCostUsd: 0,
+  };
+}
+
+function collectEvaluationPairs(datasets) {
+  const pairs = new Map();
+  const add = (clue, word) => {
+    const normalizedClue = normalizeConceptTerm(clue);
+    const normalizedWord = normalizeConceptTerm(word);
+    pairs.set(pairKey(normalizedClue, normalizedWord), {
+      clue: normalizedClue,
+      word: normalizedWord,
+    });
+  };
+  for (const turns of Object.values(datasets)) {
+    for (const turn of turns) {
+      for (const word of [
+        ...turn.remaining,
+        ...turn.targets,
+        ...turn.neutral,
+        ...turn.avoid,
+      ]) {
+        add(turn.clue, word);
+      }
+    }
+  }
+  for (const { candidates, clue } of ORIGINAL_FIXTURES) {
+    for (const word of candidates) add(clue, word);
+  }
+  for (const word of JOUST_WORDS) add("joust", word);
+  return [...pairs.values()].sort(
+    (left, right) =>
+      left.clue.localeCompare(right.clue) ||
+      left.word.localeCompare(right.word),
+  );
+}
+
+async function scoreRerankerPairs({
+  label,
+  model,
+  pairs,
+  tokenizer,
+}) {
+  const scores = new Map();
+  for (
+    let start = 0;
+    start < pairs.length;
+    start += RERANKER_BATCH_SIZE
+  ) {
+    const batch = pairs.slice(
+      start,
+      start + RERANKER_BATCH_SIZE,
+    );
+    const inputs = await tokenizer(
+      batch.map(({ query }) => query),
+      {
+        text_pair: batch.map(({ passage }) => passage),
+        padding: true,
+        truncation: true,
+      },
+    );
+    const output = await model(inputs);
+    const logits = output.logits.tolist();
+    batch.forEach(({ key }, index) => {
+      scores.set(key, logits[index][0]);
+    });
+    if (
+      start > 0 &&
+      start % (RERANKER_BATCH_SIZE * 200) === 0
+    ) {
+      console.log(
+        `Scored ${start.toLocaleString("en-US")}/${pairs.length.toLocaleString("en-US")} ${label} pairs.`,
+      );
+    }
+  }
+  return scores;
+}
+
+function strongestBridgeEvidence(context, clue, word) {
+  const clueTerm = normalizeConceptTerm(clue);
+  const wordTerm = normalizeConceptTerm(word);
+  const clueVectors = context.conceptVectors.get(clueTerm) ?? [];
+  const wordVectors = context.conceptVectors.get(wordTerm) ?? [];
+  const clueDefinitions =
+    context.conceptDefinitions.get(clueTerm) ?? [];
+  const wordDefinitions =
+    context.conceptDefinitions.get(wordTerm) ?? [];
+  let best = null;
+  for (
+    let clueIndex = 0;
+    clueIndex < clueVectors.length;
+    clueIndex += 1
+  ) {
+    for (
+      let wordIndex = 0;
+      wordIndex < wordVectors.length;
+      wordIndex += 1
+    ) {
+      const similarity = dotVectors(
+        clueVectors[clueIndex],
+        wordVectors[wordIndex],
+      );
+      if (!best || similarity > best.similarity) {
+        best = {
+          similarity,
+          clueSense: clueDefinitions[clueIndex],
+          cardSense: wordDefinitions[wordIndex],
+        };
+      }
+    }
+  }
+  return best;
+}
+
+function scorePipelineDatasets(
+  datasets,
+  context,
+  { adjustmentCap, expandedScores },
+) {
+  return Object.fromEntries(
+    Object.entries(datasets).map(([name, turns]) => [
+      name,
+      scoreTurns(
+        turns,
+        (clue, word) => directScore(context, clue, word),
+        {
+          rankWords: (clue, words, clueNumber) =>
+            rankPipelineWords(
+              clue,
+              words,
+              clueNumber,
+              context,
+              expandedScores,
+              { adjustmentCap },
+            ),
+        },
+      ),
+    ]),
+  );
+}
+
+function rankPipelineWords(
+  clue,
+  words,
+  clueNumber,
+  context,
+  expandedScores,
+  { adjustmentCap },
+) {
+  const direct = rankWords(clue, words, (activeClue, word) =>
+    directScore(context, activeClue, word),
+  );
+  if (
+    clueNumber < 2 ||
+    (direct[0]?.score ?? Number.POSITIVE_INFINITY) >= 0.2
+  ) {
+    return direct;
+  }
+  const association = rankWords(
+    clue,
+    words,
+    (activeClue, word) =>
+      scoreOperativeAssociation(
+        directScore(context, activeClue, word),
+        conceptScore(context, activeClue, word),
+        { conceptOffset: 0.05 },
+      ),
+  );
+  const shortlist = association.slice(0, RERANKER_SHORTLIST_SIZE);
+  const rerankerRows = shortlist
+    .map(({ word }) => ({
+      word,
+      score: expandedScores.get(pairKey(clue, word)),
+    }))
+    .filter(({ score }) => Number.isFinite(score));
+  if (rerankerRows.length < 2) {
+    return association;
+  }
+  const minimum = Math.min(
+    ...rerankerRows.map(({ score }) => score),
+  );
+  const maximum = Math.max(
+    ...rerankerRows.map(({ score }) => score),
+  );
+  if (maximum === minimum) {
+    return association;
+  }
+  const adjustmentByWord = new Map(
+    rerankerRows.map(({ score, word }) => [
+      word,
+      adjustmentCap *
+        (2 * ((score - minimum) / (maximum - minimum)) - 1),
+    ]),
+  );
+  return association
+    .map(({ score, word }) => ({
+      word,
+      score: score + (adjustmentByWord.get(word) ?? 0),
+    }))
+    .sort(
+      (left, right) =>
+        right.score - left.score ||
+        left.word.localeCompare(right.word),
+    );
+}
+
+function evaluateRerankerFixtures(
+  scores,
+  pipelineOptions,
+) {
+  return ORIGINAL_FIXTURES.map((fixture) => {
+    const ranking = pipelineOptions
+      ? rankPipelineWords(
+          fixture.clue,
+          fixture.candidates,
+          fixture.targets.length,
+          pipelineOptions.context,
+          scores,
+          {
+            adjustmentCap:
+              pipelineOptions.adjustmentCap,
+          },
+        )
+      : rankWords(
+          fixture.clue,
+          fixture.candidates,
+          (clue, word) =>
+            scores.get(pairKey(clue, word)) ??
+            Number.NEGATIVE_INFINITY,
+        );
+    const top = ranking
+      .slice(0, fixture.targets.length)
+      .map(({ word }) => word);
+    return {
+      clue: fixture.clue.toUpperCase(),
+      targets: fixture.targets.map((word) =>
+        word.toUpperCase(),
+      ),
+      top: top.map((word) => word.toUpperCase()),
+      targetHits: intersectionSize(top, fixture.targets),
+    };
+  });
+}
+
+async function measureRerankerLatency({
+  expandedPairs,
+  model,
+  tokenizer,
+}) {
+  const words = DEFAULT_BOARD.map(({ word }) =>
+    normalizeConceptTerm(word),
+  );
+  const directPairs = words.map((word) => ({
+    query: "joust",
+    passage: word,
+  }));
+  const bridgePairs = expandedPairs
+    .slice(0, RERANKER_SHORTLIST_SIZE)
+    .map(({ passage, query }) => ({ passage, query }));
+  const directSamples = [];
+  const bridgeSamples = [];
+  await runRerankerBatch(model, tokenizer, directPairs);
+  if (bridgePairs.length > 0) {
+    await runRerankerBatch(model, tokenizer, bridgePairs);
+  }
+  for (let iteration = 0; iteration < 5; iteration += 1) {
+    let startedAt = performance.now();
+    await runRerankerBatch(model, tokenizer, directPairs);
+    directSamples.push(performance.now() - startedAt);
+    startedAt = performance.now();
+    await runRerankerBatch(model, tokenizer, bridgePairs);
+    bridgeSamples.push(performance.now() - startedAt);
+  }
+  return {
+    directPairs: directPairs.length,
+    bridgePairs: bridgePairs.length,
+    directTurnMedianMs: round(median(directSamples)),
+    bridgeShortlistMedianMs: round(median(bridgeSamples)),
+  };
+}
+
+async function runRerankerBatch(model, tokenizer, pairs) {
+  if (pairs.length === 0) return;
+  const inputs = await tokenizer(
+    pairs.map(({ query }) => query),
+    {
+      text_pair: pairs.map(({ passage }) => passage),
+      padding: true,
+      truncation: true,
+    },
+  );
+  await model(inputs);
+}
+
+function roundRankingRow({ score, word }) {
+  return {
+    word: word.toUpperCase(),
+    score: round(score),
+  };
+}
+
+function pairKey(clue, word) {
+  return `${normalizeConceptTerm(clue)}\u0000${normalizeConceptTerm(word)}`;
+}
+
+async function directorySize(path) {
+  try {
+    const entries = await readdir(path, { withFileTypes: true });
+    let total = 0;
+    for (const entry of entries) {
+      const entryPath = resolve(path, entry.name);
+      total += entry.isDirectory()
+        ? await directorySize(entryPath)
+        : (await stat(entryPath)).size;
+    }
+    return total;
+  } catch {
+    return null;
+  }
+}
+
+async function measureRerankerActivation() {
+  const { stdout } = await execFileAsync(
+    process.execPath,
+    [
+      "--expose-gc",
+      resolve(ROOT, "scripts/measure-reranker-memory.mjs"),
+    ],
+    {
+      env: {
+        ...process.env,
+        ALLOW_REMOTE_MODELS: "0",
+        HF_CACHE_DIR: env.cacheDir,
+      },
+    },
+  );
+  return JSON.parse(stdout);
 }
 
 async function loadConceptDefinitions() {

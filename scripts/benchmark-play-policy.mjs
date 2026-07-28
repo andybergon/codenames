@@ -3,7 +3,11 @@ import { access, readFile, writeFile } from "node:fs/promises";
 import { isAbsolute, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { performance } from "node:perf_hooks";
-import { env } from "@huggingface/transformers";
+import {
+  AutoModelForSequenceClassification,
+  AutoTokenizer,
+  env,
+} from "@huggingface/transformers";
 import { BOARD_ORDER, createGeneratedBoardState } from "../src/board-share.js";
 import { hydrateClueShards } from "../src/clue-index.js";
 import { centerEmbeddings, embedTerms } from "../src/embeddings.js";
@@ -34,6 +38,7 @@ import {
   CONCEPT_RANKING_MODEL_ID,
   buildConceptualGuessCandidates,
 } from "../src/play/concept-ranking.js";
+import { conceptShardForTerm } from "../src/play/concept-shards.js";
 import {
   DEFAULT_PLAY_BOT_SETTINGS,
   PLAY_BONUS_POLICY,
@@ -75,7 +80,16 @@ const OPERATIVE_AGGRESSIONS = Object.values(PLAY_OPERATIVE_AGGRESSION);
 const OPERATIVE_NOISE_VALUES = Object.values(PLAY_OPERATIVE_NOISE);
 const MISSED_TARGET_TIMINGS = Object.values(PLAY_MISSED_TARGET_TIMING);
 const CLUE_REPEAT_POLICIES = Object.values(PLAY_CLUE_REPEAT_POLICY);
-const OPERATIVE_RANKINGS = ["concept", "direct"];
+const OPERATIVE_RANKINGS = [
+  "concept",
+  "concept-rerank",
+  "direct",
+];
+const RERANKER_MODEL = "Xenova/ms-marco-MiniLM-L-6-v2";
+const RERANKER_REVISION =
+  "a09144355adeed5f58c8ed011d209bf8ee5a1fec";
+const RERANKER_SHORTLIST_SIZE = 8;
+const RERANKER_ADJUSTMENT_CAP = 0.04;
 const conceptDefinitionPromises = new Map();
 const BENCHMARK_SPLITS = Object.freeze({
   smoke: { boardOffset: 0, boards: 20 },
@@ -149,12 +163,19 @@ const operativeContext = await loadOperativeContext({
   modelId: options.operativeModel,
 });
 const conceptRankingEnabled =
-  options.operativeRanking === "concept" &&
+  ["concept", "concept-rerank"].includes(
+    options.operativeRanking,
+  ) &&
   options.language === LANGUAGE.ENGLISH &&
   options.operativeModel === "same" &&
   options.modelId === CONCEPT_RANKING_MODEL_ID &&
   similarityCalibration.scale === 1 &&
   similarityCalibration.offset === 0;
+const benchmarkReranker =
+  conceptRankingEnabled &&
+  options.operativeRanking === "concept-rerank"
+    ? await loadBenchmarkReranker()
+    : null;
 const resultsByPolicy = new Map(
   activePolicies.map((policy) => [policy, []]),
 );
@@ -325,9 +346,11 @@ const report = {
     operative:
       `The bot guesser sees only public clue and unrevealed-card data from ${operativeContext.model}.`,
     operativeRanking:
-      conceptRankingEnabled
+      benchmarkReranker
+        ? "Weak multi-card clues use the local WordNet sense bridge, then the top eight associations receive a capped 0.04 local cross-encoder adjustment."
+        : conceptRankingEnabled
         ? "Weak multi-card clues use the local WordNet sense bridge when every direct card similarity is below 0.20. Other turns retain exact direct ranking."
-        : options.operativeRanking === "concept"
+        : options.operativeRanking !== "direct"
           ? "The requested concept ranker is unavailable for this model or calibration, so every turn uses centered direct clue-to-card similarity."
           : "Every turn uses centered direct clue-to-card similarity.",
     operativeAggression:
@@ -417,6 +440,9 @@ if (!options.comparisonOnly) {
 console.log(`Wrote ${outputPath}`);
 if (!options.comparisonOnly) {
   console.log(`Wrote ${summaryOutputPath}`);
+}
+if (benchmarkReranker?.model?.dispose) {
+  await benchmarkReranker.model.dispose();
 }
 printSummary(policies, activePolicies);
 
@@ -638,6 +664,7 @@ async function simulateGame({
                 game.currentTurn.clue,
               ),
             embeddingOptions: operativeContext.embeddingOptions,
+            rerankCandidates: benchmarkReranker?.rerankCandidates,
           })
         : directCandidates;
     const candidates = rankedCandidates
@@ -1270,7 +1297,9 @@ function parseOptions(args) {
       values.operativeNoise = value;
     } else if (option === "--operative-ranking") {
       if (!OPERATIVE_RANKINGS.includes(value)) {
-        throw new Error(`${option} must be concept or direct.`);
+        throw new Error(
+          `${option} must be concept, concept-rerank, or direct.`,
+        );
       }
       values.operativeRanking = value;
     } else if (option === "--report-detail") {
@@ -1518,9 +1547,7 @@ function dotVectors(left, right) {
 
 async function loadBenchmarkConceptDefinitions(clue) {
   const normalized = normalizeTerm(clue);
-  const shard = /^[a-z]/u.test(normalized)
-    ? normalized[0]
-    : "other";
+  const shard = conceptShardForTerm(normalized);
   const [board, clueEntries] = await Promise.all([
     loadConceptFile("board.json"),
     loadConceptFile(`${shard}.json`),
@@ -1542,6 +1569,96 @@ function loadConceptFile(file) {
     );
   }
   return conceptDefinitionPromises.get(file);
+}
+
+async function loadBenchmarkReranker() {
+  console.log(`Loading local benchmark reranker ${RERANKER_MODEL}...`);
+  const [tokenizer, model] = await Promise.all([
+    AutoTokenizer.from_pretrained(RERANKER_MODEL, {
+      revision: RERANKER_REVISION,
+    }),
+    AutoModelForSequenceClassification.from_pretrained(
+      RERANKER_MODEL,
+      {
+        dtype: "q8",
+        revision: RERANKER_REVISION,
+      },
+    ),
+  ]);
+  return {
+    model,
+    rerankCandidates: async ({
+      candidates,
+      cards,
+      clue,
+      conceptBridges,
+    }) => {
+      const cardByLayoutId = new Map(
+        cards.map((card) => [card.layoutId, card]),
+      );
+      const bridgeByLayoutId = new Map(
+        candidates.map((candidate, index) => [
+          candidate.layoutId,
+          conceptBridges[index],
+        ]),
+      );
+      const shortlist = candidates
+        .filter(({ done }) => !done)
+        .sort(
+          (left, right) =>
+            (right.rankingScore ?? right.similarity) -
+            (left.rankingScore ?? left.similarity),
+        )
+        .slice(0, RERANKER_SHORTLIST_SIZE)
+        .flatMap((candidate) => {
+          const card = cardByLayoutId.get(candidate.layoutId);
+          const bridge = bridgeByLayoutId.get(
+            candidate.layoutId,
+          );
+          return card && bridge?.clueSense && bridge?.cardSense
+            ? [{ candidate, card, bridge }]
+            : [];
+        });
+      if (shortlist.length < 2) {
+        return candidates;
+      }
+      const inputs = await tokenizer(
+        shortlist.map(
+          ({ bridge }) => `${clue}: ${bridge.clueSense}`,
+        ),
+        {
+          text_pair: shortlist.map(
+            ({ bridge, card }) =>
+              `${card.word}: ${bridge.cardSense}`,
+          ),
+          padding: true,
+          truncation: true,
+        },
+      );
+      const logits = (await model(inputs)).logits
+        .tolist()
+        .map(([score]) => score);
+      const minimum = Math.min(...logits);
+      const maximum = Math.max(...logits);
+      if (minimum === maximum) {
+        return candidates;
+      }
+      const adjustmentByLayoutId = new Map(
+        shortlist.map(({ candidate }, index) => [
+          candidate.layoutId,
+          RERANKER_ADJUSTMENT_CAP *
+            (2 * ((logits[index] - minimum) / (maximum - minimum)) -
+              1),
+        ]),
+      );
+      return candidates.map((candidate) => ({
+        ...candidate,
+        rankingScore:
+          (candidate.rankingScore ?? candidate.similarity) +
+          (adjustmentByLayoutId.get(candidate.layoutId) ?? 0),
+      }));
+    },
+  };
 }
 
 async function embedLocalBoardWords(words, activeManifest, activeClueIndex) {

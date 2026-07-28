@@ -6,14 +6,6 @@
 
 ## 🔴 High
 
-- 🧠 Evaluate learned bridge representations and rerankers for operative ranking.
-  - Compare the generated-gloss bridge against BGE-aligned WordNet vectors, AutoExtend, LMMS, ARES, a guarded ConceptNet ensemble, pairwise cross-encoders, and listwise rerankers.
-  - Ablate a bridge alone, a reranker alone, and a bounded `direct BGE → bridge expansion → rerank` pipeline.
-  - Current embedding result: calibrated same-model development favored Cohere and tied Voyage with BGE, but both failed the primary MiniLM-L6 transfer gates, so BGE stays in production and the held-out test remains locked.
-  - Measure download size, first-activation latency, memory, human alignment, cross-model safety, and full-game effects before promotion.
-  - Preserve local offline operation and the operative public-information boundary. Treat hosted rerankers only as capped comparison benchmarks.
-  - Require any candidate to pass calibrated development, cross-model transfer, and human gates before unlocking the held-out test.
-
 - 🔐 Add informed consent and privacy controls for Play analytics.
   - Initial analytics collection may ship without a banner, but treat that as a temporary privacy gap and keep this item high priority.
   - Current collection begins after one completed turn, stores replayable snapshots under a random HTTP-only browser cookie, and keeps Developer and loopback-local games as separate cohorts.

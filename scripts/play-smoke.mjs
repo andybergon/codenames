@@ -165,6 +165,18 @@ const unrestrictedConceptCrossModelComparison = JSON.parse(
     "utf8",
   ),
 );
+const bridgeRerankerFullGameComparison = JSON.parse(
+  await readFile(
+    "scripts/generated/bridge-reranker-full-game-comparison.json",
+    "utf8",
+  ),
+);
+const bridgeRerankerCrossModelComparison = JSON.parse(
+  await readFile(
+    "scripts/generated/bridge-reranker-cross-model-comparison.json",
+    "utf8",
+  ),
+);
 
 assert.equal(playPolicyBenchmark.methodology.boardCount, 100);
 assert.equal(playPolicyBenchmark.methodology.pairedBoards, true);
@@ -224,6 +236,41 @@ assert.deepEqual(
   new Set(["MATCH", "CROWN", "GLOVE", "BELT"]),
 );
 assert.equal(evaluatedJoustRanking.at(-1), "PIANO");
+assert.equal(conceptRankingEvaluation.version, 4);
+assert.equal(
+  conceptRankingEvaluation.rerankerEvaluation.paidCostUsd,
+  0,
+);
+assert.equal(
+  conceptRankingEvaluation.rerankerEvaluation.directReranker.joust[0]
+    .word,
+  "PIANO",
+);
+assert.ok(
+  conceptRankingEvaluation.rerankerEvaluation.directReranker.datasets
+    .culturalCodes.targetRecallAtCount <
+    conceptRankingEvaluation.models.find(
+      ({ id }) => id === "bge-small",
+    ).guarded["0.05"]["0.2"].culturalCodes.targetRecallAtCount,
+);
+const rerankedJoust =
+  conceptRankingEvaluation.rerankerEvaluation.pipelines[
+    "0.04"
+  ].joust.map(({ word }) => word);
+assert.deepEqual(
+  new Set(rerankedJoust.slice(0, 4)),
+  new Set(["MATCH", "CROWN", "GLOVE", "BELT"]),
+);
+assert.equal(rerankedJoust.at(-1), "PIANO");
+for (const comparison of [
+  bridgeRerankerFullGameComparison,
+  bridgeRerankerCrossModelComparison,
+]) {
+  const metrics = comparison.candidates[0].comparison.metrics;
+  for (const metric of Object.values(metrics)) {
+    assert.equal(metric.delta.estimate, 0);
+  }
+}
 const productionConceptEvaluation =
   conceptRankingEvaluation.models.find(
     ({ id }) => id === "bge-small",

@@ -17,6 +17,7 @@ export async function buildConceptualGuessCandidates({
   embeddingOptions,
   embed = embedTerms,
   includeRevealed = false,
+  rerankCandidates,
 }) {
   const clueVector =
     providedClueVector ??
@@ -74,32 +75,51 @@ export async function buildConceptualGuessCandidates({
       clueRange.end,
     );
 
-    return directCandidates.map((candidate, index) => {
-      const range = cardRanges[index];
-      const cardConceptVectors = conceptVectors.slice(
-        range.start,
-        range.end,
-      );
-      const conceptBridge = maximumConceptBridge(
-        clueConceptVectors,
-        cardConceptVectors,
-        clueDefinitions,
-        cardDefinitions[index],
-      );
-      const conceptSimilarity = conceptBridge?.similarity ?? null;
-      const rankingScore = scoreOperativeAssociation(
-        candidate.similarity,
-        conceptSimilarity,
-      );
-      return {
-        ...candidate,
-        conceptSimilarity,
-        ...(conceptBridge &&
-        rankingScore > candidate.similarity
-          ? { conceptBridge }
-          : {}),
-        rankingScore,
-      };
+    const evaluatedCandidates = directCandidates.map(
+      (candidate, index) => {
+        const range = cardRanges[index];
+        const cardConceptVectors = conceptVectors.slice(
+          range.start,
+          range.end,
+        );
+        const conceptBridge = maximumConceptBridge(
+          clueConceptVectors,
+          cardConceptVectors,
+          clueDefinitions,
+          cardDefinitions[index],
+        );
+        const conceptSimilarity = conceptBridge?.similarity ?? null;
+        const rankingScore = scoreOperativeAssociation(
+          candidate.similarity,
+          conceptSimilarity,
+        );
+        return {
+          candidate: {
+            ...candidate,
+            conceptSimilarity,
+            ...(conceptBridge &&
+            rankingScore > candidate.similarity
+              ? { conceptBridge }
+              : {}),
+            rankingScore,
+          },
+          conceptBridge,
+        };
+      },
+    );
+    const candidates = evaluatedCandidates.map(
+      ({ candidate }) => candidate,
+    );
+    if (!rerankCandidates) {
+      return candidates;
+    }
+    return await rerankCandidates({
+      candidates,
+      cards,
+      clue,
+      conceptBridges: evaluatedCandidates.map(
+        ({ conceptBridge }) => conceptBridge,
+      ),
     });
   } catch {
     return directCandidates.map(addDirectRankingScore);

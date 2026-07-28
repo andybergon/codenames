@@ -11,6 +11,12 @@ The English operative concept bridge uses Princeton WordNet 3.0 sense definition
 
 The runtime lazily loads the board dictionary and one of 256 deterministic FNV-1a hash shards for the clue. It does not call a hosted knowledge graph or send clue and board data to a paid model.
 
+## Operative reranker benchmark
+
+The non-production reranker ablation uses `Xenova/ms-marco-MiniLM-L-6-v2` at revision `a09144355adeed5f58c8ed011d209bf8ee5a1fec`. The upstream `cross-encoder/ms-marco-MiniLM-L6-v2` model is Apache-2.0. Its quantized ONNX weights stay in the local Hugging Face cache and are not checked into this repository or loaded by Play.
+
+The checked report retains only aggregate Codenames metrics, model metadata, size, latency, and memory. Human dataset rows and model weights remain local.
+
 ## Italian Train and Play beta
 
 ### Board words
