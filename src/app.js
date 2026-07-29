@@ -294,6 +294,14 @@ const calibrationMode = createCalibrationMode();
 const analyticsReviewMode = createAnalyticsReviewMode();
 let benchmarkMode = null;
 let benchmarkModePromise = null;
+let localDevelopmentNavigation = null;
+
+if (import.meta.env.DEV) {
+  const { mountLocalDevelopmentNavigation } = await import(
+    "./local-development.js"
+  );
+  localDevelopmentNavigation = mountLocalDevelopmentNavigation();
+}
 
 elements.modelLabModel.addEventListener("change", (event) => {
   if (boardLanguage === LANGUAGE.ITALIAN) {
@@ -796,6 +804,7 @@ function renderAppMode() {
   const isAnalytics = appMode === "analytics";
   const isBenchmark = appMode === "benchmarks";
   const isHiddenMode = isCalibration || isAnalytics || isBenchmark;
+  localDevelopmentNavigation?.setMode(appMode);
   applyStaticLocale(isHiddenMode ? LANGUAGE.ENGLISH : appLanguage);
   renderBoardLanguageControl();
   const isTrainerLoading = isTrain && !trainerInitialized;
@@ -803,14 +812,14 @@ function renderAppMode() {
   elements.trainerWorkspace.hidden = !isTrain || isTrainerLoading;
   elements.modelLab.hidden = !isTrain || isTrainerLoading;
   elements.playMode.hidden = !isPlay;
-  elements.appModeSwitch.hidden = isHiddenMode;
+  const hasLocalDevelopmentMode = Boolean(
+    elements.appModeSwitch.querySelector("[data-local-development-mode]"),
+  );
+  elements.appModeSwitch.hidden =
+    isHiddenMode && !hasLocalDevelopmentMode;
   elements.appLanguageSwitch.hidden = isHiddenMode;
-  elements.appTitle.textContent = isCalibration
-    ? `${APP_NAME} calibration`
-    : isBenchmark
-      ? `${APP_NAME} benchmarks`
-      : APP_NAME;
-  document.title = elements.appTitle.textContent;
+  elements.appTitle.textContent = APP_NAME;
+  document.title = APP_NAME;
   void calibrationMode.setActive(isCalibration);
   void analyticsReviewMode.setActive(isAnalytics);
   void setBenchmarkModeActive(isBenchmark);

@@ -1,0 +1,57 @@
+.local-development-root {
+  display: flex;
+  justify-content: center;
+  margin: -10px 0 14px;
+}
+
+.local-development-root[hidden] {
+  display: none;
+}
+
+.local-development-tabs {
+  display: inline-flex;
+  gap: 2px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 3px;
+  background: var(--panel);
+}
+
+.local-development-tabs a {
+  display: inline-grid;
+  min-height: 32px;
+  place-items: center;
+  border-radius: 5px;
+  padding: 0 11px;
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.local-development-tabs a:hover,
+.local-development-tabs a:focus-visible {
+  color: var(--ink);
+}
+
+.local-development-tabs a[aria-current="page"] {
+  background: var(--ink);
+  color: var(--on-ink);
+}
+
+.local-development-tabs a:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+@media (max-width: 420px) {
+  .local-development-tabs {
+    display: grid;
+    width: 100%;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .local-development-tabs a {
+    padding-inline: 6px;
+  }
+}

@@ -1018,6 +1018,92 @@ test("human calibration stays hidden outside its direct URL", async ({ page }) =
   ).toEqual(["Play", "Train"]);
 });
 
+test("localhost Lab navigation exposes hidden development surfaces", async ({
+  page,
+}) => {
+  await page.goto("/");
+
+  const modeSwitch = page.locator(".app-mode-switch");
+  await expect(modeSwitch.getByRole("button")).toHaveText([
+    "Play",
+    "Train",
+    "Lab",
+  ]);
+  await expect(page.locator("#local-development-root")).toBeHidden();
+
+  await modeSwitch.getByRole("button", { name: "Lab" }).click();
+  await expect(page).toHaveURL(/mode=benchmarks$/);
+  await expect(page.locator("#app-title")).toHaveText("Codenames");
+  await expect(page).toHaveTitle("Codenames");
+  await expect(modeSwitch).toBeVisible();
+  await expect(
+    modeSwitch.getByRole("button", { name: "Lab" }),
+  ).toHaveAttribute("aria-pressed", "true");
+
+  const tabs = page.locator(".local-development-tabs");
+  await expect(tabs).toBeVisible();
+  const links = tabs.getByRole("link");
+  await expect(links).toHaveCount(3);
+  await expect(links).toHaveText([
+    "Benchmarks",
+    "Calibration",
+    "Reviews",
+  ]);
+  expect(
+    await links.evaluateAll((items) =>
+      items.map((item) => item.getAttribute("href")),
+    ),
+  ).toEqual([
+    "/?mode=benchmarks",
+    "/?mode=calibrate",
+    "/?mode=analytics",
+  ]);
+
+  const hostChecks = await page.evaluate(async () => {
+    const { isLoopbackHostname } = await import(
+      "/src/local-development.js"
+    );
+    return {
+      localhost: isLoopbackHostname("localhost"),
+      ipv4: isLoopbackHostname("127.0.0.1"),
+      ipv6: isLoopbackHostname("::1"),
+      production: isLoopbackHostname("codenames.andybergon.me"),
+    };
+  });
+  expect(hostChecks).toEqual({
+    localhost: true,
+    ipv4: true,
+    ipv6: true,
+    production: false,
+  });
+
+  await modeSwitch.getByRole("button", { name: "Train" }).click();
+  await expect(page).toHaveURL(/mode=train$/);
+  await expect(page.locator("#app-title")).toHaveText("Codenames");
+  await expect(page).toHaveTitle("Codenames");
+  await expect(
+    modeSwitch.getByRole("button", { name: "Train" }),
+  ).toHaveAttribute("aria-pressed", "true");
+  await expect(
+    modeSwitch.getByRole("button", { name: "Lab" }),
+  ).toHaveAttribute("aria-pressed", "false");
+  await expect(page.locator("#local-development-root")).toBeHidden();
+
+  await modeSwitch.getByRole("button", { name: "Lab" }).click();
+  await expect(page).toHaveURL(/mode=benchmarks$/);
+  await expect(tabs).toBeVisible();
+
+  await tabs.getByRole("link", { name: "Calibration" }).click();
+  await expect(page).toHaveURL(/mode=calibrate$/);
+  await expect(page.locator("#app-title")).toHaveText("Codenames");
+  await expect(page).toHaveTitle("Codenames");
+  await expect(
+    page
+      .locator(".local-development-tabs")
+      .getByRole("link", { name: "Calibration" }),
+  ).toHaveAttribute("aria-current", "page");
+});
+
 test("human calibration auto-saves answers and corrections across navigation", async ({
   page,
 }) => {
@@ -6028,8 +6114,12 @@ test("benchmark scorecard presents the canonical accepted baseline", async ({
 }) => {
   await page.goto("/?mode=benchmarks");
 
-  await expect(page).toHaveTitle("Treats benchmarks");
-  await expect(page.locator(".app-mode-switch")).toBeHidden();
+  await expect(page).toHaveTitle("Treats");
+  await expect(page.locator("#app-title")).toHaveText("Treats");
+  await expect(page.locator(".app-mode-switch")).toBeVisible();
+  await expect(
+    page.locator(".app-mode-switch").getByRole("button", { name: "Lab" }),
+  ).toHaveAttribute("aria-pressed", "true");
   await expect(
     page.getByRole("heading", { name: "Benchmark comparison" }),
   ).toBeVisible();
