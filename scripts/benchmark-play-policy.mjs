@@ -1,5 +1,6 @@
 import { cpus, platform, release } from "node:os";
-import { access, readFile, writeFile } from "node:fs/promises";
+import { createHash } from "node:crypto";
+import { access, readFile, readdir, writeFile } from "node:fs/promises";
 import { isAbsolute, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { performance } from "node:perf_hooks";
@@ -65,6 +66,10 @@ import {
 } from "../src/word-data.js";
 import { PLAY_FUN_OBJECTIVE, scorePlayFun } from "./play-fun-score.mjs";
 import { writePlayPolicySummary } from "./play-policy-summary.mjs";
+import {
+  createBenchmarkConfiguration,
+  stableFingerprint,
+} from "./benchmark-configuration.mjs";
 
 const ROOT = resolve(fileURLToPath(new URL("..", import.meta.url)));
 env.cacheDir =
@@ -115,32 +120,55 @@ const BENCHMARK_SPLITS = Object.freeze({
 
 const options = parseOptions(process.argv.slice(2));
 const outputPath = isAbsolute(options.output) ? options.output : resolve(ROOT, options.output);
-await validateHeldOutTestRun(options, outputPath);
+const heldOutProtocol = await validateHeldOutTestRun(options, outputPath);
 const summaryOutput = options.summaryOutput ?? summaryPathFor(options.output);
 const summaryOutputPath = isAbsolute(summaryOutput)
   ? summaryOutput
   : resolve(ROOT, summaryOutput);
+const manifestDirectoryLabel =
+  options.indexDir ??
+  (options.language === LANGUAGE.ITALIAN
+    ? `public/data/model-lab/it/${options.modelId}`
+    : `public/data/model-lab/${options.modelId}`);
 const manifestDirectory = options.indexDir
   ? resolve(ROOT, options.indexDir)
   : resolve(
       ROOT,
-      options.language === LANGUAGE.ITALIAN
-        ? `public/data/model-lab/it/${options.modelId}`
-        : `public/data/model-lab/${options.modelId}`,
+      manifestDirectoryLabel,
     );
-const manifest = JSON.parse(
-  await readFile(resolve(manifestDirectory, "manifest.json"), "utf8"),
+const manifestBytes = await readFile(
+  resolve(manifestDirectory, "manifest.json"),
 );
+const manifest = JSON.parse(manifestBytes.toString("utf8"));
 const selectedShards = manifest.shards.filter((shard) => shard.start < options.candidates);
 if (selectedShards.length === 0 || options.candidates > manifest.shards.at(-1).end) {
   throw new Error(`Candidate count must be between 1 and ${manifest.shards.at(-1).end}.`);
 }
-const shards = await Promise.all(
+const shardArtifacts = await Promise.all(
   selectedShards.map(async ({ file }) =>
-    JSON.parse(await readFile(resolve(manifestDirectory, file), "utf8")),
+    readAsset(resolve(manifestDirectory, file), file),
   ),
 );
+const auxiliaryArtifacts = await Promise.all(
+  [manifest.boardVectors?.file]
+    .filter(Boolean)
+    .map((file) =>
+      readAsset(resolve(manifestDirectory, file), file),
+    ),
+);
+const shards = shardArtifacts.map(({ bytes }) =>
+  JSON.parse(bytes.toString("utf8")),
+);
 const clueIndex = hydrateClueShards(manifest, shards, options.candidates);
+const modelAsset = modelIndexAsset({
+  id: options.modelId,
+  directory: manifestDirectoryLabel,
+  manifest,
+  manifestBytes,
+  selectedShards,
+  shardArtifacts,
+  auxiliaryArtifacts,
+});
 
 const boardWords = getWordsForSet(options.wordSet, options.language);
 const centeredBoardWords =
@@ -176,6 +204,7 @@ const operativeContext = await loadOperativeContext({
   centeredClueVectors,
   manifest,
   modelId: options.operativeModel,
+  modelAsset,
 });
 const conceptRankingEnabled =
   ["concept", "concept-rerank"].includes(
@@ -191,6 +220,31 @@ const benchmarkReranker =
   options.operativeRanking === "concept-rerank"
     ? await loadBenchmarkReranker()
     : null;
+const conceptAsset = conceptRankingEnabled
+  ? await conceptAssetIdentity()
+  : null;
+const implementationAsset = await behaviorImplementationIdentity();
+const benchmarkConfiguration = createBenchmarkConfiguration({
+  activeAggressions,
+  activePolicies,
+  benchmarkReranker: benchmarkReranker
+    ? {
+        id: RERANKER_ID,
+        definition: RERANKER_DEFINITION,
+        shortlistSize: RERANKER_SHORTLIST_SIZE,
+        adjustmentCap: RERANKER_ADJUSTMENT_CAP,
+      }
+    : null,
+  boardWords,
+  conceptAsset,
+  conceptRankingEnabled,
+  heldOutProtocol,
+  implementationAsset,
+  modelAsset,
+  operativeAsset: operativeContext.asset,
+  options,
+  resultsPerTargetSize: RESULTS_PER_SIZE,
+});
 const resultsByPolicy = new Map(
   activePolicies.map((policy) => [policy, []]),
 );
@@ -314,7 +368,13 @@ const operativeAggression = Object.fromEntries(
   ]),
 );
 const report = {
+  schemaVersion: 2,
+  artifactKind: "play-benchmark-result",
   generatedAt: new Date().toISOString(),
+  configuration: benchmarkConfiguration.configuration,
+  configurationFingerprint:
+    benchmarkConfiguration.configurationFingerprint,
+  configurationLabels: benchmarkConfiguration.configurationLabels,
   environment: {
     node: process.version,
     platform: platform(),
@@ -327,6 +387,12 @@ const report = {
     boardCount: options.boards,
     boardOffset: options.boardOffset,
     split: options.split,
+    splitRole: options.split === "test"
+      ? "held-out"
+      : options.split === "custom"
+        ? "unspecified"
+        : "tuning",
+    heldOutProtocol,
     gamesPerPolicy: options.boards,
     pairedBoards: true,
     comparisonOnly: options.comparisonOnly,
@@ -336,11 +402,7 @@ const report = {
     model: manifest.model,
     provider: manifest.provider ?? "local",
     dimensions: manifest.dimensions,
-    indexDirectory:
-      options.indexDir ??
-      (options.language === LANGUAGE.ITALIAN
-        ? `public/data/model-lab/it/${options.modelId}`
-        : `public/data/model-lab/${options.modelId}`),
+    indexDirectory: manifestDirectoryLabel,
     candidateCount: options.candidates,
     resultsPerTargetSize: RESULTS_PER_SIZE,
     boardSeed:
@@ -1402,15 +1464,15 @@ function requiredValue(value, option) {
 }
 
 async function validateHeldOutTestRun(values, output) {
-  if (values.split !== "test") return;
+  if (values.split !== "test") return null;
   if (!values.testProtocol) {
     throw new Error(
       "--split test requires --test-protocol so held-out eligibility is explicit.",
     );
   }
-  const protocol = JSON.parse(
-    await readFile(resolve(ROOT, values.testProtocol), "utf8"),
-  );
+  const protocolPath = resolve(ROOT, values.testProtocol);
+  const protocolBytes = await readFile(protocolPath);
+  const protocol = JSON.parse(protocolBytes.toString("utf8"));
   if (
     protocol.heldOutTest?.status !== "authorized" ||
     !protocol.heldOutTest.eligibleModelIds?.includes(values.modelId)
@@ -1422,7 +1484,12 @@ async function validateHeldOutTestRun(values, output) {
   try {
     await access(output);
   } catch {
-    return;
+    return {
+      path: values.testProtocol,
+      sha256: createHash("sha256").update(protocolBytes).digest("hex"),
+      schemaVersion: protocol.schemaVersion ?? null,
+      authorizedModelId: values.modelId,
+    };
   }
   throw new Error(
     `Held-out result already exists at ${output}. Refusing a repeat run.`,
@@ -1705,9 +1772,15 @@ async function loadOperativeContext({
   centeredClueVectors: spymasterClueVectors,
   manifest: activeManifest,
   modelId,
+  modelAsset,
 }) {
   if (modelId === "same") {
     return {
+      asset: {
+        ...modelAsset,
+        id: "same",
+        resolvedModelId: modelAsset.id,
+      },
       vectorByWord: new Map(
         words.map((word, index) => [word, spymasterBoardVectors[index]]),
       ),
@@ -1717,11 +1790,13 @@ async function loadOperativeContext({
       model: activeManifest.model,
     };
   }
+  const operativeDirectoryLabel = `public/data/model-lab/${modelId}`;
+  const operativeDirectory = resolve(ROOT, operativeDirectoryLabel);
+  const operativeManifestBytes = await readFile(
+    resolve(operativeDirectory, "manifest.json"),
+  );
   const operativeManifest = JSON.parse(
-    await readFile(
-      resolve(ROOT, `public/data/model-lab/${modelId}/manifest.json`),
-      "utf8",
-    ),
+    operativeManifestBytes.toString("utf8"),
   );
   const operativeEmbeddingOptions =
     embeddingOptionsForManifest(operativeManifest);
@@ -1729,6 +1804,21 @@ async function loadOperativeContext({
     const raw = await embedTerms(words, operativeEmbeddingOptions);
     const centered = centerEmbeddings(raw, operativeManifest.centering.mean);
     return {
+      asset: {
+        id: modelId,
+        model: operativeManifest.model,
+        revision: operativeManifest.modelRevision ?? null,
+        provider: operativeManifest.provider ?? "local",
+        dimensions: operativeManifest.dimensions,
+        directory: operativeDirectoryLabel,
+        manifestSha256: sha256(operativeManifestBytes),
+        selectedShards: [],
+        embeddingRuntime:
+          operativeManifest.embeddingRuntime ?? "transformers",
+        taskPrefix: operativeManifest.taskPrefix ?? null,
+        quantization: operativeManifest.quantization ?? null,
+        centeringMethod: operativeManifest.centering?.method ?? null,
+      },
       vectorByWord: new Map(
         words.map((word, index) => [word, centered[index]]),
       ),
@@ -1739,18 +1829,16 @@ async function loadOperativeContext({
     };
   }
 
-  const operativeDirectory = resolve(
-    ROOT,
-    `public/data/model-lab/${modelId}`,
+  const selectedOperativeShards = operativeManifest.shards.filter(
+    (shard) => shard.start < activeClueIndex.clues.length,
   );
-  const operativeShards = await Promise.all(
-    operativeManifest.shards
-      .filter((shard) => shard.start < activeClueIndex.clues.length)
-      .map(async ({ file }) =>
-        JSON.parse(
-          await readFile(resolve(operativeDirectory, file), "utf8"),
-        ),
-      ),
+  const operativeShardArtifacts = await Promise.all(
+    selectedOperativeShards.map(({ file }) =>
+      readAsset(resolve(operativeDirectory, file), file),
+    ),
+  );
+  const operativeShards = operativeShardArtifacts.map(({ bytes }) =>
+    JSON.parse(bytes.toString("utf8")),
   );
   const operativeClueIndex = hydrateClueShards(
     operativeManifest,
@@ -1772,6 +1860,14 @@ async function loadOperativeContext({
     operativeClueIndex.centering.mean,
   );
   return {
+    asset: modelIndexAsset({
+      id: modelId,
+      directory: operativeDirectoryLabel,
+      manifest: operativeManifest,
+      manifestBytes: operativeManifestBytes,
+      selectedShards: selectedOperativeShards,
+      shardArtifacts: operativeShardArtifacts,
+    }),
     vectorByWord: new Map(
       words.map((word, index) => [word, centered[index]]),
     ),
@@ -1842,6 +1938,113 @@ function buildPrecomputedClueVectorCache(activeClueIndex) {
     );
   });
   return cache;
+}
+
+async function readAsset(path, file) {
+  const bytes = await readFile(path);
+  return {
+    file,
+    bytes,
+    sha256: sha256(bytes),
+  };
+}
+
+function modelIndexAsset({
+  id,
+  directory,
+  manifest,
+  manifestBytes,
+  selectedShards,
+  shardArtifacts,
+  auxiliaryArtifacts = [],
+}) {
+  const hashByFile = new Map(
+    shardArtifacts.map((artifact) => [
+      artifact.file,
+      artifact.sha256,
+    ]),
+  );
+  return {
+    id,
+    model: manifest.model,
+    revision: manifest.modelRevision ?? null,
+    provider: manifest.provider ?? "local",
+    dimensions: manifest.dimensions,
+    directory,
+    manifestSha256: sha256(manifestBytes),
+    selectedShards: selectedShards.map((shard) => ({
+      start: shard.start,
+      end: shard.end,
+      file: shard.file,
+      bytes: shard.bytes ?? null,
+      sha256: hashByFile.get(shard.file),
+    })),
+    auxiliaryAssets: auxiliaryArtifacts.map(
+      ({ file, sha256: hash, bytes }) => ({
+        file,
+        bytes: bytes.length,
+        sha256: hash,
+      }),
+    ),
+    embeddingRuntime: manifest.embeddingRuntime ?? "transformers",
+    taskPrefix: manifest.taskPrefix ?? null,
+    quantization: manifest.quantization ?? null,
+    centeringMethod: manifest.centering?.method ?? null,
+  };
+}
+
+async function conceptAssetIdentity() {
+  const directory = resolve(ROOT, "public/data/concepts");
+  const files = (await readdir(directory, { withFileTypes: true }))
+    .filter((entry) => entry.isFile() && entry.name.endsWith(".json"))
+    .map((entry) => entry.name)
+    .sort();
+  const assets = await Promise.all(
+    files.map((file) => readAsset(resolve(directory, file), file)),
+  );
+  const manifest = JSON.parse(
+    assets
+      .find(({ file }) => file === "manifest.json")
+      .bytes.toString("utf8"),
+  );
+  return {
+    directory: "public/data/concepts",
+    version: manifest.version ?? null,
+    source: manifest.source ?? null,
+    shardStrategy: manifest.shardStrategy ?? null,
+    fileCount: assets.length,
+    contentSha256: stableFingerprint(
+      assets.map(({ file, sha256: hash }) => ({ file, sha256: hash })),
+    ),
+  };
+}
+
+async function behaviorImplementationIdentity() {
+  const files = [
+    "src/board-share.js",
+    "src/clue-index.js",
+    "src/embeddings.js",
+    "src/model.js",
+    "src/play/bots.js",
+    "src/play/concept-ranking.js",
+    "src/play/game-state.js",
+    "src/play/settings.js",
+    "src/word-data.js",
+  ];
+  const assets = await Promise.all(
+    files.map(async (file) => {
+      const bytes = await readFile(resolve(ROOT, file));
+      return { file, sha256: sha256(bytes) };
+    }),
+  );
+  return {
+    files: assets,
+    contentSha256: stableFingerprint(assets),
+  };
+}
+
+function sha256(bytes) {
+  return createHash("sha256").update(bytes).digest("hex");
 }
 
 function ratio(numerator, denominator) {

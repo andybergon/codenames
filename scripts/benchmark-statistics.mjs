@@ -31,6 +31,44 @@ export const PLAY_METRICS = Object.freeze({
   },
 });
 
+export const PLAY_METRIC_METADATA = Object.freeze({
+  correctCardsPerTurn: {
+    label: "Correct cards per turn",
+    preferredDirection: "higher",
+    evidence: "Paired deterministic full-game boards",
+  },
+  wrongTeamHitsPerGame: {
+    label: "Wrong-team hits per game",
+    preferredDirection: "lower",
+    evidence: "Paired deterministic full-game boards",
+  },
+  neutralHitsPerGame: {
+    label: "Neutral hits per game",
+    preferredDirection: "lower",
+    evidence: "Paired deterministic full-game boards",
+  },
+  assassinRate: {
+    label: "Assassin loss rate",
+    preferredDirection: "lower",
+    evidence: "Paired deterministic full-game boards",
+  },
+  fallbackClueRate: {
+    label: "Fallback clue rate",
+    preferredDirection: "lower",
+    evidence: "Paired deterministic full-game boards",
+  },
+  stallRate: {
+    label: "Stall rate",
+    preferredDirection: "lower",
+    evidence: "Paired deterministic full-game boards",
+  },
+  meanTurnsPerGame: {
+    label: "Turns per game",
+    preferredDirection: "context",
+    evidence: "Paired deterministic full-game boards",
+  },
+});
+
 export function comparePairedGameResults(
   baselineGames,
   candidateGames,
@@ -153,6 +191,17 @@ export function createPromotionAssessment(
       minimumLowerBound: 0,
     },
   };
+  for (const gate of Object.values(gates)) {
+    gate.status = classifyPromotionGate(gate);
+  }
+  const requiredGates = [
+    gates.zeroStalls,
+    gates.assassinNonInferiority,
+    gates.wrongTeamNonInferiority,
+    gates.neutralNonInferiority,
+    gates.fallback,
+    gates.correctNonInferiority,
+  ];
   return {
     thresholds,
     gates,
@@ -171,6 +220,11 @@ export function createPromotionAssessment(
       gates.fallback,
       gates.correctNonInferiority,
     ].every(({ passed }) => passed),
+    playGateStatus: requiredGates.some(({ status }) => status === "block")
+      ? "block"
+      : requiredGates.some(({ status }) => status === "needs-more-data")
+        ? "needs-more-data"
+        : "pass",
     correctSuperiorityObserved: gates.correctSuperiority.passed,
     candidateSafetyEvidence: {
       games: candidateGames.length,
@@ -180,6 +234,123 @@ export function createPromotionAssessment(
     },
     humanCalibrationRequired: true,
   };
+}
+
+export function classifyMetricChanges(comparison) {
+  return Object.fromEntries(
+    Object.entries(comparison.metrics).map(([name, metric]) => {
+      const metadata = PLAY_METRIC_METADATA[name];
+      if (!metadata) {
+        throw new Error(`Missing metadata for Play metric ${name}.`);
+      }
+      return [
+        name,
+        {
+          ...metadata,
+          ...metric,
+          status: metricStatus(metric.delta, metadata.preferredDirection),
+        },
+      ];
+    }),
+  );
+}
+
+export function findPairedGameRegressions(
+  baselineGames,
+  candidateGames,
+  { limit = 10 } = {},
+) {
+  const pairs = pairGamesByBoard(baselineGames, candidateGames);
+  const regressions = pairs
+    .map(({ baseline, candidate }) => {
+      const metrics = Object.fromEntries(
+        Object.entries(PLAY_METRICS)
+          .map(([name, metric]) => {
+            if (
+              PLAY_METRIC_METADATA[name].preferredDirection === "context"
+            ) {
+              return null;
+            }
+            const baselineValue = ratio(
+              metric.numerator(baseline),
+              metric.denominator(baseline),
+            );
+            const candidateValue = ratio(
+              metric.numerator(candidate),
+              metric.denominator(candidate),
+            );
+            const delta = candidateValue - baselineValue;
+            const direction = PLAY_METRIC_METADATA[name].preferredDirection;
+            const regressed =
+              direction === "higher" ? delta < 0 : delta > 0;
+            return regressed
+              ? [
+                  name,
+                  {
+                    label: PLAY_METRIC_METADATA[name].label,
+                    baseline: rounded(baselineValue),
+                    candidate: rounded(candidateValue),
+                    delta: rounded(delta),
+                  },
+                ]
+              : null;
+          })
+          .filter(Boolean),
+      );
+      return {
+        board: candidate.board,
+        regressedMetricCount: Object.keys(metrics).length,
+        metrics,
+      };
+    })
+    .filter(({ regressedMetricCount }) => regressedMetricCount > 0)
+    .sort(
+      (left, right) =>
+        right.regressedMetricCount - left.regressedMetricCount ||
+        left.board - right.board,
+    );
+  return {
+    available: true,
+    unit: "deterministic board",
+    totalWithRegression: regressions.length,
+    displayed: Math.min(limit, regressions.length),
+    items: regressions.slice(0, limit),
+  };
+}
+
+function classifyPromotionGate(gate) {
+  if (gate.passed) return "pass";
+  if (Object.hasOwn(gate, "maximum")) {
+    return gate.actual > gate.maximum ? "block" : "needs-more-data";
+  }
+  if (Object.hasOwn(gate, "maximumUpperBound")) {
+    return gate.actual.estimate > gate.maximumUpperBound
+      ? "block"
+      : "needs-more-data";
+  }
+  if (Object.hasOwn(gate, "minimumLowerBound")) {
+    return gate.actual.estimate <= gate.minimumLowerBound
+      ? "block"
+      : "needs-more-data";
+  }
+  return "needs-more-data";
+}
+
+function metricStatus(delta, preferredDirection) {
+  if (delta.lower === 0 && delta.upper === 0) return "unchanged";
+  if (preferredDirection === "context") {
+    return delta.upper < 0 || delta.lower > 0 ? "changed" : "uncertain";
+  }
+  const improvement =
+    preferredDirection === "higher"
+      ? delta.lower > 0
+      : delta.upper < 0;
+  if (improvement) return "improved";
+  const regression =
+    preferredDirection === "higher"
+      ? delta.upper < 0
+      : delta.lower > 0;
+  return regression ? "regressed" : "uncertain";
 }
 
 function eventEvidence(games, field) {

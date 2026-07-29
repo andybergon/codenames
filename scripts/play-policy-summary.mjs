@@ -43,6 +43,15 @@ export function renderPlayPolicySummary(
   const modelLine = italian
     ? `- 🤖 Spymaster: ${report.methodology.model}. Operative: ${report.methodology.operativeModel}.\n`
     : "";
+  const configurationLines = report.configurationLabels
+    ? `- 🔧 Model/index: ${report.configurationLabels.modelIndex}
+- 🗂️ Board: ${report.configurationLabels.board}
+- 💡 Clue policy: ${report.configurationLabels.clue}
+- 🕵️ Operative: ${report.configurationLabels.operative}
+- 🧾 Split: ${report.configurationLabels.split}
+- 🔐 Configuration fingerprint: \`${report.configurationFingerprint}\`
+`
+    : "";
   const clueNumbers = [
     ...new Set([
       ...Object.keys(current.clueNumberDistribution),
@@ -105,7 +114,7 @@ ${remainingCounts
 ## 📌 Latest outcome
 
 - 🧪 ${report.methodology.boardCount} identical boards, ${current.gameCount + hybrid.gameCount} clue-policy results, ${conservative.gameCount + aggressive.gameCount + dynamic.gameCount} aggression-mode results, and ${report.methodology.candidateCount.toLocaleString("en-US")} clue candidates per turn. Dynamic Hybrid is shared by both comparisons.
-${modelLine}- 🎉 Fun Index: ${decimal(current.fun.score)} current and ${decimal(hybrid.fun.score)} hybrid. It balances ambition, momentum, suspense, and flow; human agreement remains a separate guardrail.
+${modelLine}${configurationLines}- 🎉 Fun Index: ${decimal(current.fun.score)} current and ${decimal(hybrid.fun.score)} hybrid. It balances ambition, momentum, suspense, and flow; human agreement remains a separate guardrail.
 - 🌱 Hybrid retried a missed target on ${percent(hybrid.missedTargetRecovery.retryRate)} of eligible clues and ${percent(hybrid.missedTargetRecovery.earlyRetryRate)} while at least four fresh targets remained.
 - 🔎 Dynamic accepted ${percent(dynamic.operativeGuessQuality.weakDeclaredFillRate)} low-sim clue-number-filling guesses and passed early on ${percent(dynamic.operativeGuessQuality.preDeclaredPassRate)} of pre-number decisions.
 - 🎲 Operative variation: ${report.methodology.operativeNoise}
