@@ -8,6 +8,7 @@
 
 - 🤖 Evaluate an LLM reranker as a benchmarked candidate policy.
   - Keep the embedding system as the safe shortlist generator, pass the selected clue through the existing engine, and compare fairly against the embedding-only accepted baseline.
+  - The subscription CLI screen found smoke regressions for Claude Opus, GPT-5.6 Sol, and GPT-5.6 Terra. Sol and Terra also regressed on development; Opus reached its monthly subscription limit during development. None currently justifies an API rollout.
   - Preflight with an absolute total API spend cap of `$5` unless the user explicitly raises it. The first pass must be a tiny equivalent smoke or gold screen with strict request and token accounting; Opus is not eligible for a meaningful development run within this cap.
   - Preserve the canonical configuration, provenance, measured cost, and latency controls.
   - Do not replace the full engine without separate evidence that clears the existing benchmark gates.

@@ -5853,7 +5853,7 @@ test("benchmark scorecard presents the canonical accepted baseline", async ({
     "128 development boards",
   );
   await expect(page.locator(".benchmark-fingerprint code")).toHaveText(
-    "cf888693ae7567c012460f8b697231911be13352d88a7e122d4cb19879c3633b",
+    "189fd1ea518cf07159e9ce7ad5efc679ac9dc0228bc11fd365f402f4f4a8adac",
   );
   await page
     .getByText("Full canonical configuration", { exact: true })

@@ -138,6 +138,9 @@ const subscriptionClueReranker = options.subscriptionCliModel
         options.subscriptionCliModel,
       ),
       modelId: options.subscriptionCliModel,
+      requestConcurrency: options.subscriptionCliModel.startsWith("codex-")
+        ? 1
+        : 2,
     })
   : null;
 const outputPath = isAbsolute(options.output) ? options.output : resolve(ROOT, options.output);

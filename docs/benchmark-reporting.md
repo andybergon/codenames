@@ -133,6 +133,18 @@ The command runs Claude Opus, GPT-5.6 Sol, and GPT-5.6 Terra sequentially when t
 
 The sequence produces same-model smoke and development comparisons plus a MiniLM-L6 operative smoke transfer screen. It never requests the sealed test split. These subscription CLI results are research signals only because the web application cannot invoke coding CLIs during normal play. An API candidate would require a separate provider implementation, the existing `$5` total API cap, and fresh evidence.
 
+`npm run benchmark:subscription-cli:summary` writes the checked [subscription CLI reranker screen](evaluations/subscription-cli-reranker/subscription-cli-reranker-screen.md) from validated completed screens, exact identity probes, atomic progress records, and archived interruption evidence.
+
+If a subscription quota or transport interruption stops a model, resume only that exact model without regenerating the frozen baselines:
+
+```sh
+npm run benchmark:subscription-cli -- \
+  --reuse-baselines \
+  --models codex-sol
+```
+
+Replace `codex-sol` with `codex-terra` or `claude-opus` as needed. The runner validates each completed report, comparison, and timing-log triple before skipping it. It records progress atomically and archives failed attempts, so a resumed screen reuses only content-addressed requests with the same CLI identity, adapter revision, prompt, shortlist, and full case content.
+
 ## Evidence split
 
 | 🧪 Split | 📌 Role | 🔢 Boards | 🚦 Promotion use |

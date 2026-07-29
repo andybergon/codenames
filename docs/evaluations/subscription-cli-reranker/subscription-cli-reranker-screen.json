@@ -1,0 +1,2636 @@
+{
+  "schemaVersion": 1,
+  "artifactKind": "subscription-cli-clue-reranker-screen",
+  "generatedAt": "2026-07-29T13:47:54.523Z",
+  "scientificBoundary": {
+    "apiRequests": false,
+    "apiKeysInherited": false,
+    "subscriptionCliOnly": true,
+    "heldOutTestConsumed": false,
+    "promotionEvidence": false,
+    "productionAvailabilityClaim": false,
+    "providerFallback": false,
+    "apiSpendCapUsd": 5,
+    "runtimeBoundary": "The web application cannot invoke coding subscription CLIs during normal play."
+  },
+  "protocol": {
+    "promptVersion": 1,
+    "shortlistVersion": "play-safe-shortlist-v1",
+    "casesPerRequest": 1,
+    "samePromptAcrossModels": true,
+    "fixedBoardSplits": {
+      "smoke": 20,
+      "development": 128,
+      "transferSmoke": 20,
+      "heldOutTest": 0
+    }
+  },
+  "humanGold": {
+    "status": "unavailable",
+    "blocker": "No reviewed source contains paired baseline and CLI-candidate judgments for selecting one clue from the same frozen embedding shortlist.",
+    "heldOutCalibrationUsedForScoring": false,
+    "heldOutAnswerKey": {
+      "path": "scripts/generated/calibration-answer-keys/embedding-finalists-v1.json",
+      "workflowAccess": "not-loaded-or-scored"
+    },
+    "inspected": [
+      {
+        "path": "scripts/generated/human-data-embedding-comparison.json",
+        "sha256": "145db2891faccd05da655ada4f118e044bc662d5a7c1501b7df0e4ced7e8c7b6",
+        "limitation": "Listener ranking after a fixed clue, not spymaster clue selection."
+      },
+      {
+        "path": "public/data/calibration/embedding-finalists-v1.json",
+        "sha256": "cfbaf418133f91dd1d7ce56a599a0ffd970e7522ec476347e7e3859c0185375a",
+        "limitation": "Sealed fixed-clue calibration tasks with no CLI candidate cases."
+      },
+      {
+        "path": "docs/evaluations/operative-ranking/concept-ranking-evaluation.json",
+        "sha256": "5f1869f8321d5e17bd661dd16e5ba15351de57869f9b9488e5c720c358583e29",
+        "limitation": "Operative card ranking after a fixed clue."
+      },
+      {
+        "path": "docs/evaluations/operative-ranking/hosted-listwise-reranker-evaluation.json",
+        "sha256": "baf42cf5009ddd3b781570fffed956b6ca6f83704c272ea0610d42d7cbfb6562",
+        "limitation": "Operative listwise fixture after a fixed clue."
+      }
+    ]
+  },
+  "discardedPilot": {
+    "acceptedAsEvidence": false,
+    "reason": "An initial simultaneous three-model pilot hit subscription connection failures and used schedule-dependent batching with incomplete cache provenance. A corrected Sol trial at four concurrent requests also stopped after repeated connection refusals. Both incomplete attempts were replaced by the corrected one-case protocol with one Codex request or two Claude requests in flight."
+  },
+  "models": [
+    {
+      "id": "codex-sol",
+      "label": "GPT-5.6 Sol",
+      "cli": "codex",
+      "availability": "available",
+      "overallStatus": "block",
+      "generatedAt": "2026-07-29T11:48:59.832Z",
+      "identity": {
+        "modelId": "codex-sol",
+        "cli": "codex",
+        "cliVersion": "codex-cli 0.145.0",
+        "implementationSha256": "b969fb34448cc199837a1d3a94aaf84cda5837fa6dd7899987e35d1d10e72546",
+        "selector": "gpt-5.6-sol",
+        "selectionCommand": {
+          "executable": "codex",
+          "argv": [
+            "exec",
+            "--ignore-user-config",
+            "--ignore-rules",
+            "--ephemeral",
+            "--sandbox",
+            "read-only",
+            "--disable",
+            "shell_tool",
+            "--disable",
+            "plugins",
+            "--disable",
+            "skill_search",
+            "--disable",
+            "plugin_sharing",
+            "--disable",
+            "tool_suggest",
+            "--model",
+            "gpt-5.6-sol",
+            "-c",
+            "model_reasoning_effort=\"low\"",
+            "--json",
+            "{PROMPT}"
+          ]
+        },
+        "subscriptionSurface": "codex-subscription",
+        "promptVersion": 1,
+        "shortlistVersion": "play-safe-shortlist-v1",
+        "transportVersion": 1,
+        "requestConcurrency": 1,
+        "casesPerRequest": 1,
+        "timeoutMs": 120000,
+        "tools": "disabled",
+        "fallbackModel": null,
+        "resolvedModel": "gpt-5.6-sol"
+      },
+      "requests": {
+        "requestAttempts": 245,
+        "successfulRequests": 242,
+        "cachedRequests": 1666,
+        "cases": 1908,
+        "retries": 3,
+        "quotaStops": 0,
+        "errors": 3,
+        "errorRate": 0.012245,
+        "fallbackRate": 0,
+        "cacheHitRate": 0.873166,
+        "latencyMs": {
+          "count": 242,
+          "mean": 5525.032645,
+          "p50": 4838.6,
+          "p95": 9371.3,
+          "p99": 13048.5,
+          "maximum": 24661.8
+        },
+        "usage": {
+          "inputTokens": 6902670,
+          "cachedInputTokens": 5896192,
+          "cacheCreationInputTokens": 0,
+          "cacheReadInputTokens": 0,
+          "outputTokens": 10649,
+          "reasoningOutputTokens": 3419
+        }
+      },
+      "requestCorpus": {
+        "records": 1876,
+        "uniquePromptHashes": 1876,
+        "bytes": 8818076,
+        "firstGeneratedAt": "2026-07-29T07:00:17.476Z",
+        "lastGeneratedAt": "2026-07-29T11:48:59.829Z",
+        "usage": {
+          "inputTokens": 53738276,
+          "cachedInputTokens": 29671936,
+          "cacheCreationInputTokens": 0,
+          "cacheReadInputTokens": 0,
+          "outputTokens": 96719,
+          "reasoningOutputTokens": 40204
+        },
+        "latencyBoundary": "Per-request latency is retained by the complete screen execution that issued it. Earlier interrupted-attempt request latencies are not reconstructable from cache records."
+      },
+      "screens": [
+        {
+          "id": "smoke",
+          "label": "Same-model smoke",
+          "generatedAt": "2026-07-29T08:04:44.979Z",
+          "verdict": "block",
+          "reasons": [
+            "At least one Play promotion gate conclusively failed."
+          ],
+          "identity": {
+            "modelId": "codex-sol",
+            "cli": "codex",
+            "cliVersion": "codex-cli 0.145.0",
+            "implementationSha256": "b969fb34448cc199837a1d3a94aaf84cda5837fa6dd7899987e35d1d10e72546",
+            "selector": "gpt-5.6-sol",
+            "selectionCommand": {
+              "executable": "codex",
+              "argv": [
+                "exec",
+                "--ignore-user-config",
+                "--ignore-rules",
+                "--ephemeral",
+                "--sandbox",
+                "read-only",
+                "--disable",
+                "shell_tool",
+                "--disable",
+                "plugins",
+                "--disable",
+                "skill_search",
+                "--disable",
+                "plugin_sharing",
+                "--disable",
+                "tool_suggest",
+                "--model",
+                "gpt-5.6-sol",
+                "-c",
+                "model_reasoning_effort=\"low\"",
+                "--json",
+                "{PROMPT}"
+              ]
+            },
+            "subscriptionSurface": "codex-subscription",
+            "promptVersion": 1,
+            "shortlistVersion": "play-safe-shortlist-v1",
+            "transportVersion": 1,
+            "requestConcurrency": 1,
+            "casesPerRequest": 1,
+            "timeoutMs": 120000,
+            "tools": "disabled",
+            "fallbackModel": null
+          },
+          "requests": {
+            "requestAttempts": 0,
+            "successfulRequests": 0,
+            "cachedRequests": 215,
+            "cases": 215,
+            "retries": 0,
+            "quotaStops": 0,
+            "errors": {
+              "total": 0,
+              "transport": 0,
+              "parse": 0,
+              "validation": 0,
+              "timeout": 0,
+              "rate": 0
+            },
+            "fallbackRate": 0,
+            "cacheHitRate": 1,
+            "latencyMs": {
+              "count": 0,
+              "mean": 0,
+              "p50": null,
+              "p95": null,
+              "p99": null,
+              "maximum": null
+            },
+            "usage": {
+              "inputTokens": 0,
+              "cachedInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "cacheReadInputTokens": 0,
+              "outputTokens": 0,
+              "reasoningOutputTokens": 0
+            }
+          },
+          "run": {
+            "seconds": 41.51,
+            "maximumResidentBytes": 834945024,
+            "boardVectorCache": {
+              "status": "hit",
+              "milliseconds": 3.5
+            }
+          },
+          "evidence": {
+            "split": "smoke",
+            "boardOffset": 0,
+            "boardCount": 20,
+            "operativeModelId": "same",
+            "heldOutProtocol": null
+          },
+          "configurationFingerprint": "f431c2fcf3cc0b139a4768ac9a268ccf7f79e485ddfd1653b2350c1fae2ebeeb",
+          "configurationSchema": 2,
+          "pinnedAssets": {
+            "implementation": "233e0fabc574c8ad101d62e7f0618da7cfb5c963920728939d24d99b3650e9a4",
+            "boardWords": "b2bdf45505d9a23da8f127923c62a33be570d9fc1646400ad8038a18e78ab9a2",
+            "spymasterManifest": "df9997658cb028aac476db5291b03d2fb88a7923304036c651da7206968da8fb",
+            "operativeManifest": "df9997658cb028aac476db5291b03d2fb88a7923304036c651da7206968da8fb",
+            "conceptAssets": "d23c4a06d0dfb491b512349659e2a95bf05b9b8cb15a8a52bc648fbb45c77c01"
+          },
+          "metrics": {
+            "correctCardsPerTurn": {
+              "baseline": 1.642105,
+              "candidate": 1.446512,
+              "delta": {
+                "estimate": -0.195594,
+                "lower": -0.295411,
+                "upper": -0.098051
+              },
+              "status": "regressed"
+            },
+            "wrongTeamHitsPerGame": {
+              "baseline": 0,
+              "candidate": 0,
+              "delta": {
+                "estimate": 0,
+                "lower": 0,
+                "upper": 0
+              },
+              "status": "unchanged"
+            },
+            "neutralHitsPerGame": {
+              "baseline": 0,
+              "candidate": 0,
+              "delta": {
+                "estimate": 0,
+                "lower": 0,
+                "upper": 0
+              },
+              "status": "unchanged"
+            },
+            "assassinRate": {
+              "baseline": 0,
+              "candidate": 0,
+              "delta": {
+                "estimate": 0,
+                "lower": 0,
+                "upper": 0
+              },
+              "status": "unchanged"
+            },
+            "fallbackClueRate": {
+              "baseline": 0,
+              "candidate": 0,
+              "delta": {
+                "estimate": 0,
+                "lower": 0,
+                "upper": 0
+              },
+              "status": "unchanged"
+            },
+            "stallRate": {
+              "baseline": 0,
+              "candidate": 0,
+              "delta": {
+                "estimate": 0,
+                "lower": 0,
+                "upper": 0
+              },
+              "status": "unchanged"
+            },
+            "meanTurnsPerGame": {
+              "baseline": 9.5,
+              "candidate": 10.75,
+              "delta": {
+                "estimate": 1.25,
+                "lower": 0.5,
+                "upper": 1.95
+              },
+              "status": "changed"
+            }
+          },
+          "gates": {
+            "zeroStalls": {
+              "passed": true,
+              "actual": 0,
+              "maximum": 0,
+              "status": "pass"
+            },
+            "assassinNonInferiority": {
+              "passed": true,
+              "actual": {
+                "estimate": 0,
+                "lower": 0,
+                "upper": 0
+              },
+              "maximumUpperBound": 0.05,
+              "candidateRate": {
+                "estimate": 0,
+                "lower": 0,
+                "upper": 0.161125
+              },
+              "status": "pass"
+            },
+            "wrongTeamNonInferiority": {
+              "passed": true,
+              "actual": {
+                "estimate": 0,
+                "lower": 0,
+                "upper": 0
+              },
+              "maximumUpperBound": 0.15,
+              "candidateRate": 0,
+              "status": "pass"
+            },
+            "neutralNonInferiority": {
+              "passed": true,
+              "actual": {
+                "estimate": 0,
+                "lower": 0,
+                "upper": 0
+              },
+              "maximumUpperBound": 0.15,
+              "status": "pass"
+            },
+            "fallback": {
+              "passed": true,
+              "actual": 0,
+              "maximum": 0.01,
+              "status": "pass"
+            },
+            "correctNonInferiority": {
+              "passed": false,
+              "actual": {
+                "estimate": -0.195594,
+                "lower": -0.295411,
+                "upper": -0.098051
+              },
+              "minimumLowerBound": -0.05,
+              "status": "block"
+            },
+            "correctSuperiority": {
+              "passed": false,
+              "actual": {
+                "estimate": -0.195594,
+                "lower": -0.295411,
+                "upper": -0.098051
+              },
+              "minimumLowerBound": 0,
+              "status": "block"
+            }
+          },
+          "artifacts": {
+            "report": {
+              "path": ".cache/subscription-cli-benchmark/codex-sol/smoke.json",
+              "sha256": "ea61a8a203bcedf36b6e6addb8f5d6bd8d1a31b8a35ca4b3ba3da8c916075602",
+              "bytes": 114007
+            },
+            "comparison": {
+              "path": ".cache/subscription-cli-benchmark/codex-sol/smoke-comparison.json",
+              "sha256": "f4df90d2394fdb5d2f74eb965c48ecb24d569e8c597ba59c97fe6f848adbe4a8",
+              "bytes": 54166
+            },
+            "baseline": {
+              "path": "/Users/ab/.codex/worktrees/6cf6/codenames/.cache/subscription-cli-benchmark/baseline-same-model/smoke.json",
+              "sha256": "a22dcc831e5f23466a0e8081ae28e2604ef107db18b767baa7f94562e25237e1",
+              "configurationFingerprint": "680872b9cb3aa4bae9f442bfbe9810fdbe1971b22da43632fd9b1dfa0f16aa33"
+            },
+            "timingLog": {
+              "path": ".cache/subscription-cli-benchmark/codex-sol/smoke.log",
+              "sha256": "88ce474c35ebf993f9e38554caf8160f9e77d6323a4e736395cb7baaa7ab398e"
+            }
+          }
+        },
+        {
+          "id": "development",
+          "label": "Same-model development",
+          "generatedAt": "2026-07-29T11:15:31.313Z",
+          "verdict": "block",
+          "reasons": [
+            "At least one Play promotion gate conclusively failed."
+          ],
+          "identity": {
+            "modelId": "codex-sol",
+            "cli": "codex",
+            "cliVersion": "codex-cli 0.145.0",
+            "implementationSha256": "b969fb34448cc199837a1d3a94aaf84cda5837fa6dd7899987e35d1d10e72546",
+            "selector": "gpt-5.6-sol",
+            "selectionCommand": {
+              "executable": "codex",
+              "argv": [
+                "exec",
+                "--ignore-user-config",
+                "--ignore-rules",
+                "--ephemeral",
+                "--sandbox",
+                "read-only",
+                "--disable",
+                "shell_tool",
+                "--disable",
+                "plugins",
+                "--disable",
+                "skill_search",
+                "--disable",
+                "plugin_sharing",
+                "--disable",
+                "tool_suggest",
+                "--model",
+                "gpt-5.6-sol",
+                "-c",
+                "model_reasoning_effort=\"low\"",
+                "--json",
+                "{PROMPT}"
+              ]
+            },
+            "subscriptionSurface": "codex-subscription",
+            "promptVersion": 1,
+            "shortlistVersion": "play-safe-shortlist-v1",
+            "transportVersion": 1,
+            "requestConcurrency": 1,
+            "casesPerRequest": 1,
+            "timeoutMs": 120000,
+            "tools": "disabled",
+            "fallbackModel": null
+          },
+          "requests": {
+            "requestAttempts": 89,
+            "successfulRequests": 89,
+            "cachedRequests": 1322,
+            "cases": 1411,
+            "retries": 0,
+            "quotaStops": 0,
+            "errors": {
+              "total": 0,
+              "transport": 0,
+              "parse": 0,
+              "validation": 0,
+              "timeout": 0,
+              "rate": 0
+            },
+            "fallbackRate": 0,
+            "cacheHitRate": 0.936924,
+            "latencyMs": {
+              "count": 89,
+              "mean": 5214.741573,
+              "p50": 4633.3,
+              "p95": 8396.5,
+              "p99": 11883.7,
+              "maximum": 11883.7
+            },
+            "usage": {
+              "inputTokens": 2528189,
+              "cachedInputTokens": 2193664,
+              "cacheCreationInputTokens": 0,
+              "cacheReadInputTokens": 0,
+              "outputTokens": 3240,
+              "reasoningOutputTokens": 605
+            }
+          },
+          "run": {
+            "seconds": 731.07,
+            "maximumResidentBytes": 864354304,
+            "boardVectorCache": {
+              "status": "hit",
+              "milliseconds": 3.1
+            }
+          },
+          "evidence": {
+            "split": "development",
+            "boardOffset": 120,
+            "boardCount": 128,
+            "operativeModelId": "same",
+            "heldOutProtocol": null
+          },
+          "configurationFingerprint": "4c5ca1dd133168ca97a99958f25cd56f3dd43d3064e3c447410d757b52095feb",
+          "configurationSchema": 2,
+          "pinnedAssets": {
+            "implementation": "233e0fabc574c8ad101d62e7f0618da7cfb5c963920728939d24d99b3650e9a4",
+            "boardWords": "b2bdf45505d9a23da8f127923c62a33be570d9fc1646400ad8038a18e78ab9a2",
+            "spymasterManifest": "df9997658cb028aac476db5291b03d2fb88a7923304036c651da7206968da8fb",
+            "operativeManifest": "df9997658cb028aac476db5291b03d2fb88a7923304036c651da7206968da8fb",
+            "conceptAssets": "d23c4a06d0dfb491b512349659e2a95bf05b9b8cb15a8a52bc648fbb45c77c01"
+          },
+          "metrics": {
+            "correctCardsPerTurn": {
+              "baseline": 1.555469,
+              "candidate": 1.410347,
+              "delta": {
+                "estimate": -0.145121,
+                "lower": -0.177617,
+                "upper": -0.113616
+              },
+              "status": "regressed"
+            },
+            "wrongTeamHitsPerGame": {
+              "baseline": 0,
+              "candidate": 0,
+              "delta": {
+                "estimate": 0,
+                "lower": 0,
+                "upper": 0
+              },
+              "status": "unchanged"
+            },
+            "neutralHitsPerGame": {
+              "baseline": 0,
+              "candidate": 0,
+              "delta": {
+                "estimate": 0,
+                "lower": 0,
+                "upper": 0
+              },
+              "status": "unchanged"
+            },
+            "assassinRate": {
+              "baseline": 0,
+              "candidate": 0,
+              "delta": {
+                "estimate": 0,
+                "lower": 0,
+                "upper": 0
+              },
+              "status": "unchanged"
+            },
+            "fallbackClueRate": {
+              "baseline": 0,
+              "candidate": 0,
+              "delta": {
+                "estimate": 0,
+                "lower": 0,
+                "upper": 0
+              },
+              "status": "unchanged"
+            },
+            "stallRate": {
+              "baseline": 0,
+              "candidate": 0,
+              "delta": {
+                "estimate": 0,
+                "lower": 0,
+                "upper": 0
+              },
+              "status": "unchanged"
+            },
+            "meanTurnsPerGame": {
+              "baseline": 10,
+              "candidate": 11.023438,
+              "delta": {
+                "estimate": 1.023438,
+                "lower": 0.765625,
+                "upper": 1.289063
+              },
+              "status": "changed"
+            }
+          },
+          "gates": {
+            "zeroStalls": {
+              "passed": true,
+              "actual": 0,
+              "maximum": 0,
+              "status": "pass"
+            },
+            "assassinNonInferiority": {
+              "passed": true,
+              "actual": {
+                "estimate": 0,
+                "lower": 0,
+                "upper": 0
+              },
+              "maximumUpperBound": 0.05,
+              "candidateRate": {
+                "estimate": 0,
+                "lower": 0,
+                "upper": 0.029137
+              },
+              "status": "pass"
+            },
+            "wrongTeamNonInferiority": {
+              "passed": true,
+              "actual": {
+                "estimate": 0,
+                "lower": 0,
+                "upper": 0
+              },
+              "maximumUpperBound": 0.15,
+              "candidateRate": 0,
+              "status": "pass"
+            },
+            "neutralNonInferiority": {
+              "passed": true,
+              "actual": {
+                "estimate": 0,
+                "lower": 0,
+                "upper": 0
+              },
+              "maximumUpperBound": 0.15,
+              "status": "pass"
+            },
+            "fallback": {
+              "passed": true,
+              "actual": 0,
+              "maximum": 0.01,
+              "status": "pass"
+            },
+            "correctNonInferiority": {
+              "passed": false,
+              "actual": {
+                "estimate": -0.145121,
+                "lower": -0.177617,
+                "upper": -0.113616
+              },
+              "minimumLowerBound": -0.05,
+              "status": "block"
+            },
+            "correctSuperiority": {
+              "passed": false,
+              "actual": {
+                "estimate": -0.145121,
+                "lower": -0.177617,
+                "upper": -0.113616
+              },
+              "minimumLowerBound": 0,
+              "status": "block"
+            }
+          },
+          "artifacts": {
+            "report": {
+              "path": ".cache/subscription-cli-benchmark/codex-sol/development.json",
+              "sha256": "8c7ed475ae6bf9f588c28f01f45a3dcccc873e5a298a6b05415fe9808dec3133",
+              "bytes": 614407
+            },
+            "comparison": {
+              "path": ".cache/subscription-cli-benchmark/codex-sol/development-comparison.json",
+              "sha256": "4174ff9f4308c42a4c7cec8a0a2c18c0e19e5854c0d43f2270634d98377846a6",
+              "bytes": 56291
+            },
+            "baseline": {
+              "path": "/Users/ab/.codex/worktrees/6cf6/codenames/scripts/generated/play-accepted-baseline-development.json",
+              "sha256": "b6de3330918736092afa8965a12df88e7bb86e6401201ef065ec13747a3d024c",
+              "configurationFingerprint": "189fd1ea518cf07159e9ce7ad5efc679ac9dc0228bc11fd365f402f4f4a8adac"
+            },
+            "timingLog": {
+              "path": ".cache/subscription-cli-benchmark/codex-sol/development.log",
+              "sha256": "6beb1a2b7f2cfefcb60269c5ef7095bacf92470e0324fb1ecee419f93688ccf1"
+            }
+          }
+        },
+        {
+          "id": "transfer-smoke",
+          "label": "MiniLM-L6 transfer smoke",
+          "generatedAt": "2026-07-29T11:48:59.832Z",
+          "verdict": "needs-more-data",
+          "reasons": [],
+          "identity": {
+            "modelId": "codex-sol",
+            "cli": "codex",
+            "cliVersion": "codex-cli 0.145.0",
+            "implementationSha256": "b969fb34448cc199837a1d3a94aaf84cda5837fa6dd7899987e35d1d10e72546",
+            "selector": "gpt-5.6-sol",
+            "selectionCommand": {
+              "executable": "codex",
+              "argv": [
+                "exec",
+                "--ignore-user-config",
+                "--ignore-rules",
+                "--ephemeral",
+                "--sandbox",
+                "read-only",
+                "--disable",
+                "shell_tool",
+                "--disable",
+                "plugins",
+                "--disable",
+                "skill_search",
+                "--disable",
+                "plugin_sharing",
+                "--disable",
+                "tool_suggest",
+                "--model",
+                "gpt-5.6-sol",
+                "-c",
+                "model_reasoning_effort=\"low\"",
+                "--json",
+                "{PROMPT}"
+              ]
+            },
+            "subscriptionSurface": "codex-subscription",
+            "promptVersion": 1,
+            "shortlistVersion": "play-safe-shortlist-v1",
+            "transportVersion": 1,
+            "requestConcurrency": 1,
+            "casesPerRequest": 1,
+            "timeoutMs": 120000,
+            "tools": "disabled",
+            "fallbackModel": null
+          },
+          "requests": {
+            "requestAttempts": 156,
+            "successfulRequests": 153,
+            "cachedRequests": 129,
+            "cases": 282,
+            "retries": 3,
+            "quotaStops": 0,
+            "errors": {
+              "total": 3,
+              "transport": 3,
+              "parse": 0,
+              "validation": 0,
+              "timeout": 0,
+              "rate": 0.019231
+            },
+            "fallbackRate": 0,
+            "cacheHitRate": 0.457447,
+            "latencyMs": {
+              "count": 153,
+              "mean": 5705.528758,
+              "p50": 4991.2,
+              "p95": 10155.7,
+              "p99": 15838.2,
+              "maximum": 24661.8
+            },
+            "usage": {
+              "inputTokens": 4374481,
+              "cachedInputTokens": 3702528,
+              "cacheCreationInputTokens": 0,
+              "cacheReadInputTokens": 0,
+              "outputTokens": 7409,
+              "reasoningOutputTokens": 2814
+            }
+          },
+          "run": {
+            "seconds": 928.48,
+            "maximumResidentBytes": 753614848,
+            "boardVectorCache": {
+              "status": "hit",
+              "milliseconds": 2.9
+            }
+          },
+          "evidence": {
+            "split": "smoke",
+            "boardOffset": 0,
+            "boardCount": 20,
+            "operativeModelId": "minilm-l6",
+            "heldOutProtocol": null
+          },
+          "configurationFingerprint": "49792e74a8afaff5b134d7a8f84cb8ea1102149260f4ffba5aee030fbc4c2d4d",
+          "configurationSchema": 2,
+          "pinnedAssets": {
+            "implementation": "233e0fabc574c8ad101d62e7f0618da7cfb5c963920728939d24d99b3650e9a4",
+            "boardWords": "b2bdf45505d9a23da8f127923c62a33be570d9fc1646400ad8038a18e78ab9a2",
+            "spymasterManifest": "df9997658cb028aac476db5291b03d2fb88a7923304036c651da7206968da8fb",
+            "operativeManifest": "f647de4eff2b36e82cca94ee234a47ddc4520379b202d7ab1925875375eea5d7",
+            "conceptAssets": null
+          },
+          "metrics": {
+            "correctCardsPerTurn": {
+              "baseline": 1.062718,
+              "candidate": 1.074468,
+              "delta": {
+                "estimate": 0.01175,
+                "lower": -0.042403,
+                "upper": 0.062625
+              },
+              "status": "uncertain"
+            },
+            "wrongTeamHitsPerGame": {
+              "baseline": 0.2,
+              "candidate": 0.2,
+              "delta": {
+                "estimate": 0,
+                "lower": -0.3,
+                "upper": 0.35
+              },
+              "status": "uncertain"
+            },
+            "neutralHitsPerGame": {
+              "baseline": 0.9,
+              "candidate": 0.5,
+              "delta": {
+                "estimate": -0.4,
+                "lower": -0.85,
+                "upper": 0.05
+              },
+              "status": "uncertain"
+            },
+            "assassinRate": {
+              "baseline": 0,
+              "candidate": 0.05,
+              "delta": {
+                "estimate": 0.05,
+                "lower": 0,
+                "upper": 0.15
+              },
+              "status": "uncertain"
+            },
+            "fallbackClueRate": {
+              "baseline": 0,
+              "candidate": 0,
+              "delta": {
+                "estimate": 0,
+                "lower": 0,
+                "upper": 0
+              },
+              "status": "unchanged"
+            },
+            "stallRate": {
+              "baseline": 0,
+              "candidate": 0,
+              "delta": {
+                "estimate": 0,
+                "lower": 0,
+                "upper": 0
+              },
+              "status": "unchanged"
+            },
+            "meanTurnsPerGame": {
+              "baseline": 14.35,
+              "candidate": 14.1,
+              "delta": {
+                "estimate": -0.25,
+                "lower": -0.9,
+                "upper": 0.4
+              },
+              "status": "uncertain"
+            }
+          },
+          "gates": {
+            "zeroStalls": {
+              "passed": true,
+              "actual": 0,
+              "maximum": 0,
+              "status": "pass"
+            },
+            "assassinNonInferiority": {
+              "passed": false,
+              "actual": {
+                "estimate": 0.05,
+                "lower": 0,
+                "upper": 0.15
+              },
+              "maximumUpperBound": 0.05,
+              "candidateRate": {
+                "estimate": 0.05,
+                "lower": 0.008881,
+                "upper": 0.236131
+              },
+              "status": "needs-more-data"
+            },
+            "wrongTeamNonInferiority": {
+              "passed": false,
+              "actual": {
+                "estimate": 0,
+                "lower": -0.3,
+                "upper": 0.35
+              },
+              "maximumUpperBound": 0.15,
+              "candidateRate": 0.2,
+              "status": "needs-more-data"
+            },
+            "neutralNonInferiority": {
+              "passed": true,
+              "actual": {
+                "estimate": -0.4,
+                "lower": -0.85,
+                "upper": 0.05
+              },
+              "maximumUpperBound": 0.15,
+              "status": "pass"
+            },
+            "fallback": {
+              "passed": true,
+              "actual": 0,
+              "maximum": 0.01,
+              "status": "pass"
+            },
+            "correctNonInferiority": {
+              "passed": true,
+              "actual": {
+                "estimate": 0.01175,
+                "lower": -0.042403,
+                "upper": 0.062625
+              },
+              "minimumLowerBound": -0.05,
+              "status": "pass"
+            },
+            "correctSuperiority": {
+              "passed": false,
+              "actual": {
+                "estimate": 0.01175,
+                "lower": -0.042403,
+                "upper": 0.062625
+              },
+              "minimumLowerBound": 0,
+              "status": "needs-more-data"
+            }
+          },
+          "artifacts": {
+            "report": {
+              "path": ".cache/subscription-cli-benchmark/codex-sol/transfer-smoke.json",
+              "sha256": "62901c509c3dc8e2c95fe7affea9985c2b3f30c7f0d8ee49c1007b3abe5155b8",
+              "bytes": 117391
+            },
+            "comparison": {
+              "path": ".cache/subscription-cli-benchmark/codex-sol/transfer-smoke-comparison.json",
+              "sha256": "22837d5459a1b2beb352df5841c080dbcd0a1fa45c6d1cdcc17c818964b06139",
+              "bytes": 57073
+            },
+            "baseline": {
+              "path": "/Users/ab/.codex/worktrees/6cf6/codenames/.cache/subscription-cli-benchmark/baseline-transfer/smoke.json",
+              "sha256": "a2cfa1ac8aafa127ae1fcad2dd0a8685735a2e491e5333f56d29f6b5d78a6c6a",
+              "configurationFingerprint": "1ef2d006a01c1ea3f2598cf8fca836425bba7c82240ddbb144a15dc436f6295c"
+            },
+            "timingLog": {
+              "path": ".cache/subscription-cli-benchmark/codex-sol/transfer-smoke.log",
+              "sha256": "c5ba4f4c23ed675d1bff518190fe7c6e4f4793d724f805afab61b5e451fb0bb5"
+            }
+          }
+        }
+      ],
+      "failure": null,
+      "progress": {
+        "schemaVersion": 1,
+        "generatedAt": "2026-07-29T12:37:21.888Z",
+        "providerEnvironmentPolicy": {
+          "version": 1,
+          "removedVariableNames": [
+            "CLAUDE_CODE_NO_FLICKER",
+            "CODEX_CI",
+            "CODEX_INTERNAL_ORIGINATOR_OVERRIDE",
+            "CODEX_PERMISSION_PROFILE",
+            "CODEX_SHELL",
+            "CODEX_THREAD_ID"
+          ],
+          "subscriptionConfigVariablesAllowed": [
+            "CLAUDE_CONFIG_DIR",
+            "CODEX_HOME"
+          ],
+          "alternateProviderRoutesRemoved": true
+        },
+        "modelId": "codex-sol",
+        "provenance": {
+          "modelId": "codex-sol",
+          "cli": "codex",
+          "cliVersion": "codex-cli 0.145.0",
+          "implementationSha256": "b969fb34448cc199837a1d3a94aaf84cda5837fa6dd7899987e35d1d10e72546",
+          "selector": "gpt-5.6-sol",
+          "selectionCommand": {
+            "executable": "codex",
+            "argv": [
+              "exec",
+              "--ignore-user-config",
+              "--ignore-rules",
+              "--ephemeral",
+              "--sandbox",
+              "read-only",
+              "--disable",
+              "shell_tool",
+              "--disable",
+              "plugins",
+              "--disable",
+              "skill_search",
+              "--disable",
+              "plugin_sharing",
+              "--disable",
+              "tool_suggest",
+              "--model",
+              "gpt-5.6-sol",
+              "-c",
+              "model_reasoning_effort=\"low\"",
+              "--json",
+              "{PROMPT}"
+            ]
+          },
+          "subscriptionSurface": "codex-subscription",
+          "promptVersion": 1,
+          "shortlistVersion": "play-safe-shortlist-v1",
+          "transportVersion": 1,
+          "requestConcurrency": 1,
+          "casesPerRequest": 1,
+          "timeoutMs": 120000,
+          "tools": "disabled",
+          "fallbackModel": null
+        },
+        "completedScreens": [
+          "smoke",
+          "development",
+          "transfer-smoke"
+        ],
+        "artifact": {
+          "path": ".cache/subscription-cli-benchmark/codex-sol/progress.json",
+          "sha256": "edca3121af1dcfe98d232fbb850933ba1b1b97b52168b6c8fc3a966c241c0737",
+          "bytes": 1682
+        }
+      },
+      "interruptions": [
+        {
+          "failedScreen": "development",
+          "generatedAt": "2026-07-29T09:33:12.049Z",
+          "class": "subscription-transport-refused",
+          "detail": "Reconnecting... 2/5 (stream disconnected before completion: Connection refused (os error 61))",
+          "run": {
+            "seconds": 3591.86,
+            "maximumResidentBytes": 803160064,
+            "boardVectorCache": {
+              "status": "hit",
+              "milliseconds": 3
+            }
+          },
+          "logSha256": "cc6756b610cc410e0030917d365df4b6acbb1b6b1aa051f7c604a2b47b832647",
+          "logArtifact": {
+            "path": ".cache/subscription-cli-benchmark/codex-sol/development.attempt-2026-07-29T09-33-12.049Z.log",
+            "sha256": "cc6756b610cc410e0030917d365df4b6acbb1b6b1aa051f7c604a2b47b832647",
+            "bytes": 1833
+          }
+        },
+        {
+          "failedScreen": "development",
+          "generatedAt": "2026-07-29T11:03:20.271Z",
+          "class": "subscription-transport-refused",
+          "detail": "Reconnecting... 2/5 (stream disconnected before completion: Connection refused (os error 61))",
+          "run": {
+            "seconds": 4733.51,
+            "maximumResidentBytes": 853737472,
+            "boardVectorCache": {
+              "status": "hit",
+              "milliseconds": 3
+            }
+          },
+          "logSha256": "b47f9c87b396d62d287f9337565415a49ca5ab1cc10731cc27ed8c95c52b13a3",
+          "logArtifact": {
+            "path": ".cache/subscription-cli-benchmark/codex-sol/development.attempt-2026-07-29T11-03-20.271Z.log",
+            "sha256": "b47f9c87b396d62d287f9337565415a49ca5ab1cc10731cc27ed8c95c52b13a3",
+            "bytes": 2109
+          }
+        },
+        {
+          "failedScreen": "transfer-smoke",
+          "generatedAt": "2026-07-29T11:33:31.397Z",
+          "class": "subscription-transport-refused",
+          "detail": "Reconnecting... 2/5 (stream disconnected before completion: Connection refused (os error 61))",
+          "run": {
+            "seconds": 630.98,
+            "maximumResidentBytes": 728334336,
+            "boardVectorCache": {
+              "status": "hit",
+              "milliseconds": 3.1
+            }
+          },
+          "logSha256": "f063d1f36df1bc6655fa4d7e47390a8882f20455f04e305607e25160e7aa1472",
+          "logArtifact": {
+            "path": ".cache/subscription-cli-benchmark/codex-sol/transfer-smoke.attempt-2026-07-29T11-33-31.397Z.log",
+            "sha256": "f063d1f36df1bc6655fa4d7e47390a8882f20455f04e305607e25160e7aa1472",
+            "bytes": 1858
+          }
+        }
+      ],
+      "measurementLimitations": [
+        "A resume attempt overwrote the original Sol smoke report with a cache-only replay. The exact comparison metrics remain reproducible, but the original per-request latency array is unavailable."
+      ]
+    },
+    {
+      "id": "codex-terra",
+      "label": "GPT-5.6 Terra",
+      "cli": "codex",
+      "availability": "available",
+      "overallStatus": "block",
+      "generatedAt": "2026-07-29T13:47:54.523Z",
+      "identity": {
+        "modelId": "codex-terra",
+        "cli": "codex",
+        "cliVersion": "codex-cli 0.145.0",
+        "implementationSha256": "b969fb34448cc199837a1d3a94aaf84cda5837fa6dd7899987e35d1d10e72546",
+        "selector": "gpt-5.6-terra",
+        "selectionCommand": {
+          "executable": "codex",
+          "argv": [
+            "exec",
+            "--ignore-user-config",
+            "--ignore-rules",
+            "--ephemeral",
+            "--sandbox",
+            "read-only",
+            "--disable",
+            "shell_tool",
+            "--disable",
+            "plugins",
+            "--disable",
+            "skill_search",
+            "--disable",
+            "plugin_sharing",
+            "--disable",
+            "tool_suggest",
+            "--model",
+            "gpt-5.6-terra",
+            "-c",
+            "model_reasoning_effort=\"low\"",
+            "--json",
+            "{PROMPT}"
+          ]
+        },
+        "subscriptionSurface": "codex-subscription",
+        "promptVersion": 1,
+        "shortlistVersion": "play-safe-shortlist-v1",
+        "transportVersion": 1,
+        "requestConcurrency": 1,
+        "casesPerRequest": 1,
+        "timeoutMs": 120000,
+        "tools": "disabled",
+        "fallbackModel": null,
+        "resolvedModel": "gpt-5.6-terra"
+      },
+      "requests": {
+        "requestAttempts": 1012,
+        "successfulRequests": 1010,
+        "cachedRequests": 1059,
+        "cases": 2069,
+        "retries": 2,
+        "quotaStops": 0,
+        "errors": 2,
+        "errorRate": 0.001976,
+        "fallbackRate": 0,
+        "cacheHitRate": 0.511841,
+        "latencyMs": {
+          "count": 1010,
+          "mean": 5021.575644,
+          "p50": 4544.3,
+          "p95": 8299.1,
+          "p99": 11212.2,
+          "maximum": 23380.7
+        },
+        "usage": {
+          "inputTokens": 26912912,
+          "cachedInputTokens": 20008704,
+          "cacheCreationInputTokens": 0,
+          "cacheReadInputTokens": 0,
+          "outputTokens": 65682,
+          "reasoningOutputTokens": 34944
+        }
+      },
+      "requestCorpus": {
+        "records": 2019,
+        "uniquePromptHashes": 2019,
+        "bytes": 9499522,
+        "firstGeneratedAt": "2026-07-29T07:36:15.692Z",
+        "lastGeneratedAt": "2026-07-29T13:47:54.519Z",
+        "usage": {
+          "inputTokens": 53956700,
+          "cachedInputTokens": 32894720,
+          "cacheCreationInputTokens": 0,
+          "cacheReadInputTokens": 0,
+          "outputTokens": 152438,
+          "reasoningOutputTokens": 90729
+        },
+        "latencyBoundary": "Per-request latency is retained by the complete screen execution that issued it. Earlier interrupted-attempt request latencies are not reconstructable from cache records."
+      },
+      "screens": [
+        {
+          "id": "smoke",
+          "label": "Same-model smoke",
+          "generatedAt": "2026-07-29T07:55:57.669Z",
+          "verdict": "block",
+          "reasons": [
+            "At least one Play promotion gate conclusively failed."
+          ],
+          "identity": {
+            "modelId": "codex-terra",
+            "cli": "codex",
+            "cliVersion": "codex-cli 0.145.0",
+            "implementationSha256": "b969fb34448cc199837a1d3a94aaf84cda5837fa6dd7899987e35d1d10e72546",
+            "selector": "gpt-5.6-terra",
+            "selectionCommand": {
+              "executable": "codex",
+              "argv": [
+                "exec",
+                "--ignore-user-config",
+                "--ignore-rules",
+                "--ephemeral",
+                "--sandbox",
+                "read-only",
+                "--disable",
+                "shell_tool",
+                "--disable",
+                "plugins",
+                "--disable",
+                "skill_search",
+                "--disable",
+                "plugin_sharing",
+                "--disable",
+                "tool_suggest",
+                "--model",
+                "gpt-5.6-terra",
+                "-c",
+                "model_reasoning_effort=\"low\"",
+                "--json",
+                "{PROMPT}"
+              ]
+            },
+            "subscriptionSurface": "codex-subscription",
+            "promptVersion": 1,
+            "shortlistVersion": "play-safe-shortlist-v1",
+            "transportVersion": 1,
+            "requestConcurrency": 1,
+            "casesPerRequest": 1,
+            "timeoutMs": 120000,
+            "tools": "disabled",
+            "fallbackModel": null
+          },
+          "requests": {
+            "requestAttempts": 236,
+            "successfulRequests": 234,
+            "cachedRequests": 0,
+            "cases": 234,
+            "retries": 2,
+            "quotaStops": 0,
+            "errors": {
+              "total": 2,
+              "transport": 2,
+              "parse": 0,
+              "validation": 0,
+              "timeout": 0,
+              "rate": 0.008475
+            },
+            "fallbackRate": 0,
+            "cacheHitRate": 0,
+            "latencyMs": {
+              "count": 234,
+              "mean": 5099.351282,
+              "p50": 4657.9,
+              "p95": 8401.1,
+              "p99": 12143.4,
+              "maximum": 23380.7
+            },
+            "usage": {
+              "inputTokens": 6248690,
+              "cachedInputTokens": 3003136,
+              "cacheCreationInputTokens": 0,
+              "cacheReadInputTokens": 0,
+              "outputTokens": 16791,
+              "reasoningOutputTokens": 9627
+            }
+          },
+          "run": {
+            "seconds": 1213.03,
+            "maximumResidentBytes": 698564608,
+            "boardVectorCache": {
+              "status": "hit",
+              "milliseconds": 3.1
+            }
+          },
+          "evidence": {
+            "split": "smoke",
+            "boardOffset": 0,
+            "boardCount": 20,
+            "operativeModelId": "same",
+            "heldOutProtocol": null
+          },
+          "configurationFingerprint": "d59f5481ef1c9045a523908c5df7126a12b1dd88241c97816c12195797c0719c",
+          "configurationSchema": 2,
+          "pinnedAssets": {
+            "implementation": "233e0fabc574c8ad101d62e7f0618da7cfb5c963920728939d24d99b3650e9a4",
+            "boardWords": "b2bdf45505d9a23da8f127923c62a33be570d9fc1646400ad8038a18e78ab9a2",
+            "spymasterManifest": "df9997658cb028aac476db5291b03d2fb88a7923304036c651da7206968da8fb",
+            "operativeManifest": "df9997658cb028aac476db5291b03d2fb88a7923304036c651da7206968da8fb",
+            "conceptAssets": "d23c4a06d0dfb491b512349659e2a95bf05b9b8cb15a8a52bc648fbb45c77c01"
+          },
+          "metrics": {
+            "correctCardsPerTurn": {
+              "baseline": 1.642105,
+              "candidate": 1.316239,
+              "delta": {
+                "estimate": -0.325866,
+                "lower": -0.407382,
+                "upper": -0.244619
+              },
+              "status": "regressed"
+            },
+            "wrongTeamHitsPerGame": {
+              "baseline": 0,
+              "candidate": 0,
+              "delta": {
+                "estimate": 0,
+                "lower": 0,
+                "upper": 0
+              },
+              "status": "unchanged"
+            },
+            "neutralHitsPerGame": {
+              "baseline": 0,
+              "candidate": 0,
+              "delta": {
+                "estimate": 0,
+                "lower": 0,
+                "upper": 0
+              },
+              "status": "unchanged"
+            },
+            "assassinRate": {
+              "baseline": 0,
+              "candidate": 0,
+              "delta": {
+                "estimate": 0,
+                "lower": 0,
+                "upper": 0
+              },
+              "status": "unchanged"
+            },
+            "fallbackClueRate": {
+              "baseline": 0,
+              "candidate": 0,
+              "delta": {
+                "estimate": 0,
+                "lower": 0,
+                "upper": 0
+              },
+              "status": "unchanged"
+            },
+            "stallRate": {
+              "baseline": 0,
+              "candidate": 0,
+              "delta": {
+                "estimate": 0,
+                "lower": 0,
+                "upper": 0
+              },
+              "status": "unchanged"
+            },
+            "meanTurnsPerGame": {
+              "baseline": 9.5,
+              "candidate": 11.7,
+              "delta": {
+                "estimate": 2.2,
+                "lower": 1.55,
+                "upper": 2.95
+              },
+              "status": "changed"
+            }
+          },
+          "gates": {
+            "zeroStalls": {
+              "passed": true,
+              "actual": 0,
+              "maximum": 0,
+              "status": "pass"
+            },
+            "assassinNonInferiority": {
+              "passed": true,
+              "actual": {
+                "estimate": 0,
+                "lower": 0,
+                "upper": 0
+              },
+              "maximumUpperBound": 0.05,
+              "candidateRate": {
+                "estimate": 0,
+                "lower": 0,
+                "upper": 0.161125
+              },
+              "status": "pass"
+            },
+            "wrongTeamNonInferiority": {
+              "passed": true,
+              "actual": {
+                "estimate": 0,
+                "lower": 0,
+                "upper": 0
+              },
+              "maximumUpperBound": 0.15,
+              "candidateRate": 0,
+              "status": "pass"
+            },
+            "neutralNonInferiority": {
+              "passed": true,
+              "actual": {
+                "estimate": 0,
+                "lower": 0,
+                "upper": 0
+              },
+              "maximumUpperBound": 0.15,
+              "status": "pass"
+            },
+            "fallback": {
+              "passed": true,
+              "actual": 0,
+              "maximum": 0.01,
+              "status": "pass"
+            },
+            "correctNonInferiority": {
+              "passed": false,
+              "actual": {
+                "estimate": -0.325866,
+                "lower": -0.407382,
+                "upper": -0.244619
+              },
+              "minimumLowerBound": -0.05,
+              "status": "block"
+            },
+            "correctSuperiority": {
+              "passed": false,
+              "actual": {
+                "estimate": -0.325866,
+                "lower": -0.407382,
+                "upper": -0.244619
+              },
+              "minimumLowerBound": 0,
+              "status": "block"
+            }
+          },
+          "artifacts": {
+            "report": {
+              "path": ".cache/subscription-cli-benchmark/codex-terra/smoke.json",
+              "sha256": "e2c2df012c7d28a79f175d120b879a7fdd0785c206bd8fc4601176e294c0a855",
+              "bytes": 118254
+            },
+            "comparison": {
+              "path": ".cache/subscription-cli-benchmark/codex-terra/smoke-comparison.json",
+              "sha256": "0513a55bc746651fce95c90b0ba7588212c9009c686fc0d66c83b80f91982c48",
+              "bytes": 59305
+            },
+            "baseline": {
+              "path": "/Users/ab/.codex/worktrees/6cf6/codenames/.cache/subscription-cli-benchmark/baseline-same-model/smoke.json",
+              "sha256": "a22dcc831e5f23466a0e8081ae28e2604ef107db18b767baa7f94562e25237e1",
+              "configurationFingerprint": "680872b9cb3aa4bae9f442bfbe9810fdbe1971b22da43632fd9b1dfa0f16aa33"
+            },
+            "timingLog": {
+              "path": ".cache/subscription-cli-benchmark/codex-terra/smoke.log",
+              "sha256": "336ead50aae2d4e19b6c1a166fd0caac131da21851c23c93cc9767a038b31125"
+            }
+          }
+        },
+        {
+          "id": "development",
+          "label": "Same-model development",
+          "generatedAt": "2026-07-29T13:26:34.287Z",
+          "verdict": "block",
+          "reasons": [
+            "At least one Play promotion gate conclusively failed."
+          ],
+          "identity": {
+            "modelId": "codex-terra",
+            "cli": "codex",
+            "cliVersion": "codex-cli 0.145.0",
+            "implementationSha256": "b969fb34448cc199837a1d3a94aaf84cda5837fa6dd7899987e35d1d10e72546",
+            "selector": "gpt-5.6-terra",
+            "selectionCommand": {
+              "executable": "codex",
+              "argv": [
+                "exec",
+                "--ignore-user-config",
+                "--ignore-rules",
+                "--ephemeral",
+                "--sandbox",
+                "read-only",
+                "--disable",
+                "shell_tool",
+                "--disable",
+                "plugins",
+                "--disable",
+                "skill_search",
+                "--disable",
+                "plugin_sharing",
+                "--disable",
+                "tool_suggest",
+                "--model",
+                "gpt-5.6-terra",
+                "-c",
+                "model_reasoning_effort=\"low\"",
+                "--json",
+                "{PROMPT}"
+              ]
+            },
+            "subscriptionSurface": "codex-subscription",
+            "promptVersion": 1,
+            "shortlistVersion": "play-safe-shortlist-v1",
+            "transportVersion": 1,
+            "requestConcurrency": 1,
+            "casesPerRequest": 1,
+            "timeoutMs": 120000,
+            "tools": "disabled",
+            "fallbackModel": null
+          },
+          "requests": {
+            "requestAttempts": 533,
+            "successfulRequests": 533,
+            "cachedRequests": 1009,
+            "cases": 1542,
+            "retries": 0,
+            "quotaStops": 0,
+            "errors": {
+              "total": 0,
+              "transport": 0,
+              "parse": 0,
+              "validation": 0,
+              "timeout": 0,
+              "rate": 0
+            },
+            "fallbackRate": 0,
+            "cacheHitRate": 0.654345,
+            "latencyMs": {
+              "count": 533,
+              "mean": 4986.833208,
+              "p50": 4474.9,
+              "p95": 8330.1,
+              "p99": 10553.6,
+              "maximum": 13926.6
+            },
+            "usage": {
+              "inputTokens": 14171659,
+              "cachedInputTokens": 10787584,
+              "cacheCreationInputTokens": 0,
+              "cacheReadInputTokens": 0,
+              "outputTokens": 31412,
+              "reasoningOutputTokens": 15241
+            }
+          },
+          "run": {
+            "seconds": 2952.37,
+            "maximumResidentBytes": 870580224,
+            "boardVectorCache": {
+              "status": "hit",
+              "milliseconds": 3.2
+            }
+          },
+          "evidence": {
+            "split": "development",
+            "boardOffset": 120,
+            "boardCount": 128,
+            "operativeModelId": "same",
+            "heldOutProtocol": null
+          },
+          "configurationFingerprint": "da4ee926aa0c2b59f38b8144e5ccc5a68dabd675eacb678fd4efc955a98bec8c",
+          "configurationSchema": 2,
+          "pinnedAssets": {
+            "implementation": "233e0fabc574c8ad101d62e7f0618da7cfb5c963920728939d24d99b3650e9a4",
+            "boardWords": "b2bdf45505d9a23da8f127923c62a33be570d9fc1646400ad8038a18e78ab9a2",
+            "spymasterManifest": "df9997658cb028aac476db5291b03d2fb88a7923304036c651da7206968da8fb",
+            "operativeManifest": "df9997658cb028aac476db5291b03d2fb88a7923304036c651da7206968da8fb",
+            "conceptAssets": "d23c4a06d0dfb491b512349659e2a95bf05b9b8cb15a8a52bc648fbb45c77c01"
+          },
+          "metrics": {
+            "correctCardsPerTurn": {
+              "baseline": 1.555469,
+              "candidate": 1.291829,
+              "delta": {
+                "estimate": -0.26364,
+                "lower": -0.293922,
+                "upper": -0.23445
+              },
+              "status": "regressed"
+            },
+            "wrongTeamHitsPerGame": {
+              "baseline": 0,
+              "candidate": 0,
+              "delta": {
+                "estimate": 0,
+                "lower": 0,
+                "upper": 0
+              },
+              "status": "unchanged"
+            },
+            "neutralHitsPerGame": {
+              "baseline": 0,
+              "candidate": 0,
+              "delta": {
+                "estimate": 0,
+                "lower": 0,
+                "upper": 0
+              },
+              "status": "unchanged"
+            },
+            "assassinRate": {
+              "baseline": 0,
+              "candidate": 0,
+              "delta": {
+                "estimate": 0,
+                "lower": 0,
+                "upper": 0
+              },
+              "status": "unchanged"
+            },
+            "fallbackClueRate": {
+              "baseline": 0,
+              "candidate": 0,
+              "delta": {
+                "estimate": 0,
+                "lower": 0,
+                "upper": 0
+              },
+              "status": "unchanged"
+            },
+            "stallRate": {
+              "baseline": 0,
+              "candidate": 0,
+              "delta": {
+                "estimate": 0,
+                "lower": 0,
+                "upper": 0
+              },
+              "status": "unchanged"
+            },
+            "meanTurnsPerGame": {
+              "baseline": 10,
+              "candidate": 12.046875,
+              "delta": {
+                "estimate": 2.046875,
+                "lower": 1.78125,
+                "upper": 2.304688
+              },
+              "status": "changed"
+            }
+          },
+          "gates": {
+            "zeroStalls": {
+              "passed": true,
+              "actual": 0,
+              "maximum": 0,
+              "status": "pass"
+            },
+            "assassinNonInferiority": {
+              "passed": true,
+              "actual": {
+                "estimate": 0,
+                "lower": 0,
+                "upper": 0
+              },
+              "maximumUpperBound": 0.05,
+              "candidateRate": {
+                "estimate": 0,
+                "lower": 0,
+                "upper": 0.029137
+              },
+              "status": "pass"
+            },
+            "wrongTeamNonInferiority": {
+              "passed": true,
+              "actual": {
+                "estimate": 0,
+                "lower": 0,
+                "upper": 0
+              },
+              "maximumUpperBound": 0.15,
+              "candidateRate": 0,
+              "status": "pass"
+            },
+            "neutralNonInferiority": {
+              "passed": true,
+              "actual": {
+                "estimate": 0,
+                "lower": 0,
+                "upper": 0
+              },
+              "maximumUpperBound": 0.15,
+              "status": "pass"
+            },
+            "fallback": {
+              "passed": true,
+              "actual": 0,
+              "maximum": 0.01,
+              "status": "pass"
+            },
+            "correctNonInferiority": {
+              "passed": false,
+              "actual": {
+                "estimate": -0.26364,
+                "lower": -0.293922,
+                "upper": -0.23445
+              },
+              "minimumLowerBound": -0.05,
+              "status": "block"
+            },
+            "correctSuperiority": {
+              "passed": false,
+              "actual": {
+                "estimate": -0.26364,
+                "lower": -0.293922,
+                "upper": -0.23445
+              },
+              "minimumLowerBound": 0,
+              "status": "block"
+            }
+          },
+          "artifacts": {
+            "report": {
+              "path": ".cache/subscription-cli-benchmark/codex-terra/development.json",
+              "sha256": "fc47e7a2015848d92040feff2141ddc76c9a1558a3e38850369332d6ffe8e564",
+              "bytes": 623222
+            },
+            "comparison": {
+              "path": ".cache/subscription-cli-benchmark/codex-terra/development-comparison.json",
+              "sha256": "6ff31cbdf1a7757523b110393050ce786c8e38ad9082b5bdf52f2a201f708868",
+              "bytes": 66020
+            },
+            "baseline": {
+              "path": "/Users/ab/.codex/worktrees/6cf6/codenames/scripts/generated/play-accepted-baseline-development.json",
+              "sha256": "b6de3330918736092afa8965a12df88e7bb86e6401201ef065ec13747a3d024c",
+              "configurationFingerprint": "189fd1ea518cf07159e9ce7ad5efc679ac9dc0228bc11fd365f402f4f4a8adac"
+            },
+            "timingLog": {
+              "path": ".cache/subscription-cli-benchmark/codex-terra/development.log",
+              "sha256": "31e11031d837be2aa63121e83d99e6474ca5c539f692fe0e4eb7747582f16f7b"
+            }
+          }
+        },
+        {
+          "id": "transfer-smoke",
+          "label": "MiniLM-L6 transfer smoke",
+          "generatedAt": "2026-07-29T13:47:54.523Z",
+          "verdict": "needs-more-data",
+          "reasons": [],
+          "identity": {
+            "modelId": "codex-terra",
+            "cli": "codex",
+            "cliVersion": "codex-cli 0.145.0",
+            "implementationSha256": "b969fb34448cc199837a1d3a94aaf84cda5837fa6dd7899987e35d1d10e72546",
+            "selector": "gpt-5.6-terra",
+            "selectionCommand": {
+              "executable": "codex",
+              "argv": [
+                "exec",
+                "--ignore-user-config",
+                "--ignore-rules",
+                "--ephemeral",
+                "--sandbox",
+                "read-only",
+                "--disable",
+                "shell_tool",
+                "--disable",
+                "plugins",
+                "--disable",
+                "skill_search",
+                "--disable",
+                "plugin_sharing",
+                "--disable",
+                "tool_suggest",
+                "--model",
+                "gpt-5.6-terra",
+                "-c",
+                "model_reasoning_effort=\"low\"",
+                "--json",
+                "{PROMPT}"
+              ]
+            },
+            "subscriptionSurface": "codex-subscription",
+            "promptVersion": 1,
+            "shortlistVersion": "play-safe-shortlist-v1",
+            "transportVersion": 1,
+            "requestConcurrency": 1,
+            "casesPerRequest": 1,
+            "timeoutMs": 120000,
+            "tools": "disabled",
+            "fallbackModel": null
+          },
+          "requests": {
+            "requestAttempts": 243,
+            "successfulRequests": 243,
+            "cachedRequests": 50,
+            "cases": 293,
+            "retries": 0,
+            "quotaStops": 0,
+            "errors": {
+              "total": 0,
+              "transport": 0,
+              "parse": 0,
+              "validation": 0,
+              "timeout": 0,
+              "rate": 0
+            },
+            "fallbackRate": 0,
+            "cacheHitRate": 0.170648,
+            "latencyMs": {
+              "count": 243,
+              "mean": 5022.885185,
+              "p50": 4538.9,
+              "p95": 8166.9,
+              "p99": 10577,
+              "maximum": 12222.1
+            },
+            "usage": {
+              "inputTokens": 6492563,
+              "cachedInputTokens": 6217984,
+              "cacheCreationInputTokens": 0,
+              "cacheReadInputTokens": 0,
+              "outputTokens": 17479,
+              "reasoningOutputTokens": 10076
+            }
+          },
+          "run": {
+            "seconds": 1280.01,
+            "maximumResidentBytes": 682147840,
+            "boardVectorCache": {
+              "status": "hit",
+              "milliseconds": 3.4
+            }
+          },
+          "evidence": {
+            "split": "smoke",
+            "boardOffset": 0,
+            "boardCount": 20,
+            "operativeModelId": "minilm-l6",
+            "heldOutProtocol": null
+          },
+          "configurationFingerprint": "b2b9c97a753a8936ea0a1fdd4f771ab51c4db9dbcc14b9a2aa9981c3d9b1a836",
+          "configurationSchema": 2,
+          "pinnedAssets": {
+            "implementation": "233e0fabc574c8ad101d62e7f0618da7cfb5c963920728939d24d99b3650e9a4",
+            "boardWords": "b2bdf45505d9a23da8f127923c62a33be570d9fc1646400ad8038a18e78ab9a2",
+            "spymasterManifest": "df9997658cb028aac476db5291b03d2fb88a7923304036c651da7206968da8fb",
+            "operativeManifest": "f647de4eff2b36e82cca94ee234a47ddc4520379b202d7ab1925875375eea5d7",
+            "conceptAssets": null
+          },
+          "metrics": {
+            "correctCardsPerTurn": {
+              "baseline": 1.062718,
+              "candidate": 1.047782,
+              "delta": {
+                "estimate": -0.014936,
+                "lower": -0.0586,
+                "upper": 0.024644
+              },
+              "status": "uncertain"
+            },
+            "wrongTeamHitsPerGame": {
+              "baseline": 0.2,
+              "candidate": 0.2,
+              "delta": {
+                "estimate": 0,
+                "lower": -0.15,
+                "upper": 0.15
+              },
+              "status": "uncertain"
+            },
+            "neutralHitsPerGame": {
+              "baseline": 0.9,
+              "candidate": 0.4,
+              "delta": {
+                "estimate": -0.5,
+                "lower": -1,
+                "upper": 0
+              },
+              "status": "uncertain"
+            },
+            "assassinRate": {
+              "baseline": 0,
+              "candidate": 0,
+              "delta": {
+                "estimate": 0,
+                "lower": 0,
+                "upper": 0
+              },
+              "status": "unchanged"
+            },
+            "fallbackClueRate": {
+              "baseline": 0,
+              "candidate": 0,
+              "delta": {
+                "estimate": 0,
+                "lower": 0,
+                "upper": 0
+              },
+              "status": "unchanged"
+            },
+            "stallRate": {
+              "baseline": 0,
+              "candidate": 0,
+              "delta": {
+                "estimate": 0,
+                "lower": 0,
+                "upper": 0
+              },
+              "status": "unchanged"
+            },
+            "meanTurnsPerGame": {
+              "baseline": 14.35,
+              "candidate": 14.65,
+              "delta": {
+                "estimate": 0.3,
+                "lower": -0.5,
+                "upper": 1.05
+              },
+              "status": "uncertain"
+            }
+          },
+          "gates": {
+            "zeroStalls": {
+              "passed": true,
+              "actual": 0,
+              "maximum": 0,
+              "status": "pass"
+            },
+            "assassinNonInferiority": {
+              "passed": true,
+              "actual": {
+                "estimate": 0,
+                "lower": 0,
+                "upper": 0
+              },
+              "maximumUpperBound": 0.05,
+              "candidateRate": {
+                "estimate": 0,
+                "lower": 0,
+                "upper": 0.161125
+              },
+              "status": "pass"
+            },
+            "wrongTeamNonInferiority": {
+              "passed": true,
+              "actual": {
+                "estimate": 0,
+                "lower": -0.15,
+                "upper": 0.15
+              },
+              "maximumUpperBound": 0.15,
+              "candidateRate": 0.2,
+              "status": "pass"
+            },
+            "neutralNonInferiority": {
+              "passed": true,
+              "actual": {
+                "estimate": -0.5,
+                "lower": -1,
+                "upper": 0
+              },
+              "maximumUpperBound": 0.15,
+              "status": "pass"
+            },
+            "fallback": {
+              "passed": true,
+              "actual": 0,
+              "maximum": 0.01,
+              "status": "pass"
+            },
+            "correctNonInferiority": {
+              "passed": false,
+              "actual": {
+                "estimate": -0.014936,
+                "lower": -0.0586,
+                "upper": 0.024644
+              },
+              "minimumLowerBound": -0.05,
+              "status": "needs-more-data"
+            },
+            "correctSuperiority": {
+              "passed": false,
+              "actual": {
+                "estimate": -0.014936,
+                "lower": -0.0586,
+                "upper": 0.024644
+              },
+              "minimumLowerBound": 0,
+              "status": "block"
+            }
+          },
+          "artifacts": {
+            "report": {
+              "path": ".cache/subscription-cli-benchmark/codex-terra/transfer-smoke.json",
+              "sha256": "6c6172822dbb51aab98cb72cbf64088e776a0dfd51d72bd2f066fd198ce0041a",
+              "bytes": 118860
+            },
+            "comparison": {
+              "path": ".cache/subscription-cli-benchmark/codex-terra/transfer-smoke-comparison.json",
+              "sha256": "c75e5fa63741d4d67e4ff5bb77c483c844fba7a0938d62656c26dddc439bfaab",
+              "bytes": 59121
+            },
+            "baseline": {
+              "path": "/Users/ab/.codex/worktrees/6cf6/codenames/.cache/subscription-cli-benchmark/baseline-transfer/smoke.json",
+              "sha256": "a2cfa1ac8aafa127ae1fcad2dd0a8685735a2e491e5333f56d29f6b5d78a6c6a",
+              "configurationFingerprint": "1ef2d006a01c1ea3f2598cf8fca836425bba7c82240ddbb144a15dc436f6295c"
+            },
+            "timingLog": {
+              "path": ".cache/subscription-cli-benchmark/codex-terra/transfer-smoke.log",
+              "sha256": "75a304144a272798f9196520cfb61c76719d7239e4f57cea2c86bb2c890349fe"
+            }
+          }
+        }
+      ],
+      "failure": null,
+      "progress": {
+        "schemaVersion": 1,
+        "generatedAt": "2026-07-29T13:47:54.726Z",
+        "providerEnvironmentPolicy": {
+          "version": 1,
+          "removedVariableNames": [
+            "CLAUDE_CODE_NO_FLICKER",
+            "CODEX_CI",
+            "CODEX_INTERNAL_ORIGINATOR_OVERRIDE",
+            "CODEX_PERMISSION_PROFILE",
+            "CODEX_SHELL",
+            "CODEX_THREAD_ID"
+          ],
+          "subscriptionConfigVariablesAllowed": [
+            "CLAUDE_CONFIG_DIR",
+            "CODEX_HOME"
+          ],
+          "alternateProviderRoutesRemoved": true
+        },
+        "modelId": "codex-terra",
+        "provenance": {
+          "modelId": "codex-terra",
+          "cli": "codex",
+          "cliVersion": "codex-cli 0.145.0",
+          "implementationSha256": "b969fb34448cc199837a1d3a94aaf84cda5837fa6dd7899987e35d1d10e72546",
+          "selector": "gpt-5.6-terra",
+          "selectionCommand": {
+            "executable": "codex",
+            "argv": [
+              "exec",
+              "--ignore-user-config",
+              "--ignore-rules",
+              "--ephemeral",
+              "--sandbox",
+              "read-only",
+              "--disable",
+              "shell_tool",
+              "--disable",
+              "plugins",
+              "--disable",
+              "skill_search",
+              "--disable",
+              "plugin_sharing",
+              "--disable",
+              "tool_suggest",
+              "--model",
+              "gpt-5.6-terra",
+              "-c",
+              "model_reasoning_effort=\"low\"",
+              "--json",
+              "{PROMPT}"
+            ]
+          },
+          "subscriptionSurface": "codex-subscription",
+          "promptVersion": 1,
+          "shortlistVersion": "play-safe-shortlist-v1",
+          "transportVersion": 1,
+          "requestConcurrency": 1,
+          "casesPerRequest": 1,
+          "timeoutMs": 120000,
+          "tools": "disabled",
+          "fallbackModel": null
+        },
+        "completedScreens": [
+          "smoke",
+          "development",
+          "transfer-smoke"
+        ],
+        "artifact": {
+          "path": ".cache/subscription-cli-benchmark/codex-terra/progress.json",
+          "sha256": "37327ecc3d3e0dbdf93be22d47d74e70f97a5d5408a85cc015a43186fa412f12",
+          "bytes": 1690
+        }
+      },
+      "interruptions": [
+        {
+          "failedScreen": "development",
+          "generatedAt": "2026-07-29T08:03:15.801Z",
+          "class": "subscription-transport-refused",
+          "detail": "Reconnecting... 2/5 (stream disconnected before completion: Connection refused (os error 61))",
+          "run": {
+            "seconds": 437.9,
+            "maximumResidentBytes": 733790208,
+            "boardVectorCache": {
+              "status": "hit",
+              "milliseconds": 3.7
+            }
+          },
+          "logSha256": "77b1181752a234e59719c06e3099f6c6b8654f9d7ae7910400a8c71a1f715ff2",
+          "logArtifact": {
+            "path": ".cache/subscription-cli-benchmark/codex-terra/development.attempt-2026-07-29T08-03-15.801Z.log",
+            "sha256": "77b1181752a234e59719c06e3099f6c6b8654f9d7ae7910400a8c71a1f715ff2",
+            "bytes": 1837
+          }
+        },
+        {
+          "failedScreen": "development",
+          "generatedAt": "2026-07-29T10:52:05.623Z",
+          "class": "subscription-transport-refused",
+          "detail": "Reconnecting... 2/5 (stream disconnected before completion: Connection refused (os error 61))",
+          "run": {
+            "seconds": 1626.84,
+            "maximumResidentBytes": 763707392,
+            "boardVectorCache": {
+              "status": "hit",
+              "milliseconds": 3.3
+            }
+          },
+          "logSha256": "8741d05376544f954dd19f16da83f21ae11534129173daaa977f9e9e9e7ae76c",
+          "logArtifact": {
+            "path": ".cache/subscription-cli-benchmark/codex-terra/development.attempt-2026-07-29T10-52-05.623Z.log",
+            "sha256": "8741d05376544f954dd19f16da83f21ae11534129173daaa977f9e9e9e7ae76c",
+            "bytes": 1754
+          }
+        },
+        {
+          "failedScreen": "development",
+          "generatedAt": "2026-07-29T11:26:02.615Z",
+          "class": "subscription-transport-refused",
+          "detail": "Reconnecting... 2/5 (stream disconnected before completion: Connection refused (os error 61))",
+          "run": {
+            "seconds": 670.54,
+            "maximumResidentBytes": 829095936,
+            "boardVectorCache": {
+              "status": "hit",
+              "milliseconds": 3.2
+            }
+          },
+          "logSha256": "a6540749972b3a80db07991bd270776b9e691676596ac8bdaadfe5888ecaa957",
+          "logArtifact": {
+            "path": ".cache/subscription-cli-benchmark/codex-terra/development.attempt-2026-07-29T11-26-02.615Z.log",
+            "sha256": "a6540749972b3a80db07991bd270776b9e691676596ac8bdaadfe5888ecaa957",
+            "bytes": 1837
+          }
+        },
+        {
+          "failedScreen": "development",
+          "generatedAt": "2026-07-29T11:49:00.072Z",
+          "class": "subscription-transport-refused",
+          "detail": "Reconnecting... 2/5 (stream disconnected before completion: Connection refused (os error 61))",
+          "run": {
+            "seconds": 444.71,
+            "maximumResidentBytes": 880082944,
+            "boardVectorCache": {
+              "status": "hit",
+              "milliseconds": 3.4
+            }
+          },
+          "logSha256": "9266ea5631082886b30f41de5a22fd05c0d94f945c739ea5fd76d98202a32088",
+          "logArtifact": {
+            "path": ".cache/subscription-cli-benchmark/codex-terra/development.attempt-2026-07-29T11-49-00.072Z.log",
+            "sha256": "9266ea5631082886b30f41de5a22fd05c0d94f945c739ea5fd76d98202a32088",
+            "bytes": 1837
+          }
+        },
+        {
+          "failedScreen": "development",
+          "generatedAt": "2026-07-29T12:37:21.940Z",
+          "class": "subscription-transport-refused",
+          "detail": "Reconnecting... 2/5 (stream disconnected before completion: Connection refused (os error 61))",
+          "run": {
+            "seconds": 2895.81,
+            "maximumResidentBytes": 848855040,
+            "boardVectorCache": {
+              "status": "hit",
+              "milliseconds": 3.1
+            }
+          },
+          "logSha256": "381b8779a08ddba16f8d9a87415c5030a1c3e1babfa9b3433790a00ca0c0b5af",
+          "logArtifact": {
+            "path": ".cache/subscription-cli-benchmark/codex-terra/development.attempt-2026-07-29T12-37-21.940Z.log",
+            "sha256": "381b8779a08ddba16f8d9a87415c5030a1c3e1babfa9b3433790a00ca0c0b5af",
+            "bytes": 1837
+          }
+        }
+      ],
+      "measurementLimitations": []
+    },
+    {
+      "id": "claude-opus",
+      "label": "Claude Opus",
+      "cli": "claude",
+      "availability": "monthly-subscription-limit",
+      "overallStatus": "block",
+      "generatedAt": "2026-07-29T06:58:06.012Z",
+      "identity": {
+        "modelId": "claude-opus",
+        "cli": "claude",
+        "cliVersion": "2.1.220 (Claude Code)",
+        "implementationSha256": "b969fb34448cc199837a1d3a94aaf84cda5837fa6dd7899987e35d1d10e72546",
+        "selector": "opus",
+        "selectionCommand": {
+          "executable": "claude",
+          "argv": [
+            "-p",
+            "--model",
+            "opus",
+            "--effort",
+            "low",
+            "--tools",
+            "",
+            "--permission-mode",
+            "dontAsk",
+            "--safe-mode",
+            "--strict-mcp-config",
+            "--mcp-config",
+            "{\"mcpServers\":{}}",
+            "--no-session-persistence",
+            "--output-format",
+            "json",
+            "--json-schema",
+            "{\"type\":\"object\",\"additionalProperties\":false,\"required\":[\"picks\"],\"properties\":{\"picks\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"additionalProperties\":false,\"required\":[\"caseId\",\"candidateId\"],\"properties\":{\"caseId\":{\"type\":\"string\"},\"candidateId\":{\"type\":\"string\"}}}}}}",
+            "{PROMPT}"
+          ]
+        },
+        "subscriptionSurface": "claude-code-subscription",
+        "promptVersion": 1,
+        "shortlistVersion": "play-safe-shortlist-v1",
+        "transportVersion": 1,
+        "requestConcurrency": 2,
+        "casesPerRequest": 1,
+        "timeoutMs": 120000,
+        "tools": "disabled",
+        "fallbackModel": null,
+        "resolvedModel": "claude-opus-5"
+      },
+      "requests": {
+        "requestAttempts": 233,
+        "successfulRequests": 233,
+        "cachedRequests": 0,
+        "cases": 233,
+        "retries": 0,
+        "quotaStops": 0,
+        "errors": 0,
+        "errorRate": 0,
+        "fallbackRate": 0,
+        "cacheHitRate": 0,
+        "latencyMs": {
+          "count": 233,
+          "mean": 6764.385837,
+          "p50": 5774.4,
+          "p95": 13068.5,
+          "p99": 24145,
+          "maximum": 47523.3
+        },
+        "usage": {
+          "inputTokens": 466,
+          "cachedInputTokens": 0,
+          "cacheCreationInputTokens": 298992,
+          "cacheReadInputTokens": 744288,
+          "outputTokens": 54865,
+          "reasoningOutputTokens": 0
+        }
+      },
+      "requestCorpus": {
+        "records": 1344,
+        "uniquePromptHashes": 1344,
+        "bytes": 9672705,
+        "firstGeneratedAt": "2026-07-29T05:39:32.443Z",
+        "lastGeneratedAt": "2026-07-29T06:58:04.571Z",
+        "usage": {
+          "inputTokens": 2688,
+          "cachedInputTokens": 0,
+          "cacheCreationInputTokens": 1794076,
+          "cacheReadInputTokens": 4360593,
+          "outputTokens": 339457,
+          "reasoningOutputTokens": 0
+        },
+        "latencyBoundary": "Per-request latency is retained by the complete screen execution that issued it. Earlier interrupted-attempt request latencies are not reconstructable from cache records."
+      },
+      "screens": [
+        {
+          "id": "smoke",
+          "label": "Same-model smoke",
+          "generatedAt": "2026-07-29T05:52:48.833Z",
+          "verdict": "block",
+          "reasons": [
+            "At least one Play promotion gate conclusively failed."
+          ],
+          "identity": {
+            "modelId": "claude-opus",
+            "cli": "claude",
+            "cliVersion": "2.1.220 (Claude Code)",
+            "implementationSha256": "b969fb34448cc199837a1d3a94aaf84cda5837fa6dd7899987e35d1d10e72546",
+            "selector": "opus",
+            "selectionCommand": {
+              "executable": "claude",
+              "argv": [
+                "-p",
+                "--model",
+                "opus",
+                "--effort",
+                "low",
+                "--tools",
+                "",
+                "--permission-mode",
+                "dontAsk",
+                "--safe-mode",
+                "--strict-mcp-config",
+                "--mcp-config",
+                "{\"mcpServers\":{}}",
+                "--no-session-persistence",
+                "--output-format",
+                "json",
+                "--json-schema",
+                "{\"type\":\"object\",\"additionalProperties\":false,\"required\":[\"picks\"],\"properties\":{\"picks\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"additionalProperties\":false,\"required\":[\"caseId\",\"candidateId\"],\"properties\":{\"caseId\":{\"type\":\"string\"},\"candidateId\":{\"type\":\"string\"}}}}}}",
+                "{PROMPT}"
+              ]
+            },
+            "subscriptionSurface": "claude-code-subscription",
+            "promptVersion": 1,
+            "shortlistVersion": "play-safe-shortlist-v1",
+            "transportVersion": 1,
+            "requestConcurrency": 2,
+            "casesPerRequest": 1,
+            "timeoutMs": 120000,
+            "tools": "disabled",
+            "fallbackModel": null
+          },
+          "requests": {
+            "requestAttempts": 233,
+            "successfulRequests": 233,
+            "cachedRequests": 0,
+            "cases": 233,
+            "retries": 0,
+            "quotaStops": 0,
+            "errors": {
+              "total": 0,
+              "transport": 0,
+              "parse": 0,
+              "validation": 0,
+              "timeout": 0,
+              "rate": 0
+            },
+            "fallbackRate": 0,
+            "cacheHitRate": 0,
+            "latencyMs": {
+              "count": 233,
+              "mean": 6764.385837,
+              "p50": 5774.4,
+              "p95": 13068.5,
+              "p99": 24145,
+              "maximum": 47523.3
+            },
+            "usage": {
+              "inputTokens": 466,
+              "cachedInputTokens": 0,
+              "cacheCreationInputTokens": 298992,
+              "cacheReadInputTokens": 744288,
+              "outputTokens": 54865,
+              "reasoningOutputTokens": 0
+            }
+          },
+          "run": {
+            "seconds": 808.98,
+            "maximumResidentBytes": 713474048,
+            "boardVectorCache": {
+              "status": "hit",
+              "milliseconds": 3.3
+            }
+          },
+          "evidence": {
+            "split": "smoke",
+            "boardOffset": 0,
+            "boardCount": 20,
+            "operativeModelId": "same",
+            "heldOutProtocol": null
+          },
+          "configurationFingerprint": "47f0cad590feb0aa8b96e5ec434e702c236646d158cea6338d7dd4334e422790",
+          "configurationSchema": 2,
+          "pinnedAssets": {
+            "implementation": "233e0fabc574c8ad101d62e7f0618da7cfb5c963920728939d24d99b3650e9a4",
+            "boardWords": "b2bdf45505d9a23da8f127923c62a33be570d9fc1646400ad8038a18e78ab9a2",
+            "spymasterManifest": "df9997658cb028aac476db5291b03d2fb88a7923304036c651da7206968da8fb",
+            "operativeManifest": "df9997658cb028aac476db5291b03d2fb88a7923304036c651da7206968da8fb",
+            "conceptAssets": "d23c4a06d0dfb491b512349659e2a95bf05b9b8cb15a8a52bc648fbb45c77c01"
+          },
+          "metrics": {
+            "correctCardsPerTurn": {
+              "baseline": 1.642105,
+              "candidate": 1.32618,
+              "delta": {
+                "estimate": -0.315925,
+                "lower": -0.393137,
+                "upper": -0.239304
+              },
+              "status": "regressed"
+            },
+            "wrongTeamHitsPerGame": {
+              "baseline": 0,
+              "candidate": 0,
+              "delta": {
+                "estimate": 0,
+                "lower": 0,
+                "upper": 0
+              },
+              "status": "unchanged"
+            },
+            "neutralHitsPerGame": {
+              "baseline": 0,
+              "candidate": 0,
+              "delta": {
+                "estimate": 0,
+                "lower": 0,
+                "upper": 0
+              },
+              "status": "unchanged"
+            },
+            "assassinRate": {
+              "baseline": 0,
+              "candidate": 0,
+              "delta": {
+                "estimate": 0,
+                "lower": 0,
+                "upper": 0
+              },
+              "status": "unchanged"
+            },
+            "fallbackClueRate": {
+              "baseline": 0,
+              "candidate": 0,
+              "delta": {
+                "estimate": 0,
+                "lower": 0,
+                "upper": 0
+              },
+              "status": "unchanged"
+            },
+            "stallRate": {
+              "baseline": 0,
+              "candidate": 0,
+              "delta": {
+                "estimate": 0,
+                "lower": 0,
+                "upper": 0
+              },
+              "status": "unchanged"
+            },
+            "meanTurnsPerGame": {
+              "baseline": 9.5,
+              "candidate": 11.65,
+              "delta": {
+                "estimate": 2.15,
+                "lower": 1.59875,
+                "upper": 2.7
+              },
+              "status": "changed"
+            }
+          },
+          "gates": {
+            "zeroStalls": {
+              "passed": true,
+              "actual": 0,
+              "maximum": 0,
+              "status": "pass"
+            },
+            "assassinNonInferiority": {
+              "passed": true,
+              "actual": {
+                "estimate": 0,
+                "lower": 0,
+                "upper": 0
+              },
+              "maximumUpperBound": 0.05,
+              "candidateRate": {
+                "estimate": 0,
+                "lower": 0,
+                "upper": 0.161125
+              },
+              "status": "pass"
+            },
+            "wrongTeamNonInferiority": {
+              "passed": true,
+              "actual": {
+                "estimate": 0,
+                "lower": 0,
+                "upper": 0
+              },
+              "maximumUpperBound": 0.15,
+              "candidateRate": 0,
+              "status": "pass"
+            },
+            "neutralNonInferiority": {
+              "passed": true,
+              "actual": {
+                "estimate": 0,
+                "lower": 0,
+                "upper": 0
+              },
+              "maximumUpperBound": 0.15,
+              "status": "pass"
+            },
+            "fallback": {
+              "passed": true,
+              "actual": 0,
+              "maximum": 0.01,
+              "status": "pass"
+            },
+            "correctNonInferiority": {
+              "passed": false,
+              "actual": {
+                "estimate": -0.315925,
+                "lower": -0.393137,
+                "upper": -0.239304
+              },
+              "minimumLowerBound": -0.05,
+              "status": "block"
+            },
+            "correctSuperiority": {
+              "passed": false,
+              "actual": {
+                "estimate": -0.315925,
+                "lower": -0.393137,
+                "upper": -0.239304
+              },
+              "minimumLowerBound": 0,
+              "status": "block"
+            }
+          },
+          "artifacts": {
+            "report": {
+              "path": ".cache/subscription-cli-benchmark/claude-opus/smoke.json",
+              "sha256": "de8f38fa8a39776a61bc71f2b47bd17028e4abbff2c87672277bcf82827604a2",
+              "bytes": 118799
+            },
+            "comparison": {
+              "path": ".cache/subscription-cli-benchmark/claude-opus/smoke-comparison.json",
+              "sha256": "71b69e778211676b56f6c32d65966b5b473f46bbc09da351e60dd5f93bb881ec",
+              "bytes": 59633
+            },
+            "baseline": {
+              "path": "/Users/ab/.codex/worktrees/6cf6/codenames/.cache/subscription-cli-benchmark/baseline-same-model/smoke.json",
+              "sha256": "d7d509350e990fad87802c626935ac61e6131a751f97722fd606745cc1b72e7d",
+              "configurationFingerprint": "680872b9cb3aa4bae9f442bfbe9810fdbe1971b22da43632fd9b1dfa0f16aa33"
+            },
+            "timingLog": {
+              "path": ".cache/subscription-cli-benchmark/claude-opus/smoke.log",
+              "sha256": "9b123fad49f6a38cb1dd4644e1f10a72c09ccf1c9e7f6bdd9ec4006aa281f415"
+            }
+          }
+        }
+      ],
+      "failure": {
+        "modelId": "claude-opus",
+        "generatedAt": "2026-07-29T06:58:06.012Z",
+        "error": "/usr/bin/time exited on signal SIGABRT; see /Users/ab/.codex/worktrees/6cf6/codenames/.cache/subscription-cli-benchmark/claude-opus/development.log.",
+        "failedScreen": "development",
+        "completedScreens": [
+          "smoke"
+        ],
+        "heldOutTestConsumed": false,
+        "fallbackModel": null,
+        "artifact": {
+          "path": ".cache/subscription-cli-benchmark/claude-opus/failure.json",
+          "sha256": "0b92a0e9f6c3a6b147112a53038467a354da333481665055876a6ef8ac11ea6f",
+          "bytes": 370
+        },
+        "interruption": {
+          "class": "monthly-subscription-limit",
+          "detail": "You've hit your monthly spend limit · raise it at claude.ai/settings/usage?from=cc_cli_limit_message",
+          "run": {
+            "seconds": 3916.97,
+            "maximumResidentBytes": 785432576,
+            "boardVectorCache": {
+              "status": "hit",
+              "milliseconds": 3
+            }
+          },
+          "logSha256": "5d1d9e870da7bd73c44f8556e1a3056f2a113e229420720e86842b583be04a3e"
+        }
+      },
+      "progress": null,
+      "interruptions": [
+        {
+          "failedScreen": "development",
+          "generatedAt": "2026-07-29T06:58:06.012Z",
+          "class": "monthly-subscription-limit",
+          "detail": "You've hit your monthly spend limit · raise it at claude.ai/settings/usage?from=cc_cli_limit_message",
+          "run": {
+            "seconds": 3916.97,
+            "maximumResidentBytes": 785432576,
+            "boardVectorCache": {
+              "status": "hit",
+              "milliseconds": 3
+            }
+          },
+          "logSha256": "5d1d9e870da7bd73c44f8556e1a3056f2a113e229420720e86842b583be04a3e",
+          "failureArtifact": {
+            "path": ".cache/subscription-cli-benchmark/claude-opus/failure.json",
+            "sha256": "0b92a0e9f6c3a6b147112a53038467a354da333481665055876a6ef8ac11ea6f",
+            "bytes": 370
+          }
+        }
+      ],
+      "measurementLimitations": []
+    }
+  ],
+  "conclusion": {
+    "status": "incomplete-subscription-screen",
+    "heldOutAuthorized": false,
+    "promotionDeclared": false
+  }
+}
