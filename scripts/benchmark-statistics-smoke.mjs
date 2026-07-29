@@ -10,6 +10,8 @@ import {
 import {
   artifactRecord,
   comparisonFingerprint,
+  createComparisonSummary,
+  createEmbeddingAlignmentSlices,
   createFinalVerdict,
   humanEvidenceRecord,
   renderBenchmarkComparisonSummary,
@@ -241,18 +243,205 @@ const humanEvidence = humanEvidenceRecord({
       unit: "answered blinded clue task",
     },
     models: {
+      accepted: {
+        answeredTasks: 10,
+        targetRecallAtDeclaredCount: 0.6,
+        wrongTeamHitsPerTask: 0.2,
+      },
       candidate: {
         answeredTasks: 10,
         targetRecallAtDeclaredCount: 0.7,
         wrongTeamHitsPerTask: 0.1,
       },
     },
+    rounds: [
+      {
+        roundId: "held-out-round",
+        title: "Held-out round",
+        role: "held-out",
+        observationUnit: "answered blinded clue task",
+        source: {
+          revision: {
+            kind: "sha256",
+            value: "round-revision",
+          },
+        },
+        models: {
+          accepted: {
+            answeredTasks: 10,
+            targetRecallAtDeclaredCount: 0.6,
+            wrongTeamHitsPerTask: 0.2,
+          },
+          candidate: {
+            answeredTasks: 10,
+            targetRecallAtDeclaredCount: 0.7,
+            wrongTeamHitsPerTask: 0.1,
+          },
+        },
+      },
+      {
+        roundId: "candidate-only-round",
+        title: "Candidate-only round",
+        role: "held-out",
+        observationUnit: "answered blinded clue task",
+        models: {
+          candidate: {
+            answeredTasks: 5,
+            targetRecallAtDeclaredCount: 0.8,
+          },
+        },
+      },
+    ],
   },
   verdict: "pass",
+  baselineId: "accepted",
 });
 assert.equal(humanEvidence.sampleSize, 10);
 assert.equal(humanEvidence.verdict, "pass");
 assert.equal(humanEvidence.automaticThreshold, null);
+assert.equal(humanEvidence.alignmentSlices.length, 1);
+assert.equal(
+  humanEvidence.alignmentSlices[0].role,
+  "held-out",
+);
+assert.equal(
+  humanEvidence.alignmentSlices[0].metrics
+    .targetRecallAtDeclaredCount.delta,
+  0.1,
+);
+assert.equal(
+  humanEvidence.alignmentSlices[0].source.revision.kind,
+  "sha256",
+);
+assert.equal(
+  humanEvidence.alignmentSlices[0].source.revision.value,
+  "round-revision",
+);
+assert.equal(
+  humanEvidence.alignmentSlices[0].observation.baseline
+    .answeredTasks,
+  10,
+);
+
+const embeddingAlignmentSlices = createEmbeddingAlignmentSlices({
+  candidateId: "candidate",
+  path: "embedding.json",
+  bytes: Buffer.from("embedding"),
+  baselineSelector: "accepted-model#centered",
+  candidateSelector: "candidate-model#centered",
+  role: "tuning",
+  report: {
+    generatedAt: "2026-01-04T00:00:00.000Z",
+    dataset: {
+      culturalCodes: {
+        name: "Cultural Codes",
+        repository: "https://example.test/cultural-codes",
+        commit: "abc123",
+        turns: 100,
+        note: "Duet games",
+      },
+      connector: {
+        name: "Connector",
+        repository: "https://example.test/connector",
+        commit: "def456",
+        turns: 20,
+        note: "Two-target reference game",
+      },
+    },
+    evaluation: {
+      guessMetrics: "Rank remaining words from each human clue.",
+      targetMetrics:
+        "Rank intended targets against the other board words.",
+    },
+    results: [
+      {
+        model: "accepted-model",
+        transform: "centered",
+        datasets: {
+          culturalCodes: {
+            scoredGuessTurns: 90,
+            scoredTargetTurns: 100,
+            firstGuessAccuracy: 0.5,
+            targetRecallAtCount: 0.6,
+          },
+          connector: {
+            scoredGuessTurns: 0,
+            scoredTargetTurns: 20,
+            firstGuessAccuracy: null,
+            targetRecallAtCount: 0.55,
+          },
+        },
+      },
+      {
+        model: "candidate-model",
+        transform: "centered",
+        datasets: {
+          culturalCodes: {
+            scoredGuessTurns: 90,
+            scoredTargetTurns: 100,
+            firstGuessAccuracy: 0.52,
+            targetRecallAtCount: 0.63,
+          },
+          connector: {
+            scoredGuessTurns: 0,
+            scoredTargetTurns: 20,
+            firstGuessAccuracy: null,
+            targetRecallAtCount: 0.5,
+          },
+        },
+      },
+    ],
+  },
+});
+assert.equal(embeddingAlignmentSlices.length, 2);
+assert.deepEqual(
+  embeddingAlignmentSlices.map(({ source }) => source.id),
+  ["culturalCodes", "connector"],
+);
+assert.equal(
+  embeddingAlignmentSlices[0].source.revision.value,
+  "abc123",
+);
+assert.equal(
+  embeddingAlignmentSlices[0].observation.candidate
+    .scoredTargetTurns,
+  100,
+);
+assert.equal(
+  embeddingAlignmentSlices[0].baseline.id,
+  "accepted-model#centered",
+);
+assert.equal(
+  embeddingAlignmentSlices[0].candidate.id,
+  "candidate-model#centered",
+);
+assert.equal(
+  embeddingAlignmentSlices[0].metrics.targetRecallAtCount.delta,
+  0.03,
+);
+assert.equal(
+  embeddingAlignmentSlices[0].metrics.targetRecallAtCount.interval,
+  null,
+);
+assert.equal(
+  embeddingAlignmentSlices[0].metrics.targetRecallAtCount.status,
+  "reported",
+);
+assert.throws(
+  () =>
+    createEmbeddingAlignmentSlices({
+      candidateId: "candidate",
+      path: "embedding.json",
+      bytes: Buffer.from("embedding"),
+      baselineSelector: "missing#centered",
+      candidateSelector: "candidate-model#centered",
+      report: {
+        dataset: {},
+        results: [],
+      },
+    }),
+  /matched 0 results/u,
+);
 const block = createFinalVerdict({
   promotion: assessment,
   split: "test",
@@ -320,6 +509,74 @@ assert.equal(
     methodology: { bootstrapIterations: 1_000 },
   }),
 );
+const alignmentFingerprint = comparisonFingerprint({
+  baseline: baselineArtifact,
+  candidates: [
+    {
+      id: "candidate",
+      artifact: candidateArtifact,
+      humanAlignmentSlices: embeddingAlignmentSlices,
+    },
+  ],
+  methodology: { bootstrapIterations: 1_000 },
+});
+assert.notEqual(alignmentFingerprint, fingerprint);
+const changedAlignmentFingerprint = comparisonFingerprint({
+  baseline: baselineArtifact,
+  candidates: [
+    {
+      id: "candidate",
+      artifact: candidateArtifact,
+      humanAlignmentSlices: embeddingAlignmentSlices.map(
+        (slice, index) =>
+          index === 0
+            ? {
+                ...slice,
+                source: {
+                  ...slice.source,
+                  revision: {
+                    ...slice.source.revision,
+                    value: "changed-revision",
+                  },
+                },
+              }
+            : slice,
+      ),
+    },
+  ],
+  methodology: { bootstrapIterations: 1_000 },
+});
+assert.notEqual(
+  changedAlignmentFingerprint,
+  alignmentFingerprint,
+);
+
+const presentationSummary = createComparisonSummary([
+  {
+    id: "candidate",
+    metrics,
+    humanEvidence,
+    humanAlignmentSlices: [
+      ...humanEvidence.alignmentSlices,
+      ...embeddingAlignmentSlices,
+    ],
+    verdict: needsHeldOut,
+  },
+]);
+assert.equal(presentationSummary.candidateCount, 1);
+assert.equal(presentationSummary.verdicts.needsMoreData, 1);
+assert.equal(
+  presentationSummary.candidates[0].humanAlignment.slices,
+  3,
+);
+assert.equal(
+  presentationSummary.candidates[0].humanAlignment.tuningSlices,
+  2,
+);
+assert.equal(
+  presentationSummary.candidates[0].humanAlignment.heldOutSlices,
+  1,
+);
 
 const summary = renderBenchmarkComparisonSummary({
   evidence: {
@@ -337,6 +594,7 @@ const summary = renderBenchmarkComparisonSummary({
         modelId: { baseline: "accepted", candidate: "candidate" },
       },
       humanEvidence: null,
+      humanAlignmentSlices: embeddingAlignmentSlices,
       perExampleRegressions: regressions,
       verdict: needsHeldOut,
     },
@@ -345,6 +603,9 @@ const summary = renderBenchmarkComparisonSummary({
 assert.match(summary, /needs-more-data/u);
 assert.match(summary, /95% interval/u);
 assert.match(summary, /Board 1/u);
+assert.match(summary, /Cultural Codes/u);
+assert.match(summary, /targetRecallAtCount/u);
+assert.match(summary, /abc123/u);
 
 console.log("Benchmark statistics smoke checks passed.");
 

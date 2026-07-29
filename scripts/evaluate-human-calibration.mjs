@@ -1,18 +1,29 @@
+import { createHash } from "node:crypto";
 import { readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { normalizeCalibrationState } from "../src/calibration/store.js";
 
 const options = parseOptions(process.argv.slice(2));
+const inputBytes = await readFile(resolve(options.input));
 const state = normalizeCalibrationState(
-  JSON.parse(await readFile(resolve(options.input), "utf8")),
+  JSON.parse(inputBytes.toString("utf8")),
 );
 if (state.rounds.length === 0) {
   throw new Error("Calibration export contains no valid rounds.");
 }
-const answerKeys = await Promise.all(
-  options.answerKeys.map(async (path) =>
-    JSON.parse(await readFile(resolve(path), "utf8")),
-  ),
+const answerKeySources = await Promise.all(
+  options.answerKeys.map(async (path) => {
+    const bytes = await readFile(resolve(path));
+    return {
+      path,
+      bytes,
+      report: JSON.parse(bytes.toString("utf8")),
+    };
+  }),
+);
+const answerKeys = answerKeySources.map(({ report }) => report);
+const answerKeyByRound = new Map(
+  answerKeySources.map((source) => [source.report.roundId, source]),
 );
 const hiddenByTask = new Map(
   answerKeys.flatMap((answerKey) =>
@@ -49,10 +60,78 @@ const models = Object.fromEntries(
     ),
   ]),
 );
+const rounds = state.rounds
+  .map(({ round, answers }) => {
+    const roundObservations = round.tasks
+      .filter(({ taskId }) => answers[taskId])
+      .map((task) => ({
+        task: enrichTask(
+          task,
+          hiddenByTask.get(`${round.roundId}:${task.taskId}`),
+        ),
+        answer: answers[task.taskId],
+      }));
+    const roundModelIds = [
+      ...new Set(
+        roundObservations.map(({ task }) => task.source.modelId),
+      ),
+    ]
+      .filter(Boolean)
+      .sort();
+    const answerKeySource = answerKeyByRound.get(round.roundId);
+    return {
+      roundId: round.roundId,
+      title: round.title,
+      role: "held-out",
+      source: {
+        id: round.roundId,
+        name: round.title,
+        revision: {
+          kind: "sha256",
+          value: stableSha256({
+            round,
+            answerKeySha256: answerKeySource
+              ? sha256(answerKeySource.bytes)
+              : null,
+          }),
+        },
+        answerKey: answerKeySource
+          ? {
+              path: answerKeySource.path,
+              sha256: sha256(answerKeySource.bytes),
+            }
+          : null,
+      },
+      observationUnit: "answered blinded clue task",
+      answeredTasks: roundObservations.length,
+      models: Object.fromEntries(
+        roundModelIds.map((modelId) => [
+          modelId,
+          summarize(
+            roundObservations.filter(
+              ({ task }) => task.source.modelId === modelId,
+            ),
+          ),
+        ]),
+      ),
+    };
+  })
+  .filter(({ answeredTasks }) => answeredTasks > 0);
 const report = {
-  schemaVersion: 1,
+  schemaVersion: 2,
   generatedAt: new Date().toISOString(),
   input: options.input,
+  sources: {
+    input: {
+      path: options.input,
+      sha256: sha256(inputBytes),
+    },
+    answerKeys: answerKeySources.map(({ path, bytes, report }) => ({
+      path,
+      roundId: report.roundId,
+      sha256: sha256(bytes),
+    })),
+  },
   methodology: {
     unit: "answered blinded clue task",
     targetRecall:
@@ -66,6 +145,7 @@ const report = {
   },
   answeredTasks: observations.length,
   models,
+  rounds,
 };
 await writeFile(resolve(options.output), `${JSON.stringify(report, null, 2)}\n`);
 console.log(`Wrote ${resolve(options.output)}`);
@@ -176,4 +256,29 @@ function required(value, option) {
 
 function rounded(value) {
   return Number.isFinite(value) ? Number(value.toFixed(6)) : null;
+}
+
+function sha256(bytes) {
+  return createHash("sha256").update(bytes).digest("hex");
+}
+
+function stableSha256(value) {
+  return sha256(
+    Buffer.from(
+      JSON.stringify(sortValue(value)),
+      "utf8",
+    ),
+  );
+}
+
+function sortValue(value) {
+  if (Array.isArray(value)) return value.map(sortValue);
+  if (value && typeof value === "object") {
+    return Object.fromEntries(
+      Object.keys(value)
+        .sort()
+        .map((key) => [key, sortValue(value[key])]),
+    );
+  }
+  return value;
 }

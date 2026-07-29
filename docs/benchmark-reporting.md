@@ -44,6 +44,23 @@ npm run benchmark:compare -- \
 
 The comparator records the reviewed `pass` or `fail`. It does not invent a numeric human threshold or use the human round as a model ranker.
 
+`npm run calibration:evaluate` writes each answered blinded round separately in `rounds[]`, pins its public definition plus answer key by SHA-256, and retains the aggregate `models` object for older consumers. The decision report emits one held-out slice per round only when both the accepted baseline and candidate have observations in that round.
+
+Attach an aggregate human embedding report with exact result selectors:
+
+```sh
+npm run benchmark:compare -- \
+  --baseline <accepted-development.json> \
+  --candidate candidate=<candidate-development.json> \
+  --human-alignment candidate=scripts/generated/embedding-model-comparison.json \
+  --human-alignment-baseline candidate=Xenova/bge-small-en-v1.5#centered \
+  --human-alignment-candidate candidate=<candidate-model>#centered \
+  --human-alignment-role candidate=tuning \
+  --output <development-comparison.json>
+```
+
+The `#transform` suffix disambiguates raw and centered results. The selected baseline must represent the accepted system. Public datasets default to tuning evidence and require an explicit `held-out` role to claim otherwise.
+
 ## Canonical configuration
 
 Every newly generated Play benchmark result includes:
@@ -126,4 +143,19 @@ The comparison JSON preserves the previous `baseline`, `candidates`, `comparison
 - A final verdict with reasons and missing evidence.
 - A stable comparison fingerprint derived from artifact hashes and comparison methodology.
 
-Human source rows remain outside the report. Only aggregate evaluated human metrics may be attached. Board-level details come from deterministic project-generated simulations, not the unlicensed Cultural Codes or Connector rows.
+Schema version 3 keeps `baseline` and `candidates[]` as the stable presentation roots and adds:
+
+- `summary`, a compact candidate and verdict inventory with Play metric-status counts and human-evidence coverage.
+- `evidenceFamilies.humanAlignment.slices[]`, one expandable slice per source and game or task format.
+
+Every human-alignment slice includes:
+
+- Candidate ID, tuning or held-out role, source identity, format, repository when available, and an exact pinned revision.
+- Attached artifact path, SHA-256 hash, and source report timestamp.
+- Observation unit and source, baseline, and candidate counts.
+- Metric definitions, baseline values, candidate values, candidate-minus-baseline deltas, intervals when available, and status.
+- Explicit baseline and candidate result identities.
+
+Aggregate human reports do not provide paired observations, so their slice intervals are `null` and metric status is `reported` or `unchanged`. The report does not infer significance from aggregate deltas. Reviewed blinded calibration uses its existing `pass`, `fail`, or `unreviewed` gross-failure status.
+
+Human source rows remain outside the report. Only aggregate evaluated human metrics may be attached. Cultural Codes and Connector remain separate slices because Duet games and fixed two-target reference games are incompatible formats. The comparator never collapses them into an opaque score. Board-level details come from deterministic project-generated simulations, not the unlicensed human source rows.

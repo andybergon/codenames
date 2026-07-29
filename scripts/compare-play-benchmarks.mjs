@@ -4,6 +4,8 @@ import {
   artifactRecord,
   comparisonFingerprint,
   configurationChanges,
+  createComparisonSummary,
+  createEmbeddingAlignmentSlices,
   createFinalVerdict,
   deterministicGeneratedAt,
   humanEvidenceRecord,
@@ -31,6 +33,14 @@ validateHumanOptions(options, candidateIds);
 const humanSources = new Map(
   await Promise.all(
     [...options.humanEvidence].map(async ([id, path]) => [
+      id,
+      { path, ...(await readArtifact(path)) },
+    ]),
+  ),
+);
+const humanAlignmentSources = new Map(
+  await Promise.all(
+    [...options.humanAlignment].map(async ([id, path]) => [
       id,
       { path, ...(await readArtifact(path)) },
     ]),
@@ -65,6 +75,11 @@ const results = candidateSources.map(({ id, path, bytes, report }) => {
   const humanSource = humanSources.get(id);
   const humanEvidence = humanSource
     ? humanEvidenceRecord({
+        baselineId:
+          baselineSource.report.configuration?.spymaster?.modelIndex
+            ?.id ??
+          baselineSource.report.methodology?.modelId ??
+          options.baselineId,
         candidateId: id,
         path: humanSource.path,
         bytes: humanSource.bytes,
@@ -72,6 +87,24 @@ const results = candidateSources.map(({ id, path, bytes, report }) => {
         verdict: options.humanVerdicts.get(id) ?? "unreviewed",
       })
     : null;
+  const humanAlignmentSource = humanAlignmentSources.get(id);
+  const humanAlignmentSlices = [
+    ...(humanEvidence?.alignmentSlices ?? []),
+    ...(humanAlignmentSource
+      ? createEmbeddingAlignmentSlices({
+          candidateId: id,
+          path: humanAlignmentSource.path,
+          bytes: humanAlignmentSource.bytes,
+          report: humanAlignmentSource.report,
+          baselineSelector:
+            options.humanAlignmentBaselines.get(id),
+          candidateSelector:
+            options.humanAlignmentCandidates.get(id),
+          role:
+            options.humanAlignmentRoles.get(id) ?? "tuning",
+        })
+      : []),
+  ];
   const verdict = createFinalVerdict({
     promotion,
     split: report.methodology?.split,
@@ -93,6 +126,7 @@ const results = candidateSources.map(({ id, path, bytes, report }) => {
     metrics: classifyMetricChanges(comparison),
     promotion,
     humanEvidence,
+    humanAlignmentSlices,
     perExampleRegressions: findPairedGameRegressions(
       baselineGames,
       candidateGames,
@@ -114,11 +148,14 @@ const methodology = {
     "A point estimate beyond an existing promotion threshold blocks. A point estimate within the threshold with a confidence bound outside it needs more data.",
 };
 const output = {
-  schemaVersion: 2,
+  schemaVersion: 3,
   generatedAt: deterministicGeneratedAt([
     baselineSource.report,
     ...candidateSources.map(({ report }) => report),
     ...[...humanSources.values()].map(({ report }) => report),
+    ...[...humanAlignmentSources.values()].map(
+      ({ report }) => report,
+    ),
   ]),
   baseline: {
     path: options.baseline,
@@ -135,6 +172,16 @@ const output = {
   },
   methodology,
   candidates: results,
+  summary: createComparisonSummary(results),
+  evidenceFamilies: {
+    humanAlignment: {
+      slices: results.flatMap(
+        ({ humanAlignmentSlices }) => humanAlignmentSlices,
+      ),
+      aggregation:
+        "None. Each source and game or task format remains a separate slice.",
+    },
+  },
 };
 output.comparisonFingerprint = comparisonFingerprint({
   baseline: output.baseline,
@@ -175,13 +222,17 @@ function parseOptions(args) {
     baseline: null,
     baselineId: "accepted-baseline",
     candidates: [],
-    output: "scripts/generated/play-model-comparison-v2.json",
+    output: "scripts/generated/play-model-comparison-v3.json",
     summaryOutput: null,
     iterations: 10_000,
     seed: "CODE-STATS",
     maxRegressions: 10,
     humanEvidence: new Map(),
     humanVerdicts: new Map(),
+    humanAlignment: new Map(),
+    humanAlignmentBaselines: new Map(),
+    humanAlignmentCandidates: new Map(),
+    humanAlignmentRoles: new Map(),
   };
   for (let index = 0; index < args.length; index += 1) {
     const option = args[index];
@@ -202,6 +253,32 @@ function parseOptions(args) {
         );
       }
       values.humanVerdicts.set(assignment.id, assignment.path);
+    } else if (option === "--human-alignment") {
+      const assignment = parseAssignment(value, option);
+      values.humanAlignment.set(assignment.id, assignment.path);
+    } else if (option === "--human-alignment-baseline") {
+      const assignment = parseAssignment(value, option);
+      values.humanAlignmentBaselines.set(
+        assignment.id,
+        assignment.path,
+      );
+    } else if (option === "--human-alignment-candidate") {
+      const assignment = parseAssignment(value, option);
+      values.humanAlignmentCandidates.set(
+        assignment.id,
+        assignment.path,
+      );
+    } else if (option === "--human-alignment-role") {
+      const assignment = parseAssignment(value, option);
+      if (!["tuning", "held-out"].includes(assignment.path)) {
+        throw new Error(
+          `${option} role must be tuning or held-out.`,
+        );
+      }
+      values.humanAlignmentRoles.set(
+        assignment.id,
+        assignment.path,
+      );
     } else if (option === "--output") {
       values.output = required(value, option);
     } else if (option === "--summary-output") {
@@ -247,6 +324,47 @@ function validateHumanOptions(values, candidateIds) {
       throw new Error(
         `Human verdict for ${id} requires --human-evidence ${id}=path.`,
       );
+    }
+  }
+  for (const [option, assignments] of [
+    ["--human-alignment", values.humanAlignment],
+    [
+      "--human-alignment-baseline",
+      values.humanAlignmentBaselines,
+    ],
+    [
+      "--human-alignment-candidate",
+      values.humanAlignmentCandidates,
+    ],
+    ["--human-alignment-role", values.humanAlignmentRoles],
+  ]) {
+    for (const id of assignments.keys()) {
+      if (!candidateIds.has(id)) {
+        throw new Error(`${option} references unknown candidate ${id}.`);
+      }
+    }
+  }
+  for (const id of values.humanAlignment.keys()) {
+    if (
+      !values.humanAlignmentBaselines.has(id) ||
+      !values.humanAlignmentCandidates.has(id)
+    ) {
+      throw new Error(
+        `Human alignment for ${id} requires baseline and candidate result selectors.`,
+      );
+    }
+  }
+  for (const assignments of [
+    values.humanAlignmentBaselines,
+    values.humanAlignmentCandidates,
+    values.humanAlignmentRoles,
+  ]) {
+    for (const id of assignments.keys()) {
+      if (!values.humanAlignment.has(id)) {
+        throw new Error(
+          `Human-alignment options for ${id} require --human-alignment ${id}=path.`,
+        );
+      }
     }
   }
 }

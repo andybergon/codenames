@@ -218,6 +218,7 @@ export function createFinalVerdict({
 }
 
 export function humanEvidenceRecord({
+  baselineId,
   candidateId,
   path,
   bytes,
@@ -244,6 +245,148 @@ export function humanEvidenceRecord({
     automaticThreshold: null,
     note:
       "The comparator records the reviewed gross-failure decision but does not invent a human threshold.",
+    alignmentSlices: createCalibrationAlignmentSlices({
+      baselineId,
+      candidateId,
+      path,
+      bytes,
+      report,
+      verdict,
+    }),
+  };
+}
+
+export function createEmbeddingAlignmentSlices({
+  candidateId,
+  path,
+  bytes,
+  report,
+  baselineSelector,
+  candidateSelector,
+  role = "tuning",
+}) {
+  if (!["tuning", "held-out"].includes(role)) {
+    throw new Error(`Invalid human-alignment role: ${role}.`);
+  }
+  const baselineResult = selectEmbeddingResult(
+    report,
+    baselineSelector,
+    "baseline",
+  );
+  const candidateResult = selectEmbeddingResult(
+    report,
+    candidateSelector,
+    "candidate",
+  );
+  const artifactSha256 = createHash("sha256")
+    .update(bytes)
+    .digest("hex");
+  const slices = Object.entries(report.dataset ?? {})
+    .filter(
+      ([sourceId, source]) =>
+        source &&
+        typeof source === "object" &&
+        baselineResult.datasets?.[sourceId] &&
+        candidateResult.datasets?.[sourceId],
+    )
+    .map(([sourceId, source]) =>
+      humanAlignmentSlice({
+        id: `${candidateId}:${sourceId}`,
+        candidateId,
+        role,
+        source: {
+          id: sourceId,
+          name: source.name ?? sourceId,
+          format: source.note ?? "Human associative clue task",
+          repository: source.repository ?? null,
+          revision: source.commit
+            ? {
+                kind: "git-commit",
+                value: source.commit,
+              }
+            : {
+                kind: "artifact-sha256",
+                value: artifactSha256,
+              },
+          artifact: {
+            path,
+            sha256: artifactSha256,
+            generatedAt: report.generatedAt ?? null,
+          },
+        },
+        observation: {
+          unit: "human clue turn",
+          count: source.turns ?? null,
+          baseline: embeddingObservationCounts(
+            baselineResult.datasets[sourceId],
+          ),
+          candidate: embeddingObservationCounts(
+            candidateResult.datasets[sourceId],
+          ),
+        },
+        metricDefinitions: embeddingMetricDefinitions(report.evaluation),
+        baselineId: embeddingResultLabel(baselineResult),
+        candidateResultId: embeddingResultLabel(candidateResult),
+        baselineMetrics: baselineResult.datasets[sourceId],
+        candidateMetrics: candidateResult.datasets[sourceId],
+        excludedMetricIds: [
+          "scoredGuessTurns",
+          "scoredTargetTurns",
+        ],
+        status: "reported",
+        note:
+          "No interval is reported because the source artifact contains aggregate metrics without paired observations.",
+      }),
+    );
+  if (slices.length === 0) {
+    throw new Error(
+      "Human-alignment report has no source shared by the selected results.",
+    );
+  }
+  return slices;
+}
+
+export function createComparisonSummary(candidates) {
+  const candidateSummaries = candidates.map((candidate) => {
+    const metricStatuses = Object.values(candidate.metrics);
+    const humanSlices = candidate.humanAlignmentSlices ?? [];
+    return {
+      id: candidate.id,
+      verdict: candidate.verdict.status,
+      playMetrics: {
+        improved: countStatus(metricStatuses, "improved"),
+        regressed: countStatus(metricStatuses, "regressed"),
+        uncertain: countStatus(metricStatuses, "uncertain"),
+        changed: countStatus(metricStatuses, "changed"),
+        unchanged: countStatus(metricStatuses, "unchanged"),
+      },
+      humanAlignment: {
+        slices: humanSlices.length,
+        tuningSlices: humanSlices.filter(
+          ({ role }) => role === "tuning",
+        ).length,
+        heldOutSlices: humanSlices.filter(
+          ({ role }) => role === "held-out",
+        ).length,
+        reviewedStatus:
+          candidate.humanEvidence?.verdict ?? "not-attached",
+      },
+    };
+  });
+  return {
+    candidateCount: candidates.length,
+    verdicts: {
+      promote: candidateSummaries.filter(
+        ({ verdict }) => verdict === "promote",
+      ).length,
+      block: candidateSummaries.filter(
+        ({ verdict }) => verdict === "block",
+      ).length,
+      needsMoreData: candidateSummaries.filter(
+        ({ verdict }) => verdict === "needs-more-data",
+      ).length,
+    },
+    candidates: candidateSummaries,
   };
 }
 
@@ -257,7 +400,12 @@ export function comparisonFingerprint({
       stableJson({
         baseline: baseline.sha256,
         candidates: candidates.map(
-          ({ id, artifact, humanEvidence }) => ({
+          ({
+            id,
+            artifact,
+            humanEvidence,
+            humanAlignmentSlices,
+          }) => ({
             id,
             artifact: artifact.sha256,
             humanEvidence: humanEvidence
@@ -266,6 +414,16 @@ export function comparisonFingerprint({
                   verdict: humanEvidence.verdict,
                 }
               : null,
+            humanAlignment: (humanAlignmentSlices ?? []).map(
+              ({ id: sliceId, source, role, baseline, candidate }) => ({
+                id: sliceId,
+                role,
+                revision: source.revision,
+                artifactSha256: source.artifact.sha256,
+                baseline: baseline.id,
+                candidate: candidate.id,
+              }),
+            ),
           }),
         ),
         methodology,
@@ -357,6 +515,13 @@ function renderCandidate(candidate, report) {
   const evidence = candidate.humanEvidence
     ? `${candidate.humanEvidence.sampleSize} blinded tasks, reviewed ${candidate.humanEvidence.verdict}`
     : "No human calibration attached";
+  const alignmentSlices = candidate.humanAlignmentSlices ?? [];
+  const alignmentDetails =
+    alignmentSlices.length === 0
+      ? "- No source-separated human-alignment comparison attached."
+      : alignmentSlices
+          .map(renderHumanAlignmentSlice)
+          .join("\n\n");
   const reasonLines = [
     ...candidate.verdict.reasons,
     ...candidate.verdict.requiredEvidence,
@@ -385,6 +550,10 @@ ${changeLines}
 Showing ${candidate.perExampleRegressions.displayed} of ${candidate.perExampleRegressions.totalWithRegression} boards with at least one numeric regression.
 
 ${regressionLines}
+
+### 👥 Human alignment
+
+${alignmentDetails}
 
 ### 📌 Decision evidence
 
@@ -518,6 +687,294 @@ function verdictLabel(status) {
 function compactValue(value) {
   const text = stableJson(value);
   return text.length > 80 ? `${text.slice(0, 77)}...` : text;
+}
+
+function renderHumanAlignmentSlice(slice) {
+  const metricRows = Object.entries(slice.metrics)
+    .map(
+      ([metricId, metric]) =>
+        `| ${escapeCell(metricId)} | ${formatNumber(metric.baseline)} | ${formatNumber(metric.candidate)} | ${formatSigned(metric.delta)} | ${metric.interval ? escapeCell(JSON.stringify(metric.interval)) : "n/a"} | ${escapeCell(metric.status)} |`,
+    )
+    .join("\n");
+  return `#### ${escapeHeading(slice.source.name)}
+
+- 🧾 Evidence: ${slice.role}, ${slice.observation.count ?? "unknown"} ${slice.observation.unit}s
+- 🔐 Revision: ${slice.source.revision.kind} \`${slice.source.revision.value}\`
+- 📌 Status: ${slice.status}
+
+| 📏 Metric | 📍 Baseline | 🧪 Candidate | Δ Candidate | 📐 Interval | 📌 Status |
+| --- | ---: | ---: | ---: | --- | --- |
+${metricRows}`;
+}
+
+function createCalibrationAlignmentSlices({
+  baselineId,
+  candidateId,
+  path,
+  bytes,
+  report,
+  verdict,
+}) {
+  const artifactSha256 = createHash("sha256")
+    .update(bytes)
+    .digest("hex");
+  const sources =
+    Array.isArray(report.rounds) && report.rounds.length > 0
+      ? report.rounds.map((round) => ({
+          id: round.roundId,
+          name: round.title ?? round.roundId,
+          role: round.role ?? "held-out",
+          revision: round.source?.revision ?? {
+            kind: "artifact-sha256",
+            value: artifactSha256,
+          },
+          observationUnit:
+            round.observationUnit ??
+            report.methodology?.unit ??
+            "answered blinded clue task",
+          models: round.models,
+        }))
+      : [
+          {
+            id: report.roundId ?? "blinded-human-calibration",
+            name: report.title ?? "Blinded human calibration",
+            role: "held-out",
+            revision: {
+              kind: "artifact-sha256",
+              value: artifactSha256,
+            },
+            observationUnit:
+              report.methodology?.unit ??
+              "answered blinded clue task",
+            models: report.models,
+          },
+        ];
+  return sources
+    .filter(
+      ({ models }) => models?.[baselineId] && models?.[candidateId],
+    )
+    .map((source) => {
+      const baseline = source.models[baselineId];
+      const candidate = source.models[candidateId];
+      return humanAlignmentSlice({
+        id: `${candidateId}:${source.id}`,
+        candidateId,
+        role: source.role,
+        source: {
+          id: source.id,
+          name: source.name,
+          format: source.observationUnit,
+          repository: null,
+          revision: source.revision,
+          artifact: {
+            path,
+            sha256: artifactSha256,
+            generatedAt: report.generatedAt ?? null,
+          },
+        },
+        observation: {
+          unit: source.observationUnit,
+          count: Math.min(
+            baseline.answeredTasks ?? 0,
+            candidate.answeredTasks ?? 0,
+          ),
+          baseline: {
+            answeredTasks: baseline.answeredTasks ?? null,
+          },
+          candidate: {
+            answeredTasks: candidate.answeredTasks ?? null,
+          },
+        },
+        metricDefinitions: calibrationMetricDefinitions(
+          report.methodology,
+        ),
+        baselineId,
+        candidateResultId: candidateId,
+        baselineMetrics: baseline,
+        candidateMetrics: candidate,
+        excludedMetricIds: ["answeredTasks", "judgment"],
+        status: verdict,
+        note:
+          "This held-out blinded round is a reviewed gross-failure screen, not a model-ranking score.",
+      });
+    });
+}
+
+function humanAlignmentSlice({
+  id,
+  candidateId,
+  role,
+  source,
+  observation,
+  metricDefinitions,
+  baselineId,
+  candidateResultId,
+  baselineMetrics,
+  candidateMetrics,
+  excludedMetricIds,
+  status,
+  note,
+}) {
+  const metricIds = new Set([
+    ...Object.keys(baselineMetrics ?? {}),
+    ...Object.keys(candidateMetrics ?? {}),
+  ]);
+  const metrics = Object.fromEntries(
+    [...metricIds]
+      .sort()
+      .filter(
+        (metricId) =>
+          !excludedMetricIds.includes(metricId) &&
+          (Number.isFinite(baselineMetrics?.[metricId]) ||
+            Number.isFinite(candidateMetrics?.[metricId])),
+      )
+      .map((metricId) => {
+        const baseline = numericOrNull(baselineMetrics?.[metricId]);
+        const candidate = numericOrNull(
+          candidateMetrics?.[metricId],
+        );
+        return [
+          metricId,
+          {
+            definition:
+              metricDefinitions[metricId] ??
+              "Metric reported by the source evaluation.",
+            baseline,
+            candidate,
+            delta:
+              baseline === null || candidate === null
+                ? null
+                : roundDelta(candidate - baseline),
+            interval: null,
+            status:
+              baseline !== null &&
+              candidate !== null &&
+              baseline === candidate
+                ? "unchanged"
+                : "reported",
+          },
+        ];
+      }),
+  );
+  const definitions = Object.fromEntries(
+    Object.entries(metrics).map(([metricId, metric]) => [
+      metricId,
+      metric.definition,
+    ]),
+  );
+  return {
+    id,
+    candidateId,
+    role,
+    source,
+    observation,
+    metricDefinitions: definitions,
+    baseline: {
+      id: baselineId,
+      metrics: Object.fromEntries(
+        Object.entries(metrics).map(([metricId, metric]) => [
+          metricId,
+          metric.baseline,
+        ]),
+      ),
+    },
+    candidate: {
+      id: candidateResultId,
+      metrics: Object.fromEntries(
+        Object.entries(metrics).map(([metricId, metric]) => [
+          metricId,
+          metric.candidate,
+        ]),
+      ),
+    },
+    delta: Object.fromEntries(
+      Object.entries(metrics).map(([metricId, metric]) => [
+        metricId,
+        metric.delta,
+      ]),
+    ),
+    metrics,
+    interval: null,
+    status,
+    note,
+  };
+}
+
+function selectEmbeddingResult(report, selector, label) {
+  if (!selector) {
+    throw new Error(
+      `Human-alignment ${label} result selector is required.`,
+    );
+  }
+  const { model, transform } = parseResultSelector(selector);
+  const matches = (report.results ?? []).filter(
+    (result) =>
+      result.model === model &&
+      (transform === null || result.transform === transform),
+  );
+  if (matches.length !== 1) {
+    throw new Error(
+      `Human-alignment ${label} selector ${selector} matched ${matches.length} results.`,
+    );
+  }
+  return matches[0];
+}
+
+function parseResultSelector(selector) {
+  const separator = selector.lastIndexOf("#");
+  return separator === -1
+    ? { model: selector, transform: null }
+    : {
+        model: selector.slice(0, separator),
+        transform: selector.slice(separator + 1),
+      };
+}
+
+function embeddingResultLabel(result) {
+  return result.transform
+    ? `${result.model}#${result.transform}`
+    : result.model;
+}
+
+function embeddingObservationCounts(metrics) {
+  return {
+    scoredGuessTurns: metrics.scoredGuessTurns ?? null,
+    scoredTargetTurns: metrics.scoredTargetTurns ?? null,
+  };
+}
+
+function embeddingMetricDefinitions(evaluation = {}) {
+  return {
+    firstGuessAccuracy: evaluation.guessMetrics ?? null,
+    guessRecallAtHumanCount: evaluation.guessMetrics ?? null,
+    targetRecallAtCount: evaluation.targetMetrics ?? null,
+    exactTargetSetAccuracy: evaluation.targetMetrics ?? null,
+    avoidWordRate: evaluation.targetMetrics ?? null,
+    pairwiseTargetAccuracy: evaluation.targetMetrics ?? null,
+  };
+}
+
+function calibrationMetricDefinitions(methodology = {}) {
+  return {
+    targetRecallAtDeclaredCount: methodology.targetRecall ?? null,
+    exactTargetRate:
+      "Share of answered tasks whose declared-number guesses exactly match all intended targets.",
+    guessesPerTask:
+      "Mean number of human guesses recorded per answered task.",
+    passes: methodology.pass ?? null,
+    passRate: methodology.pass ?? null,
+    wrongTeamHitsPerTask: methodology.safety ?? null,
+    neutralHitsPerTask: methodology.safety ?? null,
+    assassinHitRate: methodology.safety ?? null,
+  };
+}
+
+function numericOrNull(value) {
+  return Number.isFinite(value) ? value : null;
+}
+
+function roundDelta(value) {
+  return Number(value.toFixed(9));
 }
 
 function readPath(value, path) {
