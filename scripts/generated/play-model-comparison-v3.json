@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
   "mode": "baseline",
-  "generatedAt": "2026-07-29T03:40:12.862Z",
+  "generatedAt": "2026-07-29T05:29:40.258Z",
   "baseline": {
     "path": "scripts/generated/play-accepted-baseline-development.json",
     "methodology": {
@@ -25,6 +25,7 @@
       "boardSeed": "Eight deterministic bytes: ASCII CODE followed by a big-endian 1-based board index.",
       "decisionSeed": "Matches Play runtime: board seed, turn number, and history length for each action.",
       "clueSelection": "Prefer the highest-scoring multi clue when it is within 5 points of the best clue; otherwise choose the best clue.",
+      "subscriptionClueReranker": null,
       "bonusGuesses": "Pass after reaching the declared clue number.",
       "operative": "The bot guesser sees only public clue and unrevealed-card data from Xenova/bge-small-en-v1.5.",
       "operativeRanking": "Weak multi-card clues use the local WordNet sense bridge when every direct card similarity is below 0.20. Other turns retain exact direct ranking.",
@@ -125,10 +126,10 @@
     },
     "id": "accepted-production-development",
     "role": "accepted-baseline",
-    "sha256": "4d4bf6e12354c865f4db933925fe207fff816bc3f689e0f4fb6e908d1857085e",
-    "generatedAt": "2026-07-29T03:40:12.862Z",
+    "sha256": "b6de3330918736092afa8965a12df88e7bb86e6401201ef065ec13747a3d024c",
+    "generatedAt": "2026-07-29T05:29:40.258Z",
     "configuration": {
-      "schemaVersion": 1,
+      "schemaVersion": 2,
       "evidence": {
         "split": "development",
         "splitRole": "tuning",
@@ -260,6 +261,7 @@
           "hybrid": "hybrid-v1"
         },
         "clueSelection": "tempo",
+        "clueReranker": null,
         "clueRandomShortlistSize": null,
         "multiClueTolerance": 5,
         "clueRepeatPolicy": "never",
@@ -354,7 +356,7 @@
         "clueSelectionRandomized": false
       }
     },
-    "configurationFingerprint": "cf888693ae7567c012460f8b697231911be13352d88a7e122d4cb19879c3633b",
+    "configurationFingerprint": "189fd1ea518cf07159e9ce7ad5efc679ac9dc0228bc11fd365f402f4f4a8adac",
     "configurationLabels": {
       "modelIndex": "bge-small 30k",
       "board": "en official",
@@ -362,7 +364,7 @@
       "operative": "same, dynamic, concept bridges, variation none, extra pass",
       "split": "development 128 boards at 120"
     },
-    "configurationContract": "canonical-v1",
+    "configurationContract": "canonical-v2",
     "evidence": {
       "source": "Deterministic Play full-game simulation",
       "unit": "board",
@@ -484,5 +486,5 @@
       "aggregation": "None. Each source and game or task format remains a separate slice."
     }
   },
-  "comparisonFingerprint": "68f7e3b4a1a58393a0768ddc171969d46267c59bc5d21afa2aa3940050761b0a"
+  "comparisonFingerprint": "a750a6516d91f60b824505d0db64d9db666163ada5c68f60213332727cb4bca7"
 }

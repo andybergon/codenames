@@ -1,8 +1,8 @@
 # Accepted Play benchmark baseline
 
 - 🧾 Evidence: 128 development boards (tuning)
-- 🔐 Artifact: `4d4bf6e12354c865f4db933925fe207fff816bc3f689e0f4fb6e908d1857085e`
-- 🔧 Configuration: `cf888693ae7567c012460f8b697231911be13352d88a7e122d4cb19879c3633b`
+- 🔐 Artifact: `b6de3330918736092afa8965a12df88e7bb86e6401201ef065ec13747a3d024c`
+- 🔧 Configuration: `189fd1ea518cf07159e9ce7ad5efc679ac9dc0228bc11fd365f402f4f4a8adac`
 
 - modelIndex: bge-small 30k
 - board: en official

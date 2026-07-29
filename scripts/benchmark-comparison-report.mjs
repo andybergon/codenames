@@ -91,7 +91,9 @@ export function artifactRecord({
     configurationLabels:
       report.configurationLabels ??
       (configuration ? configurationLabels(configuration) : null),
-    configurationContract: configuration ? "canonical-v1" : "legacy",
+    configurationContract: configuration
+      ? `canonical-v${configuration.schemaVersion}`
+      : "legacy",
     evidence: {
       source: "Deterministic Play full-game simulation",
       unit: "board",

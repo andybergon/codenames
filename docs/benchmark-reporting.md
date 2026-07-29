@@ -49,14 +49,14 @@ The comparison command also writes `play-model-comparison-v3.md`. Repeating the 
 
 The checked baseline uses the documented current English production behavior on development boards 120 through 247:
 
-- Generated at: `2026-07-29T03:40:12.862Z`.
-- Full artifact: [`play-accepted-baseline-development.json`](../scripts/generated/play-accepted-baseline-development.json), SHA-256 `4d4bf6e12354c865f4db933925fe207fff816bc3f689e0f4fb6e908d1857085e`.
-- Canonical configuration fingerprint: `cf888693ae7567c012460f8b697231911be13352d88a7e122d4cb19879c3633b`.
+- Generated at: `2026-07-29T05:29:40.258Z`.
+- Full artifact: [`play-accepted-baseline-development.json`](../scripts/generated/play-accepted-baseline-development.json), SHA-256 `b6de3330918736092afa8965a12df88e7bb86e6401201ef065ec13747a3d024c`.
+- Canonical configuration fingerprint: `189fd1ea518cf07159e9ce7ad5efc679ac9dc0228bc11fd365f402f4f4a8adac`.
 - Behavior implementation: SHA-256 `233e0fabc574c8ad101d62e7f0618da7cfb5c963920728939d24d99b3650e9a4`.
 - BGE-small manifest: SHA-256 `df9997658cb028aac476db5291b03d2fb88a7923304036c651da7206968da8fb`, with exact selected shard hashes retained in the artifact.
 - Official English word pool: SHA-256 `b2bdf45505d9a23da8f127923c62a33be570d9fc1646400ad8038a18e78ab9a2`.
 - WordNet concept assets: version 2, SHA-256 `d23c4a06d0dfb491b512349659e2a95bf05b9b8cb15a8a52bc648fbb45c77c01`.
-- Canonical v3 scorecard report: [`play-model-comparison-v3.json`](../scripts/generated/play-model-comparison-v3.json), comparison fingerprint `68f7e3b4a1a58393a0768ddc171969d46267c59bc5d21afa2aa3940050761b0a`.
+- Canonical v3 scorecard report: [`play-model-comparison-v3.json`](../scripts/generated/play-model-comparison-v3.json), comparison fingerprint `a750a6516d91f60b824505d0db64d9db666163ada5c68f60213332727cb4bca7`.
 
 This development artifact is accepted as the reproducible baseline for tuning comparisons. It is not held-out promotion evidence.
 
@@ -107,7 +107,7 @@ Every newly generated Play benchmark result includes:
 The configuration includes every Play setting that can change simulated game behavior:
 
 - Board language, word set, exact word-content hash, board order, word-reuse policy, board range, and deterministic board seed scheme.
-- Spymaster model and index identity, manifest and selected-shard hashes, vocabulary size, clue policy variants, comparison policy, clue scoring contract, clue selection, multi-clue tolerance, clue reuse, missed-target timing, and suggestion depth.
+- Spymaster model and index identity, manifest and selected-shard hashes, vocabulary size, clue policy variants, comparison policy, clue scoring contract, clue selection, optional clue-reranker identity, multi-clue tolerance, clue reuse, missed-target timing, and suggestion depth.
 - Operative model and index identity, aggression, concept-bridge request and resolved behavior, concept-data identity, optional reranker identity, guess variation and range, and extra-guess policy.
 - Similarity scale and offset, starting side, simulated seat, action bound, fallback clue behavior, forced-progress behavior, and every decision-seed input.
 - Frozen split role and held-out protocol authorization when applicable.
@@ -118,6 +118,20 @@ Visual-only state is excluded. Developer score ordering, live-analysis visibilit
 Model manifests, every selected index shard, and precomputed auxiliary vector assets receive content hashes. English concept runs also hash the complete generated concept asset set. The board-word hash captures the exact selected pool even when its source module has no separate version number.
 
 When a new behavior-affecting setting is added to Play or the benchmark runner, add it to `scripts/benchmark-configuration.mjs`, its required-field validation, fingerprint tests, and these docs in the same change. Bump `game.simulationContractVersion` when benchmark-only simulation semantics change without a separate exact configuration field.
+
+Canonical configuration schema 2 requires `spymaster.clueReranker`. The embedding-only policy records `null`; a research candidate records its exact CLI, version, selector, no-tools command, adapter hash, prompt and shortlist revisions, timeout, concurrency, and no-fallback policy. Schema 1 remains valid only for the historical artifacts created before this field existed.
+
+### Subscription CLI research screen
+
+Run the complete non-held-out subscription screen with:
+
+```sh
+npm run benchmark:subscription-cli
+```
+
+The command runs Claude Opus, GPT-5.6 Sol, and GPT-5.6 Terra sequentially when their exact selectors are available. Each receives one frozen safe-engine shortlist case per read-only, no-tools request. Requests are content-addressed by the complete prompt, CLI version, selector, adapter revision, and transport revision. No API key is inherited, no provider fallback is allowed, and a fatal, timeout, quota, parse, or validation error stops that model without substituting another.
+
+The sequence produces same-model smoke and development comparisons plus a MiniLM-L6 operative smoke transfer screen. It never requests the sealed test split. These subscription CLI results are research signals only because the web application cannot invoke coding CLIs during normal play. An API candidate would require a separate provider implementation, the existing `$5` total API cap, and fresh evidence.
 
 ## Evidence split
 

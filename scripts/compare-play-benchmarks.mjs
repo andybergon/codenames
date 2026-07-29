@@ -111,8 +111,9 @@ const results = candidateSources.map(({ id, path, bytes, report }) => {
     heldOutProtocol: report.methodology?.heldOutProtocol ?? null,
     humanEvidence,
     canonicalConfiguration:
-      baselineArtifact.configurationContract === "canonical-v1" &&
-      artifact.configurationContract === "canonical-v1",
+      baselineArtifact.configurationContract ===
+        artifact.configurationContract &&
+      baselineArtifact.configurationContract.startsWith("canonical-v"),
   });
   return {
     id,

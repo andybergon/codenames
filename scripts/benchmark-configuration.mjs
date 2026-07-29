@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 
-export const BENCHMARK_CONFIGURATION_SCHEMA_VERSION = 1;
+export const BENCHMARK_CONFIGURATION_SCHEMA_VERSION = 2;
 const REQUIRED_CONFIGURATION_PATHS = Object.freeze([
   "evidence.split",
   "evidence.splitRole",
@@ -37,6 +37,7 @@ const REQUIRED_CONFIGURATION_PATHS = Object.freeze([
   "spymaster.clueScoring.current",
   "spymaster.clueScoring.hybrid",
   "spymaster.clueSelection",
+  "spymaster.clueReranker",
   "spymaster.multiClueTolerance",
   "spymaster.clueRepeatPolicy",
   "spymaster.missedTargetTiming",
@@ -73,6 +74,7 @@ export function createBenchmarkConfiguration({
   operativeAsset,
   options,
   resultsPerTargetSize,
+  subscriptionClueReranker,
 }) {
   const resolvedOperativeRanking = benchmarkReranker
     ? "guarded-wordnet-reranker"
@@ -139,6 +141,7 @@ export function createBenchmarkConfiguration({
         hybrid: "hybrid-v1",
       },
       clueSelection: options.clueSelection,
+      clueReranker: subscriptionClueReranker,
       clueRandomShortlistSize:
         options.clueSelection === "random" ? 4 : null,
       multiClueTolerance: options.multiTolerance,
@@ -200,15 +203,20 @@ export function validateCanonicalConfiguration(
   configuration,
   label = "benchmark configuration",
 ) {
-  if (
-    configuration?.schemaVersion !==
-    BENCHMARK_CONFIGURATION_SCHEMA_VERSION
-  ) {
+  if (![1, BENCHMARK_CONFIGURATION_SCHEMA_VERSION].includes(
+    configuration?.schemaVersion,
+  )) {
     throw new Error(
-      `${label} must use configuration schema ${BENCHMARK_CONFIGURATION_SCHEMA_VERSION}.`,
+      `${label} must use configuration schema 1 or ${BENCHMARK_CONFIGURATION_SCHEMA_VERSION}.`,
     );
   }
-  const missing = REQUIRED_CONFIGURATION_PATHS.filter(
+  const requiredPaths =
+    configuration.schemaVersion >= 2
+      ? REQUIRED_CONFIGURATION_PATHS
+      : REQUIRED_CONFIGURATION_PATHS.filter(
+          (path) => path !== "spymaster.clueReranker",
+        );
+  const missing = requiredPaths.filter(
     (path) => readPath(configuration, path) === undefined,
   );
   if (missing.length > 0) {
@@ -236,10 +244,13 @@ export function configurationLabels(configuration) {
     "guarded-wordnet": "concept bridges",
     "guarded-wordnet-reranker": "concept bridges + reranker",
   }[operative.conceptBridges.resolved];
+  const reranker = spymaster.clueReranker
+    ? `, CLI reranker ${spymaster.clueReranker.selector}`
+    : "";
   return {
     modelIndex: `${spymaster.modelIndex.id} ${candidateCount}`,
     board: `${board.language} ${board.wordSet}`,
-    clue: `${spymaster.comparisonPolicy}, ${spymaster.clueSelection}, tolerance ${spymaster.multiClueTolerance}, repeats ${spymaster.clueRepeatPolicy}`,
+    clue: `${spymaster.comparisonPolicy}, ${spymaster.clueSelection}, tolerance ${spymaster.multiClueTolerance}, repeats ${spymaster.clueRepeatPolicy}${reranker}`,
     operative: `${operative.modelIndex.id}, ${operative.aggression}, ${bridge}, variation ${operative.guessVariation}, extra ${operative.extraGuessPolicy}`,
     split: `${evidence.split} ${evidence.boardCount} boards at ${evidence.boardOffset}`,
   };

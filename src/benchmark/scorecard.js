@@ -12,7 +12,9 @@ export function validateBenchmarkReport(report) {
     );
   }
   if (
-    report.baseline.configurationContract !== "canonical-v1" ||
+    !/^canonical-v[12]$/u.test(
+      report.baseline.configurationContract ?? "",
+    ) ||
     !report.baseline.configuration ||
     !report.baseline.configurationFingerprint
   ) {

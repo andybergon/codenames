@@ -20,6 +20,7 @@ import {
 import {
   createBenchmarkConfiguration,
   stableFingerprint,
+  validateCanonicalConfiguration,
 } from "./benchmark-configuration.mjs";
 
 const baseline = Array.from({ length: 20 }, (_, index) => ({
@@ -145,6 +146,7 @@ const canonical = createBenchmarkConfiguration({
     similarityOffset: 0,
   },
   resultsPerTargetSize: 6,
+  subscriptionClueReranker: null,
 });
 assert.equal(canonical.configuration.board.language, "en");
 assert.equal(canonical.configuration.board.wordSet, "official");
@@ -154,6 +156,7 @@ assert.equal(
 );
 assert.equal(canonical.configuration.spymaster.vocabularySize, 30_000);
 assert.equal(canonical.configuration.spymaster.clueSelection, "tempo");
+assert.equal(canonical.configuration.spymaster.clueReranker, null);
 assert.equal(canonical.configuration.spymaster.multiClueTolerance, 5);
 assert.equal(canonical.configuration.spymaster.clueRepeatPolicy, "never");
 assert.equal(canonical.configuration.spymaster.missedTargetTiming, "late");
@@ -170,6 +173,13 @@ assert.equal(canonical.configuration.operative.guessVariation, "none");
 assert.equal(canonical.configuration.operative.extraGuessPolicy, "pass");
 assert.equal(canonical.configuration.randomness.deterministic, true);
 assert.match(canonical.configurationLabels.modelIndex, /30k/u);
+const legacyConfiguration = structuredClone(canonical.configuration);
+legacyConfiguration.schemaVersion = 1;
+delete legacyConfiguration.spymaster.clueReranker;
+assert.equal(
+  validateCanonicalConfiguration(legacyConfiguration),
+  legacyConfiguration,
+);
 
 for (const [path, value] of [
   ["board.language", "it"],
@@ -180,6 +190,12 @@ for (const [path, value] of [
   ["spymaster.vocabularySize", 10_000],
   ["spymaster.comparisonPolicy", "current"],
   ["spymaster.clueSelection", "random"],
+  [
+    "spymaster.clueReranker",
+    {
+      selector: "candidate-model",
+    },
+  ],
   ["spymaster.multiClueTolerance", 8],
   ["spymaster.clueRepeatPolicy", "previous"],
   ["spymaster.missedTargetTiming", "balanced"],
@@ -484,7 +500,7 @@ const canonicalArtifact = artifactRecord({
 });
 assert.equal(
   canonicalArtifact.configurationContract,
-  "canonical-v1",
+  "canonical-v2",
 );
 assert.throws(
   () =>

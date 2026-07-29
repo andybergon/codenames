@@ -80,6 +80,7 @@ import {
   boardVectorCacheIdentity,
   loadOrCreateBoardVectors,
 } from "./benchmark-board-vector-cache.mjs";
+import { createSubscriptionCliClueReranker } from "./subscription-cli-clue-reranker.mjs";
 
 const ROOT = resolve(fileURLToPath(new URL("..", import.meta.url)));
 env.cacheDir =
@@ -129,6 +130,16 @@ const BENCHMARK_SPLITS = Object.freeze({
 });
 
 const options = parseOptions(process.argv.slice(2));
+const subscriptionClueReranker = options.subscriptionCliModel
+  ? await createSubscriptionCliClueReranker({
+      cacheDirectory: resolve(
+        ROOT,
+        ".cache/subscription-cli-clue-reranker",
+        options.subscriptionCliModel,
+      ),
+      modelId: options.subscriptionCliModel,
+    })
+  : null;
 const outputPath = isAbsolute(options.output) ? options.output : resolve(ROOT, options.output);
 const heldOutProtocol = await validateHeldOutTestRun(options, outputPath);
 const summaryOutput = options.summaryOutput ?? summaryPathFor(options.output);
@@ -278,6 +289,7 @@ const benchmarkConfiguration = createBenchmarkConfiguration({
   operativeAsset: operativeContext.asset,
   options,
   resultsPerTargetSize: RESULTS_PER_SIZE,
+  subscriptionClueReranker: subscriptionClueReranker?.identity ?? null,
 });
 const resultsByPolicy = new Map(
   activePolicies.map((policy) => [policy, []]),
@@ -286,8 +298,33 @@ const resultsByAggression = new Map(
   activeAggressions.map((aggression) => [aggression, []]),
 );
 const startedAt = performance.now();
+let completedBoards = 0;
+const boardIndexes = Array.from(
+  { length: options.boards },
+  (_, index) => index,
+);
+const boardRuns = subscriptionClueReranker
+  ? await Promise.all(boardIndexes.map(runBenchmarkBoard))
+  : [];
+if (!subscriptionClueReranker) {
+  for (const boardIndex of boardIndexes) {
+    boardRuns.push(await runBenchmarkBoard(boardIndex));
+  }
+}
+boardRuns.sort((left, right) => left.boardIndex - right.boardIndex);
+for (const boardRun of boardRuns) {
+  for (const [policy, result] of boardRun.policyResults) {
+    resultsByPolicy.get(policy).push(result);
+    if (policy === PLAY_CLUE_POLICY.HYBRID) {
+      resultsByAggression.get(options.operativeAggression).push(result);
+    }
+  }
+  for (const [aggression, result] of boardRun.aggressionResults) {
+    resultsByAggression.get(aggression).push(result);
+  }
+}
 
-for (let boardIndex = 0; boardIndex < options.boards; boardIndex += 1) {
+async function runBenchmarkBoard(boardIndex) {
   const benchmarkBoardIndex = options.boardOffset + boardIndex;
   const seed = boardSeed(benchmarkBoardIndex);
   const boardState = createGeneratedBoardState(
@@ -322,6 +359,7 @@ for (let boardIndex = 0; boardIndex < options.boards; boardIndex += 1) {
     }),
   };
 
+  const policyResults = [];
   for (const policy of activePolicies) {
     const result = await simulateGame({
       boardIndex: benchmarkBoardIndex,
@@ -344,17 +382,16 @@ for (let boardIndex = 0; boardIndex < options.boards; boardIndex += 1) {
       maxActions: options.maxActions,
       similarityCalibration,
     });
-    resultsByPolicy.get(policy).push(result);
-    if (policy === PLAY_CLUE_POLICY.HYBRID) {
-      resultsByAggression.get(options.operativeAggression).push(result);
-    }
+    policyResults.push([policy, result]);
   }
 
+  const aggressionResults = [];
   for (const operativeAggression of activeAggressions) {
     if (operativeAggression === options.operativeAggression) {
       continue;
     }
-    resultsByAggression.get(operativeAggression).push(
+    aggressionResults.push([
+      operativeAggression,
       await simulateGame({
         boardIndex: benchmarkBoardIndex,
         boardVectors,
@@ -376,15 +413,17 @@ for (let boardIndex = 0; boardIndex < options.boards; boardIndex += 1) {
         maxActions: options.maxActions,
         similarityCalibration,
       }),
-    );
+    ]);
   }
 
-  if ((boardIndex + 1) % 10 === 0 || boardIndex + 1 === options.boards) {
+  completedBoards += 1;
+  if (completedBoards % 10 === 0 || completedBoards === options.boards) {
     const seconds = ((performance.now() - startedAt) / 1000).toFixed(1);
     console.log(
-      `Completed ${boardIndex + 1}/${options.boards} controlled boards in ${seconds}s`,
+      `Completed ${completedBoards}/${options.boards} controlled boards in ${seconds}s`,
     );
   }
+  return { aggressionResults, boardIndex, policyResults };
 }
 
 const policies = Object.fromEntries(
@@ -450,6 +489,12 @@ const report = {
       tempo:
         `Prefer the highest-scoring multi clue when it is within ${options.multiTolerance} points of the best clue; otherwise choose the best clue.`,
     }[options.clueSelection],
+    subscriptionClueReranker: subscriptionClueReranker
+      ? {
+          ...subscriptionClueReranker.identity,
+          stats: subscriptionClueReranker.stats(),
+        }
+      : null,
     bonusGuesses:
       options.bonusGuesses === "pass"
         ? "Pass after reaching the declared clue number."
@@ -677,7 +722,36 @@ async function simulateGame({
         ({ candidate }) => candidate.number >= 2,
       );
       let suggestion;
-      if (clueSelection === "tempo") {
+      if (subscriptionClueReranker && scoredSuggestions.length > 0) {
+        const shortlist = scoredSuggestions.slice(0, 6);
+        const candidateId = await subscriptionClueReranker.select({
+          caseId: [
+            boardIndex,
+            policy,
+            operativeAggression,
+            game.turnNumber,
+            game.activeSide,
+          ].join(":"),
+          activeSide: game.activeSide,
+          board: game.cards
+            .filter(({ done }) => !done)
+            .map(({ team, word }) => ({ team, word })),
+          candidates: shortlist.map(({ candidate, score }, index) => ({
+            candidateId: `c${index}`,
+            clue: candidate.clue,
+            number: candidate.number,
+            targets: candidate.targets.map(({ word }) => word),
+            engineEvidence: {
+              expectedNet: rounded(candidate.expectedNet ?? 0),
+              margin: rounded(candidate.margin ?? 0),
+              risk: candidate.risk,
+              score: rounded(score),
+              success: rounded(candidate.success ?? 0),
+            },
+          })),
+        });
+        suggestion = shortlist[Number(candidateId.slice(1))]?.candidate;
+      } else if (clueSelection === "tempo") {
         const best = scoredSuggestions[0];
         suggestion =
           bestMulti && bestMulti.score >= best.score - multiTolerance
@@ -1337,6 +1411,7 @@ function parseOptions(args) {
     similarityScale: 1,
     similarityOffset: 0,
     comparisonOnly: false,
+    subscriptionCliModel: null,
     testProtocol: null,
   };
   const explicit = new Set();
@@ -1408,6 +1483,15 @@ function parseOptions(args) {
     } else if (option === "--comparison-only") {
       values.comparisonOnly = true;
       index -= 1;
+    } else if (option === "--subscription-cli-model") {
+      if (
+        !["claude-opus", "codex-sol", "codex-terra"].includes(value)
+      ) {
+        throw new Error(
+          `${option} must be claude-opus, codex-sol, or codex-terra.`,
+        );
+      }
+      values.subscriptionCliModel = value;
     } else if (option === "--test-protocol") {
       values.testProtocol = requiredValue(value, option);
     } else if (option === "--bonus-guesses") {
