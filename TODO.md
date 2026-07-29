@@ -4,14 +4,6 @@
   - Design a multi-round match that rotates players through roles and tracks an overall result instead of treating each board as the whole game.
   - Planning only for now; do not implement it as part of the current feedback batch.
 
-- 🧪 Verify every Play default with one-factor-at-a-time ablations.
-  - After the benchmark suite integration, compare each behavior-affecting setting alternative against the accepted defaults while keeping every other configuration field fixed.
-  - Record whether each alternative improves, regresses, or remains uncertain. Do not run the combinatorial matrix.
-  - Run independent candidates through a bounded worker pool against the frozen baseline. Start with 6 workers, measure throughput and responsiveness, then trial 8. Do not launch every candidate or saturate the 18-core machine.
-  - Record per-worker cold and warm timing, peak resident memory, CPU saturation, and cache hit rate.
-  - Treat vector-cache and model-index keys as immutable inputs. Keep candidate artifacts isolated and merge only deterministic report outputs.
-  - This can justify each default locally, but cannot prove global optimality because setting interactions remain untested.
-
 ## 🚨 Critical
 
 - 🤖 Evaluate an LLM reranker as a benchmarked candidate policy.

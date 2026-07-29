@@ -43,6 +43,8 @@ npm run benchmark:compare -- \
 
 The comparison command also writes `play-model-comparison-v3.md`. Repeating the command with identical artifacts, seed, and iteration count produces the same statistics, artifact hashes, comparison fingerprint, and report timestamp. The timestamp is the latest source-artifact timestamp rather than the wall-clock comparison time. Run `npm run validate:benchmark-report` after refreshing the checked report.
 
+`npm run benchmark:audit:summary` consolidates isolated smoke and development comparisons under `.cache/benchmark-audit/` into the checked [English Play default one-factor audit](evaluations/play-default-audit/play-default-audit.md). The audit keeps the accepted baseline immutable, uses six workers by default, stops smoke gate failures before development, and never consumes held-out boards. `--clue-policy current` or `--clue-policy hybrid` selects one exact scoring policy for comparison-only runs.
+
 ### Accepted development baseline
 
 The checked baseline uses the documented current English production behavior on development boards 120 through 247:

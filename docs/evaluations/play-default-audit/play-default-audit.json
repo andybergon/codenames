@@ -1,0 +1,5008 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-07-29T04:28:29.573Z",
+  "title": "English Play default one-factor audit",
+  "baseline": {
+    "id": "accepted-production-development",
+    "artifact": "scripts/generated/play-accepted-baseline-development.json",
+    "sha256": "4d4bf6e12354c865f4db933925fe207fff816bc3f689e0f4fb6e908d1857085e",
+    "configurationFingerprint": "cf888693ae7567c012460f8b697231911be13352d88a7e122d4cb19879c3633b"
+  },
+  "methodology": {
+    "design": "One alternative at a time against the frozen accepted English production configuration.",
+    "screening": "Use existing compatible human or gold evidence, then fixed smoke. Smoke gate failures do not consume development boards.",
+    "developmentBoards": 128,
+    "heldOutBoardsUsed": 0,
+    "promotionClaim": false,
+    "interactionLimitation": "This audit tests local alternatives only. It cannot establish global optimality because setting interactions and Cartesian combinations remain untested."
+  },
+  "workerPools": {
+    "recommended": 6,
+    "sixWorkerTrial": {
+      "peakObservedCpuPercent": 603.3,
+      "peakObservedResidentMiB": 3657.3,
+      "loadAverageOneMinute": 7.39,
+      "responsive": true
+    },
+    "eightWorkerTrial": {
+      "peakObservedCpuPercent": 884.8,
+      "peakObservedResidentMiB": 4660.8,
+      "loadAverageOneMinute": 9.4,
+      "responsive": true,
+      "conclusion": "Safe for a bounded trial, but slower per worker. Keep six as the default."
+    },
+    "cacheInputsImmutable": true,
+    "isolatedCandidateArtifacts": true
+  },
+  "candidates": [
+    {
+      "id": "model-minilm-l6",
+      "setting": "Embedding model",
+      "alternative": "MiniLM-L6",
+      "screen": "human",
+      "phase": "smoke",
+      "boardCount": 20,
+      "verdict": "block",
+      "metricStatus": {
+        "improved": 0,
+        "regressed": 1,
+        "uncertain": 0,
+        "changed": 1,
+        "unchanged": 5
+      },
+      "gateStatus": {
+        "zeroStalls": "pass",
+        "assassinNonInferiority": "pass",
+        "wrongTeamNonInferiority": "pass",
+        "neutralNonInferiority": "pass",
+        "fallback": "pass",
+        "correctNonInferiority": "block",
+        "correctSuperiority": "block"
+      },
+      "humanScreen": {
+        "status": "baseline-favored",
+        "source": "scripts/generated/embedding-model-comparison.json",
+        "note": "The accepted centered BGE-small model has stronger aggregate human target recall and lower Cultural Codes avoid-word rate than the selectable MiniLM alternatives."
+      },
+      "assessment": {
+        "status": "default-locally-justified",
+        "note": "smoke evidence blocks or regresses the alternative."
+      },
+      "timing": {
+        "vectorCache": "miss",
+        "vectorMilliseconds": 8196.1,
+        "wallSeconds": 59.34,
+        "peakResidentBytes": 704659456
+      },
+      "artifacts": {
+        "candidate": {
+          "id": "model-minilm-l6",
+          "role": "candidate",
+          "path": ".cache/benchmark-audit/model-minilm-l6/smoke.json",
+          "sha256": "51bdbfafbe270cf66508cd653ac64c9f3bc41b8522086d1ffdb491926b0b2359",
+          "generatedAt": "2026-07-29T04:02:58.447Z",
+          "configuration": {
+            "schemaVersion": 1,
+            "evidence": {
+              "split": "smoke",
+              "splitRole": "tuning",
+              "boardOffset": 0,
+              "boardCount": 20,
+              "heldOutProtocol": null
+            },
+            "implementation": {
+              "files": [
+                {
+                  "file": "src/board-share.js",
+                  "sha256": "c5760a235e45c17296f801e8b15d2562ed64ef1b87d18d63f8bcd7e1f6f9aaf7"
+                },
+                {
+                  "file": "src/clue-index.js",
+                  "sha256": "296a0739d438a75dc40aabdfbdc50aed87a85cfd0dabd8a0c3734d562dd2fccc"
+                },
+                {
+                  "file": "src/embeddings.js",
+                  "sha256": "9a1ed10d867ccde86802fb645b2ef9667c422536b82fc6f3871b84a4cde5058f"
+                },
+                {
+                  "file": "src/model.js",
+                  "sha256": "184f556ef5e870af4731eb7f32070fe647712dfac9cd23fbbcc0ef1d707eb6a3"
+                },
+                {
+                  "file": "src/play/bots.js",
+                  "sha256": "832c6a9b89f7c8749973edd7a45e5d05bdcb1d8e69b83e2ed42b21ef28a56736"
+                },
+                {
+                  "file": "src/play/concept-ranking.js",
+                  "sha256": "2d065d9c75c61ad9aea69070312766977a27b41f354b975a041c5c40c42cb8c9"
+                },
+                {
+                  "file": "src/play/game-state.js",
+                  "sha256": "1b8879010672994e726e53b398c4497325abe23cce86445e056e2ee05af592b3"
+                },
+                {
+                  "file": "src/play/settings.js",
+                  "sha256": "fd7f6c92b324642a8c074e3992ef1a136dc788bc41adc849068c41c82ddda43d"
+                },
+                {
+                  "file": "src/word-data.js",
+                  "sha256": "05dd6b7f69008b429e025142a1ab493cfb8ccfdbb08ad29df66b0a8bb1b803a4"
+                }
+              ],
+              "contentSha256": "233e0fabc574c8ad101d62e7f0618da7cfb5c963920728939d24d99b3650e9a4"
+            },
+            "board": {
+              "language": "en",
+              "wordSet": "official",
+              "wordCount": 400,
+              "wordContentSha256": "b2bdf45505d9a23da8f127923c62a33be570d9fc1646400ad8038a18e78ab9a2",
+              "cardCount": 25,
+              "order": "random",
+              "wordReusePolicy": "fully-random",
+              "wordReuseHistoryBoards": 0,
+              "generationSeed": {
+                "deterministic": true,
+                "scheme": "Eight bytes: ASCII CODE followed by a big-endian 1-based board index.",
+                "firstBoardIndex": 0,
+                "lastBoardIndex": 19
+              }
+            },
+            "game": {
+              "simulationContractVersion": 1,
+              "startingSide": "blue",
+              "simulatedHumanSeat": {
+                "side": "blue",
+                "role": "spymaster"
+              },
+              "maxActionsPerGame": 100,
+              "forcedProgressAfterConsecutivePasses": 2,
+              "forcedProgressChoice": "highest-ranked-available-guess",
+              "fallbackClue": {
+                "enabled": true,
+                "number": 1,
+                "selection": "nearest-legal-indexed-clue-to-one-friendly-card"
+              }
+            },
+            "spymaster": {
+              "modelIndex": {
+                "id": "minilm-l6",
+                "model": "Xenova/all-MiniLM-L6-v2",
+                "revision": null,
+                "provider": "local",
+                "dimensions": 384,
+                "directory": "public/data/model-lab/minilm-l6",
+                "manifestSha256": "f647de4eff2b36e82cca94ee234a47ddc4520379b202d7ab1925875375eea5d7",
+                "selectedShards": [
+                  {
+                    "start": 0,
+                    "end": 3000,
+                    "file": "clues-0-3000.json",
+                    "bytes": 1578554,
+                    "sha256": "29a24c1a49abf3eaf1b7654d0492f16251cc496ca809d24417d245b759623094"
+                  },
+                  {
+                    "start": 3000,
+                    "end": 10000,
+                    "file": "clues-3000-10000.json",
+                    "bytes": 3689892,
+                    "sha256": "33cd53ef842f3833d78d74d6dfa023ee9bfd96279255a88cffb7fc33ee1c1617"
+                  },
+                  {
+                    "start": 10000,
+                    "end": 30000,
+                    "file": "clues-10000-30000.json",
+                    "bytes": 10552271,
+                    "sha256": "d39768964ea122defba0e932a511eba1590f195241e06aaee908d559b42689a0"
+                  }
+                ],
+                "auxiliaryAssets": [],
+                "embeddingRuntime": "transformers",
+                "taskPrefix": null,
+                "quantization": {
+                  "type": "symmetric-int8",
+                  "scale": 127
+                },
+                "centeringMethod": "30000-clue-corpus-mean"
+              },
+              "vocabularySize": 30000,
+              "cluePolicyVariants": [
+                "hybrid"
+              ],
+              "comparisonPolicy": "hybrid",
+              "clueScoring": {
+                "current": "current-v1",
+                "hybrid": "hybrid-v1"
+              },
+              "clueSelection": "tempo",
+              "clueRandomShortlistSize": null,
+              "multiClueTolerance": 5,
+              "clueRepeatPolicy": "never",
+              "missedTargetTiming": "late",
+              "resultsPerTargetSize": 6
+            },
+            "operative": {
+              "modelIndex": {
+                "id": "same",
+                "model": "Xenova/all-MiniLM-L6-v2",
+                "revision": null,
+                "provider": "local",
+                "dimensions": 384,
+                "directory": "public/data/model-lab/minilm-l6",
+                "manifestSha256": "f647de4eff2b36e82cca94ee234a47ddc4520379b202d7ab1925875375eea5d7",
+                "selectedShards": [
+                  {
+                    "start": 0,
+                    "end": 3000,
+                    "file": "clues-0-3000.json",
+                    "bytes": 1578554,
+                    "sha256": "29a24c1a49abf3eaf1b7654d0492f16251cc496ca809d24417d245b759623094"
+                  },
+                  {
+                    "start": 3000,
+                    "end": 10000,
+                    "file": "clues-3000-10000.json",
+                    "bytes": 3689892,
+                    "sha256": "33cd53ef842f3833d78d74d6dfa023ee9bfd96279255a88cffb7fc33ee1c1617"
+                  },
+                  {
+                    "start": 10000,
+                    "end": 30000,
+                    "file": "clues-10000-30000.json",
+                    "bytes": 10552271,
+                    "sha256": "d39768964ea122defba0e932a511eba1590f195241e06aaee908d559b42689a0"
+                  }
+                ],
+                "auxiliaryAssets": [],
+                "embeddingRuntime": "transformers",
+                "taskPrefix": null,
+                "quantization": {
+                  "type": "symmetric-int8",
+                  "scale": 127
+                },
+                "centeringMethod": "30000-clue-corpus-mean",
+                "resolvedModelId": "minilm-l6"
+              },
+              "aggression": "dynamic",
+              "additionalAggressionVariants": [
+                "dynamic"
+              ],
+              "conceptBridges": {
+                "playSetting": "guarded",
+                "requested": "concept",
+                "resolved": "direct",
+                "asset": null
+              },
+              "reranker": null,
+              "guessVariation": "none",
+              "guessVariationRange": {
+                "minimum": 0,
+                "maximum": 0
+              },
+              "extraGuessPolicy": "pass"
+            },
+            "scoring": {
+              "similarityCalibration": {
+                "scale": 1,
+                "offset": 0
+              }
+            },
+            "randomness": {
+              "deterministic": true,
+              "boardSeed": "board-index",
+              "decisionSeed": "game-seed, turn-number, and event-history-length",
+              "operativeVariationSeed": "decision-seed",
+              "clueSelectionRandomized": false
+            }
+          },
+          "configurationFingerprint": "d9eccd852f8541572e37e67e5e0b7201782748013d31fda426b98eb4d58d7a1e",
+          "configurationLabels": {
+            "modelIndex": "minilm-l6 30k",
+            "board": "en official",
+            "clue": "hybrid, tempo, tolerance 5, repeats never",
+            "operative": "same, dynamic, direct, variation none, extra pass",
+            "split": "smoke 20 boards at 0"
+          },
+          "configurationContract": "canonical-v1",
+          "evidence": {
+            "source": "Deterministic Play full-game simulation",
+            "unit": "board",
+            "sampleSize": 20,
+            "split": "smoke",
+            "splitRole": "tuning",
+            "boardOffset": 0,
+            "pairedBoards": true,
+            "humanRealismClaim": false
+          }
+        },
+        "comparisonFingerprint": "ee443c1409f2f53090b4d777384546712ce6dc178f1afff97dc5865eaedf93ed"
+      }
+    },
+    {
+      "id": "model-minilm-l3",
+      "setting": "Embedding model",
+      "alternative": "MiniLM-L3",
+      "screen": "human",
+      "phase": "smoke",
+      "boardCount": 20,
+      "verdict": "block",
+      "metricStatus": {
+        "improved": 0,
+        "regressed": 1,
+        "uncertain": 1,
+        "changed": 0,
+        "unchanged": 5
+      },
+      "gateStatus": {
+        "zeroStalls": "pass",
+        "assassinNonInferiority": "pass",
+        "wrongTeamNonInferiority": "pass",
+        "neutralNonInferiority": "pass",
+        "fallback": "pass",
+        "correctNonInferiority": "block",
+        "correctSuperiority": "block"
+      },
+      "humanScreen": {
+        "status": "baseline-favored",
+        "source": "scripts/generated/embedding-model-comparison.json",
+        "note": "The accepted centered BGE-small model has stronger aggregate human target recall and lower Cultural Codes avoid-word rate than the selectable MiniLM alternatives."
+      },
+      "assessment": {
+        "status": "default-locally-justified",
+        "note": "smoke evidence blocks or regresses the alternative."
+      },
+      "timing": {
+        "vectorCache": "miss",
+        "vectorMilliseconds": 6431,
+        "wallSeconds": 53.25,
+        "peakResidentBytes": 693616640
+      },
+      "artifacts": {
+        "candidate": {
+          "id": "model-minilm-l3",
+          "role": "candidate",
+          "path": ".cache/benchmark-audit/model-minilm-l3/smoke.json",
+          "sha256": "3209a11bc798069031959ab75486aa7a304996bb6737b5c09a0757d5d0a318c5",
+          "generatedAt": "2026-07-29T04:02:52.347Z",
+          "configuration": {
+            "schemaVersion": 1,
+            "evidence": {
+              "split": "smoke",
+              "splitRole": "tuning",
+              "boardOffset": 0,
+              "boardCount": 20,
+              "heldOutProtocol": null
+            },
+            "implementation": {
+              "files": [
+                {
+                  "file": "src/board-share.js",
+                  "sha256": "c5760a235e45c17296f801e8b15d2562ed64ef1b87d18d63f8bcd7e1f6f9aaf7"
+                },
+                {
+                  "file": "src/clue-index.js",
+                  "sha256": "296a0739d438a75dc40aabdfbdc50aed87a85cfd0dabd8a0c3734d562dd2fccc"
+                },
+                {
+                  "file": "src/embeddings.js",
+                  "sha256": "9a1ed10d867ccde86802fb645b2ef9667c422536b82fc6f3871b84a4cde5058f"
+                },
+                {
+                  "file": "src/model.js",
+                  "sha256": "184f556ef5e870af4731eb7f32070fe647712dfac9cd23fbbcc0ef1d707eb6a3"
+                },
+                {
+                  "file": "src/play/bots.js",
+                  "sha256": "832c6a9b89f7c8749973edd7a45e5d05bdcb1d8e69b83e2ed42b21ef28a56736"
+                },
+                {
+                  "file": "src/play/concept-ranking.js",
+                  "sha256": "2d065d9c75c61ad9aea69070312766977a27b41f354b975a041c5c40c42cb8c9"
+                },
+                {
+                  "file": "src/play/game-state.js",
+                  "sha256": "1b8879010672994e726e53b398c4497325abe23cce86445e056e2ee05af592b3"
+                },
+                {
+                  "file": "src/play/settings.js",
+                  "sha256": "fd7f6c92b324642a8c074e3992ef1a136dc788bc41adc849068c41c82ddda43d"
+                },
+                {
+                  "file": "src/word-data.js",
+                  "sha256": "05dd6b7f69008b429e025142a1ab493cfb8ccfdbb08ad29df66b0a8bb1b803a4"
+                }
+              ],
+              "contentSha256": "233e0fabc574c8ad101d62e7f0618da7cfb5c963920728939d24d99b3650e9a4"
+            },
+            "board": {
+              "language": "en",
+              "wordSet": "official",
+              "wordCount": 400,
+              "wordContentSha256": "b2bdf45505d9a23da8f127923c62a33be570d9fc1646400ad8038a18e78ab9a2",
+              "cardCount": 25,
+              "order": "random",
+              "wordReusePolicy": "fully-random",
+              "wordReuseHistoryBoards": 0,
+              "generationSeed": {
+                "deterministic": true,
+                "scheme": "Eight bytes: ASCII CODE followed by a big-endian 1-based board index.",
+                "firstBoardIndex": 0,
+                "lastBoardIndex": 19
+              }
+            },
+            "game": {
+              "simulationContractVersion": 1,
+              "startingSide": "blue",
+              "simulatedHumanSeat": {
+                "side": "blue",
+                "role": "spymaster"
+              },
+              "maxActionsPerGame": 100,
+              "forcedProgressAfterConsecutivePasses": 2,
+              "forcedProgressChoice": "highest-ranked-available-guess",
+              "fallbackClue": {
+                "enabled": true,
+                "number": 1,
+                "selection": "nearest-legal-indexed-clue-to-one-friendly-card"
+              }
+            },
+            "spymaster": {
+              "modelIndex": {
+                "id": "minilm-l3",
+                "model": "Xenova/paraphrase-MiniLM-L3-v2",
+                "revision": null,
+                "provider": "local",
+                "dimensions": 384,
+                "directory": "public/data/model-lab/minilm-l3",
+                "manifestSha256": "eff5fa35de0050ddc26c820c7ffd3a89b6be9b3dcdbce715cfa12b3bd272626a",
+                "selectedShards": [
+                  {
+                    "start": 0,
+                    "end": 3000,
+                    "file": "clues-0-3000.json",
+                    "bytes": 1578554,
+                    "sha256": "7b160c82c860f7eae008ec4054ac746290c8ddab534a8b69641ea4628c33c6f7"
+                  },
+                  {
+                    "start": 3000,
+                    "end": 10000,
+                    "file": "clues-3000-10000.json",
+                    "bytes": 3689892,
+                    "sha256": "dae4191be18b679b4dbd2b922baace97a60357566303d91d7a45424ee3aa33be"
+                  },
+                  {
+                    "start": 10000,
+                    "end": 30000,
+                    "file": "clues-10000-30000.json",
+                    "bytes": 10552271,
+                    "sha256": "ddc3bf88fe9ef5a7baa2ff3c8cbb2d42142871d5252ef291fd856ed2fd15412b"
+                  }
+                ],
+                "auxiliaryAssets": [],
+                "embeddingRuntime": "transformers",
+                "taskPrefix": null,
+                "quantization": {
+                  "type": "symmetric-int8",
+                  "scale": 127
+                },
+                "centeringMethod": "30000-clue-corpus-mean"
+              },
+              "vocabularySize": 30000,
+              "cluePolicyVariants": [
+                "hybrid"
+              ],
+              "comparisonPolicy": "hybrid",
+              "clueScoring": {
+                "current": "current-v1",
+                "hybrid": "hybrid-v1"
+              },
+              "clueSelection": "tempo",
+              "clueRandomShortlistSize": null,
+              "multiClueTolerance": 5,
+              "clueRepeatPolicy": "never",
+              "missedTargetTiming": "late",
+              "resultsPerTargetSize": 6
+            },
+            "operative": {
+              "modelIndex": {
+                "id": "same",
+                "model": "Xenova/paraphrase-MiniLM-L3-v2",
+                "revision": null,
+                "provider": "local",
+                "dimensions": 384,
+                "directory": "public/data/model-lab/minilm-l3",
+                "manifestSha256": "eff5fa35de0050ddc26c820c7ffd3a89b6be9b3dcdbce715cfa12b3bd272626a",
+                "selectedShards": [
+                  {
+                    "start": 0,
+                    "end": 3000,
+                    "file": "clues-0-3000.json",
+                    "bytes": 1578554,
+                    "sha256": "7b160c82c860f7eae008ec4054ac746290c8ddab534a8b69641ea4628c33c6f7"
+                  },
+                  {
+                    "start": 3000,
+                    "end": 10000,
+                    "file": "clues-3000-10000.json",
+                    "bytes": 3689892,
+                    "sha256": "dae4191be18b679b4dbd2b922baace97a60357566303d91d7a45424ee3aa33be"
+                  },
+                  {
+                    "start": 10000,
+                    "end": 30000,
+                    "file": "clues-10000-30000.json",
+                    "bytes": 10552271,
+                    "sha256": "ddc3bf88fe9ef5a7baa2ff3c8cbb2d42142871d5252ef291fd856ed2fd15412b"
+                  }
+                ],
+                "auxiliaryAssets": [],
+                "embeddingRuntime": "transformers",
+                "taskPrefix": null,
+                "quantization": {
+                  "type": "symmetric-int8",
+                  "scale": 127
+                },
+                "centeringMethod": "30000-clue-corpus-mean",
+                "resolvedModelId": "minilm-l3"
+              },
+              "aggression": "dynamic",
+              "additionalAggressionVariants": [
+                "dynamic"
+              ],
+              "conceptBridges": {
+                "playSetting": "guarded",
+                "requested": "concept",
+                "resolved": "direct",
+                "asset": null
+              },
+              "reranker": null,
+              "guessVariation": "none",
+              "guessVariationRange": {
+                "minimum": 0,
+                "maximum": 0
+              },
+              "extraGuessPolicy": "pass"
+            },
+            "scoring": {
+              "similarityCalibration": {
+                "scale": 1,
+                "offset": 0
+              }
+            },
+            "randomness": {
+              "deterministic": true,
+              "boardSeed": "board-index",
+              "decisionSeed": "game-seed, turn-number, and event-history-length",
+              "operativeVariationSeed": "decision-seed",
+              "clueSelectionRandomized": false
+            }
+          },
+          "configurationFingerprint": "7ad609678fa1e21d3da62e3016815ed1bdbc911fe8ab7fa8741533d684620411",
+          "configurationLabels": {
+            "modelIndex": "minilm-l3 30k",
+            "board": "en official",
+            "clue": "hybrid, tempo, tolerance 5, repeats never",
+            "operative": "same, dynamic, direct, variation none, extra pass",
+            "split": "smoke 20 boards at 0"
+          },
+          "configurationContract": "canonical-v1",
+          "evidence": {
+            "source": "Deterministic Play full-game simulation",
+            "unit": "board",
+            "sampleSize": 20,
+            "split": "smoke",
+            "splitRole": "tuning",
+            "boardOffset": 0,
+            "pairedBoards": true,
+            "humanRealismClaim": false
+          }
+        },
+        "comparisonFingerprint": "2a6cf899ab1372313e239f850164233dd2ba4048a268b49799890a813a080e2d"
+      }
+    },
+    {
+      "id": "vocabulary-3k",
+      "setting": "Clue vocabulary",
+      "alternative": "3,000",
+      "screen": "coverage",
+      "phase": "smoke",
+      "boardCount": 20,
+      "verdict": "block",
+      "metricStatus": {
+        "improved": 0,
+        "regressed": 1,
+        "uncertain": 1,
+        "changed": 1,
+        "unchanged": 4
+      },
+      "gateStatus": {
+        "zeroStalls": "pass",
+        "assassinNonInferiority": "pass",
+        "wrongTeamNonInferiority": "pass",
+        "neutralNonInferiority": "pass",
+        "fallback": "pass",
+        "correctNonInferiority": "block",
+        "correctSuperiority": "block"
+      },
+      "humanScreen": {
+        "status": "baseline-favored",
+        "source": "scripts/generated/candidate-coverage.json",
+        "observationCoverage": 0.621,
+        "baselineObservationCoverage": 0.9389,
+        "note": "Exact human-clue vocabulary coverage is a screening signal, not end-to-end ranking evidence."
+      },
+      "assessment": {
+        "status": "default-locally-justified",
+        "note": "smoke evidence blocks or regresses the alternative."
+      },
+      "timing": {
+        "vectorCache": "hit",
+        "vectorMilliseconds": 3.9,
+        "wallSeconds": 8.32,
+        "peakResidentBytes": 570900480
+      },
+      "artifacts": {
+        "candidate": {
+          "id": "vocabulary-3k",
+          "role": "candidate",
+          "path": ".cache/benchmark-audit/vocabulary-3k/smoke.json",
+          "sha256": "1f83f7614264fb41090dc0f2274ef76d556e787371ecfdbade651de663b3bd8f",
+          "generatedAt": "2026-07-29T04:02:07.475Z",
+          "configuration": {
+            "schemaVersion": 1,
+            "evidence": {
+              "split": "smoke",
+              "splitRole": "tuning",
+              "boardOffset": 0,
+              "boardCount": 20,
+              "heldOutProtocol": null
+            },
+            "implementation": {
+              "files": [
+                {
+                  "file": "src/board-share.js",
+                  "sha256": "c5760a235e45c17296f801e8b15d2562ed64ef1b87d18d63f8bcd7e1f6f9aaf7"
+                },
+                {
+                  "file": "src/clue-index.js",
+                  "sha256": "296a0739d438a75dc40aabdfbdc50aed87a85cfd0dabd8a0c3734d562dd2fccc"
+                },
+                {
+                  "file": "src/embeddings.js",
+                  "sha256": "9a1ed10d867ccde86802fb645b2ef9667c422536b82fc6f3871b84a4cde5058f"
+                },
+                {
+                  "file": "src/model.js",
+                  "sha256": "184f556ef5e870af4731eb7f32070fe647712dfac9cd23fbbcc0ef1d707eb6a3"
+                },
+                {
+                  "file": "src/play/bots.js",
+                  "sha256": "832c6a9b89f7c8749973edd7a45e5d05bdcb1d8e69b83e2ed42b21ef28a56736"
+                },
+                {
+                  "file": "src/play/concept-ranking.js",
+                  "sha256": "2d065d9c75c61ad9aea69070312766977a27b41f354b975a041c5c40c42cb8c9"
+                },
+                {
+                  "file": "src/play/game-state.js",
+                  "sha256": "1b8879010672994e726e53b398c4497325abe23cce86445e056e2ee05af592b3"
+                },
+                {
+                  "file": "src/play/settings.js",
+                  "sha256": "fd7f6c92b324642a8c074e3992ef1a136dc788bc41adc849068c41c82ddda43d"
+                },
+                {
+                  "file": "src/word-data.js",
+                  "sha256": "05dd6b7f69008b429e025142a1ab493cfb8ccfdbb08ad29df66b0a8bb1b803a4"
+                }
+              ],
+              "contentSha256": "233e0fabc574c8ad101d62e7f0618da7cfb5c963920728939d24d99b3650e9a4"
+            },
+            "board": {
+              "language": "en",
+              "wordSet": "official",
+              "wordCount": 400,
+              "wordContentSha256": "b2bdf45505d9a23da8f127923c62a33be570d9fc1646400ad8038a18e78ab9a2",
+              "cardCount": 25,
+              "order": "random",
+              "wordReusePolicy": "fully-random",
+              "wordReuseHistoryBoards": 0,
+              "generationSeed": {
+                "deterministic": true,
+                "scheme": "Eight bytes: ASCII CODE followed by a big-endian 1-based board index.",
+                "firstBoardIndex": 0,
+                "lastBoardIndex": 19
+              }
+            },
+            "game": {
+              "simulationContractVersion": 1,
+              "startingSide": "blue",
+              "simulatedHumanSeat": {
+                "side": "blue",
+                "role": "spymaster"
+              },
+              "maxActionsPerGame": 100,
+              "forcedProgressAfterConsecutivePasses": 2,
+              "forcedProgressChoice": "highest-ranked-available-guess",
+              "fallbackClue": {
+                "enabled": true,
+                "number": 1,
+                "selection": "nearest-legal-indexed-clue-to-one-friendly-card"
+              }
+            },
+            "spymaster": {
+              "modelIndex": {
+                "id": "bge-small",
+                "model": "Xenova/bge-small-en-v1.5",
+                "revision": null,
+                "provider": "local",
+                "dimensions": 384,
+                "directory": "public/data/model-lab/bge-small",
+                "manifestSha256": "df9997658cb028aac476db5291b03d2fb88a7923304036c651da7206968da8fb",
+                "selectedShards": [
+                  {
+                    "start": 0,
+                    "end": 3000,
+                    "file": "clues-0-3000.json",
+                    "bytes": 1578554,
+                    "sha256": "e1b5ada2077983a8a544e1542cfda072639904896c958f7223619ac09fae5fe9"
+                  }
+                ],
+                "auxiliaryAssets": [],
+                "embeddingRuntime": "transformers",
+                "taskPrefix": null,
+                "quantization": {
+                  "type": "symmetric-int8",
+                  "scale": 127
+                },
+                "centeringMethod": "30000-clue-corpus-mean"
+              },
+              "vocabularySize": 3000,
+              "cluePolicyVariants": [
+                "hybrid"
+              ],
+              "comparisonPolicy": "hybrid",
+              "clueScoring": {
+                "current": "current-v1",
+                "hybrid": "hybrid-v1"
+              },
+              "clueSelection": "tempo",
+              "clueRandomShortlistSize": null,
+              "multiClueTolerance": 5,
+              "clueRepeatPolicy": "never",
+              "missedTargetTiming": "late",
+              "resultsPerTargetSize": 6
+            },
+            "operative": {
+              "modelIndex": {
+                "id": "same",
+                "model": "Xenova/bge-small-en-v1.5",
+                "revision": null,
+                "provider": "local",
+                "dimensions": 384,
+                "directory": "public/data/model-lab/bge-small",
+                "manifestSha256": "df9997658cb028aac476db5291b03d2fb88a7923304036c651da7206968da8fb",
+                "selectedShards": [
+                  {
+                    "start": 0,
+                    "end": 3000,
+                    "file": "clues-0-3000.json",
+                    "bytes": 1578554,
+                    "sha256": "e1b5ada2077983a8a544e1542cfda072639904896c958f7223619ac09fae5fe9"
+                  }
+                ],
+                "auxiliaryAssets": [],
+                "embeddingRuntime": "transformers",
+                "taskPrefix": null,
+                "quantization": {
+                  "type": "symmetric-int8",
+                  "scale": 127
+                },
+                "centeringMethod": "30000-clue-corpus-mean",
+                "resolvedModelId": "bge-small"
+              },
+              "aggression": "dynamic",
+              "additionalAggressionVariants": [
+                "dynamic"
+              ],
+              "conceptBridges": {
+                "playSetting": "guarded",
+                "requested": "concept",
+                "resolved": "guarded-wordnet",
+                "asset": {
+                  "directory": "public/data/concepts",
+                  "version": 2,
+                  "source": {
+                    "name": "Princeton WordNet 3.0",
+                    "archiveSha256": "cbda5ea6eef7f36a97a43d4a75f85e07fccbb4f23657d27b4ccbc93e2646ab59",
+                    "license": "WordNet 3.0"
+                  },
+                  "shardStrategy": {
+                    "algorithm": "fnv1a-32",
+                    "buckets": 256
+                  },
+                  "fileCount": 258,
+                  "contentSha256": "d23c4a06d0dfb491b512349659e2a95bf05b9b8cb15a8a52bc648fbb45c77c01"
+                }
+              },
+              "reranker": null,
+              "guessVariation": "none",
+              "guessVariationRange": {
+                "minimum": 0,
+                "maximum": 0
+              },
+              "extraGuessPolicy": "pass"
+            },
+            "scoring": {
+              "similarityCalibration": {
+                "scale": 1,
+                "offset": 0
+              }
+            },
+            "randomness": {
+              "deterministic": true,
+              "boardSeed": "board-index",
+              "decisionSeed": "game-seed, turn-number, and event-history-length",
+              "operativeVariationSeed": "decision-seed",
+              "clueSelectionRandomized": false
+            }
+          },
+          "configurationFingerprint": "a9a885f2516a14a126f5c344360e2326ea66900eb39638c7dfe48520c030358d",
+          "configurationLabels": {
+            "modelIndex": "bge-small 3k",
+            "board": "en official",
+            "clue": "hybrid, tempo, tolerance 5, repeats never",
+            "operative": "same, dynamic, concept bridges, variation none, extra pass",
+            "split": "smoke 20 boards at 0"
+          },
+          "configurationContract": "canonical-v1",
+          "evidence": {
+            "source": "Deterministic Play full-game simulation",
+            "unit": "board",
+            "sampleSize": 20,
+            "split": "smoke",
+            "splitRole": "tuning",
+            "boardOffset": 0,
+            "pairedBoards": true,
+            "humanRealismClaim": false
+          }
+        },
+        "comparisonFingerprint": "6b37d406c00829be2bdc749296b3717cedb64f291a409096770477b66e6ef649"
+      }
+    },
+    {
+      "id": "vocabulary-10k",
+      "setting": "Clue vocabulary",
+      "alternative": "10,000",
+      "screen": "coverage",
+      "phase": "smoke",
+      "boardCount": 20,
+      "verdict": "block",
+      "metricStatus": {
+        "improved": 0,
+        "regressed": 1,
+        "uncertain": 1,
+        "changed": 0,
+        "unchanged": 5
+      },
+      "gateStatus": {
+        "zeroStalls": "pass",
+        "assassinNonInferiority": "pass",
+        "wrongTeamNonInferiority": "pass",
+        "neutralNonInferiority": "pass",
+        "fallback": "pass",
+        "correctNonInferiority": "block",
+        "correctSuperiority": "block"
+      },
+      "humanScreen": {
+        "status": "baseline-favored",
+        "source": "scripts/generated/candidate-coverage.json",
+        "observationCoverage": 0.8547,
+        "baselineObservationCoverage": 0.9389,
+        "note": "Exact human-clue vocabulary coverage is a screening signal, not end-to-end ranking evidence."
+      },
+      "assessment": {
+        "status": "default-locally-justified",
+        "note": "smoke evidence blocks or regresses the alternative."
+      },
+      "timing": {
+        "vectorCache": "hit",
+        "vectorMilliseconds": 3.8,
+        "wallSeconds": 18.77,
+        "peakResidentBytes": 589414400
+      },
+      "artifacts": {
+        "candidate": {
+          "id": "vocabulary-10k",
+          "role": "candidate",
+          "path": ".cache/benchmark-audit/vocabulary-10k/smoke.json",
+          "sha256": "05ed9243e9fa349ddaada61a1059083458d85a4e9bf9502e8bb792479836d7c1",
+          "generatedAt": "2026-07-29T04:02:17.908Z",
+          "configuration": {
+            "schemaVersion": 1,
+            "evidence": {
+              "split": "smoke",
+              "splitRole": "tuning",
+              "boardOffset": 0,
+              "boardCount": 20,
+              "heldOutProtocol": null
+            },
+            "implementation": {
+              "files": [
+                {
+                  "file": "src/board-share.js",
+                  "sha256": "c5760a235e45c17296f801e8b15d2562ed64ef1b87d18d63f8bcd7e1f6f9aaf7"
+                },
+                {
+                  "file": "src/clue-index.js",
+                  "sha256": "296a0739d438a75dc40aabdfbdc50aed87a85cfd0dabd8a0c3734d562dd2fccc"
+                },
+                {
+                  "file": "src/embeddings.js",
+                  "sha256": "9a1ed10d867ccde86802fb645b2ef9667c422536b82fc6f3871b84a4cde5058f"
+                },
+                {
+                  "file": "src/model.js",
+                  "sha256": "184f556ef5e870af4731eb7f32070fe647712dfac9cd23fbbcc0ef1d707eb6a3"
+                },
+                {
+                  "file": "src/play/bots.js",
+                  "sha256": "832c6a9b89f7c8749973edd7a45e5d05bdcb1d8e69b83e2ed42b21ef28a56736"
+                },
+                {
+                  "file": "src/play/concept-ranking.js",
+                  "sha256": "2d065d9c75c61ad9aea69070312766977a27b41f354b975a041c5c40c42cb8c9"
+                },
+                {
+                  "file": "src/play/game-state.js",
+                  "sha256": "1b8879010672994e726e53b398c4497325abe23cce86445e056e2ee05af592b3"
+                },
+                {
+                  "file": "src/play/settings.js",
+                  "sha256": "fd7f6c92b324642a8c074e3992ef1a136dc788bc41adc849068c41c82ddda43d"
+                },
+                {
+                  "file": "src/word-data.js",
+                  "sha256": "05dd6b7f69008b429e025142a1ab493cfb8ccfdbb08ad29df66b0a8bb1b803a4"
+                }
+              ],
+              "contentSha256": "233e0fabc574c8ad101d62e7f0618da7cfb5c963920728939d24d99b3650e9a4"
+            },
+            "board": {
+              "language": "en",
+              "wordSet": "official",
+              "wordCount": 400,
+              "wordContentSha256": "b2bdf45505d9a23da8f127923c62a33be570d9fc1646400ad8038a18e78ab9a2",
+              "cardCount": 25,
+              "order": "random",
+              "wordReusePolicy": "fully-random",
+              "wordReuseHistoryBoards": 0,
+              "generationSeed": {
+                "deterministic": true,
+                "scheme": "Eight bytes: ASCII CODE followed by a big-endian 1-based board index.",
+                "firstBoardIndex": 0,
+                "lastBoardIndex": 19
+              }
+            },
+            "game": {
+              "simulationContractVersion": 1,
+              "startingSide": "blue",
+              "simulatedHumanSeat": {
+                "side": "blue",
+                "role": "spymaster"
+              },
+              "maxActionsPerGame": 100,
+              "forcedProgressAfterConsecutivePasses": 2,
+              "forcedProgressChoice": "highest-ranked-available-guess",
+              "fallbackClue": {
+                "enabled": true,
+                "number": 1,
+                "selection": "nearest-legal-indexed-clue-to-one-friendly-card"
+              }
+            },
+            "spymaster": {
+              "modelIndex": {
+                "id": "bge-small",
+                "model": "Xenova/bge-small-en-v1.5",
+                "revision": null,
+                "provider": "local",
+                "dimensions": 384,
+                "directory": "public/data/model-lab/bge-small",
+                "manifestSha256": "df9997658cb028aac476db5291b03d2fb88a7923304036c651da7206968da8fb",
+                "selectedShards": [
+                  {
+                    "start": 0,
+                    "end": 3000,
+                    "file": "clues-0-3000.json",
+                    "bytes": 1578554,
+                    "sha256": "e1b5ada2077983a8a544e1542cfda072639904896c958f7223619ac09fae5fe9"
+                  },
+                  {
+                    "start": 3000,
+                    "end": 10000,
+                    "file": "clues-3000-10000.json",
+                    "bytes": 3689892,
+                    "sha256": "bcbb4440dbd82efcc22093348f4238b5998a783e0c4de8c35a4bacf19d497766"
+                  }
+                ],
+                "auxiliaryAssets": [],
+                "embeddingRuntime": "transformers",
+                "taskPrefix": null,
+                "quantization": {
+                  "type": "symmetric-int8",
+                  "scale": 127
+                },
+                "centeringMethod": "30000-clue-corpus-mean"
+              },
+              "vocabularySize": 10000,
+              "cluePolicyVariants": [
+                "hybrid"
+              ],
+              "comparisonPolicy": "hybrid",
+              "clueScoring": {
+                "current": "current-v1",
+                "hybrid": "hybrid-v1"
+              },
+              "clueSelection": "tempo",
+              "clueRandomShortlistSize": null,
+              "multiClueTolerance": 5,
+              "clueRepeatPolicy": "never",
+              "missedTargetTiming": "late",
+              "resultsPerTargetSize": 6
+            },
+            "operative": {
+              "modelIndex": {
+                "id": "same",
+                "model": "Xenova/bge-small-en-v1.5",
+                "revision": null,
+                "provider": "local",
+                "dimensions": 384,
+                "directory": "public/data/model-lab/bge-small",
+                "manifestSha256": "df9997658cb028aac476db5291b03d2fb88a7923304036c651da7206968da8fb",
+                "selectedShards": [
+                  {
+                    "start": 0,
+                    "end": 3000,
+                    "file": "clues-0-3000.json",
+                    "bytes": 1578554,
+                    "sha256": "e1b5ada2077983a8a544e1542cfda072639904896c958f7223619ac09fae5fe9"
+                  },
+                  {
+                    "start": 3000,
+                    "end": 10000,
+                    "file": "clues-3000-10000.json",
+                    "bytes": 3689892,
+                    "sha256": "bcbb4440dbd82efcc22093348f4238b5998a783e0c4de8c35a4bacf19d497766"
+                  }
+                ],
+                "auxiliaryAssets": [],
+                "embeddingRuntime": "transformers",
+                "taskPrefix": null,
+                "quantization": {
+                  "type": "symmetric-int8",
+                  "scale": 127
+                },
+                "centeringMethod": "30000-clue-corpus-mean",
+                "resolvedModelId": "bge-small"
+              },
+              "aggression": "dynamic",
+              "additionalAggressionVariants": [
+                "dynamic"
+              ],
+              "conceptBridges": {
+                "playSetting": "guarded",
+                "requested": "concept",
+                "resolved": "guarded-wordnet",
+                "asset": {
+                  "directory": "public/data/concepts",
+                  "version": 2,
+                  "source": {
+                    "name": "Princeton WordNet 3.0",
+                    "archiveSha256": "cbda5ea6eef7f36a97a43d4a75f85e07fccbb4f23657d27b4ccbc93e2646ab59",
+                    "license": "WordNet 3.0"
+                  },
+                  "shardStrategy": {
+                    "algorithm": "fnv1a-32",
+                    "buckets": 256
+                  },
+                  "fileCount": 258,
+                  "contentSha256": "d23c4a06d0dfb491b512349659e2a95bf05b9b8cb15a8a52bc648fbb45c77c01"
+                }
+              },
+              "reranker": null,
+              "guessVariation": "none",
+              "guessVariationRange": {
+                "minimum": 0,
+                "maximum": 0
+              },
+              "extraGuessPolicy": "pass"
+            },
+            "scoring": {
+              "similarityCalibration": {
+                "scale": 1,
+                "offset": 0
+              }
+            },
+            "randomness": {
+              "deterministic": true,
+              "boardSeed": "board-index",
+              "decisionSeed": "game-seed, turn-number, and event-history-length",
+              "operativeVariationSeed": "decision-seed",
+              "clueSelectionRandomized": false
+            }
+          },
+          "configurationFingerprint": "3622bd09790430d75f75c3415fff6be07a4b3b66f395bdcce0b4359013f6f680",
+          "configurationLabels": {
+            "modelIndex": "bge-small 10k",
+            "board": "en official",
+            "clue": "hybrid, tempo, tolerance 5, repeats never",
+            "operative": "same, dynamic, concept bridges, variation none, extra pass",
+            "split": "smoke 20 boards at 0"
+          },
+          "configurationContract": "canonical-v1",
+          "evidence": {
+            "source": "Deterministic Play full-game simulation",
+            "unit": "board",
+            "sampleSize": 20,
+            "split": "smoke",
+            "splitRole": "tuning",
+            "boardOffset": 0,
+            "pairedBoards": true,
+            "humanRealismClaim": false
+          }
+        },
+        "comparisonFingerprint": "4a90447c520dc70b31615b46585c47ba908490a03f302d4a0d418077cf25e5c3"
+      }
+    },
+    {
+      "id": "vocabulary-100k",
+      "setting": "Clue vocabulary",
+      "alternative": "100,000",
+      "screen": "coverage",
+      "phase": "development",
+      "boardCount": 128,
+      "verdict": "needs-more-data",
+      "metricStatus": {
+        "improved": 1,
+        "regressed": 0,
+        "uncertain": 0,
+        "changed": 1,
+        "unchanged": 5
+      },
+      "gateStatus": {
+        "zeroStalls": "pass",
+        "assassinNonInferiority": "pass",
+        "wrongTeamNonInferiority": "pass",
+        "neutralNonInferiority": "pass",
+        "fallback": "pass",
+        "correctNonInferiority": "pass",
+        "correctSuperiority": "pass"
+      },
+      "humanScreen": {
+        "status": "alternative-favored",
+        "source": "scripts/generated/candidate-coverage.json",
+        "observationCoverage": 0.9627,
+        "baselineObservationCoverage": 0.9389,
+        "note": "Exact human-clue vocabulary coverage is a screening signal, not end-to-end ranking evidence."
+      },
+      "assessment": {
+        "status": "alternative-promising",
+        "note": "The alternative improves at least one paired metric without an established regression, but remains tuning evidence."
+      },
+      "timing": {
+        "vectorCache": "hit",
+        "vectorMilliseconds": 3.4,
+        "wallSeconds": 822.74,
+        "peakResidentBytes": 1344946176
+      },
+      "artifacts": {
+        "candidate": {
+          "id": "vocabulary-100k",
+          "role": "candidate",
+          "path": ".cache/benchmark-audit/vocabulary-100k/development.json",
+          "sha256": "0395b31676c90ebbe7652e3b4c08c1ac20e6298e8236f645883e4333bbe26541",
+          "generatedAt": "2026-07-29T04:28:29.573Z",
+          "configuration": {
+            "schemaVersion": 1,
+            "evidence": {
+              "split": "development",
+              "splitRole": "tuning",
+              "boardOffset": 120,
+              "boardCount": 128,
+              "heldOutProtocol": null
+            },
+            "implementation": {
+              "files": [
+                {
+                  "file": "src/board-share.js",
+                  "sha256": "c5760a235e45c17296f801e8b15d2562ed64ef1b87d18d63f8bcd7e1f6f9aaf7"
+                },
+                {
+                  "file": "src/clue-index.js",
+                  "sha256": "296a0739d438a75dc40aabdfbdc50aed87a85cfd0dabd8a0c3734d562dd2fccc"
+                },
+                {
+                  "file": "src/embeddings.js",
+                  "sha256": "9a1ed10d867ccde86802fb645b2ef9667c422536b82fc6f3871b84a4cde5058f"
+                },
+                {
+                  "file": "src/model.js",
+                  "sha256": "184f556ef5e870af4731eb7f32070fe647712dfac9cd23fbbcc0ef1d707eb6a3"
+                },
+                {
+                  "file": "src/play/bots.js",
+                  "sha256": "832c6a9b89f7c8749973edd7a45e5d05bdcb1d8e69b83e2ed42b21ef28a56736"
+                },
+                {
+                  "file": "src/play/concept-ranking.js",
+                  "sha256": "2d065d9c75c61ad9aea69070312766977a27b41f354b975a041c5c40c42cb8c9"
+                },
+                {
+                  "file": "src/play/game-state.js",
+                  "sha256": "1b8879010672994e726e53b398c4497325abe23cce86445e056e2ee05af592b3"
+                },
+                {
+                  "file": "src/play/settings.js",
+                  "sha256": "fd7f6c92b324642a8c074e3992ef1a136dc788bc41adc849068c41c82ddda43d"
+                },
+                {
+                  "file": "src/word-data.js",
+                  "sha256": "05dd6b7f69008b429e025142a1ab493cfb8ccfdbb08ad29df66b0a8bb1b803a4"
+                }
+              ],
+              "contentSha256": "233e0fabc574c8ad101d62e7f0618da7cfb5c963920728939d24d99b3650e9a4"
+            },
+            "board": {
+              "language": "en",
+              "wordSet": "official",
+              "wordCount": 400,
+              "wordContentSha256": "b2bdf45505d9a23da8f127923c62a33be570d9fc1646400ad8038a18e78ab9a2",
+              "cardCount": 25,
+              "order": "random",
+              "wordReusePolicy": "fully-random",
+              "wordReuseHistoryBoards": 0,
+              "generationSeed": {
+                "deterministic": true,
+                "scheme": "Eight bytes: ASCII CODE followed by a big-endian 1-based board index.",
+                "firstBoardIndex": 120,
+                "lastBoardIndex": 247
+              }
+            },
+            "game": {
+              "simulationContractVersion": 1,
+              "startingSide": "blue",
+              "simulatedHumanSeat": {
+                "side": "blue",
+                "role": "spymaster"
+              },
+              "maxActionsPerGame": 100,
+              "forcedProgressAfterConsecutivePasses": 2,
+              "forcedProgressChoice": "highest-ranked-available-guess",
+              "fallbackClue": {
+                "enabled": true,
+                "number": 1,
+                "selection": "nearest-legal-indexed-clue-to-one-friendly-card"
+              }
+            },
+            "spymaster": {
+              "modelIndex": {
+                "id": "bge-small",
+                "model": "Xenova/bge-small-en-v1.5",
+                "revision": null,
+                "provider": "local",
+                "dimensions": 384,
+                "directory": "public/data/model-lab/bge-small",
+                "manifestSha256": "df9997658cb028aac476db5291b03d2fb88a7923304036c651da7206968da8fb",
+                "selectedShards": [
+                  {
+                    "start": 0,
+                    "end": 3000,
+                    "file": "clues-0-3000.json",
+                    "bytes": 1578554,
+                    "sha256": "e1b5ada2077983a8a544e1542cfda072639904896c958f7223619ac09fae5fe9"
+                  },
+                  {
+                    "start": 3000,
+                    "end": 10000,
+                    "file": "clues-3000-10000.json",
+                    "bytes": 3689892,
+                    "sha256": "bcbb4440dbd82efcc22093348f4238b5998a783e0c4de8c35a4bacf19d497766"
+                  },
+                  {
+                    "start": 10000,
+                    "end": 30000,
+                    "file": "clues-10000-30000.json",
+                    "bytes": 10552271,
+                    "sha256": "d10f3a629c61b33a0524b6d866125220c51d75ca5c9af983226cff4680767d82"
+                  },
+                  {
+                    "start": 30000,
+                    "end": 100000,
+                    "file": "clues-30000-100000.json",
+                    "bytes": 36970872,
+                    "sha256": "db5e94c2469c512500a742bd899893005f6044d692d66d9ca6c0f44af44e9beb"
+                  }
+                ],
+                "auxiliaryAssets": [],
+                "embeddingRuntime": "transformers",
+                "taskPrefix": null,
+                "quantization": {
+                  "type": "symmetric-int8",
+                  "scale": 127
+                },
+                "centeringMethod": "30000-clue-corpus-mean"
+              },
+              "vocabularySize": 100000,
+              "cluePolicyVariants": [
+                "hybrid"
+              ],
+              "comparisonPolicy": "hybrid",
+              "clueScoring": {
+                "current": "current-v1",
+                "hybrid": "hybrid-v1"
+              },
+              "clueSelection": "tempo",
+              "clueRandomShortlistSize": null,
+              "multiClueTolerance": 5,
+              "clueRepeatPolicy": "never",
+              "missedTargetTiming": "late",
+              "resultsPerTargetSize": 6
+            },
+            "operative": {
+              "modelIndex": {
+                "id": "same",
+                "model": "Xenova/bge-small-en-v1.5",
+                "revision": null,
+                "provider": "local",
+                "dimensions": 384,
+                "directory": "public/data/model-lab/bge-small",
+                "manifestSha256": "df9997658cb028aac476db5291b03d2fb88a7923304036c651da7206968da8fb",
+                "selectedShards": [
+                  {
+                    "start": 0,
+                    "end": 3000,
+                    "file": "clues-0-3000.json",
+                    "bytes": 1578554,
+                    "sha256": "e1b5ada2077983a8a544e1542cfda072639904896c958f7223619ac09fae5fe9"
+                  },
+                  {
+                    "start": 3000,
+                    "end": 10000,
+                    "file": "clues-3000-10000.json",
+                    "bytes": 3689892,
+                    "sha256": "bcbb4440dbd82efcc22093348f4238b5998a783e0c4de8c35a4bacf19d497766"
+                  },
+                  {
+                    "start": 10000,
+                    "end": 30000,
+                    "file": "clues-10000-30000.json",
+                    "bytes": 10552271,
+                    "sha256": "d10f3a629c61b33a0524b6d866125220c51d75ca5c9af983226cff4680767d82"
+                  },
+                  {
+                    "start": 30000,
+                    "end": 100000,
+                    "file": "clues-30000-100000.json",
+                    "bytes": 36970872,
+                    "sha256": "db5e94c2469c512500a742bd899893005f6044d692d66d9ca6c0f44af44e9beb"
+                  }
+                ],
+                "auxiliaryAssets": [],
+                "embeddingRuntime": "transformers",
+                "taskPrefix": null,
+                "quantization": {
+                  "type": "symmetric-int8",
+                  "scale": 127
+                },
+                "centeringMethod": "30000-clue-corpus-mean",
+                "resolvedModelId": "bge-small"
+              },
+              "aggression": "dynamic",
+              "additionalAggressionVariants": [
+                "dynamic"
+              ],
+              "conceptBridges": {
+                "playSetting": "guarded",
+                "requested": "concept",
+                "resolved": "guarded-wordnet",
+                "asset": {
+                  "directory": "public/data/concepts",
+                  "version": 2,
+                  "source": {
+                    "name": "Princeton WordNet 3.0",
+                    "archiveSha256": "cbda5ea6eef7f36a97a43d4a75f85e07fccbb4f23657d27b4ccbc93e2646ab59",
+                    "license": "WordNet 3.0"
+                  },
+                  "shardStrategy": {
+                    "algorithm": "fnv1a-32",
+                    "buckets": 256
+                  },
+                  "fileCount": 258,
+                  "contentSha256": "d23c4a06d0dfb491b512349659e2a95bf05b9b8cb15a8a52bc648fbb45c77c01"
+                }
+              },
+              "reranker": null,
+              "guessVariation": "none",
+              "guessVariationRange": {
+                "minimum": 0,
+                "maximum": 0
+              },
+              "extraGuessPolicy": "pass"
+            },
+            "scoring": {
+              "similarityCalibration": {
+                "scale": 1,
+                "offset": 0
+              }
+            },
+            "randomness": {
+              "deterministic": true,
+              "boardSeed": "board-index",
+              "decisionSeed": "game-seed, turn-number, and event-history-length",
+              "operativeVariationSeed": "decision-seed",
+              "clueSelectionRandomized": false
+            }
+          },
+          "configurationFingerprint": "2858c652f4b1b7eea921bde2d2b26a83f0121a1ecf2194e601053e801734a1c4",
+          "configurationLabels": {
+            "modelIndex": "bge-small 100k",
+            "board": "en official",
+            "clue": "hybrid, tempo, tolerance 5, repeats never",
+            "operative": "same, dynamic, concept bridges, variation none, extra pass",
+            "split": "development 128 boards at 120"
+          },
+          "configurationContract": "canonical-v1",
+          "evidence": {
+            "source": "Deterministic Play full-game simulation",
+            "unit": "board",
+            "sampleSize": 128,
+            "split": "development",
+            "splitRole": "tuning",
+            "boardOffset": 120,
+            "pairedBoards": true,
+            "humanRealismClaim": false
+          }
+        },
+        "comparisonFingerprint": "577cf9f0fb11f7b94ec0824881f442bdb09b4cacf07933c19eae621f09c21829"
+      }
+    },
+    {
+      "id": "clue-policy-current",
+      "setting": "Clue scoring",
+      "alternative": "Conservative",
+      "screen": "none",
+      "phase": "smoke",
+      "boardCount": 20,
+      "verdict": "block",
+      "metricStatus": {
+        "improved": 0,
+        "regressed": 1,
+        "uncertain": 0,
+        "changed": 1,
+        "unchanged": 5
+      },
+      "gateStatus": {
+        "zeroStalls": "pass",
+        "assassinNonInferiority": "pass",
+        "wrongTeamNonInferiority": "pass",
+        "neutralNonInferiority": "pass",
+        "fallback": "pass",
+        "correctNonInferiority": "block",
+        "correctSuperiority": "block"
+      },
+      "humanScreen": {
+        "status": "not-applicable",
+        "source": null,
+        "note": "No compatible source-separated human or gold artifact isolates this single Play behavior setting."
+      },
+      "assessment": {
+        "status": "default-locally-justified",
+        "note": "smoke evidence blocks or regresses the alternative."
+      },
+      "timing": {
+        "vectorCache": "hit",
+        "vectorMilliseconds": 4.7,
+        "wallSeconds": 70.2,
+        "peakResidentBytes": 812908544
+      },
+      "artifacts": {
+        "candidate": {
+          "id": "clue-policy-current",
+          "role": "candidate",
+          "path": ".cache/benchmark-audit/clue-policy-current/smoke.json",
+          "sha256": "e2ba215ceae5a9961a9cb2a75e14e3d2f5d85aec3898a72f9b045a1aa59cd41f",
+          "generatedAt": "2026-07-29T04:05:38.396Z",
+          "configuration": {
+            "schemaVersion": 1,
+            "evidence": {
+              "split": "smoke",
+              "splitRole": "tuning",
+              "boardOffset": 0,
+              "boardCount": 20,
+              "heldOutProtocol": null
+            },
+            "implementation": {
+              "files": [
+                {
+                  "file": "src/board-share.js",
+                  "sha256": "c5760a235e45c17296f801e8b15d2562ed64ef1b87d18d63f8bcd7e1f6f9aaf7"
+                },
+                {
+                  "file": "src/clue-index.js",
+                  "sha256": "296a0739d438a75dc40aabdfbdc50aed87a85cfd0dabd8a0c3734d562dd2fccc"
+                },
+                {
+                  "file": "src/embeddings.js",
+                  "sha256": "9a1ed10d867ccde86802fb645b2ef9667c422536b82fc6f3871b84a4cde5058f"
+                },
+                {
+                  "file": "src/model.js",
+                  "sha256": "184f556ef5e870af4731eb7f32070fe647712dfac9cd23fbbcc0ef1d707eb6a3"
+                },
+                {
+                  "file": "src/play/bots.js",
+                  "sha256": "832c6a9b89f7c8749973edd7a45e5d05bdcb1d8e69b83e2ed42b21ef28a56736"
+                },
+                {
+                  "file": "src/play/concept-ranking.js",
+                  "sha256": "2d065d9c75c61ad9aea69070312766977a27b41f354b975a041c5c40c42cb8c9"
+                },
+                {
+                  "file": "src/play/game-state.js",
+                  "sha256": "1b8879010672994e726e53b398c4497325abe23cce86445e056e2ee05af592b3"
+                },
+                {
+                  "file": "src/play/settings.js",
+                  "sha256": "fd7f6c92b324642a8c074e3992ef1a136dc788bc41adc849068c41c82ddda43d"
+                },
+                {
+                  "file": "src/word-data.js",
+                  "sha256": "05dd6b7f69008b429e025142a1ab493cfb8ccfdbb08ad29df66b0a8bb1b803a4"
+                }
+              ],
+              "contentSha256": "233e0fabc574c8ad101d62e7f0618da7cfb5c963920728939d24d99b3650e9a4"
+            },
+            "board": {
+              "language": "en",
+              "wordSet": "official",
+              "wordCount": 400,
+              "wordContentSha256": "b2bdf45505d9a23da8f127923c62a33be570d9fc1646400ad8038a18e78ab9a2",
+              "cardCount": 25,
+              "order": "random",
+              "wordReusePolicy": "fully-random",
+              "wordReuseHistoryBoards": 0,
+              "generationSeed": {
+                "deterministic": true,
+                "scheme": "Eight bytes: ASCII CODE followed by a big-endian 1-based board index.",
+                "firstBoardIndex": 0,
+                "lastBoardIndex": 19
+              }
+            },
+            "game": {
+              "simulationContractVersion": 1,
+              "startingSide": "blue",
+              "simulatedHumanSeat": {
+                "side": "blue",
+                "role": "spymaster"
+              },
+              "maxActionsPerGame": 100,
+              "forcedProgressAfterConsecutivePasses": 2,
+              "forcedProgressChoice": "highest-ranked-available-guess",
+              "fallbackClue": {
+                "enabled": true,
+                "number": 1,
+                "selection": "nearest-legal-indexed-clue-to-one-friendly-card"
+              }
+            },
+            "spymaster": {
+              "modelIndex": {
+                "id": "bge-small",
+                "model": "Xenova/bge-small-en-v1.5",
+                "revision": null,
+                "provider": "local",
+                "dimensions": 384,
+                "directory": "public/data/model-lab/bge-small",
+                "manifestSha256": "df9997658cb028aac476db5291b03d2fb88a7923304036c651da7206968da8fb",
+                "selectedShards": [
+                  {
+                    "start": 0,
+                    "end": 3000,
+                    "file": "clues-0-3000.json",
+                    "bytes": 1578554,
+                    "sha256": "e1b5ada2077983a8a544e1542cfda072639904896c958f7223619ac09fae5fe9"
+                  },
+                  {
+                    "start": 3000,
+                    "end": 10000,
+                    "file": "clues-3000-10000.json",
+                    "bytes": 3689892,
+                    "sha256": "bcbb4440dbd82efcc22093348f4238b5998a783e0c4de8c35a4bacf19d497766"
+                  },
+                  {
+                    "start": 10000,
+                    "end": 30000,
+                    "file": "clues-10000-30000.json",
+                    "bytes": 10552271,
+                    "sha256": "d10f3a629c61b33a0524b6d866125220c51d75ca5c9af983226cff4680767d82"
+                  }
+                ],
+                "auxiliaryAssets": [],
+                "embeddingRuntime": "transformers",
+                "taskPrefix": null,
+                "quantization": {
+                  "type": "symmetric-int8",
+                  "scale": 127
+                },
+                "centeringMethod": "30000-clue-corpus-mean"
+              },
+              "vocabularySize": 30000,
+              "cluePolicyVariants": [
+                "current"
+              ],
+              "comparisonPolicy": "hybrid",
+              "clueScoring": {
+                "current": "current-v1",
+                "hybrid": "hybrid-v1"
+              },
+              "clueSelection": "tempo",
+              "clueRandomShortlistSize": null,
+              "multiClueTolerance": 5,
+              "clueRepeatPolicy": "never",
+              "missedTargetTiming": "late",
+              "resultsPerTargetSize": 6
+            },
+            "operative": {
+              "modelIndex": {
+                "id": "same",
+                "model": "Xenova/bge-small-en-v1.5",
+                "revision": null,
+                "provider": "local",
+                "dimensions": 384,
+                "directory": "public/data/model-lab/bge-small",
+                "manifestSha256": "df9997658cb028aac476db5291b03d2fb88a7923304036c651da7206968da8fb",
+                "selectedShards": [
+                  {
+                    "start": 0,
+                    "end": 3000,
+                    "file": "clues-0-3000.json",
+                    "bytes": 1578554,
+                    "sha256": "e1b5ada2077983a8a544e1542cfda072639904896c958f7223619ac09fae5fe9"
+                  },
+                  {
+                    "start": 3000,
+                    "end": 10000,
+                    "file": "clues-3000-10000.json",
+                    "bytes": 3689892,
+                    "sha256": "bcbb4440dbd82efcc22093348f4238b5998a783e0c4de8c35a4bacf19d497766"
+                  },
+                  {
+                    "start": 10000,
+                    "end": 30000,
+                    "file": "clues-10000-30000.json",
+                    "bytes": 10552271,
+                    "sha256": "d10f3a629c61b33a0524b6d866125220c51d75ca5c9af983226cff4680767d82"
+                  }
+                ],
+                "auxiliaryAssets": [],
+                "embeddingRuntime": "transformers",
+                "taskPrefix": null,
+                "quantization": {
+                  "type": "symmetric-int8",
+                  "scale": 127
+                },
+                "centeringMethod": "30000-clue-corpus-mean",
+                "resolvedModelId": "bge-small"
+              },
+              "aggression": "dynamic",
+              "additionalAggressionVariants": [
+                "dynamic"
+              ],
+              "conceptBridges": {
+                "playSetting": "guarded",
+                "requested": "concept",
+                "resolved": "guarded-wordnet",
+                "asset": {
+                  "directory": "public/data/concepts",
+                  "version": 2,
+                  "source": {
+                    "name": "Princeton WordNet 3.0",
+                    "archiveSha256": "cbda5ea6eef7f36a97a43d4a75f85e07fccbb4f23657d27b4ccbc93e2646ab59",
+                    "license": "WordNet 3.0"
+                  },
+                  "shardStrategy": {
+                    "algorithm": "fnv1a-32",
+                    "buckets": 256
+                  },
+                  "fileCount": 258,
+                  "contentSha256": "d23c4a06d0dfb491b512349659e2a95bf05b9b8cb15a8a52bc648fbb45c77c01"
+                }
+              },
+              "reranker": null,
+              "guessVariation": "none",
+              "guessVariationRange": {
+                "minimum": 0,
+                "maximum": 0
+              },
+              "extraGuessPolicy": "pass"
+            },
+            "scoring": {
+              "similarityCalibration": {
+                "scale": 1,
+                "offset": 0
+              }
+            },
+            "randomness": {
+              "deterministic": true,
+              "boardSeed": "board-index",
+              "decisionSeed": "game-seed, turn-number, and event-history-length",
+              "operativeVariationSeed": "decision-seed",
+              "clueSelectionRandomized": false
+            }
+          },
+          "configurationFingerprint": "35e1a5e22e549cfbec9f195a684063386ea61a62cc5aca91aab9cf1fb5135a4c",
+          "configurationLabels": {
+            "modelIndex": "bge-small 30k",
+            "board": "en official",
+            "clue": "hybrid, tempo, tolerance 5, repeats never",
+            "operative": "same, dynamic, concept bridges, variation none, extra pass",
+            "split": "smoke 20 boards at 0"
+          },
+          "configurationContract": "canonical-v1",
+          "evidence": {
+            "source": "Deterministic Play full-game simulation",
+            "unit": "board",
+            "sampleSize": 20,
+            "split": "smoke",
+            "splitRole": "tuning",
+            "boardOffset": 0,
+            "pairedBoards": true,
+            "humanRealismClaim": false
+          }
+        },
+        "comparisonFingerprint": "0e284dd8e995e6bdf41addb06673149bf2221476be497ea2048507cdebe927e9"
+      }
+    },
+    {
+      "id": "clue-repeat-previous",
+      "setting": "Clue reuse",
+      "alternative": "Previous only",
+      "screen": "none",
+      "phase": "development",
+      "boardCount": 128,
+      "verdict": "needs-more-data",
+      "metricStatus": {
+        "improved": 0,
+        "regressed": 0,
+        "uncertain": 1,
+        "changed": 0,
+        "unchanged": 6
+      },
+      "gateStatus": {
+        "zeroStalls": "pass",
+        "assassinNonInferiority": "pass",
+        "wrongTeamNonInferiority": "pass",
+        "neutralNonInferiority": "pass",
+        "fallback": "pass",
+        "correctNonInferiority": "pass",
+        "correctSuperiority": "needs-more-data"
+      },
+      "humanScreen": {
+        "status": "not-applicable",
+        "source": null,
+        "note": "No compatible source-separated human or gold artifact isolates this single Play behavior setting."
+      },
+      "assessment": {
+        "status": "uncertain",
+        "note": "The available paired evidence does not establish a local improvement or regression."
+      },
+      "timing": {
+        "vectorCache": "hit",
+        "vectorMilliseconds": 4.3,
+        "wallSeconds": 340.2,
+        "peakResidentBytes": 883113984
+      },
+      "artifacts": {
+        "candidate": {
+          "id": "clue-repeat-previous",
+          "role": "candidate",
+          "path": ".cache/benchmark-audit/clue-repeat-previous/development.json",
+          "sha256": "1371de6884823b74ccfe88035b459c49fc454996f1014d38ac7d98ba179ac4ab",
+          "generatedAt": "2026-07-29T04:14:32.971Z",
+          "configuration": {
+            "schemaVersion": 1,
+            "evidence": {
+              "split": "development",
+              "splitRole": "tuning",
+              "boardOffset": 120,
+              "boardCount": 128,
+              "heldOutProtocol": null
+            },
+            "implementation": {
+              "files": [
+                {
+                  "file": "src/board-share.js",
+                  "sha256": "c5760a235e45c17296f801e8b15d2562ed64ef1b87d18d63f8bcd7e1f6f9aaf7"
+                },
+                {
+                  "file": "src/clue-index.js",
+                  "sha256": "296a0739d438a75dc40aabdfbdc50aed87a85cfd0dabd8a0c3734d562dd2fccc"
+                },
+                {
+                  "file": "src/embeddings.js",
+                  "sha256": "9a1ed10d867ccde86802fb645b2ef9667c422536b82fc6f3871b84a4cde5058f"
+                },
+                {
+                  "file": "src/model.js",
+                  "sha256": "184f556ef5e870af4731eb7f32070fe647712dfac9cd23fbbcc0ef1d707eb6a3"
+                },
+                {
+                  "file": "src/play/bots.js",
+                  "sha256": "832c6a9b89f7c8749973edd7a45e5d05bdcb1d8e69b83e2ed42b21ef28a56736"
+                },
+                {
+                  "file": "src/play/concept-ranking.js",
+                  "sha256": "2d065d9c75c61ad9aea69070312766977a27b41f354b975a041c5c40c42cb8c9"
+                },
+                {
+                  "file": "src/play/game-state.js",
+                  "sha256": "1b8879010672994e726e53b398c4497325abe23cce86445e056e2ee05af592b3"
+                },
+                {
+                  "file": "src/play/settings.js",
+                  "sha256": "fd7f6c92b324642a8c074e3992ef1a136dc788bc41adc849068c41c82ddda43d"
+                },
+                {
+                  "file": "src/word-data.js",
+                  "sha256": "05dd6b7f69008b429e025142a1ab493cfb8ccfdbb08ad29df66b0a8bb1b803a4"
+                }
+              ],
+              "contentSha256": "233e0fabc574c8ad101d62e7f0618da7cfb5c963920728939d24d99b3650e9a4"
+            },
+            "board": {
+              "language": "en",
+              "wordSet": "official",
+              "wordCount": 400,
+              "wordContentSha256": "b2bdf45505d9a23da8f127923c62a33be570d9fc1646400ad8038a18e78ab9a2",
+              "cardCount": 25,
+              "order": "random",
+              "wordReusePolicy": "fully-random",
+              "wordReuseHistoryBoards": 0,
+              "generationSeed": {
+                "deterministic": true,
+                "scheme": "Eight bytes: ASCII CODE followed by a big-endian 1-based board index.",
+                "firstBoardIndex": 120,
+                "lastBoardIndex": 247
+              }
+            },
+            "game": {
+              "simulationContractVersion": 1,
+              "startingSide": "blue",
+              "simulatedHumanSeat": {
+                "side": "blue",
+                "role": "spymaster"
+              },
+              "maxActionsPerGame": 100,
+              "forcedProgressAfterConsecutivePasses": 2,
+              "forcedProgressChoice": "highest-ranked-available-guess",
+              "fallbackClue": {
+                "enabled": true,
+                "number": 1,
+                "selection": "nearest-legal-indexed-clue-to-one-friendly-card"
+              }
+            },
+            "spymaster": {
+              "modelIndex": {
+                "id": "bge-small",
+                "model": "Xenova/bge-small-en-v1.5",
+                "revision": null,
+                "provider": "local",
+                "dimensions": 384,
+                "directory": "public/data/model-lab/bge-small",
+                "manifestSha256": "df9997658cb028aac476db5291b03d2fb88a7923304036c651da7206968da8fb",
+                "selectedShards": [
+                  {
+                    "start": 0,
+                    "end": 3000,
+                    "file": "clues-0-3000.json",
+                    "bytes": 1578554,
+                    "sha256": "e1b5ada2077983a8a544e1542cfda072639904896c958f7223619ac09fae5fe9"
+                  },
+                  {
+                    "start": 3000,
+                    "end": 10000,
+                    "file": "clues-3000-10000.json",
+                    "bytes": 3689892,
+                    "sha256": "bcbb4440dbd82efcc22093348f4238b5998a783e0c4de8c35a4bacf19d497766"
+                  },
+                  {
+                    "start": 10000,
+                    "end": 30000,
+                    "file": "clues-10000-30000.json",
+                    "bytes": 10552271,
+                    "sha256": "d10f3a629c61b33a0524b6d866125220c51d75ca5c9af983226cff4680767d82"
+                  }
+                ],
+                "auxiliaryAssets": [],
+                "embeddingRuntime": "transformers",
+                "taskPrefix": null,
+                "quantization": {
+                  "type": "symmetric-int8",
+                  "scale": 127
+                },
+                "centeringMethod": "30000-clue-corpus-mean"
+              },
+              "vocabularySize": 30000,
+              "cluePolicyVariants": [
+                "hybrid"
+              ],
+              "comparisonPolicy": "hybrid",
+              "clueScoring": {
+                "current": "current-v1",
+                "hybrid": "hybrid-v1"
+              },
+              "clueSelection": "tempo",
+              "clueRandomShortlistSize": null,
+              "multiClueTolerance": 5,
+              "clueRepeatPolicy": "previous",
+              "missedTargetTiming": "late",
+              "resultsPerTargetSize": 6
+            },
+            "operative": {
+              "modelIndex": {
+                "id": "same",
+                "model": "Xenova/bge-small-en-v1.5",
+                "revision": null,
+                "provider": "local",
+                "dimensions": 384,
+                "directory": "public/data/model-lab/bge-small",
+                "manifestSha256": "df9997658cb028aac476db5291b03d2fb88a7923304036c651da7206968da8fb",
+                "selectedShards": [
+                  {
+                    "start": 0,
+                    "end": 3000,
+                    "file": "clues-0-3000.json",
+                    "bytes": 1578554,
+                    "sha256": "e1b5ada2077983a8a544e1542cfda072639904896c958f7223619ac09fae5fe9"
+                  },
+                  {
+                    "start": 3000,
+                    "end": 10000,
+                    "file": "clues-3000-10000.json",
+                    "bytes": 3689892,
+                    "sha256": "bcbb4440dbd82efcc22093348f4238b5998a783e0c4de8c35a4bacf19d497766"
+                  },
+                  {
+                    "start": 10000,
+                    "end": 30000,
+                    "file": "clues-10000-30000.json",
+                    "bytes": 10552271,
+                    "sha256": "d10f3a629c61b33a0524b6d866125220c51d75ca5c9af983226cff4680767d82"
+                  }
+                ],
+                "auxiliaryAssets": [],
+                "embeddingRuntime": "transformers",
+                "taskPrefix": null,
+                "quantization": {
+                  "type": "symmetric-int8",
+                  "scale": 127
+                },
+                "centeringMethod": "30000-clue-corpus-mean",
+                "resolvedModelId": "bge-small"
+              },
+              "aggression": "dynamic",
+              "additionalAggressionVariants": [
+                "dynamic"
+              ],
+              "conceptBridges": {
+                "playSetting": "guarded",
+                "requested": "concept",
+                "resolved": "guarded-wordnet",
+                "asset": {
+                  "directory": "public/data/concepts",
+                  "version": 2,
+                  "source": {
+                    "name": "Princeton WordNet 3.0",
+                    "archiveSha256": "cbda5ea6eef7f36a97a43d4a75f85e07fccbb4f23657d27b4ccbc93e2646ab59",
+                    "license": "WordNet 3.0"
+                  },
+                  "shardStrategy": {
+                    "algorithm": "fnv1a-32",
+                    "buckets": 256
+                  },
+                  "fileCount": 258,
+                  "contentSha256": "d23c4a06d0dfb491b512349659e2a95bf05b9b8cb15a8a52bc648fbb45c77c01"
+                }
+              },
+              "reranker": null,
+              "guessVariation": "none",
+              "guessVariationRange": {
+                "minimum": 0,
+                "maximum": 0
+              },
+              "extraGuessPolicy": "pass"
+            },
+            "scoring": {
+              "similarityCalibration": {
+                "scale": 1,
+                "offset": 0
+              }
+            },
+            "randomness": {
+              "deterministic": true,
+              "boardSeed": "board-index",
+              "decisionSeed": "game-seed, turn-number, and event-history-length",
+              "operativeVariationSeed": "decision-seed",
+              "clueSelectionRandomized": false
+            }
+          },
+          "configurationFingerprint": "01ab8c1cfe206e86f265bbda412735a6b852afc61d81a656a8631774440499a4",
+          "configurationLabels": {
+            "modelIndex": "bge-small 30k",
+            "board": "en official",
+            "clue": "hybrid, tempo, tolerance 5, repeats previous",
+            "operative": "same, dynamic, concept bridges, variation none, extra pass",
+            "split": "development 128 boards at 120"
+          },
+          "configurationContract": "canonical-v1",
+          "evidence": {
+            "source": "Deterministic Play full-game simulation",
+            "unit": "board",
+            "sampleSize": 128,
+            "split": "development",
+            "splitRole": "tuning",
+            "boardOffset": 120,
+            "pairedBoards": true,
+            "humanRealismClaim": false
+          }
+        },
+        "comparisonFingerprint": "2744d2fbfbbb2c19ac39e82dcb1d6a954640521cbdd781ea5fde6612633df200"
+      }
+    },
+    {
+      "id": "clue-repeat-allow",
+      "setting": "Clue reuse",
+      "alternative": "Allow repeats",
+      "screen": "none",
+      "phase": "development",
+      "boardCount": 128,
+      "verdict": "needs-more-data",
+      "metricStatus": {
+        "improved": 0,
+        "regressed": 0,
+        "uncertain": 1,
+        "changed": 0,
+        "unchanged": 6
+      },
+      "gateStatus": {
+        "zeroStalls": "pass",
+        "assassinNonInferiority": "pass",
+        "wrongTeamNonInferiority": "pass",
+        "neutralNonInferiority": "pass",
+        "fallback": "pass",
+        "correctNonInferiority": "pass",
+        "correctSuperiority": "needs-more-data"
+      },
+      "humanScreen": {
+        "status": "not-applicable",
+        "source": null,
+        "note": "No compatible source-separated human or gold artifact isolates this single Play behavior setting."
+      },
+      "assessment": {
+        "status": "uncertain",
+        "note": "The available paired evidence does not establish a local improvement or regression."
+      },
+      "timing": {
+        "vectorCache": "hit",
+        "vectorMilliseconds": 4.8,
+        "wallSeconds": 340.12,
+        "peakResidentBytes": 890339328
+      },
+      "artifacts": {
+        "candidate": {
+          "id": "clue-repeat-allow",
+          "role": "candidate",
+          "path": ".cache/benchmark-audit/clue-repeat-allow/development.json",
+          "sha256": "ec9d623719a773397352bc78b19359dd1a2a34db78153b93cad3b86298a321dd",
+          "generatedAt": "2026-07-29T04:14:32.947Z",
+          "configuration": {
+            "schemaVersion": 1,
+            "evidence": {
+              "split": "development",
+              "splitRole": "tuning",
+              "boardOffset": 120,
+              "boardCount": 128,
+              "heldOutProtocol": null
+            },
+            "implementation": {
+              "files": [
+                {
+                  "file": "src/board-share.js",
+                  "sha256": "c5760a235e45c17296f801e8b15d2562ed64ef1b87d18d63f8bcd7e1f6f9aaf7"
+                },
+                {
+                  "file": "src/clue-index.js",
+                  "sha256": "296a0739d438a75dc40aabdfbdc50aed87a85cfd0dabd8a0c3734d562dd2fccc"
+                },
+                {
+                  "file": "src/embeddings.js",
+                  "sha256": "9a1ed10d867ccde86802fb645b2ef9667c422536b82fc6f3871b84a4cde5058f"
+                },
+                {
+                  "file": "src/model.js",
+                  "sha256": "184f556ef5e870af4731eb7f32070fe647712dfac9cd23fbbcc0ef1d707eb6a3"
+                },
+                {
+                  "file": "src/play/bots.js",
+                  "sha256": "832c6a9b89f7c8749973edd7a45e5d05bdcb1d8e69b83e2ed42b21ef28a56736"
+                },
+                {
+                  "file": "src/play/concept-ranking.js",
+                  "sha256": "2d065d9c75c61ad9aea69070312766977a27b41f354b975a041c5c40c42cb8c9"
+                },
+                {
+                  "file": "src/play/game-state.js",
+                  "sha256": "1b8879010672994e726e53b398c4497325abe23cce86445e056e2ee05af592b3"
+                },
+                {
+                  "file": "src/play/settings.js",
+                  "sha256": "fd7f6c92b324642a8c074e3992ef1a136dc788bc41adc849068c41c82ddda43d"
+                },
+                {
+                  "file": "src/word-data.js",
+                  "sha256": "05dd6b7f69008b429e025142a1ab493cfb8ccfdbb08ad29df66b0a8bb1b803a4"
+                }
+              ],
+              "contentSha256": "233e0fabc574c8ad101d62e7f0618da7cfb5c963920728939d24d99b3650e9a4"
+            },
+            "board": {
+              "language": "en",
+              "wordSet": "official",
+              "wordCount": 400,
+              "wordContentSha256": "b2bdf45505d9a23da8f127923c62a33be570d9fc1646400ad8038a18e78ab9a2",
+              "cardCount": 25,
+              "order": "random",
+              "wordReusePolicy": "fully-random",
+              "wordReuseHistoryBoards": 0,
+              "generationSeed": {
+                "deterministic": true,
+                "scheme": "Eight bytes: ASCII CODE followed by a big-endian 1-based board index.",
+                "firstBoardIndex": 120,
+                "lastBoardIndex": 247
+              }
+            },
+            "game": {
+              "simulationContractVersion": 1,
+              "startingSide": "blue",
+              "simulatedHumanSeat": {
+                "side": "blue",
+                "role": "spymaster"
+              },
+              "maxActionsPerGame": 100,
+              "forcedProgressAfterConsecutivePasses": 2,
+              "forcedProgressChoice": "highest-ranked-available-guess",
+              "fallbackClue": {
+                "enabled": true,
+                "number": 1,
+                "selection": "nearest-legal-indexed-clue-to-one-friendly-card"
+              }
+            },
+            "spymaster": {
+              "modelIndex": {
+                "id": "bge-small",
+                "model": "Xenova/bge-small-en-v1.5",
+                "revision": null,
+                "provider": "local",
+                "dimensions": 384,
+                "directory": "public/data/model-lab/bge-small",
+                "manifestSha256": "df9997658cb028aac476db5291b03d2fb88a7923304036c651da7206968da8fb",
+                "selectedShards": [
+                  {
+                    "start": 0,
+                    "end": 3000,
+                    "file": "clues-0-3000.json",
+                    "bytes": 1578554,
+                    "sha256": "e1b5ada2077983a8a544e1542cfda072639904896c958f7223619ac09fae5fe9"
+                  },
+                  {
+                    "start": 3000,
+                    "end": 10000,
+                    "file": "clues-3000-10000.json",
+                    "bytes": 3689892,
+                    "sha256": "bcbb4440dbd82efcc22093348f4238b5998a783e0c4de8c35a4bacf19d497766"
+                  },
+                  {
+                    "start": 10000,
+                    "end": 30000,
+                    "file": "clues-10000-30000.json",
+                    "bytes": 10552271,
+                    "sha256": "d10f3a629c61b33a0524b6d866125220c51d75ca5c9af983226cff4680767d82"
+                  }
+                ],
+                "auxiliaryAssets": [],
+                "embeddingRuntime": "transformers",
+                "taskPrefix": null,
+                "quantization": {
+                  "type": "symmetric-int8",
+                  "scale": 127
+                },
+                "centeringMethod": "30000-clue-corpus-mean"
+              },
+              "vocabularySize": 30000,
+              "cluePolicyVariants": [
+                "hybrid"
+              ],
+              "comparisonPolicy": "hybrid",
+              "clueScoring": {
+                "current": "current-v1",
+                "hybrid": "hybrid-v1"
+              },
+              "clueSelection": "tempo",
+              "clueRandomShortlistSize": null,
+              "multiClueTolerance": 5,
+              "clueRepeatPolicy": "allow",
+              "missedTargetTiming": "late",
+              "resultsPerTargetSize": 6
+            },
+            "operative": {
+              "modelIndex": {
+                "id": "same",
+                "model": "Xenova/bge-small-en-v1.5",
+                "revision": null,
+                "provider": "local",
+                "dimensions": 384,
+                "directory": "public/data/model-lab/bge-small",
+                "manifestSha256": "df9997658cb028aac476db5291b03d2fb88a7923304036c651da7206968da8fb",
+                "selectedShards": [
+                  {
+                    "start": 0,
+                    "end": 3000,
+                    "file": "clues-0-3000.json",
+                    "bytes": 1578554,
+                    "sha256": "e1b5ada2077983a8a544e1542cfda072639904896c958f7223619ac09fae5fe9"
+                  },
+                  {
+                    "start": 3000,
+                    "end": 10000,
+                    "file": "clues-3000-10000.json",
+                    "bytes": 3689892,
+                    "sha256": "bcbb4440dbd82efcc22093348f4238b5998a783e0c4de8c35a4bacf19d497766"
+                  },
+                  {
+                    "start": 10000,
+                    "end": 30000,
+                    "file": "clues-10000-30000.json",
+                    "bytes": 10552271,
+                    "sha256": "d10f3a629c61b33a0524b6d866125220c51d75ca5c9af983226cff4680767d82"
+                  }
+                ],
+                "auxiliaryAssets": [],
+                "embeddingRuntime": "transformers",
+                "taskPrefix": null,
+                "quantization": {
+                  "type": "symmetric-int8",
+                  "scale": 127
+                },
+                "centeringMethod": "30000-clue-corpus-mean",
+                "resolvedModelId": "bge-small"
+              },
+              "aggression": "dynamic",
+              "additionalAggressionVariants": [
+                "dynamic"
+              ],
+              "conceptBridges": {
+                "playSetting": "guarded",
+                "requested": "concept",
+                "resolved": "guarded-wordnet",
+                "asset": {
+                  "directory": "public/data/concepts",
+                  "version": 2,
+                  "source": {
+                    "name": "Princeton WordNet 3.0",
+                    "archiveSha256": "cbda5ea6eef7f36a97a43d4a75f85e07fccbb4f23657d27b4ccbc93e2646ab59",
+                    "license": "WordNet 3.0"
+                  },
+                  "shardStrategy": {
+                    "algorithm": "fnv1a-32",
+                    "buckets": 256
+                  },
+                  "fileCount": 258,
+                  "contentSha256": "d23c4a06d0dfb491b512349659e2a95bf05b9b8cb15a8a52bc648fbb45c77c01"
+                }
+              },
+              "reranker": null,
+              "guessVariation": "none",
+              "guessVariationRange": {
+                "minimum": 0,
+                "maximum": 0
+              },
+              "extraGuessPolicy": "pass"
+            },
+            "scoring": {
+              "similarityCalibration": {
+                "scale": 1,
+                "offset": 0
+              }
+            },
+            "randomness": {
+              "deterministic": true,
+              "boardSeed": "board-index",
+              "decisionSeed": "game-seed, turn-number, and event-history-length",
+              "operativeVariationSeed": "decision-seed",
+              "clueSelectionRandomized": false
+            }
+          },
+          "configurationFingerprint": "8a1900bacdf47c5f2feb8e3195a52029a8da7e9475140d261728f541c2c1ba58",
+          "configurationLabels": {
+            "modelIndex": "bge-small 30k",
+            "board": "en official",
+            "clue": "hybrid, tempo, tolerance 5, repeats allow",
+            "operative": "same, dynamic, concept bridges, variation none, extra pass",
+            "split": "development 128 boards at 120"
+          },
+          "configurationContract": "canonical-v1",
+          "evidence": {
+            "source": "Deterministic Play full-game simulation",
+            "unit": "board",
+            "sampleSize": 128,
+            "split": "development",
+            "splitRole": "tuning",
+            "boardOffset": 120,
+            "pairedBoards": true,
+            "humanRealismClaim": false
+          }
+        },
+        "comparisonFingerprint": "a67c9cf56462b19b4699a576a66d8425690ae0be7da3aa7484468d60067e979b"
+      }
+    },
+    {
+      "id": "multi-tolerance-0",
+      "setting": "Prefer multi-card clues",
+      "alternative": "Off",
+      "screen": "none",
+      "phase": "smoke",
+      "boardCount": 20,
+      "verdict": "block",
+      "metricStatus": {
+        "improved": 0,
+        "regressed": 1,
+        "uncertain": 0,
+        "changed": 1,
+        "unchanged": 5
+      },
+      "gateStatus": {
+        "zeroStalls": "pass",
+        "assassinNonInferiority": "pass",
+        "wrongTeamNonInferiority": "pass",
+        "neutralNonInferiority": "pass",
+        "fallback": "pass",
+        "correctNonInferiority": "block",
+        "correctSuperiority": "block"
+      },
+      "humanScreen": {
+        "status": "not-applicable",
+        "source": null,
+        "note": "No compatible source-separated human or gold artifact isolates this single Play behavior setting."
+      },
+      "assessment": {
+        "status": "default-locally-justified",
+        "note": "smoke evidence blocks or regresses the alternative."
+      },
+      "timing": {
+        "vectorCache": "hit",
+        "vectorMilliseconds": 4.1,
+        "wallSeconds": 55.61,
+        "peakResidentBytes": 800325632
+      },
+      "artifacts": {
+        "candidate": {
+          "id": "multi-tolerance-0",
+          "role": "candidate",
+          "path": ".cache/benchmark-audit/multi-tolerance-0/smoke.json",
+          "sha256": "79fb6766e8c66618620ec811a654e31937f677daac00dc32e70d5d643c47fbcd",
+          "generatedAt": "2026-07-29T04:05:23.801Z",
+          "configuration": {
+            "schemaVersion": 1,
+            "evidence": {
+              "split": "smoke",
+              "splitRole": "tuning",
+              "boardOffset": 0,
+              "boardCount": 20,
+              "heldOutProtocol": null
+            },
+            "implementation": {
+              "files": [
+                {
+                  "file": "src/board-share.js",
+                  "sha256": "c5760a235e45c17296f801e8b15d2562ed64ef1b87d18d63f8bcd7e1f6f9aaf7"
+                },
+                {
+                  "file": "src/clue-index.js",
+                  "sha256": "296a0739d438a75dc40aabdfbdc50aed87a85cfd0dabd8a0c3734d562dd2fccc"
+                },
+                {
+                  "file": "src/embeddings.js",
+                  "sha256": "9a1ed10d867ccde86802fb645b2ef9667c422536b82fc6f3871b84a4cde5058f"
+                },
+                {
+                  "file": "src/model.js",
+                  "sha256": "184f556ef5e870af4731eb7f32070fe647712dfac9cd23fbbcc0ef1d707eb6a3"
+                },
+                {
+                  "file": "src/play/bots.js",
+                  "sha256": "832c6a9b89f7c8749973edd7a45e5d05bdcb1d8e69b83e2ed42b21ef28a56736"
+                },
+                {
+                  "file": "src/play/concept-ranking.js",
+                  "sha256": "2d065d9c75c61ad9aea69070312766977a27b41f354b975a041c5c40c42cb8c9"
+                },
+                {
+                  "file": "src/play/game-state.js",
+                  "sha256": "1b8879010672994e726e53b398c4497325abe23cce86445e056e2ee05af592b3"
+                },
+                {
+                  "file": "src/play/settings.js",
+                  "sha256": "fd7f6c92b324642a8c074e3992ef1a136dc788bc41adc849068c41c82ddda43d"
+                },
+                {
+                  "file": "src/word-data.js",
+                  "sha256": "05dd6b7f69008b429e025142a1ab493cfb8ccfdbb08ad29df66b0a8bb1b803a4"
+                }
+              ],
+              "contentSha256": "233e0fabc574c8ad101d62e7f0618da7cfb5c963920728939d24d99b3650e9a4"
+            },
+            "board": {
+              "language": "en",
+              "wordSet": "official",
+              "wordCount": 400,
+              "wordContentSha256": "b2bdf45505d9a23da8f127923c62a33be570d9fc1646400ad8038a18e78ab9a2",
+              "cardCount": 25,
+              "order": "random",
+              "wordReusePolicy": "fully-random",
+              "wordReuseHistoryBoards": 0,
+              "generationSeed": {
+                "deterministic": true,
+                "scheme": "Eight bytes: ASCII CODE followed by a big-endian 1-based board index.",
+                "firstBoardIndex": 0,
+                "lastBoardIndex": 19
+              }
+            },
+            "game": {
+              "simulationContractVersion": 1,
+              "startingSide": "blue",
+              "simulatedHumanSeat": {
+                "side": "blue",
+                "role": "spymaster"
+              },
+              "maxActionsPerGame": 100,
+              "forcedProgressAfterConsecutivePasses": 2,
+              "forcedProgressChoice": "highest-ranked-available-guess",
+              "fallbackClue": {
+                "enabled": true,
+                "number": 1,
+                "selection": "nearest-legal-indexed-clue-to-one-friendly-card"
+              }
+            },
+            "spymaster": {
+              "modelIndex": {
+                "id": "bge-small",
+                "model": "Xenova/bge-small-en-v1.5",
+                "revision": null,
+                "provider": "local",
+                "dimensions": 384,
+                "directory": "public/data/model-lab/bge-small",
+                "manifestSha256": "df9997658cb028aac476db5291b03d2fb88a7923304036c651da7206968da8fb",
+                "selectedShards": [
+                  {
+                    "start": 0,
+                    "end": 3000,
+                    "file": "clues-0-3000.json",
+                    "bytes": 1578554,
+                    "sha256": "e1b5ada2077983a8a544e1542cfda072639904896c958f7223619ac09fae5fe9"
+                  },
+                  {
+                    "start": 3000,
+                    "end": 10000,
+                    "file": "clues-3000-10000.json",
+                    "bytes": 3689892,
+                    "sha256": "bcbb4440dbd82efcc22093348f4238b5998a783e0c4de8c35a4bacf19d497766"
+                  },
+                  {
+                    "start": 10000,
+                    "end": 30000,
+                    "file": "clues-10000-30000.json",
+                    "bytes": 10552271,
+                    "sha256": "d10f3a629c61b33a0524b6d866125220c51d75ca5c9af983226cff4680767d82"
+                  }
+                ],
+                "auxiliaryAssets": [],
+                "embeddingRuntime": "transformers",
+                "taskPrefix": null,
+                "quantization": {
+                  "type": "symmetric-int8",
+                  "scale": 127
+                },
+                "centeringMethod": "30000-clue-corpus-mean"
+              },
+              "vocabularySize": 30000,
+              "cluePolicyVariants": [
+                "hybrid"
+              ],
+              "comparisonPolicy": "hybrid",
+              "clueScoring": {
+                "current": "current-v1",
+                "hybrid": "hybrid-v1"
+              },
+              "clueSelection": "tempo",
+              "clueRandomShortlistSize": null,
+              "multiClueTolerance": 0,
+              "clueRepeatPolicy": "never",
+              "missedTargetTiming": "late",
+              "resultsPerTargetSize": 6
+            },
+            "operative": {
+              "modelIndex": {
+                "id": "same",
+                "model": "Xenova/bge-small-en-v1.5",
+                "revision": null,
+                "provider": "local",
+                "dimensions": 384,
+                "directory": "public/data/model-lab/bge-small",
+                "manifestSha256": "df9997658cb028aac476db5291b03d2fb88a7923304036c651da7206968da8fb",
+                "selectedShards": [
+                  {
+                    "start": 0,
+                    "end": 3000,
+                    "file": "clues-0-3000.json",
+                    "bytes": 1578554,
+                    "sha256": "e1b5ada2077983a8a544e1542cfda072639904896c958f7223619ac09fae5fe9"
+                  },
+                  {
+                    "start": 3000,
+                    "end": 10000,
+                    "file": "clues-3000-10000.json",
+                    "bytes": 3689892,
+                    "sha256": "bcbb4440dbd82efcc22093348f4238b5998a783e0c4de8c35a4bacf19d497766"
+                  },
+                  {
+                    "start": 10000,
+                    "end": 30000,
+                    "file": "clues-10000-30000.json",
+                    "bytes": 10552271,
+                    "sha256": "d10f3a629c61b33a0524b6d866125220c51d75ca5c9af983226cff4680767d82"
+                  }
+                ],
+                "auxiliaryAssets": [],
+                "embeddingRuntime": "transformers",
+                "taskPrefix": null,
+                "quantization": {
+                  "type": "symmetric-int8",
+                  "scale": 127
+                },
+                "centeringMethod": "30000-clue-corpus-mean",
+                "resolvedModelId": "bge-small"
+              },
+              "aggression": "dynamic",
+              "additionalAggressionVariants": [
+                "dynamic"
+              ],
+              "conceptBridges": {
+                "playSetting": "guarded",
+                "requested": "concept",
+                "resolved": "guarded-wordnet",
+                "asset": {
+                  "directory": "public/data/concepts",
+                  "version": 2,
+                  "source": {
+                    "name": "Princeton WordNet 3.0",
+                    "archiveSha256": "cbda5ea6eef7f36a97a43d4a75f85e07fccbb4f23657d27b4ccbc93e2646ab59",
+                    "license": "WordNet 3.0"
+                  },
+                  "shardStrategy": {
+                    "algorithm": "fnv1a-32",
+                    "buckets": 256
+                  },
+                  "fileCount": 258,
+                  "contentSha256": "d23c4a06d0dfb491b512349659e2a95bf05b9b8cb15a8a52bc648fbb45c77c01"
+                }
+              },
+              "reranker": null,
+              "guessVariation": "none",
+              "guessVariationRange": {
+                "minimum": 0,
+                "maximum": 0
+              },
+              "extraGuessPolicy": "pass"
+            },
+            "scoring": {
+              "similarityCalibration": {
+                "scale": 1,
+                "offset": 0
+              }
+            },
+            "randomness": {
+              "deterministic": true,
+              "boardSeed": "board-index",
+              "decisionSeed": "game-seed, turn-number, and event-history-length",
+              "operativeVariationSeed": "decision-seed",
+              "clueSelectionRandomized": false
+            }
+          },
+          "configurationFingerprint": "826c180fe714c151a205299b76fdadd038e76f0a917a6706c39a09b0bdd8408e",
+          "configurationLabels": {
+            "modelIndex": "bge-small 30k",
+            "board": "en official",
+            "clue": "hybrid, tempo, tolerance 0, repeats never",
+            "operative": "same, dynamic, concept bridges, variation none, extra pass",
+            "split": "smoke 20 boards at 0"
+          },
+          "configurationContract": "canonical-v1",
+          "evidence": {
+            "source": "Deterministic Play full-game simulation",
+            "unit": "board",
+            "sampleSize": 20,
+            "split": "smoke",
+            "splitRole": "tuning",
+            "boardOffset": 0,
+            "pairedBoards": true,
+            "humanRealismClaim": false
+          }
+        },
+        "comparisonFingerprint": "2bde28b96d966602a04fa2a04d07f2cccc404f8cb0955f068b2aaab77be45bab"
+      }
+    },
+    {
+      "id": "multi-tolerance-10",
+      "setting": "Prefer multi-card clues",
+      "alternative": "Strong",
+      "screen": "none",
+      "phase": "development",
+      "boardCount": 128,
+      "verdict": "needs-more-data",
+      "metricStatus": {
+        "improved": 1,
+        "regressed": 0,
+        "uncertain": 0,
+        "changed": 1,
+        "unchanged": 5
+      },
+      "gateStatus": {
+        "zeroStalls": "pass",
+        "assassinNonInferiority": "pass",
+        "wrongTeamNonInferiority": "pass",
+        "neutralNonInferiority": "pass",
+        "fallback": "pass",
+        "correctNonInferiority": "pass",
+        "correctSuperiority": "pass"
+      },
+      "humanScreen": {
+        "status": "not-applicable",
+        "source": null,
+        "note": "No compatible source-separated human or gold artifact isolates this single Play behavior setting."
+      },
+      "assessment": {
+        "status": "alternative-promising",
+        "note": "The alternative improves at least one paired metric without an established regression, but remains tuning evidence."
+      },
+      "timing": {
+        "vectorCache": "hit",
+        "vectorMilliseconds": 5.2,
+        "wallSeconds": 329.72,
+        "peakResidentBytes": 884408320
+      },
+      "artifacts": {
+        "candidate": {
+          "id": "multi-tolerance-10",
+          "role": "candidate",
+          "path": ".cache/benchmark-audit/multi-tolerance-10/development.json",
+          "sha256": "291c9b992640ab6592038e631d9b5307deb7aff76d23616f58e98001ff791887",
+          "generatedAt": "2026-07-29T04:14:22.529Z",
+          "configuration": {
+            "schemaVersion": 1,
+            "evidence": {
+              "split": "development",
+              "splitRole": "tuning",
+              "boardOffset": 120,
+              "boardCount": 128,
+              "heldOutProtocol": null
+            },
+            "implementation": {
+              "files": [
+                {
+                  "file": "src/board-share.js",
+                  "sha256": "c5760a235e45c17296f801e8b15d2562ed64ef1b87d18d63f8bcd7e1f6f9aaf7"
+                },
+                {
+                  "file": "src/clue-index.js",
+                  "sha256": "296a0739d438a75dc40aabdfbdc50aed87a85cfd0dabd8a0c3734d562dd2fccc"
+                },
+                {
+                  "file": "src/embeddings.js",
+                  "sha256": "9a1ed10d867ccde86802fb645b2ef9667c422536b82fc6f3871b84a4cde5058f"
+                },
+                {
+                  "file": "src/model.js",
+                  "sha256": "184f556ef5e870af4731eb7f32070fe647712dfac9cd23fbbcc0ef1d707eb6a3"
+                },
+                {
+                  "file": "src/play/bots.js",
+                  "sha256": "832c6a9b89f7c8749973edd7a45e5d05bdcb1d8e69b83e2ed42b21ef28a56736"
+                },
+                {
+                  "file": "src/play/concept-ranking.js",
+                  "sha256": "2d065d9c75c61ad9aea69070312766977a27b41f354b975a041c5c40c42cb8c9"
+                },
+                {
+                  "file": "src/play/game-state.js",
+                  "sha256": "1b8879010672994e726e53b398c4497325abe23cce86445e056e2ee05af592b3"
+                },
+                {
+                  "file": "src/play/settings.js",
+                  "sha256": "fd7f6c92b324642a8c074e3992ef1a136dc788bc41adc849068c41c82ddda43d"
+                },
+                {
+                  "file": "src/word-data.js",
+                  "sha256": "05dd6b7f69008b429e025142a1ab493cfb8ccfdbb08ad29df66b0a8bb1b803a4"
+                }
+              ],
+              "contentSha256": "233e0fabc574c8ad101d62e7f0618da7cfb5c963920728939d24d99b3650e9a4"
+            },
+            "board": {
+              "language": "en",
+              "wordSet": "official",
+              "wordCount": 400,
+              "wordContentSha256": "b2bdf45505d9a23da8f127923c62a33be570d9fc1646400ad8038a18e78ab9a2",
+              "cardCount": 25,
+              "order": "random",
+              "wordReusePolicy": "fully-random",
+              "wordReuseHistoryBoards": 0,
+              "generationSeed": {
+                "deterministic": true,
+                "scheme": "Eight bytes: ASCII CODE followed by a big-endian 1-based board index.",
+                "firstBoardIndex": 120,
+                "lastBoardIndex": 247
+              }
+            },
+            "game": {
+              "simulationContractVersion": 1,
+              "startingSide": "blue",
+              "simulatedHumanSeat": {
+                "side": "blue",
+                "role": "spymaster"
+              },
+              "maxActionsPerGame": 100,
+              "forcedProgressAfterConsecutivePasses": 2,
+              "forcedProgressChoice": "highest-ranked-available-guess",
+              "fallbackClue": {
+                "enabled": true,
+                "number": 1,
+                "selection": "nearest-legal-indexed-clue-to-one-friendly-card"
+              }
+            },
+            "spymaster": {
+              "modelIndex": {
+                "id": "bge-small",
+                "model": "Xenova/bge-small-en-v1.5",
+                "revision": null,
+                "provider": "local",
+                "dimensions": 384,
+                "directory": "public/data/model-lab/bge-small",
+                "manifestSha256": "df9997658cb028aac476db5291b03d2fb88a7923304036c651da7206968da8fb",
+                "selectedShards": [
+                  {
+                    "start": 0,
+                    "end": 3000,
+                    "file": "clues-0-3000.json",
+                    "bytes": 1578554,
+                    "sha256": "e1b5ada2077983a8a544e1542cfda072639904896c958f7223619ac09fae5fe9"
+                  },
+                  {
+                    "start": 3000,
+                    "end": 10000,
+                    "file": "clues-3000-10000.json",
+                    "bytes": 3689892,
+                    "sha256": "bcbb4440dbd82efcc22093348f4238b5998a783e0c4de8c35a4bacf19d497766"
+                  },
+                  {
+                    "start": 10000,
+                    "end": 30000,
+                    "file": "clues-10000-30000.json",
+                    "bytes": 10552271,
+                    "sha256": "d10f3a629c61b33a0524b6d866125220c51d75ca5c9af983226cff4680767d82"
+                  }
+                ],
+                "auxiliaryAssets": [],
+                "embeddingRuntime": "transformers",
+                "taskPrefix": null,
+                "quantization": {
+                  "type": "symmetric-int8",
+                  "scale": 127
+                },
+                "centeringMethod": "30000-clue-corpus-mean"
+              },
+              "vocabularySize": 30000,
+              "cluePolicyVariants": [
+                "hybrid"
+              ],
+              "comparisonPolicy": "hybrid",
+              "clueScoring": {
+                "current": "current-v1",
+                "hybrid": "hybrid-v1"
+              },
+              "clueSelection": "tempo",
+              "clueRandomShortlistSize": null,
+              "multiClueTolerance": 10,
+              "clueRepeatPolicy": "never",
+              "missedTargetTiming": "late",
+              "resultsPerTargetSize": 6
+            },
+            "operative": {
+              "modelIndex": {
+                "id": "same",
+                "model": "Xenova/bge-small-en-v1.5",
+                "revision": null,
+                "provider": "local",
+                "dimensions": 384,
+                "directory": "public/data/model-lab/bge-small",
+                "manifestSha256": "df9997658cb028aac476db5291b03d2fb88a7923304036c651da7206968da8fb",
+                "selectedShards": [
+                  {
+                    "start": 0,
+                    "end": 3000,
+                    "file": "clues-0-3000.json",
+                    "bytes": 1578554,
+                    "sha256": "e1b5ada2077983a8a544e1542cfda072639904896c958f7223619ac09fae5fe9"
+                  },
+                  {
+                    "start": 3000,
+                    "end": 10000,
+                    "file": "clues-3000-10000.json",
+                    "bytes": 3689892,
+                    "sha256": "bcbb4440dbd82efcc22093348f4238b5998a783e0c4de8c35a4bacf19d497766"
+                  },
+                  {
+                    "start": 10000,
+                    "end": 30000,
+                    "file": "clues-10000-30000.json",
+                    "bytes": 10552271,
+                    "sha256": "d10f3a629c61b33a0524b6d866125220c51d75ca5c9af983226cff4680767d82"
+                  }
+                ],
+                "auxiliaryAssets": [],
+                "embeddingRuntime": "transformers",
+                "taskPrefix": null,
+                "quantization": {
+                  "type": "symmetric-int8",
+                  "scale": 127
+                },
+                "centeringMethod": "30000-clue-corpus-mean",
+                "resolvedModelId": "bge-small"
+              },
+              "aggression": "dynamic",
+              "additionalAggressionVariants": [
+                "dynamic"
+              ],
+              "conceptBridges": {
+                "playSetting": "guarded",
+                "requested": "concept",
+                "resolved": "guarded-wordnet",
+                "asset": {
+                  "directory": "public/data/concepts",
+                  "version": 2,
+                  "source": {
+                    "name": "Princeton WordNet 3.0",
+                    "archiveSha256": "cbda5ea6eef7f36a97a43d4a75f85e07fccbb4f23657d27b4ccbc93e2646ab59",
+                    "license": "WordNet 3.0"
+                  },
+                  "shardStrategy": {
+                    "algorithm": "fnv1a-32",
+                    "buckets": 256
+                  },
+                  "fileCount": 258,
+                  "contentSha256": "d23c4a06d0dfb491b512349659e2a95bf05b9b8cb15a8a52bc648fbb45c77c01"
+                }
+              },
+              "reranker": null,
+              "guessVariation": "none",
+              "guessVariationRange": {
+                "minimum": 0,
+                "maximum": 0
+              },
+              "extraGuessPolicy": "pass"
+            },
+            "scoring": {
+              "similarityCalibration": {
+                "scale": 1,
+                "offset": 0
+              }
+            },
+            "randomness": {
+              "deterministic": true,
+              "boardSeed": "board-index",
+              "decisionSeed": "game-seed, turn-number, and event-history-length",
+              "operativeVariationSeed": "decision-seed",
+              "clueSelectionRandomized": false
+            }
+          },
+          "configurationFingerprint": "b5823860652bf84dcea992c380790c87e9417d9085fe53210ad01e4a5d71ecdc",
+          "configurationLabels": {
+            "modelIndex": "bge-small 30k",
+            "board": "en official",
+            "clue": "hybrid, tempo, tolerance 10, repeats never",
+            "operative": "same, dynamic, concept bridges, variation none, extra pass",
+            "split": "development 128 boards at 120"
+          },
+          "configurationContract": "canonical-v1",
+          "evidence": {
+            "source": "Deterministic Play full-game simulation",
+            "unit": "board",
+            "sampleSize": 128,
+            "split": "development",
+            "splitRole": "tuning",
+            "boardOffset": 120,
+            "pairedBoards": true,
+            "humanRealismClaim": false
+          }
+        },
+        "comparisonFingerprint": "0d5088d96fab6013b57894e92b0836b8a9d5eabfee9e60492d036b8894784a00"
+      }
+    },
+    {
+      "id": "missed-target-balanced",
+      "setting": "Retry missed targets",
+      "alternative": "Mid-game",
+      "screen": "none",
+      "phase": "development",
+      "boardCount": 128,
+      "verdict": "needs-more-data",
+      "metricStatus": {
+        "improved": 0,
+        "regressed": 0,
+        "uncertain": 2,
+        "changed": 0,
+        "unchanged": 5
+      },
+      "gateStatus": {
+        "zeroStalls": "pass",
+        "assassinNonInferiority": "pass",
+        "wrongTeamNonInferiority": "pass",
+        "neutralNonInferiority": "pass",
+        "fallback": "pass",
+        "correctNonInferiority": "pass",
+        "correctSuperiority": "needs-more-data"
+      },
+      "humanScreen": {
+        "status": "not-applicable",
+        "source": null,
+        "note": "No compatible source-separated human or gold artifact isolates this single Play behavior setting."
+      },
+      "assessment": {
+        "status": "uncertain",
+        "note": "The available paired evidence does not establish a local improvement or regression."
+      },
+      "timing": {
+        "vectorCache": "hit",
+        "vectorMilliseconds": 5.6,
+        "wallSeconds": 339.22,
+        "peakResidentBytes": 860536832
+      },
+      "artifacts": {
+        "candidate": {
+          "id": "missed-target-balanced",
+          "role": "candidate",
+          "path": ".cache/benchmark-audit/missed-target-balanced/development.json",
+          "sha256": "03d9ca672e3c66c631ffa9b0fa208276ec580200db3d77a07754d08bacfdc557",
+          "generatedAt": "2026-07-29T04:14:31.985Z",
+          "configuration": {
+            "schemaVersion": 1,
+            "evidence": {
+              "split": "development",
+              "splitRole": "tuning",
+              "boardOffset": 120,
+              "boardCount": 128,
+              "heldOutProtocol": null
+            },
+            "implementation": {
+              "files": [
+                {
+                  "file": "src/board-share.js",
+                  "sha256": "c5760a235e45c17296f801e8b15d2562ed64ef1b87d18d63f8bcd7e1f6f9aaf7"
+                },
+                {
+                  "file": "src/clue-index.js",
+                  "sha256": "296a0739d438a75dc40aabdfbdc50aed87a85cfd0dabd8a0c3734d562dd2fccc"
+                },
+                {
+                  "file": "src/embeddings.js",
+                  "sha256": "9a1ed10d867ccde86802fb645b2ef9667c422536b82fc6f3871b84a4cde5058f"
+                },
+                {
+                  "file": "src/model.js",
+                  "sha256": "184f556ef5e870af4731eb7f32070fe647712dfac9cd23fbbcc0ef1d707eb6a3"
+                },
+                {
+                  "file": "src/play/bots.js",
+                  "sha256": "832c6a9b89f7c8749973edd7a45e5d05bdcb1d8e69b83e2ed42b21ef28a56736"
+                },
+                {
+                  "file": "src/play/concept-ranking.js",
+                  "sha256": "2d065d9c75c61ad9aea69070312766977a27b41f354b975a041c5c40c42cb8c9"
+                },
+                {
+                  "file": "src/play/game-state.js",
+                  "sha256": "1b8879010672994e726e53b398c4497325abe23cce86445e056e2ee05af592b3"
+                },
+                {
+                  "file": "src/play/settings.js",
+                  "sha256": "fd7f6c92b324642a8c074e3992ef1a136dc788bc41adc849068c41c82ddda43d"
+                },
+                {
+                  "file": "src/word-data.js",
+                  "sha256": "05dd6b7f69008b429e025142a1ab493cfb8ccfdbb08ad29df66b0a8bb1b803a4"
+                }
+              ],
+              "contentSha256": "233e0fabc574c8ad101d62e7f0618da7cfb5c963920728939d24d99b3650e9a4"
+            },
+            "board": {
+              "language": "en",
+              "wordSet": "official",
+              "wordCount": 400,
+              "wordContentSha256": "b2bdf45505d9a23da8f127923c62a33be570d9fc1646400ad8038a18e78ab9a2",
+              "cardCount": 25,
+              "order": "random",
+              "wordReusePolicy": "fully-random",
+              "wordReuseHistoryBoards": 0,
+              "generationSeed": {
+                "deterministic": true,
+                "scheme": "Eight bytes: ASCII CODE followed by a big-endian 1-based board index.",
+                "firstBoardIndex": 120,
+                "lastBoardIndex": 247
+              }
+            },
+            "game": {
+              "simulationContractVersion": 1,
+              "startingSide": "blue",
+              "simulatedHumanSeat": {
+                "side": "blue",
+                "role": "spymaster"
+              },
+              "maxActionsPerGame": 100,
+              "forcedProgressAfterConsecutivePasses": 2,
+              "forcedProgressChoice": "highest-ranked-available-guess",
+              "fallbackClue": {
+                "enabled": true,
+                "number": 1,
+                "selection": "nearest-legal-indexed-clue-to-one-friendly-card"
+              }
+            },
+            "spymaster": {
+              "modelIndex": {
+                "id": "bge-small",
+                "model": "Xenova/bge-small-en-v1.5",
+                "revision": null,
+                "provider": "local",
+                "dimensions": 384,
+                "directory": "public/data/model-lab/bge-small",
+                "manifestSha256": "df9997658cb028aac476db5291b03d2fb88a7923304036c651da7206968da8fb",
+                "selectedShards": [
+                  {
+                    "start": 0,
+                    "end": 3000,
+                    "file": "clues-0-3000.json",
+                    "bytes": 1578554,
+                    "sha256": "e1b5ada2077983a8a544e1542cfda072639904896c958f7223619ac09fae5fe9"
+                  },
+                  {
+                    "start": 3000,
+                    "end": 10000,
+                    "file": "clues-3000-10000.json",
+                    "bytes": 3689892,
+                    "sha256": "bcbb4440dbd82efcc22093348f4238b5998a783e0c4de8c35a4bacf19d497766"
+                  },
+                  {
+                    "start": 10000,
+                    "end": 30000,
+                    "file": "clues-10000-30000.json",
+                    "bytes": 10552271,
+                    "sha256": "d10f3a629c61b33a0524b6d866125220c51d75ca5c9af983226cff4680767d82"
+                  }
+                ],
+                "auxiliaryAssets": [],
+                "embeddingRuntime": "transformers",
+                "taskPrefix": null,
+                "quantization": {
+                  "type": "symmetric-int8",
+                  "scale": 127
+                },
+                "centeringMethod": "30000-clue-corpus-mean"
+              },
+              "vocabularySize": 30000,
+              "cluePolicyVariants": [
+                "hybrid"
+              ],
+              "comparisonPolicy": "hybrid",
+              "clueScoring": {
+                "current": "current-v1",
+                "hybrid": "hybrid-v1"
+              },
+              "clueSelection": "tempo",
+              "clueRandomShortlistSize": null,
+              "multiClueTolerance": 5,
+              "clueRepeatPolicy": "never",
+              "missedTargetTiming": "balanced",
+              "resultsPerTargetSize": 6
+            },
+            "operative": {
+              "modelIndex": {
+                "id": "same",
+                "model": "Xenova/bge-small-en-v1.5",
+                "revision": null,
+                "provider": "local",
+                "dimensions": 384,
+                "directory": "public/data/model-lab/bge-small",
+                "manifestSha256": "df9997658cb028aac476db5291b03d2fb88a7923304036c651da7206968da8fb",
+                "selectedShards": [
+                  {
+                    "start": 0,
+                    "end": 3000,
+                    "file": "clues-0-3000.json",
+                    "bytes": 1578554,
+                    "sha256": "e1b5ada2077983a8a544e1542cfda072639904896c958f7223619ac09fae5fe9"
+                  },
+                  {
+                    "start": 3000,
+                    "end": 10000,
+                    "file": "clues-3000-10000.json",
+                    "bytes": 3689892,
+                    "sha256": "bcbb4440dbd82efcc22093348f4238b5998a783e0c4de8c35a4bacf19d497766"
+                  },
+                  {
+                    "start": 10000,
+                    "end": 30000,
+                    "file": "clues-10000-30000.json",
+                    "bytes": 10552271,
+                    "sha256": "d10f3a629c61b33a0524b6d866125220c51d75ca5c9af983226cff4680767d82"
+                  }
+                ],
+                "auxiliaryAssets": [],
+                "embeddingRuntime": "transformers",
+                "taskPrefix": null,
+                "quantization": {
+                  "type": "symmetric-int8",
+                  "scale": 127
+                },
+                "centeringMethod": "30000-clue-corpus-mean",
+                "resolvedModelId": "bge-small"
+              },
+              "aggression": "dynamic",
+              "additionalAggressionVariants": [
+                "dynamic"
+              ],
+              "conceptBridges": {
+                "playSetting": "guarded",
+                "requested": "concept",
+                "resolved": "guarded-wordnet",
+                "asset": {
+                  "directory": "public/data/concepts",
+                  "version": 2,
+                  "source": {
+                    "name": "Princeton WordNet 3.0",
+                    "archiveSha256": "cbda5ea6eef7f36a97a43d4a75f85e07fccbb4f23657d27b4ccbc93e2646ab59",
+                    "license": "WordNet 3.0"
+                  },
+                  "shardStrategy": {
+                    "algorithm": "fnv1a-32",
+                    "buckets": 256
+                  },
+                  "fileCount": 258,
+                  "contentSha256": "d23c4a06d0dfb491b512349659e2a95bf05b9b8cb15a8a52bc648fbb45c77c01"
+                }
+              },
+              "reranker": null,
+              "guessVariation": "none",
+              "guessVariationRange": {
+                "minimum": 0,
+                "maximum": 0
+              },
+              "extraGuessPolicy": "pass"
+            },
+            "scoring": {
+              "similarityCalibration": {
+                "scale": 1,
+                "offset": 0
+              }
+            },
+            "randomness": {
+              "deterministic": true,
+              "boardSeed": "board-index",
+              "decisionSeed": "game-seed, turn-number, and event-history-length",
+              "operativeVariationSeed": "decision-seed",
+              "clueSelectionRandomized": false
+            }
+          },
+          "configurationFingerprint": "c1f6fedb48a9662e266bb7d0f644e642a521181631fa12278b7e620208fb923f",
+          "configurationLabels": {
+            "modelIndex": "bge-small 30k",
+            "board": "en official",
+            "clue": "hybrid, tempo, tolerance 5, repeats never",
+            "operative": "same, dynamic, concept bridges, variation none, extra pass",
+            "split": "development 128 boards at 120"
+          },
+          "configurationContract": "canonical-v1",
+          "evidence": {
+            "source": "Deterministic Play full-game simulation",
+            "unit": "board",
+            "sampleSize": 128,
+            "split": "development",
+            "splitRole": "tuning",
+            "boardOffset": 120,
+            "pairedBoards": true,
+            "humanRealismClaim": false
+          }
+        },
+        "comparisonFingerprint": "01906f497532da1922b2e293ea938908b0a40eaaf90bd6cf6050c63e4df80666"
+      }
+    },
+    {
+      "id": "missed-target-immediate",
+      "setting": "Retry missed targets",
+      "alternative": "Immediately",
+      "screen": "none",
+      "phase": "development",
+      "boardCount": 128,
+      "verdict": "needs-more-data",
+      "metricStatus": {
+        "improved": 0,
+        "regressed": 0,
+        "uncertain": 2,
+        "changed": 0,
+        "unchanged": 5
+      },
+      "gateStatus": {
+        "zeroStalls": "pass",
+        "assassinNonInferiority": "pass",
+        "wrongTeamNonInferiority": "pass",
+        "neutralNonInferiority": "pass",
+        "fallback": "pass",
+        "correctNonInferiority": "pass",
+        "correctSuperiority": "needs-more-data"
+      },
+      "humanScreen": {
+        "status": "not-applicable",
+        "source": null,
+        "note": "No compatible source-separated human or gold artifact isolates this single Play behavior setting."
+      },
+      "assessment": {
+        "status": "uncertain",
+        "note": "The available paired evidence does not establish a local improvement or regression."
+      },
+      "timing": {
+        "vectorCache": "hit",
+        "vectorMilliseconds": 5.3,
+        "wallSeconds": 339.42,
+        "peakResidentBytes": 927154176
+      },
+      "artifacts": {
+        "candidate": {
+          "id": "missed-target-immediate",
+          "role": "candidate",
+          "path": ".cache/benchmark-audit/missed-target-immediate/development.json",
+          "sha256": "cc642200fee958b3b1db777525498c65ea9d71da20f277ccdb5445aeecd388cc",
+          "generatedAt": "2026-07-29T04:14:32.219Z",
+          "configuration": {
+            "schemaVersion": 1,
+            "evidence": {
+              "split": "development",
+              "splitRole": "tuning",
+              "boardOffset": 120,
+              "boardCount": 128,
+              "heldOutProtocol": null
+            },
+            "implementation": {
+              "files": [
+                {
+                  "file": "src/board-share.js",
+                  "sha256": "c5760a235e45c17296f801e8b15d2562ed64ef1b87d18d63f8bcd7e1f6f9aaf7"
+                },
+                {
+                  "file": "src/clue-index.js",
+                  "sha256": "296a0739d438a75dc40aabdfbdc50aed87a85cfd0dabd8a0c3734d562dd2fccc"
+                },
+                {
+                  "file": "src/embeddings.js",
+                  "sha256": "9a1ed10d867ccde86802fb645b2ef9667c422536b82fc6f3871b84a4cde5058f"
+                },
+                {
+                  "file": "src/model.js",
+                  "sha256": "184f556ef5e870af4731eb7f32070fe647712dfac9cd23fbbcc0ef1d707eb6a3"
+                },
+                {
+                  "file": "src/play/bots.js",
+                  "sha256": "832c6a9b89f7c8749973edd7a45e5d05bdcb1d8e69b83e2ed42b21ef28a56736"
+                },
+                {
+                  "file": "src/play/concept-ranking.js",
+                  "sha256": "2d065d9c75c61ad9aea69070312766977a27b41f354b975a041c5c40c42cb8c9"
+                },
+                {
+                  "file": "src/play/game-state.js",
+                  "sha256": "1b8879010672994e726e53b398c4497325abe23cce86445e056e2ee05af592b3"
+                },
+                {
+                  "file": "src/play/settings.js",
+                  "sha256": "fd7f6c92b324642a8c074e3992ef1a136dc788bc41adc849068c41c82ddda43d"
+                },
+                {
+                  "file": "src/word-data.js",
+                  "sha256": "05dd6b7f69008b429e025142a1ab493cfb8ccfdbb08ad29df66b0a8bb1b803a4"
+                }
+              ],
+              "contentSha256": "233e0fabc574c8ad101d62e7f0618da7cfb5c963920728939d24d99b3650e9a4"
+            },
+            "board": {
+              "language": "en",
+              "wordSet": "official",
+              "wordCount": 400,
+              "wordContentSha256": "b2bdf45505d9a23da8f127923c62a33be570d9fc1646400ad8038a18e78ab9a2",
+              "cardCount": 25,
+              "order": "random",
+              "wordReusePolicy": "fully-random",
+              "wordReuseHistoryBoards": 0,
+              "generationSeed": {
+                "deterministic": true,
+                "scheme": "Eight bytes: ASCII CODE followed by a big-endian 1-based board index.",
+                "firstBoardIndex": 120,
+                "lastBoardIndex": 247
+              }
+            },
+            "game": {
+              "simulationContractVersion": 1,
+              "startingSide": "blue",
+              "simulatedHumanSeat": {
+                "side": "blue",
+                "role": "spymaster"
+              },
+              "maxActionsPerGame": 100,
+              "forcedProgressAfterConsecutivePasses": 2,
+              "forcedProgressChoice": "highest-ranked-available-guess",
+              "fallbackClue": {
+                "enabled": true,
+                "number": 1,
+                "selection": "nearest-legal-indexed-clue-to-one-friendly-card"
+              }
+            },
+            "spymaster": {
+              "modelIndex": {
+                "id": "bge-small",
+                "model": "Xenova/bge-small-en-v1.5",
+                "revision": null,
+                "provider": "local",
+                "dimensions": 384,
+                "directory": "public/data/model-lab/bge-small",
+                "manifestSha256": "df9997658cb028aac476db5291b03d2fb88a7923304036c651da7206968da8fb",
+                "selectedShards": [
+                  {
+                    "start": 0,
+                    "end": 3000,
+                    "file": "clues-0-3000.json",
+                    "bytes": 1578554,
+                    "sha256": "e1b5ada2077983a8a544e1542cfda072639904896c958f7223619ac09fae5fe9"
+                  },
+                  {
+                    "start": 3000,
+                    "end": 10000,
+                    "file": "clues-3000-10000.json",
+                    "bytes": 3689892,
+                    "sha256": "bcbb4440dbd82efcc22093348f4238b5998a783e0c4de8c35a4bacf19d497766"
+                  },
+                  {
+                    "start": 10000,
+                    "end": 30000,
+                    "file": "clues-10000-30000.json",
+                    "bytes": 10552271,
+                    "sha256": "d10f3a629c61b33a0524b6d866125220c51d75ca5c9af983226cff4680767d82"
+                  }
+                ],
+                "auxiliaryAssets": [],
+                "embeddingRuntime": "transformers",
+                "taskPrefix": null,
+                "quantization": {
+                  "type": "symmetric-int8",
+                  "scale": 127
+                },
+                "centeringMethod": "30000-clue-corpus-mean"
+              },
+              "vocabularySize": 30000,
+              "cluePolicyVariants": [
+                "hybrid"
+              ],
+              "comparisonPolicy": "hybrid",
+              "clueScoring": {
+                "current": "current-v1",
+                "hybrid": "hybrid-v1"
+              },
+              "clueSelection": "tempo",
+              "clueRandomShortlistSize": null,
+              "multiClueTolerance": 5,
+              "clueRepeatPolicy": "never",
+              "missedTargetTiming": "immediate",
+              "resultsPerTargetSize": 6
+            },
+            "operative": {
+              "modelIndex": {
+                "id": "same",
+                "model": "Xenova/bge-small-en-v1.5",
+                "revision": null,
+                "provider": "local",
+                "dimensions": 384,
+                "directory": "public/data/model-lab/bge-small",
+                "manifestSha256": "df9997658cb028aac476db5291b03d2fb88a7923304036c651da7206968da8fb",
+                "selectedShards": [
+                  {
+                    "start": 0,
+                    "end": 3000,
+                    "file": "clues-0-3000.json",
+                    "bytes": 1578554,
+                    "sha256": "e1b5ada2077983a8a544e1542cfda072639904896c958f7223619ac09fae5fe9"
+                  },
+                  {
+                    "start": 3000,
+                    "end": 10000,
+                    "file": "clues-3000-10000.json",
+                    "bytes": 3689892,
+                    "sha256": "bcbb4440dbd82efcc22093348f4238b5998a783e0c4de8c35a4bacf19d497766"
+                  },
+                  {
+                    "start": 10000,
+                    "end": 30000,
+                    "file": "clues-10000-30000.json",
+                    "bytes": 10552271,
+                    "sha256": "d10f3a629c61b33a0524b6d866125220c51d75ca5c9af983226cff4680767d82"
+                  }
+                ],
+                "auxiliaryAssets": [],
+                "embeddingRuntime": "transformers",
+                "taskPrefix": null,
+                "quantization": {
+                  "type": "symmetric-int8",
+                  "scale": 127
+                },
+                "centeringMethod": "30000-clue-corpus-mean",
+                "resolvedModelId": "bge-small"
+              },
+              "aggression": "dynamic",
+              "additionalAggressionVariants": [
+                "dynamic"
+              ],
+              "conceptBridges": {
+                "playSetting": "guarded",
+                "requested": "concept",
+                "resolved": "guarded-wordnet",
+                "asset": {
+                  "directory": "public/data/concepts",
+                  "version": 2,
+                  "source": {
+                    "name": "Princeton WordNet 3.0",
+                    "archiveSha256": "cbda5ea6eef7f36a97a43d4a75f85e07fccbb4f23657d27b4ccbc93e2646ab59",
+                    "license": "WordNet 3.0"
+                  },
+                  "shardStrategy": {
+                    "algorithm": "fnv1a-32",
+                    "buckets": 256
+                  },
+                  "fileCount": 258,
+                  "contentSha256": "d23c4a06d0dfb491b512349659e2a95bf05b9b8cb15a8a52bc648fbb45c77c01"
+                }
+              },
+              "reranker": null,
+              "guessVariation": "none",
+              "guessVariationRange": {
+                "minimum": 0,
+                "maximum": 0
+              },
+              "extraGuessPolicy": "pass"
+            },
+            "scoring": {
+              "similarityCalibration": {
+                "scale": 1,
+                "offset": 0
+              }
+            },
+            "randomness": {
+              "deterministic": true,
+              "boardSeed": "board-index",
+              "decisionSeed": "game-seed, turn-number, and event-history-length",
+              "operativeVariationSeed": "decision-seed",
+              "clueSelectionRandomized": false
+            }
+          },
+          "configurationFingerprint": "9fd9805dcf67dc512b72ff8597a2ca8a9906b38ef2a1da6e97e9061705fb3023",
+          "configurationLabels": {
+            "modelIndex": "bge-small 30k",
+            "board": "en official",
+            "clue": "hybrid, tempo, tolerance 5, repeats never",
+            "operative": "same, dynamic, concept bridges, variation none, extra pass",
+            "split": "development 128 boards at 120"
+          },
+          "configurationContract": "canonical-v1",
+          "evidence": {
+            "source": "Deterministic Play full-game simulation",
+            "unit": "board",
+            "sampleSize": 128,
+            "split": "development",
+            "splitRole": "tuning",
+            "boardOffset": 120,
+            "pairedBoards": true,
+            "humanRealismClaim": false
+          }
+        },
+        "comparisonFingerprint": "1e66165032235bff58b20662300ce377dc2584ca7138b79cb4d0e77560c839b6"
+      }
+    },
+    {
+      "id": "aggression-conservative",
+      "setting": "Operative aggression",
+      "alternative": "Conservative",
+      "screen": "none",
+      "phase": "smoke",
+      "boardCount": 20,
+      "verdict": "block",
+      "metricStatus": {
+        "improved": 0,
+        "regressed": 1,
+        "uncertain": 0,
+        "changed": 1,
+        "unchanged": 5
+      },
+      "gateStatus": {
+        "zeroStalls": "pass",
+        "assassinNonInferiority": "pass",
+        "wrongTeamNonInferiority": "pass",
+        "neutralNonInferiority": "pass",
+        "fallback": "pass",
+        "correctNonInferiority": "block",
+        "correctSuperiority": "block"
+      },
+      "humanScreen": {
+        "status": "not-applicable",
+        "source": null,
+        "note": "No compatible source-separated human or gold artifact isolates this single Play behavior setting."
+      },
+      "assessment": {
+        "status": "default-locally-justified",
+        "note": "smoke evidence blocks or regresses the alternative."
+      },
+      "timing": {
+        "vectorCache": "hit",
+        "vectorMilliseconds": 4.6,
+        "wallSeconds": 51.21,
+        "peakResidentBytes": 782647296
+      },
+      "artifacts": {
+        "candidate": {
+          "id": "aggression-conservative",
+          "role": "candidate",
+          "path": ".cache/benchmark-audit/aggression-conservative/smoke.json",
+          "sha256": "3c9969090724345eb3241435e1eb1f9c550d17dce739d5a27d0de8022976299a",
+          "generatedAt": "2026-07-29T04:08:26.867Z",
+          "configuration": {
+            "schemaVersion": 1,
+            "evidence": {
+              "split": "smoke",
+              "splitRole": "tuning",
+              "boardOffset": 0,
+              "boardCount": 20,
+              "heldOutProtocol": null
+            },
+            "implementation": {
+              "files": [
+                {
+                  "file": "src/board-share.js",
+                  "sha256": "c5760a235e45c17296f801e8b15d2562ed64ef1b87d18d63f8bcd7e1f6f9aaf7"
+                },
+                {
+                  "file": "src/clue-index.js",
+                  "sha256": "296a0739d438a75dc40aabdfbdc50aed87a85cfd0dabd8a0c3734d562dd2fccc"
+                },
+                {
+                  "file": "src/embeddings.js",
+                  "sha256": "9a1ed10d867ccde86802fb645b2ef9667c422536b82fc6f3871b84a4cde5058f"
+                },
+                {
+                  "file": "src/model.js",
+                  "sha256": "184f556ef5e870af4731eb7f32070fe647712dfac9cd23fbbcc0ef1d707eb6a3"
+                },
+                {
+                  "file": "src/play/bots.js",
+                  "sha256": "832c6a9b89f7c8749973edd7a45e5d05bdcb1d8e69b83e2ed42b21ef28a56736"
+                },
+                {
+                  "file": "src/play/concept-ranking.js",
+                  "sha256": "2d065d9c75c61ad9aea69070312766977a27b41f354b975a041c5c40c42cb8c9"
+                },
+                {
+                  "file": "src/play/game-state.js",
+                  "sha256": "1b8879010672994e726e53b398c4497325abe23cce86445e056e2ee05af592b3"
+                },
+                {
+                  "file": "src/play/settings.js",
+                  "sha256": "fd7f6c92b324642a8c074e3992ef1a136dc788bc41adc849068c41c82ddda43d"
+                },
+                {
+                  "file": "src/word-data.js",
+                  "sha256": "05dd6b7f69008b429e025142a1ab493cfb8ccfdbb08ad29df66b0a8bb1b803a4"
+                }
+              ],
+              "contentSha256": "233e0fabc574c8ad101d62e7f0618da7cfb5c963920728939d24d99b3650e9a4"
+            },
+            "board": {
+              "language": "en",
+              "wordSet": "official",
+              "wordCount": 400,
+              "wordContentSha256": "b2bdf45505d9a23da8f127923c62a33be570d9fc1646400ad8038a18e78ab9a2",
+              "cardCount": 25,
+              "order": "random",
+              "wordReusePolicy": "fully-random",
+              "wordReuseHistoryBoards": 0,
+              "generationSeed": {
+                "deterministic": true,
+                "scheme": "Eight bytes: ASCII CODE followed by a big-endian 1-based board index.",
+                "firstBoardIndex": 0,
+                "lastBoardIndex": 19
+              }
+            },
+            "game": {
+              "simulationContractVersion": 1,
+              "startingSide": "blue",
+              "simulatedHumanSeat": {
+                "side": "blue",
+                "role": "spymaster"
+              },
+              "maxActionsPerGame": 100,
+              "forcedProgressAfterConsecutivePasses": 2,
+              "forcedProgressChoice": "highest-ranked-available-guess",
+              "fallbackClue": {
+                "enabled": true,
+                "number": 1,
+                "selection": "nearest-legal-indexed-clue-to-one-friendly-card"
+              }
+            },
+            "spymaster": {
+              "modelIndex": {
+                "id": "bge-small",
+                "model": "Xenova/bge-small-en-v1.5",
+                "revision": null,
+                "provider": "local",
+                "dimensions": 384,
+                "directory": "public/data/model-lab/bge-small",
+                "manifestSha256": "df9997658cb028aac476db5291b03d2fb88a7923304036c651da7206968da8fb",
+                "selectedShards": [
+                  {
+                    "start": 0,
+                    "end": 3000,
+                    "file": "clues-0-3000.json",
+                    "bytes": 1578554,
+                    "sha256": "e1b5ada2077983a8a544e1542cfda072639904896c958f7223619ac09fae5fe9"
+                  },
+                  {
+                    "start": 3000,
+                    "end": 10000,
+                    "file": "clues-3000-10000.json",
+                    "bytes": 3689892,
+                    "sha256": "bcbb4440dbd82efcc22093348f4238b5998a783e0c4de8c35a4bacf19d497766"
+                  },
+                  {
+                    "start": 10000,
+                    "end": 30000,
+                    "file": "clues-10000-30000.json",
+                    "bytes": 10552271,
+                    "sha256": "d10f3a629c61b33a0524b6d866125220c51d75ca5c9af983226cff4680767d82"
+                  }
+                ],
+                "auxiliaryAssets": [],
+                "embeddingRuntime": "transformers",
+                "taskPrefix": null,
+                "quantization": {
+                  "type": "symmetric-int8",
+                  "scale": 127
+                },
+                "centeringMethod": "30000-clue-corpus-mean"
+              },
+              "vocabularySize": 30000,
+              "cluePolicyVariants": [
+                "hybrid"
+              ],
+              "comparisonPolicy": "hybrid",
+              "clueScoring": {
+                "current": "current-v1",
+                "hybrid": "hybrid-v1"
+              },
+              "clueSelection": "tempo",
+              "clueRandomShortlistSize": null,
+              "multiClueTolerance": 5,
+              "clueRepeatPolicy": "never",
+              "missedTargetTiming": "late",
+              "resultsPerTargetSize": 6
+            },
+            "operative": {
+              "modelIndex": {
+                "id": "same",
+                "model": "Xenova/bge-small-en-v1.5",
+                "revision": null,
+                "provider": "local",
+                "dimensions": 384,
+                "directory": "public/data/model-lab/bge-small",
+                "manifestSha256": "df9997658cb028aac476db5291b03d2fb88a7923304036c651da7206968da8fb",
+                "selectedShards": [
+                  {
+                    "start": 0,
+                    "end": 3000,
+                    "file": "clues-0-3000.json",
+                    "bytes": 1578554,
+                    "sha256": "e1b5ada2077983a8a544e1542cfda072639904896c958f7223619ac09fae5fe9"
+                  },
+                  {
+                    "start": 3000,
+                    "end": 10000,
+                    "file": "clues-3000-10000.json",
+                    "bytes": 3689892,
+                    "sha256": "bcbb4440dbd82efcc22093348f4238b5998a783e0c4de8c35a4bacf19d497766"
+                  },
+                  {
+                    "start": 10000,
+                    "end": 30000,
+                    "file": "clues-10000-30000.json",
+                    "bytes": 10552271,
+                    "sha256": "d10f3a629c61b33a0524b6d866125220c51d75ca5c9af983226cff4680767d82"
+                  }
+                ],
+                "auxiliaryAssets": [],
+                "embeddingRuntime": "transformers",
+                "taskPrefix": null,
+                "quantization": {
+                  "type": "symmetric-int8",
+                  "scale": 127
+                },
+                "centeringMethod": "30000-clue-corpus-mean",
+                "resolvedModelId": "bge-small"
+              },
+              "aggression": "conservative",
+              "additionalAggressionVariants": [
+                "conservative"
+              ],
+              "conceptBridges": {
+                "playSetting": "guarded",
+                "requested": "concept",
+                "resolved": "guarded-wordnet",
+                "asset": {
+                  "directory": "public/data/concepts",
+                  "version": 2,
+                  "source": {
+                    "name": "Princeton WordNet 3.0",
+                    "archiveSha256": "cbda5ea6eef7f36a97a43d4a75f85e07fccbb4f23657d27b4ccbc93e2646ab59",
+                    "license": "WordNet 3.0"
+                  },
+                  "shardStrategy": {
+                    "algorithm": "fnv1a-32",
+                    "buckets": 256
+                  },
+                  "fileCount": 258,
+                  "contentSha256": "d23c4a06d0dfb491b512349659e2a95bf05b9b8cb15a8a52bc648fbb45c77c01"
+                }
+              },
+              "reranker": null,
+              "guessVariation": "none",
+              "guessVariationRange": {
+                "minimum": 0,
+                "maximum": 0
+              },
+              "extraGuessPolicy": "pass"
+            },
+            "scoring": {
+              "similarityCalibration": {
+                "scale": 1,
+                "offset": 0
+              }
+            },
+            "randomness": {
+              "deterministic": true,
+              "boardSeed": "board-index",
+              "decisionSeed": "game-seed, turn-number, and event-history-length",
+              "operativeVariationSeed": "decision-seed",
+              "clueSelectionRandomized": false
+            }
+          },
+          "configurationFingerprint": "1c321530a98edf2f6b4cfcd2f4aa9fbd108d43462252ff235b3b01fb48dbcd7b",
+          "configurationLabels": {
+            "modelIndex": "bge-small 30k",
+            "board": "en official",
+            "clue": "hybrid, tempo, tolerance 5, repeats never",
+            "operative": "same, conservative, concept bridges, variation none, extra pass",
+            "split": "smoke 20 boards at 0"
+          },
+          "configurationContract": "canonical-v1",
+          "evidence": {
+            "source": "Deterministic Play full-game simulation",
+            "unit": "board",
+            "sampleSize": 20,
+            "split": "smoke",
+            "splitRole": "tuning",
+            "boardOffset": 0,
+            "pairedBoards": true,
+            "humanRealismClaim": false
+          }
+        },
+        "comparisonFingerprint": "7f1ffdb3b26a1d642fdff7d3d44395d8001415a317afcc6289328ecb2a2ab06f"
+      }
+    },
+    {
+      "id": "aggression-aggressive",
+      "setting": "Operative aggression",
+      "alternative": "Aggressive",
+      "screen": "none",
+      "phase": "development",
+      "boardCount": 128,
+      "verdict": "needs-more-data",
+      "metricStatus": {
+        "improved": 1,
+        "regressed": 0,
+        "uncertain": 0,
+        "changed": 1,
+        "unchanged": 5
+      },
+      "gateStatus": {
+        "zeroStalls": "pass",
+        "assassinNonInferiority": "pass",
+        "wrongTeamNonInferiority": "pass",
+        "neutralNonInferiority": "pass",
+        "fallback": "pass",
+        "correctNonInferiority": "pass",
+        "correctSuperiority": "pass"
+      },
+      "humanScreen": {
+        "status": "not-applicable",
+        "source": null,
+        "note": "No compatible source-separated human or gold artifact isolates this single Play behavior setting."
+      },
+      "assessment": {
+        "status": "alternative-promising",
+        "note": "The alternative improves at least one paired metric without an established regression, but remains tuning evidence."
+      },
+      "timing": {
+        "vectorCache": "hit",
+        "vectorMilliseconds": 6.2,
+        "wallSeconds": 326.34,
+        "peakResidentBytes": 869761024
+      },
+      "artifacts": {
+        "candidate": {
+          "id": "aggression-aggressive",
+          "role": "candidate",
+          "path": ".cache/benchmark-audit/aggression-aggressive/development.json",
+          "sha256": "c139cf29fb57237b3cd0a24d0e7e9fe7d6d5541681452a1ffa666f6650b3df25",
+          "generatedAt": "2026-07-29T04:14:19.120Z",
+          "configuration": {
+            "schemaVersion": 1,
+            "evidence": {
+              "split": "development",
+              "splitRole": "tuning",
+              "boardOffset": 120,
+              "boardCount": 128,
+              "heldOutProtocol": null
+            },
+            "implementation": {
+              "files": [
+                {
+                  "file": "src/board-share.js",
+                  "sha256": "c5760a235e45c17296f801e8b15d2562ed64ef1b87d18d63f8bcd7e1f6f9aaf7"
+                },
+                {
+                  "file": "src/clue-index.js",
+                  "sha256": "296a0739d438a75dc40aabdfbdc50aed87a85cfd0dabd8a0c3734d562dd2fccc"
+                },
+                {
+                  "file": "src/embeddings.js",
+                  "sha256": "9a1ed10d867ccde86802fb645b2ef9667c422536b82fc6f3871b84a4cde5058f"
+                },
+                {
+                  "file": "src/model.js",
+                  "sha256": "184f556ef5e870af4731eb7f32070fe647712dfac9cd23fbbcc0ef1d707eb6a3"
+                },
+                {
+                  "file": "src/play/bots.js",
+                  "sha256": "832c6a9b89f7c8749973edd7a45e5d05bdcb1d8e69b83e2ed42b21ef28a56736"
+                },
+                {
+                  "file": "src/play/concept-ranking.js",
+                  "sha256": "2d065d9c75c61ad9aea69070312766977a27b41f354b975a041c5c40c42cb8c9"
+                },
+                {
+                  "file": "src/play/game-state.js",
+                  "sha256": "1b8879010672994e726e53b398c4497325abe23cce86445e056e2ee05af592b3"
+                },
+                {
+                  "file": "src/play/settings.js",
+                  "sha256": "fd7f6c92b324642a8c074e3992ef1a136dc788bc41adc849068c41c82ddda43d"
+                },
+                {
+                  "file": "src/word-data.js",
+                  "sha256": "05dd6b7f69008b429e025142a1ab493cfb8ccfdbb08ad29df66b0a8bb1b803a4"
+                }
+              ],
+              "contentSha256": "233e0fabc574c8ad101d62e7f0618da7cfb5c963920728939d24d99b3650e9a4"
+            },
+            "board": {
+              "language": "en",
+              "wordSet": "official",
+              "wordCount": 400,
+              "wordContentSha256": "b2bdf45505d9a23da8f127923c62a33be570d9fc1646400ad8038a18e78ab9a2",
+              "cardCount": 25,
+              "order": "random",
+              "wordReusePolicy": "fully-random",
+              "wordReuseHistoryBoards": 0,
+              "generationSeed": {
+                "deterministic": true,
+                "scheme": "Eight bytes: ASCII CODE followed by a big-endian 1-based board index.",
+                "firstBoardIndex": 120,
+                "lastBoardIndex": 247
+              }
+            },
+            "game": {
+              "simulationContractVersion": 1,
+              "startingSide": "blue",
+              "simulatedHumanSeat": {
+                "side": "blue",
+                "role": "spymaster"
+              },
+              "maxActionsPerGame": 100,
+              "forcedProgressAfterConsecutivePasses": 2,
+              "forcedProgressChoice": "highest-ranked-available-guess",
+              "fallbackClue": {
+                "enabled": true,
+                "number": 1,
+                "selection": "nearest-legal-indexed-clue-to-one-friendly-card"
+              }
+            },
+            "spymaster": {
+              "modelIndex": {
+                "id": "bge-small",
+                "model": "Xenova/bge-small-en-v1.5",
+                "revision": null,
+                "provider": "local",
+                "dimensions": 384,
+                "directory": "public/data/model-lab/bge-small",
+                "manifestSha256": "df9997658cb028aac476db5291b03d2fb88a7923304036c651da7206968da8fb",
+                "selectedShards": [
+                  {
+                    "start": 0,
+                    "end": 3000,
+                    "file": "clues-0-3000.json",
+                    "bytes": 1578554,
+                    "sha256": "e1b5ada2077983a8a544e1542cfda072639904896c958f7223619ac09fae5fe9"
+                  },
+                  {
+                    "start": 3000,
+                    "end": 10000,
+                    "file": "clues-3000-10000.json",
+                    "bytes": 3689892,
+                    "sha256": "bcbb4440dbd82efcc22093348f4238b5998a783e0c4de8c35a4bacf19d497766"
+                  },
+                  {
+                    "start": 10000,
+                    "end": 30000,
+                    "file": "clues-10000-30000.json",
+                    "bytes": 10552271,
+                    "sha256": "d10f3a629c61b33a0524b6d866125220c51d75ca5c9af983226cff4680767d82"
+                  }
+                ],
+                "auxiliaryAssets": [],
+                "embeddingRuntime": "transformers",
+                "taskPrefix": null,
+                "quantization": {
+                  "type": "symmetric-int8",
+                  "scale": 127
+                },
+                "centeringMethod": "30000-clue-corpus-mean"
+              },
+              "vocabularySize": 30000,
+              "cluePolicyVariants": [
+                "hybrid"
+              ],
+              "comparisonPolicy": "hybrid",
+              "clueScoring": {
+                "current": "current-v1",
+                "hybrid": "hybrid-v1"
+              },
+              "clueSelection": "tempo",
+              "clueRandomShortlistSize": null,
+              "multiClueTolerance": 5,
+              "clueRepeatPolicy": "never",
+              "missedTargetTiming": "late",
+              "resultsPerTargetSize": 6
+            },
+            "operative": {
+              "modelIndex": {
+                "id": "same",
+                "model": "Xenova/bge-small-en-v1.5",
+                "revision": null,
+                "provider": "local",
+                "dimensions": 384,
+                "directory": "public/data/model-lab/bge-small",
+                "manifestSha256": "df9997658cb028aac476db5291b03d2fb88a7923304036c651da7206968da8fb",
+                "selectedShards": [
+                  {
+                    "start": 0,
+                    "end": 3000,
+                    "file": "clues-0-3000.json",
+                    "bytes": 1578554,
+                    "sha256": "e1b5ada2077983a8a544e1542cfda072639904896c958f7223619ac09fae5fe9"
+                  },
+                  {
+                    "start": 3000,
+                    "end": 10000,
+                    "file": "clues-3000-10000.json",
+                    "bytes": 3689892,
+                    "sha256": "bcbb4440dbd82efcc22093348f4238b5998a783e0c4de8c35a4bacf19d497766"
+                  },
+                  {
+                    "start": 10000,
+                    "end": 30000,
+                    "file": "clues-10000-30000.json",
+                    "bytes": 10552271,
+                    "sha256": "d10f3a629c61b33a0524b6d866125220c51d75ca5c9af983226cff4680767d82"
+                  }
+                ],
+                "auxiliaryAssets": [],
+                "embeddingRuntime": "transformers",
+                "taskPrefix": null,
+                "quantization": {
+                  "type": "symmetric-int8",
+                  "scale": 127
+                },
+                "centeringMethod": "30000-clue-corpus-mean",
+                "resolvedModelId": "bge-small"
+              },
+              "aggression": "aggressive",
+              "additionalAggressionVariants": [
+                "aggressive"
+              ],
+              "conceptBridges": {
+                "playSetting": "guarded",
+                "requested": "concept",
+                "resolved": "guarded-wordnet",
+                "asset": {
+                  "directory": "public/data/concepts",
+                  "version": 2,
+                  "source": {
+                    "name": "Princeton WordNet 3.0",
+                    "archiveSha256": "cbda5ea6eef7f36a97a43d4a75f85e07fccbb4f23657d27b4ccbc93e2646ab59",
+                    "license": "WordNet 3.0"
+                  },
+                  "shardStrategy": {
+                    "algorithm": "fnv1a-32",
+                    "buckets": 256
+                  },
+                  "fileCount": 258,
+                  "contentSha256": "d23c4a06d0dfb491b512349659e2a95bf05b9b8cb15a8a52bc648fbb45c77c01"
+                }
+              },
+              "reranker": null,
+              "guessVariation": "none",
+              "guessVariationRange": {
+                "minimum": 0,
+                "maximum": 0
+              },
+              "extraGuessPolicy": "pass"
+            },
+            "scoring": {
+              "similarityCalibration": {
+                "scale": 1,
+                "offset": 0
+              }
+            },
+            "randomness": {
+              "deterministic": true,
+              "boardSeed": "board-index",
+              "decisionSeed": "game-seed, turn-number, and event-history-length",
+              "operativeVariationSeed": "decision-seed",
+              "clueSelectionRandomized": false
+            }
+          },
+          "configurationFingerprint": "c714b358398ab90704372b07eeedd89d3f04bd9c5d5c134afba23d1a5632c023",
+          "configurationLabels": {
+            "modelIndex": "bge-small 30k",
+            "board": "en official",
+            "clue": "hybrid, tempo, tolerance 5, repeats never",
+            "operative": "same, aggressive, concept bridges, variation none, extra pass",
+            "split": "development 128 boards at 120"
+          },
+          "configurationContract": "canonical-v1",
+          "evidence": {
+            "source": "Deterministic Play full-game simulation",
+            "unit": "board",
+            "sampleSize": 128,
+            "split": "development",
+            "splitRole": "tuning",
+            "boardOffset": 120,
+            "pairedBoards": true,
+            "humanRealismClaim": false
+          }
+        },
+        "comparisonFingerprint": "71d48b959dea681ee375feaa8149037892d09b43b5e10e11eaf434a2873c8451"
+      }
+    },
+    {
+      "id": "concept-bridges-off",
+      "setting": "Concept bridges",
+      "alternative": "Off",
+      "screen": "gold",
+      "phase": "development",
+      "boardCount": 128,
+      "verdict": "needs-more-data",
+      "metricStatus": {
+        "improved": 0,
+        "regressed": 0,
+        "uncertain": 0,
+        "changed": 0,
+        "unchanged": 7
+      },
+      "gateStatus": {
+        "zeroStalls": "pass",
+        "assassinNonInferiority": "pass",
+        "wrongTeamNonInferiority": "pass",
+        "neutralNonInferiority": "pass",
+        "fallback": "pass",
+        "correctNonInferiority": "pass",
+        "correctSuperiority": "block"
+      },
+      "humanScreen": {
+        "status": "baseline-favored",
+        "source": "docs/evaluations/operative-ranking/concept-ranking-evaluation.json",
+        "note": "The guarded WordNet bridge fixes the frozen JOUST association regression; direct ranking does not."
+      },
+      "assessment": {
+        "status": "default-locally-justified",
+        "note": "Compatible human or gold evidence favors the default and paired gameplay shows no established improvement."
+      },
+      "timing": {
+        "vectorCache": "hit",
+        "vectorMilliseconds": 3.4,
+        "wallSeconds": 257.49,
+        "peakResidentBytes": 507052032
+      },
+      "artifacts": {
+        "candidate": {
+          "id": "concept-bridges-off",
+          "role": "candidate",
+          "path": ".cache/benchmark-audit/concept-bridges-off/development.json",
+          "sha256": "4bd173cdfd880924dc0d1d79cf6722ae32d9e375fc4d0386c9130f742a040f45",
+          "generatedAt": "2026-07-29T04:01:04.881Z",
+          "configuration": {
+            "schemaVersion": 1,
+            "evidence": {
+              "split": "development",
+              "splitRole": "tuning",
+              "boardOffset": 120,
+              "boardCount": 128,
+              "heldOutProtocol": null
+            },
+            "implementation": {
+              "files": [
+                {
+                  "file": "src/board-share.js",
+                  "sha256": "c5760a235e45c17296f801e8b15d2562ed64ef1b87d18d63f8bcd7e1f6f9aaf7"
+                },
+                {
+                  "file": "src/clue-index.js",
+                  "sha256": "296a0739d438a75dc40aabdfbdc50aed87a85cfd0dabd8a0c3734d562dd2fccc"
+                },
+                {
+                  "file": "src/embeddings.js",
+                  "sha256": "9a1ed10d867ccde86802fb645b2ef9667c422536b82fc6f3871b84a4cde5058f"
+                },
+                {
+                  "file": "src/model.js",
+                  "sha256": "184f556ef5e870af4731eb7f32070fe647712dfac9cd23fbbcc0ef1d707eb6a3"
+                },
+                {
+                  "file": "src/play/bots.js",
+                  "sha256": "832c6a9b89f7c8749973edd7a45e5d05bdcb1d8e69b83e2ed42b21ef28a56736"
+                },
+                {
+                  "file": "src/play/concept-ranking.js",
+                  "sha256": "2d065d9c75c61ad9aea69070312766977a27b41f354b975a041c5c40c42cb8c9"
+                },
+                {
+                  "file": "src/play/game-state.js",
+                  "sha256": "1b8879010672994e726e53b398c4497325abe23cce86445e056e2ee05af592b3"
+                },
+                {
+                  "file": "src/play/settings.js",
+                  "sha256": "fd7f6c92b324642a8c074e3992ef1a136dc788bc41adc849068c41c82ddda43d"
+                },
+                {
+                  "file": "src/word-data.js",
+                  "sha256": "05dd6b7f69008b429e025142a1ab493cfb8ccfdbb08ad29df66b0a8bb1b803a4"
+                }
+              ],
+              "contentSha256": "233e0fabc574c8ad101d62e7f0618da7cfb5c963920728939d24d99b3650e9a4"
+            },
+            "board": {
+              "language": "en",
+              "wordSet": "official",
+              "wordCount": 400,
+              "wordContentSha256": "b2bdf45505d9a23da8f127923c62a33be570d9fc1646400ad8038a18e78ab9a2",
+              "cardCount": 25,
+              "order": "random",
+              "wordReusePolicy": "fully-random",
+              "wordReuseHistoryBoards": 0,
+              "generationSeed": {
+                "deterministic": true,
+                "scheme": "Eight bytes: ASCII CODE followed by a big-endian 1-based board index.",
+                "firstBoardIndex": 120,
+                "lastBoardIndex": 247
+              }
+            },
+            "game": {
+              "simulationContractVersion": 1,
+              "startingSide": "blue",
+              "simulatedHumanSeat": {
+                "side": "blue",
+                "role": "spymaster"
+              },
+              "maxActionsPerGame": 100,
+              "forcedProgressAfterConsecutivePasses": 2,
+              "forcedProgressChoice": "highest-ranked-available-guess",
+              "fallbackClue": {
+                "enabled": true,
+                "number": 1,
+                "selection": "nearest-legal-indexed-clue-to-one-friendly-card"
+              }
+            },
+            "spymaster": {
+              "modelIndex": {
+                "id": "bge-small",
+                "model": "Xenova/bge-small-en-v1.5",
+                "revision": null,
+                "provider": "local",
+                "dimensions": 384,
+                "directory": "public/data/model-lab/bge-small",
+                "manifestSha256": "df9997658cb028aac476db5291b03d2fb88a7923304036c651da7206968da8fb",
+                "selectedShards": [
+                  {
+                    "start": 0,
+                    "end": 3000,
+                    "file": "clues-0-3000.json",
+                    "bytes": 1578554,
+                    "sha256": "e1b5ada2077983a8a544e1542cfda072639904896c958f7223619ac09fae5fe9"
+                  },
+                  {
+                    "start": 3000,
+                    "end": 10000,
+                    "file": "clues-3000-10000.json",
+                    "bytes": 3689892,
+                    "sha256": "bcbb4440dbd82efcc22093348f4238b5998a783e0c4de8c35a4bacf19d497766"
+                  },
+                  {
+                    "start": 10000,
+                    "end": 30000,
+                    "file": "clues-10000-30000.json",
+                    "bytes": 10552271,
+                    "sha256": "d10f3a629c61b33a0524b6d866125220c51d75ca5c9af983226cff4680767d82"
+                  }
+                ],
+                "auxiliaryAssets": [],
+                "embeddingRuntime": "transformers",
+                "taskPrefix": null,
+                "quantization": {
+                  "type": "symmetric-int8",
+                  "scale": 127
+                },
+                "centeringMethod": "30000-clue-corpus-mean"
+              },
+              "vocabularySize": 30000,
+              "cluePolicyVariants": [
+                "hybrid"
+              ],
+              "comparisonPolicy": "hybrid",
+              "clueScoring": {
+                "current": "current-v1",
+                "hybrid": "hybrid-v1"
+              },
+              "clueSelection": "tempo",
+              "clueRandomShortlistSize": null,
+              "multiClueTolerance": 5,
+              "clueRepeatPolicy": "never",
+              "missedTargetTiming": "late",
+              "resultsPerTargetSize": 6
+            },
+            "operative": {
+              "modelIndex": {
+                "id": "same",
+                "model": "Xenova/bge-small-en-v1.5",
+                "revision": null,
+                "provider": "local",
+                "dimensions": 384,
+                "directory": "public/data/model-lab/bge-small",
+                "manifestSha256": "df9997658cb028aac476db5291b03d2fb88a7923304036c651da7206968da8fb",
+                "selectedShards": [
+                  {
+                    "start": 0,
+                    "end": 3000,
+                    "file": "clues-0-3000.json",
+                    "bytes": 1578554,
+                    "sha256": "e1b5ada2077983a8a544e1542cfda072639904896c958f7223619ac09fae5fe9"
+                  },
+                  {
+                    "start": 3000,
+                    "end": 10000,
+                    "file": "clues-3000-10000.json",
+                    "bytes": 3689892,
+                    "sha256": "bcbb4440dbd82efcc22093348f4238b5998a783e0c4de8c35a4bacf19d497766"
+                  },
+                  {
+                    "start": 10000,
+                    "end": 30000,
+                    "file": "clues-10000-30000.json",
+                    "bytes": 10552271,
+                    "sha256": "d10f3a629c61b33a0524b6d866125220c51d75ca5c9af983226cff4680767d82"
+                  }
+                ],
+                "auxiliaryAssets": [],
+                "embeddingRuntime": "transformers",
+                "taskPrefix": null,
+                "quantization": {
+                  "type": "symmetric-int8",
+                  "scale": 127
+                },
+                "centeringMethod": "30000-clue-corpus-mean",
+                "resolvedModelId": "bge-small"
+              },
+              "aggression": "dynamic",
+              "additionalAggressionVariants": [
+                "dynamic"
+              ],
+              "conceptBridges": {
+                "playSetting": "direct",
+                "requested": "direct",
+                "resolved": "direct",
+                "asset": null
+              },
+              "reranker": null,
+              "guessVariation": "none",
+              "guessVariationRange": {
+                "minimum": 0,
+                "maximum": 0
+              },
+              "extraGuessPolicy": "pass"
+            },
+            "scoring": {
+              "similarityCalibration": {
+                "scale": 1,
+                "offset": 0
+              }
+            },
+            "randomness": {
+              "deterministic": true,
+              "boardSeed": "board-index",
+              "decisionSeed": "game-seed, turn-number, and event-history-length",
+              "operativeVariationSeed": "decision-seed",
+              "clueSelectionRandomized": false
+            }
+          },
+          "configurationFingerprint": "97e1bd67c992ad3cf2e7552441de03c7310d3732bcf46220321d8cfb6c36e99f",
+          "configurationLabels": {
+            "modelIndex": "bge-small 30k",
+            "board": "en official",
+            "clue": "hybrid, tempo, tolerance 5, repeats never",
+            "operative": "same, dynamic, direct, variation none, extra pass",
+            "split": "development 128 boards at 120"
+          },
+          "configurationContract": "canonical-v1",
+          "evidence": {
+            "source": "Deterministic Play full-game simulation",
+            "unit": "board",
+            "sampleSize": 128,
+            "split": "development",
+            "splitRole": "tuning",
+            "boardOffset": 120,
+            "pairedBoards": true,
+            "humanRealismClaim": false
+          }
+        },
+        "comparisonFingerprint": "cd7f15d81b1dfb878e1ebf3195add3404986baebaa503477f4d9110df3df4fc0"
+      }
+    },
+    {
+      "id": "operative-noise-standard",
+      "setting": "Guess variation",
+      "alternative": "Standard",
+      "screen": "none",
+      "phase": "development",
+      "boardCount": 128,
+      "verdict": "needs-more-data",
+      "metricStatus": {
+        "improved": 0,
+        "regressed": 0,
+        "uncertain": 2,
+        "changed": 0,
+        "unchanged": 5
+      },
+      "gateStatus": {
+        "zeroStalls": "pass",
+        "assassinNonInferiority": "pass",
+        "wrongTeamNonInferiority": "pass",
+        "neutralNonInferiority": "pass",
+        "fallback": "pass",
+        "correctNonInferiority": "pass",
+        "correctSuperiority": "needs-more-data"
+      },
+      "humanScreen": {
+        "status": "not-applicable",
+        "source": null,
+        "note": "No compatible source-separated human or gold artifact isolates this single Play behavior setting."
+      },
+      "assessment": {
+        "status": "uncertain",
+        "note": "The available paired evidence does not establish a local improvement or regression."
+      },
+      "timing": {
+        "vectorCache": "hit",
+        "vectorMilliseconds": 4,
+        "wallSeconds": 263.57,
+        "peakResidentBytes": 875708416
+      },
+      "artifacts": {
+        "candidate": {
+          "id": "operative-noise-standard",
+          "role": "candidate",
+          "path": ".cache/benchmark-audit/operative-noise-standard/development.json",
+          "sha256": "06af503354bc436342941a28191734345e33c2535643c6368b3a2a54e81701e9",
+          "generatedAt": "2026-07-29T04:19:10.410Z",
+          "configuration": {
+            "schemaVersion": 1,
+            "evidence": {
+              "split": "development",
+              "splitRole": "tuning",
+              "boardOffset": 120,
+              "boardCount": 128,
+              "heldOutProtocol": null
+            },
+            "implementation": {
+              "files": [
+                {
+                  "file": "src/board-share.js",
+                  "sha256": "c5760a235e45c17296f801e8b15d2562ed64ef1b87d18d63f8bcd7e1f6f9aaf7"
+                },
+                {
+                  "file": "src/clue-index.js",
+                  "sha256": "296a0739d438a75dc40aabdfbdc50aed87a85cfd0dabd8a0c3734d562dd2fccc"
+                },
+                {
+                  "file": "src/embeddings.js",
+                  "sha256": "9a1ed10d867ccde86802fb645b2ef9667c422536b82fc6f3871b84a4cde5058f"
+                },
+                {
+                  "file": "src/model.js",
+                  "sha256": "184f556ef5e870af4731eb7f32070fe647712dfac9cd23fbbcc0ef1d707eb6a3"
+                },
+                {
+                  "file": "src/play/bots.js",
+                  "sha256": "832c6a9b89f7c8749973edd7a45e5d05bdcb1d8e69b83e2ed42b21ef28a56736"
+                },
+                {
+                  "file": "src/play/concept-ranking.js",
+                  "sha256": "2d065d9c75c61ad9aea69070312766977a27b41f354b975a041c5c40c42cb8c9"
+                },
+                {
+                  "file": "src/play/game-state.js",
+                  "sha256": "1b8879010672994e726e53b398c4497325abe23cce86445e056e2ee05af592b3"
+                },
+                {
+                  "file": "src/play/settings.js",
+                  "sha256": "fd7f6c92b324642a8c074e3992ef1a136dc788bc41adc849068c41c82ddda43d"
+                },
+                {
+                  "file": "src/word-data.js",
+                  "sha256": "05dd6b7f69008b429e025142a1ab493cfb8ccfdbb08ad29df66b0a8bb1b803a4"
+                }
+              ],
+              "contentSha256": "233e0fabc574c8ad101d62e7f0618da7cfb5c963920728939d24d99b3650e9a4"
+            },
+            "board": {
+              "language": "en",
+              "wordSet": "official",
+              "wordCount": 400,
+              "wordContentSha256": "b2bdf45505d9a23da8f127923c62a33be570d9fc1646400ad8038a18e78ab9a2",
+              "cardCount": 25,
+              "order": "random",
+              "wordReusePolicy": "fully-random",
+              "wordReuseHistoryBoards": 0,
+              "generationSeed": {
+                "deterministic": true,
+                "scheme": "Eight bytes: ASCII CODE followed by a big-endian 1-based board index.",
+                "firstBoardIndex": 120,
+                "lastBoardIndex": 247
+              }
+            },
+            "game": {
+              "simulationContractVersion": 1,
+              "startingSide": "blue",
+              "simulatedHumanSeat": {
+                "side": "blue",
+                "role": "spymaster"
+              },
+              "maxActionsPerGame": 100,
+              "forcedProgressAfterConsecutivePasses": 2,
+              "forcedProgressChoice": "highest-ranked-available-guess",
+              "fallbackClue": {
+                "enabled": true,
+                "number": 1,
+                "selection": "nearest-legal-indexed-clue-to-one-friendly-card"
+              }
+            },
+            "spymaster": {
+              "modelIndex": {
+                "id": "bge-small",
+                "model": "Xenova/bge-small-en-v1.5",
+                "revision": null,
+                "provider": "local",
+                "dimensions": 384,
+                "directory": "public/data/model-lab/bge-small",
+                "manifestSha256": "df9997658cb028aac476db5291b03d2fb88a7923304036c651da7206968da8fb",
+                "selectedShards": [
+                  {
+                    "start": 0,
+                    "end": 3000,
+                    "file": "clues-0-3000.json",
+                    "bytes": 1578554,
+                    "sha256": "e1b5ada2077983a8a544e1542cfda072639904896c958f7223619ac09fae5fe9"
+                  },
+                  {
+                    "start": 3000,
+                    "end": 10000,
+                    "file": "clues-3000-10000.json",
+                    "bytes": 3689892,
+                    "sha256": "bcbb4440dbd82efcc22093348f4238b5998a783e0c4de8c35a4bacf19d497766"
+                  },
+                  {
+                    "start": 10000,
+                    "end": 30000,
+                    "file": "clues-10000-30000.json",
+                    "bytes": 10552271,
+                    "sha256": "d10f3a629c61b33a0524b6d866125220c51d75ca5c9af983226cff4680767d82"
+                  }
+                ],
+                "auxiliaryAssets": [],
+                "embeddingRuntime": "transformers",
+                "taskPrefix": null,
+                "quantization": {
+                  "type": "symmetric-int8",
+                  "scale": 127
+                },
+                "centeringMethod": "30000-clue-corpus-mean"
+              },
+              "vocabularySize": 30000,
+              "cluePolicyVariants": [
+                "hybrid"
+              ],
+              "comparisonPolicy": "hybrid",
+              "clueScoring": {
+                "current": "current-v1",
+                "hybrid": "hybrid-v1"
+              },
+              "clueSelection": "tempo",
+              "clueRandomShortlistSize": null,
+              "multiClueTolerance": 5,
+              "clueRepeatPolicy": "never",
+              "missedTargetTiming": "late",
+              "resultsPerTargetSize": 6
+            },
+            "operative": {
+              "modelIndex": {
+                "id": "same",
+                "model": "Xenova/bge-small-en-v1.5",
+                "revision": null,
+                "provider": "local",
+                "dimensions": 384,
+                "directory": "public/data/model-lab/bge-small",
+                "manifestSha256": "df9997658cb028aac476db5291b03d2fb88a7923304036c651da7206968da8fb",
+                "selectedShards": [
+                  {
+                    "start": 0,
+                    "end": 3000,
+                    "file": "clues-0-3000.json",
+                    "bytes": 1578554,
+                    "sha256": "e1b5ada2077983a8a544e1542cfda072639904896c958f7223619ac09fae5fe9"
+                  },
+                  {
+                    "start": 3000,
+                    "end": 10000,
+                    "file": "clues-3000-10000.json",
+                    "bytes": 3689892,
+                    "sha256": "bcbb4440dbd82efcc22093348f4238b5998a783e0c4de8c35a4bacf19d497766"
+                  },
+                  {
+                    "start": 10000,
+                    "end": 30000,
+                    "file": "clues-10000-30000.json",
+                    "bytes": 10552271,
+                    "sha256": "d10f3a629c61b33a0524b6d866125220c51d75ca5c9af983226cff4680767d82"
+                  }
+                ],
+                "auxiliaryAssets": [],
+                "embeddingRuntime": "transformers",
+                "taskPrefix": null,
+                "quantization": {
+                  "type": "symmetric-int8",
+                  "scale": 127
+                },
+                "centeringMethod": "30000-clue-corpus-mean",
+                "resolvedModelId": "bge-small"
+              },
+              "aggression": "dynamic",
+              "additionalAggressionVariants": [
+                "dynamic"
+              ],
+              "conceptBridges": {
+                "playSetting": "guarded",
+                "requested": "concept",
+                "resolved": "guarded-wordnet",
+                "asset": {
+                  "directory": "public/data/concepts",
+                  "version": 2,
+                  "source": {
+                    "name": "Princeton WordNet 3.0",
+                    "archiveSha256": "cbda5ea6eef7f36a97a43d4a75f85e07fccbb4f23657d27b4ccbc93e2646ab59",
+                    "license": "WordNet 3.0"
+                  },
+                  "shardStrategy": {
+                    "algorithm": "fnv1a-32",
+                    "buckets": 256
+                  },
+                  "fileCount": 258,
+                  "contentSha256": "d23c4a06d0dfb491b512349659e2a95bf05b9b8cb15a8a52bc648fbb45c77c01"
+                }
+              },
+              "reranker": null,
+              "guessVariation": "standard",
+              "guessVariationRange": {
+                "minimum": -0.0275,
+                "maximum": 0.0275
+              },
+              "extraGuessPolicy": "pass"
+            },
+            "scoring": {
+              "similarityCalibration": {
+                "scale": 1,
+                "offset": 0
+              }
+            },
+            "randomness": {
+              "deterministic": true,
+              "boardSeed": "board-index",
+              "decisionSeed": "game-seed, turn-number, and event-history-length",
+              "operativeVariationSeed": "decision-seed",
+              "clueSelectionRandomized": false
+            }
+          },
+          "configurationFingerprint": "cc789be672078660e7ede1490f219bf2708f7a3fb0c6ed617eaa68337b06c0de",
+          "configurationLabels": {
+            "modelIndex": "bge-small 30k",
+            "board": "en official",
+            "clue": "hybrid, tempo, tolerance 5, repeats never",
+            "operative": "same, dynamic, concept bridges, variation standard, extra pass",
+            "split": "development 128 boards at 120"
+          },
+          "configurationContract": "canonical-v1",
+          "evidence": {
+            "source": "Deterministic Play full-game simulation",
+            "unit": "board",
+            "sampleSize": 128,
+            "split": "development",
+            "splitRole": "tuning",
+            "boardOffset": 120,
+            "pairedBoards": true,
+            "humanRealismClaim": false
+          }
+        },
+        "comparisonFingerprint": "febb357ae9e5331c1c34fd60ceccd86287e6816a72d684e2dd9669da828dbdec"
+      }
+    },
+    {
+      "id": "bonus-guesses-allow",
+      "setting": "Extra guess",
+      "alternative": "Allow",
+      "screen": "none",
+      "phase": "smoke",
+      "boardCount": 20,
+      "verdict": "block",
+      "metricStatus": {
+        "improved": 0,
+        "regressed": 2,
+        "uncertain": 1,
+        "changed": 1,
+        "unchanged": 3
+      },
+      "gateStatus": {
+        "zeroStalls": "pass",
+        "assassinNonInferiority": "pass",
+        "wrongTeamNonInferiority": "block",
+        "neutralNonInferiority": "block",
+        "fallback": "pass",
+        "correctNonInferiority": "pass",
+        "correctSuperiority": "needs-more-data"
+      },
+      "humanScreen": {
+        "status": "not-applicable",
+        "source": null,
+        "note": "No compatible source-separated human or gold artifact isolates this single Play behavior setting."
+      },
+      "assessment": {
+        "status": "default-locally-justified",
+        "note": "smoke evidence blocks or regresses the alternative."
+      },
+      "timing": {
+        "vectorCache": "hit",
+        "vectorMilliseconds": 4.6,
+        "wallSeconds": 57.87,
+        "peakResidentBytes": 793624576
+      },
+      "artifacts": {
+        "candidate": {
+          "id": "bonus-guesses-allow",
+          "role": "candidate",
+          "path": ".cache/benchmark-audit/bonus-guesses-allow/smoke.json",
+          "sha256": "0bbe0ea47d3d255f5089dca995cef0bd77c05fba12f2dac80e389372f1515456",
+          "generatedAt": "2026-07-29T04:07:04.985Z",
+          "configuration": {
+            "schemaVersion": 1,
+            "evidence": {
+              "split": "smoke",
+              "splitRole": "tuning",
+              "boardOffset": 0,
+              "boardCount": 20,
+              "heldOutProtocol": null
+            },
+            "implementation": {
+              "files": [
+                {
+                  "file": "src/board-share.js",
+                  "sha256": "c5760a235e45c17296f801e8b15d2562ed64ef1b87d18d63f8bcd7e1f6f9aaf7"
+                },
+                {
+                  "file": "src/clue-index.js",
+                  "sha256": "296a0739d438a75dc40aabdfbdc50aed87a85cfd0dabd8a0c3734d562dd2fccc"
+                },
+                {
+                  "file": "src/embeddings.js",
+                  "sha256": "9a1ed10d867ccde86802fb645b2ef9667c422536b82fc6f3871b84a4cde5058f"
+                },
+                {
+                  "file": "src/model.js",
+                  "sha256": "184f556ef5e870af4731eb7f32070fe647712dfac9cd23fbbcc0ef1d707eb6a3"
+                },
+                {
+                  "file": "src/play/bots.js",
+                  "sha256": "832c6a9b89f7c8749973edd7a45e5d05bdcb1d8e69b83e2ed42b21ef28a56736"
+                },
+                {
+                  "file": "src/play/concept-ranking.js",
+                  "sha256": "2d065d9c75c61ad9aea69070312766977a27b41f354b975a041c5c40c42cb8c9"
+                },
+                {
+                  "file": "src/play/game-state.js",
+                  "sha256": "1b8879010672994e726e53b398c4497325abe23cce86445e056e2ee05af592b3"
+                },
+                {
+                  "file": "src/play/settings.js",
+                  "sha256": "fd7f6c92b324642a8c074e3992ef1a136dc788bc41adc849068c41c82ddda43d"
+                },
+                {
+                  "file": "src/word-data.js",
+                  "sha256": "05dd6b7f69008b429e025142a1ab493cfb8ccfdbb08ad29df66b0a8bb1b803a4"
+                }
+              ],
+              "contentSha256": "233e0fabc574c8ad101d62e7f0618da7cfb5c963920728939d24d99b3650e9a4"
+            },
+            "board": {
+              "language": "en",
+              "wordSet": "official",
+              "wordCount": 400,
+              "wordContentSha256": "b2bdf45505d9a23da8f127923c62a33be570d9fc1646400ad8038a18e78ab9a2",
+              "cardCount": 25,
+              "order": "random",
+              "wordReusePolicy": "fully-random",
+              "wordReuseHistoryBoards": 0,
+              "generationSeed": {
+                "deterministic": true,
+                "scheme": "Eight bytes: ASCII CODE followed by a big-endian 1-based board index.",
+                "firstBoardIndex": 0,
+                "lastBoardIndex": 19
+              }
+            },
+            "game": {
+              "simulationContractVersion": 1,
+              "startingSide": "blue",
+              "simulatedHumanSeat": {
+                "side": "blue",
+                "role": "spymaster"
+              },
+              "maxActionsPerGame": 100,
+              "forcedProgressAfterConsecutivePasses": 2,
+              "forcedProgressChoice": "highest-ranked-available-guess",
+              "fallbackClue": {
+                "enabled": true,
+                "number": 1,
+                "selection": "nearest-legal-indexed-clue-to-one-friendly-card"
+              }
+            },
+            "spymaster": {
+              "modelIndex": {
+                "id": "bge-small",
+                "model": "Xenova/bge-small-en-v1.5",
+                "revision": null,
+                "provider": "local",
+                "dimensions": 384,
+                "directory": "public/data/model-lab/bge-small",
+                "manifestSha256": "df9997658cb028aac476db5291b03d2fb88a7923304036c651da7206968da8fb",
+                "selectedShards": [
+                  {
+                    "start": 0,
+                    "end": 3000,
+                    "file": "clues-0-3000.json",
+                    "bytes": 1578554,
+                    "sha256": "e1b5ada2077983a8a544e1542cfda072639904896c958f7223619ac09fae5fe9"
+                  },
+                  {
+                    "start": 3000,
+                    "end": 10000,
+                    "file": "clues-3000-10000.json",
+                    "bytes": 3689892,
+                    "sha256": "bcbb4440dbd82efcc22093348f4238b5998a783e0c4de8c35a4bacf19d497766"
+                  },
+                  {
+                    "start": 10000,
+                    "end": 30000,
+                    "file": "clues-10000-30000.json",
+                    "bytes": 10552271,
+                    "sha256": "d10f3a629c61b33a0524b6d866125220c51d75ca5c9af983226cff4680767d82"
+                  }
+                ],
+                "auxiliaryAssets": [],
+                "embeddingRuntime": "transformers",
+                "taskPrefix": null,
+                "quantization": {
+                  "type": "symmetric-int8",
+                  "scale": 127
+                },
+                "centeringMethod": "30000-clue-corpus-mean"
+              },
+              "vocabularySize": 30000,
+              "cluePolicyVariants": [
+                "hybrid"
+              ],
+              "comparisonPolicy": "hybrid",
+              "clueScoring": {
+                "current": "current-v1",
+                "hybrid": "hybrid-v1"
+              },
+              "clueSelection": "tempo",
+              "clueRandomShortlistSize": null,
+              "multiClueTolerance": 5,
+              "clueRepeatPolicy": "never",
+              "missedTargetTiming": "late",
+              "resultsPerTargetSize": 6
+            },
+            "operative": {
+              "modelIndex": {
+                "id": "same",
+                "model": "Xenova/bge-small-en-v1.5",
+                "revision": null,
+                "provider": "local",
+                "dimensions": 384,
+                "directory": "public/data/model-lab/bge-small",
+                "manifestSha256": "df9997658cb028aac476db5291b03d2fb88a7923304036c651da7206968da8fb",
+                "selectedShards": [
+                  {
+                    "start": 0,
+                    "end": 3000,
+                    "file": "clues-0-3000.json",
+                    "bytes": 1578554,
+                    "sha256": "e1b5ada2077983a8a544e1542cfda072639904896c958f7223619ac09fae5fe9"
+                  },
+                  {
+                    "start": 3000,
+                    "end": 10000,
+                    "file": "clues-3000-10000.json",
+                    "bytes": 3689892,
+                    "sha256": "bcbb4440dbd82efcc22093348f4238b5998a783e0c4de8c35a4bacf19d497766"
+                  },
+                  {
+                    "start": 10000,
+                    "end": 30000,
+                    "file": "clues-10000-30000.json",
+                    "bytes": 10552271,
+                    "sha256": "d10f3a629c61b33a0524b6d866125220c51d75ca5c9af983226cff4680767d82"
+                  }
+                ],
+                "auxiliaryAssets": [],
+                "embeddingRuntime": "transformers",
+                "taskPrefix": null,
+                "quantization": {
+                  "type": "symmetric-int8",
+                  "scale": 127
+                },
+                "centeringMethod": "30000-clue-corpus-mean",
+                "resolvedModelId": "bge-small"
+              },
+              "aggression": "dynamic",
+              "additionalAggressionVariants": [
+                "dynamic"
+              ],
+              "conceptBridges": {
+                "playSetting": "guarded",
+                "requested": "concept",
+                "resolved": "guarded-wordnet",
+                "asset": {
+                  "directory": "public/data/concepts",
+                  "version": 2,
+                  "source": {
+                    "name": "Princeton WordNet 3.0",
+                    "archiveSha256": "cbda5ea6eef7f36a97a43d4a75f85e07fccbb4f23657d27b4ccbc93e2646ab59",
+                    "license": "WordNet 3.0"
+                  },
+                  "shardStrategy": {
+                    "algorithm": "fnv1a-32",
+                    "buckets": 256
+                  },
+                  "fileCount": 258,
+                  "contentSha256": "d23c4a06d0dfb491b512349659e2a95bf05b9b8cb15a8a52bc648fbb45c77c01"
+                }
+              },
+              "reranker": null,
+              "guessVariation": "none",
+              "guessVariationRange": {
+                "minimum": 0,
+                "maximum": 0
+              },
+              "extraGuessPolicy": "allow"
+            },
+            "scoring": {
+              "similarityCalibration": {
+                "scale": 1,
+                "offset": 0
+              }
+            },
+            "randomness": {
+              "deterministic": true,
+              "boardSeed": "board-index",
+              "decisionSeed": "game-seed, turn-number, and event-history-length",
+              "operativeVariationSeed": "decision-seed",
+              "clueSelectionRandomized": false
+            }
+          },
+          "configurationFingerprint": "65545ae6c57d9e44929316e74b2b71e7cdef8da56444ccdb347890e4bc2242e5",
+          "configurationLabels": {
+            "modelIndex": "bge-small 30k",
+            "board": "en official",
+            "clue": "hybrid, tempo, tolerance 5, repeats never",
+            "operative": "same, dynamic, concept bridges, variation none, extra allow",
+            "split": "smoke 20 boards at 0"
+          },
+          "configurationContract": "canonical-v1",
+          "evidence": {
+            "source": "Deterministic Play full-game simulation",
+            "unit": "board",
+            "sampleSize": 20,
+            "split": "smoke",
+            "splitRole": "tuning",
+            "boardOffset": 0,
+            "pairedBoards": true,
+            "humanRealismClaim": false
+          }
+        },
+        "comparisonFingerprint": "1fd27df53e5138374bdcf805a11e573fd6fa027b30aef80e335a4cb63d8d3c88"
+      }
+    }
+  ],
+  "reportSha256": "f9e947264683514005f05d251832736864786503b4780a7d644440ed618ffcc4"
+}

@@ -46,7 +46,7 @@ const humanAlignmentSources = new Map(
     ]),
   ),
 );
-const baselineGames = fullHybridGames(
+const baselineGames = fullComparisonGames(
   baselineSource.report,
   options.baseline,
 );
@@ -59,7 +59,7 @@ const baselineArtifact = artifactRecord({
 });
 const results = candidateSources.map(({ id, path, bytes, report }) => {
   validateComparableReports(baselineSource.report, report, id);
-  const candidateGames = fullHybridGames(report, id);
+  const candidateGames = fullComparisonGames(report, id);
   const comparison = comparePairedGameResults(baselineGames, candidateGames, {
     iterations: options.iterations,
     seed: `${options.seed}:${id}`,
@@ -285,8 +285,9 @@ await writeFile(
 console.log(`Wrote ${outputPath}`);
 console.log(`Wrote ${summaryOutputPath}`);
 
-function fullHybridGames(report, label) {
-  const games = report?.policies?.hybrid?.gameResults;
+function fullComparisonGames(report, label) {
+  const policy = report?.configuration?.spymaster?.cluePolicyVariants?.[0];
+  const games = report?.policies?.[policy]?.gameResults;
   if (!Array.isArray(games) || games.length < 2) {
     throw new Error(`${label} must be a full Play benchmark report.`);
   }

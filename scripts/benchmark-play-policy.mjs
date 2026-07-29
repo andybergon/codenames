@@ -222,7 +222,7 @@ const similarityGeometry = measureSimilarityGeometry(
   centeredBoardWords,
 );
 const activePolicies = options.comparisonOnly
-  ? [PLAY_CLUE_POLICY.HYBRID]
+  ? [options.cluePolicy]
   : POLICIES;
 const activeAggressions = options.comparisonOnly
   ? [options.operativeAggression]
@@ -537,7 +537,9 @@ const report = {
   operativeAggression,
   operativeAggressionVsDynamic: Object.fromEntries(
     activeAggressions.filter(
-      (aggression) => aggression !== PLAY_OPERATIVE_AGGRESSION.DYNAMIC,
+      (aggression) =>
+        aggression !== PLAY_OPERATIVE_AGGRESSION.DYNAMIC &&
+        operativeAggression.dynamic,
     ).map((aggression) => [
       aggression,
       operativeMetricDeltas(
@@ -546,7 +548,7 @@ const report = {
       ),
     ]),
   ),
-  hybridMinusCurrent: policies.current
+  hybridMinusCurrent: policies.current && policies.hybrid
     ? metricDeltas(policies.current, policies.hybrid)
     : null,
 };
@@ -1319,6 +1321,7 @@ function parseOptions(args) {
     modelId: DEFAULT_PLAY_BOT_SETTINGS.modelId,
     wordSet: WORD_SET.OFFICIAL,
     clueSelection: "tempo",
+    cluePolicy: PLAY_CLUE_POLICY.HYBRID,
     multiTolerance: DEFAULT_PLAY_BOT_SETTINGS.multiTolerance,
     missedTargetTiming: DEFAULT_PLAY_BOT_SETTINGS.missedTargetTiming,
     clueRepeatPolicy: DEFAULT_PLAY_BOT_SETTINGS.clueRepeatPolicy,
@@ -1377,6 +1380,11 @@ function parseOptions(args) {
         throw new Error(`${option} must be random, top, or tempo.`);
       }
       values.clueSelection = value;
+    } else if (option === "--clue-policy") {
+      if (!POLICIES.includes(value)) {
+        throw new Error(`${option} must be current or hybrid.`);
+      }
+      values.cluePolicy = value;
     } else if (option === "--multi-tolerance") {
       values.multiTolerance = nonNegativeNumber(value, option);
     } else if (option === "--missed-target-timing") {
