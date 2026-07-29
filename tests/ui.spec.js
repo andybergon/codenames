@@ -5826,72 +5826,133 @@ test("benchmark scorecard stays hidden outside its direct route", async ({ page 
   await page.goto("/");
 
   await expect(page.locator("#benchmark-mode")).toBeHidden();
-  await expect(page.getByRole("heading", { name: "Benchmark scorecard" })).toHaveCount(0);
+  await expect(
+    page.getByRole("heading", { name: "Benchmark comparison" }),
+  ).toHaveCount(0);
 });
 
-test("benchmark scorecard compares complete settings combinations", async ({ page }) => {
+test("benchmark scorecard presents the canonical accepted baseline", async ({
+  page,
+}) => {
   await page.goto("/?mode=benchmarks");
 
   await expect(page).toHaveTitle("Codenames benchmarks");
   await expect(page.locator(".app-mode-switch")).toBeHidden();
-  await expect(page.getByRole("heading", { name: "Benchmark scorecard" })).toBeVisible();
-  await expect(page.locator("#benchmark-table-body tr")).toHaveCount(5);
+  await expect(
+    page.getByRole("heading", { name: "Benchmark comparison" }),
+  ).toBeVisible();
+  await expect(page.locator("#benchmark-table-body tr")).toHaveCount(0);
   await expect(
     page.locator(".benchmark-table thead .info-button"),
-  ).toHaveCount(8);
-  await expect(page.locator("#benchmark-details")).toContainText("BGE · Hybrid · Dynamic");
-  await expect(page.locator("#benchmark-details")).toContainText("67.7");
-  await expect(page.getByText("Transfer remains a promotion gate, not a point source.")).toBeVisible();
-
-  await page.locator("#benchmark-human-weight").fill("100");
-  await expect(page.locator("#benchmark-human-weight-value")).toHaveText("100%");
-  await expect(page.locator("#benchmark-fun-weight-value")).toHaveText("0%");
-
+  ).toHaveCount(7);
+  await expect(page.locator("#benchmark-empty")).toBeVisible();
+  await expect(page.locator("#benchmark-details")).toContainText(
+    "accepted-production-development",
+  );
+  await expect(page.locator("#benchmark-details")).toContainText(
+    "128 development boards",
+  );
+  await expect(page.locator(".benchmark-fingerprint code")).toHaveText(
+    "cf888693ae7567c012460f8b697231911be13352d88a7e122d4cb19879c3633b",
+  );
   await page
-    .getByRole("button", { name: /Voyage · Hybrid · Dynamic/ })
+    .getByText("Full canonical configuration", { exact: true })
     .click();
-  await expect(page.locator("#benchmark-details")).toContainText("62.7");
-  await expect(page.locator("#benchmark-details")).toContainText("Blocked");
+  await expect(page.locator(".benchmark-disclosure pre")).toContainText(
+    '"vocabularySize": 30000',
+  );
+});
+
+test("benchmark tests and data tab explains artifact evidence", async ({
+  page,
+}) => {
+  await page.goto("/?mode=benchmarks");
+
+  const scorecardTab = page.getByRole("tab", { name: "Scorecard" });
+  const evidenceTab = page.getByRole("tab", { name: "Tests & data" });
+  await expect(scorecardTab).toHaveAttribute("aria-selected", "true");
+  await evidenceTab.click();
+  await expect(evidenceTab).toHaveAttribute("aria-selected", "true");
+  await expect(page.locator("#benchmark-panel-scorecard")).toBeHidden();
+  await expect(page.locator("#benchmark-panel-evidence")).toBeVisible();
   await expect(
-    page
-      .locator("#benchmark-details .benchmark-bars")
-      .first()
-      .locator(":scope > div"),
-  ).toHaveCount(5);
-  await expect(page.locator("#benchmark-details")).toContainText("128 paired boards");
+    page.getByRole("heading", { name: "Tests & data" }),
+  ).toBeVisible();
+  const splitExpectations = [
+    ["smoke", "Smoke", "20 boards", "Fast regression screen"],
+    [
+      "calibration",
+      "Calibration",
+      "100 boards",
+      "Similarity calibration and tuning",
+    ],
+    [
+      "development",
+      "Development",
+      "128 boards",
+      "Frozen candidate comparison",
+    ],
+    ["test", "Test", "150 boards", "Sealed held-out promotion"],
+  ];
+  for (const [id, label, count, role] of splitExpectations) {
+    const split = page.locator(`[data-benchmark-split="${id}"]`);
+    await expect(split.locator("dt")).toHaveText(label);
+    await expect(split.locator("strong")).toHaveText(count);
+    await expect(split.locator("span")).toHaveText(role);
+  }
+  await expect(page.locator(".benchmark-guardrail-list")).toContainText(
+    "Assassin hitsWrong-team hitsNeutral hitsFallback cluesStalls",
+  );
+  await expect(page.locator(".benchmark-flow")).toContainText(
+    "Calibration and tuning evidence cannot promote.",
+  );
+  await expect(page.locator(".benchmark-flow")).toContainText(
+    "A failed gate blocks promotion even when a headline metric improves.",
+  );
+  await expect(page.locator(".benchmark-source-list")).toContainText(
+    "No source-separated human or reviewed gold slices are attached",
+  );
+
+  await evidenceTab.press("ArrowLeft");
+  await expect(scorecardTab).toHaveAttribute("aria-selected", "true");
+  await expect(scorecardTab).toBeFocused();
 });
 
 test("benchmark columns explain their metrics on hover", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/?mode=benchmarks");
 
-  const scoreInfo = page.getByRole("button", {
-    name: "About Score",
+  const configurationInfo = page.getByRole("button", {
+    name: "About Configuration",
     exact: true,
   });
   const humanInfo = page.getByRole("button", {
-    name: "About Human",
+    name: "About Human sources",
     exact: true,
   });
-  const funInfo = page.getByRole("button", {
-    name: "About Fun",
+  const evidenceInfo = page.getByRole("button", {
+    name: "About Evidence",
     exact: true,
   });
 
-  await scoreInfo.hover();
-  await expect(page.locator("#info-benchmark-column-score")).toBeVisible();
-  await expect(page.locator("#info-benchmark-column-score")).toContainText(
-    "60% Human and 40% same-model Fun",
+  await configurationInfo.hover();
+  await expect(
+    page.locator("#info-benchmark-column-configuration"),
+  ).toBeVisible();
+  await expect(
+    page.locator("#info-benchmark-column-configuration"),
+  ).toContainText(
+    "exact configuration, fingerprint, artifact hash",
   );
 
   await humanInfo.hover();
   await expect(page.locator("#info-benchmark-column-human")).toContainText(
-    "Five dataset sources receive equal weight",
+    "Tuning and feedback slices cannot promote",
   );
 
-  await funInfo.hover();
-  await expect(page.locator("#info-benchmark-column-fun")).toContainText(
-    "ambitious multi-card clues",
+  await evidenceInfo.hover();
+  await expect(page.locator("#info-benchmark-column-evidence")).toContainText(
+    "fixed paired board split",
   );
 });
 
@@ -5903,17 +5964,37 @@ test("benchmark scorecard is responsive and keeps its matrix scrollable", async 
   ]) {
     await page.setViewportSize(viewport);
     await page.goto("/?mode=benchmarks");
-    await expect(page.getByRole("heading", { name: "Benchmark scorecard" })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Benchmark comparison" }),
+    ).toBeVisible();
+    await page.getByRole("tab", { name: "Tests & data" }).click();
 
     const layout = await page.evaluate(() => {
+      const methodology = document.querySelector("#benchmark-panel-evidence");
+      const methodologyBounds = methodology.getBoundingClientRect();
+      return {
+        pageOverflows:
+          document.documentElement.scrollWidth >
+          document.documentElement.clientWidth,
+        methodologyFits:
+          methodologyBounds.left >= 0 &&
+          methodologyBounds.right <= document.documentElement.clientWidth,
+      };
+    });
+
+    expect(layout.pageOverflows, `page overflow at ${viewport.width}px`).toBe(false);
+    expect(
+      layout.methodologyFits,
+      `methodology clipping at ${viewport.width}px`,
+    ).toBe(true);
+
+    await page.getByRole("tab", { name: "Scorecard" }).click();
+    const matrixLayout = await page.evaluate(() => {
       const matrix = document.querySelector(".benchmark-table-wrap");
       const scorecard = document.querySelector("#benchmark-details");
       const matrixBounds = matrix.getBoundingClientRect();
       const scorecardBounds = scorecard.getBoundingClientRect();
       return {
-        pageOverflows:
-          document.documentElement.scrollWidth >
-          document.documentElement.clientWidth,
         matrixScrolls: matrix.scrollWidth > matrix.clientWidth,
         matrixFits:
           matrixBounds.left >= 0 &&
@@ -5923,22 +6004,26 @@ test("benchmark scorecard is responsive and keeps its matrix scrollable", async 
           scorecardBounds.right <= document.documentElement.clientWidth,
       };
     });
-
-    expect(layout.pageOverflows, `page overflow at ${viewport.width}px`).toBe(false);
-    expect(layout.matrixScrolls, `matrix scroll at ${viewport.width}px`).toBe(
-      viewport.matrixScrolls,
+    expect(
+      matrixLayout.matrixScrolls,
+      `matrix scroll at ${viewport.width}px`,
+    ).toBe(viewport.matrixScrolls);
+    expect(matrixLayout.matrixFits, `matrix clipping at ${viewport.width}px`).toBe(
+      true,
     );
-    expect(layout.matrixFits, `matrix clipping at ${viewport.width}px`).toBe(true);
-    expect(layout.scorecardFits, `scorecard clipping at ${viewport.width}px`).toBe(true);
+    expect(
+      matrixLayout.scorecardFits,
+      `scorecard clipping at ${viewport.width}px`,
+    ).toBe(true);
 
-    const scoreInfo = page.getByRole("button", {
-      name: "About Score",
+    const configurationInfo = page.getByRole("button", {
+      name: "About Configuration",
       exact: true,
     });
-    await scoreInfo.scrollIntoViewIfNeeded();
-    await scoreInfo.hover();
+    await configurationInfo.scrollIntoViewIfNeeded();
+    await configurationInfo.hover();
     const tooltipFits = await page
-      .locator("#info-benchmark-column-score")
+      .locator("#info-benchmark-column-configuration")
       .evaluate((tooltip) => {
         const bounds = tooltip.getBoundingClientRect();
         return (
@@ -5950,7 +6035,7 @@ test("benchmark scorecard is responsive and keeps its matrix scrollable", async 
       });
     expect(
       tooltipFits,
-      `score tooltip clipping at ${viewport.width}px`,
+      `configuration tooltip clipping at ${viewport.width}px`,
     ).toBe(true);
 
     if (viewport.width <= 820) {

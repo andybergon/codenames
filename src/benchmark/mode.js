@@ -1,77 +1,75 @@
-import SCORECARD from "../../scripts/generated/benchmark-scorecard.json" with { type: "json" };
+import REPORT from "../../scripts/generated/play-model-comparison-v3.json" with { type: "json" };
 import {
-  DEFAULT_HUMAN_WEIGHT,
-  scoreBenchmarkRow,
-  scoreDelta,
+  benchmarkRows,
+  humanAlignmentSlices,
+  validateBenchmarkReport,
 } from "./scorecard.js";
 import { createInfoControl } from "../info-control.js";
 
-const STATUS = {
-  production: {
-    label: "Production",
+validateBenchmarkReport(REPORT);
+
+const VERDICTS = {
+  promote: {
     icon: "✅",
-    detail: "Current production reference with checked transfer evidence.",
+    label: "Promote",
+    detail: "All recorded promotion requirements passed.",
   },
-  blocked: {
+  block: {
+    icon: "🚫",
     label: "Blocked",
-    icon: "❌",
-    detail: "Human and self-play evidence exists, but transfer gates failed.",
+    detail: "At least one recorded promotion requirement failed.",
   },
-  "needs-transfer": {
-    label: "Needs transfer",
-    icon: "🟡",
-    detail: "The settings combination has not completed the transfer screen.",
+  "needs-more-data": {
+    icon: "⬜",
+    label: "Needs evidence",
+    detail: "The report identifies evidence still required.",
   },
 };
 
-const HUMAN_SOURCE_LABELS = {
-  culturalCodes: "Cultural Codes",
-  connector: "Connector",
-  strategyHumanClues: "Human clues",
-  strategyGptClues: "GPT clues",
-  cooccurrence: "Co-occurrence",
+const METRIC_STATUS = {
+  improved: ["🟢", "Improved"],
+  regressed: ["🔴", "Regressed"],
+  uncertain: ["🟡", "Uncertain"],
+  unchanged: ["⚪", "Unchanged"],
+  changed: ["🔵", "Changed"],
+  reported: ["🔵", "Reported"],
 };
 
 const COLUMN_INFO = [
   {
-    id: "combination",
-    label: "Combination",
-    info: "One complete benchmark configuration, including embedding model, clue count, scoring policy, operative behavior, and related settings. Select a row to inspect its full scorecard.",
+    id: "configuration",
+    label: "Configuration",
+    info: "One candidate configuration from the canonical v3 report. The report stores the exact configuration, fingerprint, artifact hash, and changed behavior fields.",
   },
   {
-    id: "score",
-    label: "Score",
-    info: "The 0-100 headline score from the objective slider. By default it is 60% Human and 40% same-model Fun. Transfer results are deliberately excluded and remain a separate promotion gate.",
+    id: "verdict",
+    label: "Verdict",
+    info: "The CLI-owned final verdict. The page displays it without recalculating gates or promotion eligibility.",
   },
   {
-    id: "status",
-    label: "Status",
-    info: "Production has checked transfer evidence. Needs transfer has not completed the cross-model screen. Blocked means the available transfer evidence failed the promotion gates.",
+    id: "evidence",
+    label: "Evidence",
+    info: "The fixed paired board split and sample size recorded by the canonical report.",
+  },
+  {
+    id: "improved",
+    label: "Improved",
+    info: "Metrics whose full paired 95% interval clears zero in the preferred direction.",
+  },
+  {
+    id: "regressed",
+    label: "Regressed",
+    info: "Metrics whose full paired 95% interval clears zero in the worse direction.",
+  },
+  {
+    id: "uncertain",
+    label: "Uncertain",
+    info: "Metrics whose paired interval does not establish a clear direction.",
   },
   {
     id: "human",
-    label: "Human",
-    info: "A 0-100 human-alignment score. Five dataset sources receive equal weight, and each source combines its available guess, target, pairwise, exact-set, good-word, and inverted avoid-rate measurements.",
-  },
-  {
-    id: "fun",
-    label: "Fun",
-    info: "The 0-100 same-model self-play Fun Index. It combines ambitious multi-card clues, productive momentum, close-game suspense, and an 8 to 12 turn flow target.",
-  },
-  {
-    id: "correct-turn",
-    label: "Correct per turn",
-    info: "Mean correct friendly cards guessed per turn in same-model self-play. Higher is more productive, but this optimistic regression metric does not prove that clues transfer to a different listener.",
-  },
-  {
-    id: "cross-correct",
-    label: "Cross correct",
-    info: "Mean correct friendly cards per turn when this configuration generates clues and the fixed MiniLM-L6 operative interprets them. This tests whether clue meaning transfers across embedding geometries.",
-  },
-  {
-    id: "cross-danger",
-    label: "Cross danger",
-    info: "Wrong-team cards hit per game plus assassin rate under the fixed cross-model listener. Lower is safer. Not run means this configuration still needs transfer evidence.",
+    label: "Human sources",
+    info: "Source-separated aggregate or blinded human evidence slices. Tuning and feedback slices cannot promote.",
   },
 ];
 
@@ -79,47 +77,44 @@ export function createBenchmarkMode() {
   const root = document.querySelector("#benchmark-mode");
   if (!root) return { setActive() {} };
 
-  let humanWeight = DEFAULT_HUMAN_WEIGHT;
-  let sortBy = "score";
-  let statusFilter = "all";
-  let activeRowId = SCORECARD.baselineId;
+  const rows = benchmarkRows(REPORT);
+  let activeCandidateId = rows[0]?.id ?? null;
+  let verdictFilter = "all";
+  let sortBy = "verdict";
+  let activeTab = "scorecard";
 
   root.replaceChildren(buildShell());
   attachColumnInfo(root);
   const elements = {
-    humanWeight: root.querySelector("#benchmark-human-weight"),
-    humanWeightValue: root.querySelector(
-      "#benchmark-human-weight-value",
-    ),
-    funWeightValue: root.querySelector(
-      "#benchmark-fun-weight-value",
-    ),
-    sort: root.querySelector("#benchmark-sort"),
-    filter: root.querySelector("#benchmark-filter"),
     summary: root.querySelector("#benchmark-summary"),
     body: root.querySelector("#benchmark-table-body"),
+    empty: root.querySelector("#benchmark-empty"),
     details: root.querySelector("#benchmark-details"),
+    filter: root.querySelector("#benchmark-filter"),
+    sort: root.querySelector("#benchmark-sort"),
+    tabs: [...root.querySelectorAll("[data-benchmark-tab]")],
+    panels: [...root.querySelectorAll("[data-benchmark-panel]")],
   };
 
-  elements.humanWeight.addEventListener("input", () => {
-    humanWeight = Number(elements.humanWeight.value);
-    render();
+  elements.filter.addEventListener("change", () => {
+    verdictFilter = elements.filter.value;
+    renderTable();
   });
   elements.sort.addEventListener("change", () => {
     sortBy = elements.sort.value;
     renderTable();
   });
-  elements.filter.addEventListener("change", () => {
-    statusFilter = elements.filter.value;
-    renderTable();
-  });
   elements.body.addEventListener("click", (event) => {
     const button = event.target.closest("[data-benchmark-row]");
     if (!button) return;
-    activeRowId = button.dataset.benchmarkRow;
+    activeCandidateId = button.dataset.benchmarkRow;
     renderTable();
     renderDetails();
   });
+  for (const tab of elements.tabs) {
+    tab.addEventListener("click", () => selectTab(tab.dataset.benchmarkTab));
+    tab.addEventListener("keydown", handleTabKeydown);
+  }
 
   render();
 
@@ -131,259 +126,129 @@ export function createBenchmarkMode() {
   };
 
   function render() {
-    elements.humanWeightValue.textContent = `${humanWeight}%`;
-    elements.funWeightValue.textContent = `${100 - humanWeight}%`;
     renderSummary();
     renderTable();
     renderDetails();
+    selectTab(activeTab);
+  }
+
+  function selectTab(tabId) {
+    if (!elements.tabs.some((tab) => tab.dataset.benchmarkTab === tabId)) {
+      return;
+    }
+    activeTab = tabId;
+    for (const tab of elements.tabs) {
+      const selected = tab.dataset.benchmarkTab === activeTab;
+      tab.setAttribute("aria-selected", String(selected));
+      tab.tabIndex = selected ? 0 : -1;
+    }
+    for (const panel of elements.panels) {
+      panel.hidden = panel.dataset.benchmarkPanel !== activeTab;
+    }
+  }
+
+  function handleTabKeydown(event) {
+    const currentIndex = elements.tabs.indexOf(event.currentTarget);
+    const keys = {
+      ArrowLeft: currentIndex - 1,
+      ArrowRight: currentIndex + 1,
+      Home: 0,
+      End: elements.tabs.length - 1,
+    };
+    if (!(event.key in keys)) return;
+    event.preventDefault();
+    const nextIndex =
+      (keys[event.key] + elements.tabs.length) % elements.tabs.length;
+    const nextTab = elements.tabs[nextIndex];
+    selectTab(nextTab.dataset.benchmarkTab);
+    nextTab.focus();
   }
 
   function renderSummary() {
-    const scored = scoredRows().sort(
-      (left, right) => right.score - left.score,
-    );
-    const leader = scored[0];
-    const reference = scored.find(
-      ({ id }) => id === SCORECARD.baselineId,
-    );
+    const fingerprint = REPORT.baseline.configurationFingerprint;
+    const verdicts = REPORT.summary.verdicts;
     elements.summary.innerHTML = `
       <article>
-        <span>Highest score</span>
-        <strong>${formatScore(leader.score)}</strong>
-        <small>${escapeHtml(leader.label)}</small>
-      </article>
-      <article>
-        <span>Production reference</span>
-        <strong>${formatScore(reference.score)}</strong>
-        <small>${escapeHtml(reference.label)}</small>
+        <span>Accepted baseline</span>
+        <strong>${escapeHtml(
+          REPORT.baseline.configurationLabels.modelIndex,
+        )}</strong>
+        <small>${escapeHtml(fingerprint)}</small>
       </article>
       <article>
         <span>Evidence</span>
-        <strong>${SCORECARD.rows.length} combos</strong>
-        <small>14,404 human guesses</small>
+        <strong>${formatInteger(REPORT.evidence.pairedBoards)} boards</strong>
+        <small>${escapeHtml(REPORT.evidence.split)} · ${escapeHtml(
+          REPORT.evidence.splitRole,
+        )}</small>
+      </article>
+      <article>
+        <span>Candidate verdicts</span>
+        <strong>${REPORT.summary.candidateCount}</strong>
+        <small>${verdicts.promote} promote · ${verdicts.block} block · ${verdicts.needsMoreData} need evidence</small>
       </article>`;
   }
 
   function renderTable() {
-    const allRows = scoredRows();
-    const baseline = allRows.find(
-      ({ id }) => id === SCORECARD.baselineId,
-    );
-    const rows = allRows
+    const visibleRows = rows
       .filter(
         (row) =>
-          statusFilter === "all" || row.status === statusFilter,
+          verdictFilter === "all" ||
+          row.verdict.status === verdictFilter,
       )
       .sort(rowSorter(sortBy));
-    elements.body.innerHTML = rows
-      .map((row) => renderRow(row, baseline))
+    elements.body.innerHTML = visibleRows
+      .map((row) => renderRow(row))
       .join("");
+    elements.empty.hidden = rows.length !== 0;
   }
 
-  function renderRow(row, baseline) {
-    const status = STATUS[row.status];
-    const active = row.id === activeRowId;
-    return `<tr data-status="${row.status}" ${
+  function renderRow(row) {
+    const status = VERDICTS[row.verdict.status];
+    const active = row.id === activeCandidateId;
+    const counts = row.summary.playMetrics;
+    return `<tr data-status="${row.verdict.status}" ${
       active ? 'data-active="true"' : ""
     }>
-      <td data-label="Combo">
+      <td data-label="Configuration">
         <button
           type="button"
           class="benchmark-row-button"
           data-benchmark-row="${escapeHtml(row.id)}"
           aria-pressed="${active}"
         >
-          <strong>🧪 ${escapeHtml(row.label)}</strong>
-          <small>${row.settings.candidates.toLocaleString()} clues · ${escapeHtml(
-            row.settings.transform,
+          <strong>🧪 ${escapeHtml(row.id)}</strong>
+          <small>${escapeHtml(
+            row.artifact.configurationLabels.modelIndex,
           )}</small>
         </button>
       </td>
-      <td data-label="Score" class="benchmark-score-cell">
-        <strong>${formatScore(row.score)}</strong>
-        ${deltaMarkup(scoreDelta(row.score, baseline.score))}
+      <td data-label="Verdict">
+        <span class="benchmark-status" data-state="${escapeHtml(
+          row.verdict.status,
+        )}">${status.icon} ${status.label}</span>
       </td>
-      <td data-label="Status">
-        <span class="benchmark-status" data-state="${row.status}">
-          ${status.icon} ${status.label}
-        </span>
+      <td data-label="Evidence">
+        <strong>${formatInteger(row.comparison.pairedBoards)} boards</strong>
+        <small>${escapeHtml(row.methodology.split)} · ${escapeHtml(
+          row.artifact.evidence.splitRole,
+        )}</small>
       </td>
-      ${metricCell(
-        "Human",
-        row.scores.humanAlignment,
-        baseline.scores.humanAlignment,
-        formatScore,
-      )}
-      ${metricCell(
-        "Fun",
-        row.scores.selfPlayFun,
-        baseline.scores.selfPlayFun,
-        formatScore,
-      )}
-      ${metricCell(
-        "Correct / turn",
-        row.selfPlay.correctCardsPerTurn,
-        baseline.selfPlay.correctCardsPerTurn,
-        formatDecimal,
-      )}
-      ${metricCell(
-        "Cross correct",
-        row.transfer?.correctCardsPerTurn,
-        baseline.transfer?.correctCardsPerTurn,
-        formatDecimal,
-      )}
-      <td data-label="Cross danger">
-        ${
-          row.transfer
-            ? `<strong>${formatDecimal(
-                row.transfer.wrongTeamHitsPerGame,
-              )} wrong</strong><small>${formatPercent(
-                row.transfer.assassinRate,
-              )} assassin</small>`
-            : "<strong>Not run</strong><small>Transfer needed</small>"
-        }
+      <td data-label="Improved"><strong>${counts.improved}</strong></td>
+      <td data-label="Regressed"><strong>${counts.regressed}</strong></td>
+      <td data-label="Uncertain"><strong>${counts.uncertain}</strong></td>
+      <td data-label="Human sources">
+        <strong>${row.summary.humanAlignment.slices}</strong>
+        <small>${row.summary.humanAlignment.tuningSlices} tuning · ${row.summary.humanAlignment.heldOutSlices} held-out</small>
       </td>
     </tr>`;
   }
 
   function renderDetails() {
-    const allRows = scoredRows();
-    const row = allRows.find(({ id }) => id === activeRowId);
-    const baseline = allRows.find(
-      ({ id }) => id === SCORECARD.baselineId,
-    );
-    const status = STATUS[row.status];
-    elements.details.innerHTML = `
-      <div class="benchmark-details-heading">
-        <div>
-          <span class="eyebrow">Selected scorecard</span>
-          <h2>${escapeHtml(row.label)}</h2>
-          <p>
-            <span class="benchmark-status" data-state="${row.status}">
-              ${status.icon} ${status.label}
-            </span>
-            ${status.detail}
-          </p>
-        </div>
-        <strong class="benchmark-detail-score">${formatScore(
-          row.score,
-        )}</strong>
-      </div>
-      <div class="benchmark-setting-chips">
-        ${Object.entries(row.settings)
-          .map(
-            ([key, value]) =>
-              `<span><b>${settingLabel(key)}</b>${escapeHtml(
-                formatSetting(value),
-              )}</span>`,
-          )
-          .join("")}
-      </div>
-      <div class="benchmark-score-grid">
-        ${scoreCard(
-          "🎯 Headline score",
-          row.score,
-          baseline.score,
-          formatScore,
-        )}
-        ${scoreCard(
-          "👥 Human alignment",
-          row.scores.humanAlignment,
-          baseline.scores.humanAlignment,
-          formatScore,
-        )}
-        ${scoreCard(
-          "🎉 Self-play Fun",
-          row.scores.selfPlayFun,
-          baseline.scores.selfPlayFun,
-          formatScore,
-        )}
-        ${scoreCard(
-          "✅ Correct / turn",
-          row.selfPlay.correctCardsPerTurn,
-          baseline.selfPlay.correctCardsPerTurn,
-          formatDecimal,
-        )}
-        ${scoreCard(
-          "⏱️ Turns / game",
-          row.selfPlay.meanTurnsPerGame,
-          baseline.selfPlay.meanTurnsPerGame,
-          formatDecimal,
-          true,
-        )}
-        ${scoreCard(
-          "🔀 Cross correct",
-          row.transfer?.correctCardsPerTurn,
-          baseline.transfer?.correctCardsPerTurn,
-          formatDecimal,
-        )}
-        ${scoreCard(
-          "🔴 Cross wrong",
-          row.transfer?.wrongTeamHitsPerGame,
-          baseline.transfer?.wrongTeamHitsPerGame,
-          formatDecimal,
-          true,
-        )}
-        ${scoreCard(
-          "☠️ Cross assassin",
-          row.transfer?.assassinRate,
-          baseline.transfer?.assassinRate,
-          formatPercent,
-          true,
-          formatPercentagePointDelta,
-        )}
-      </div>
-      <div class="benchmark-breakdowns">
-        <section>
-          <h3>👥 Human sources</h3>
-          <div class="benchmark-bars">
-            ${Object.entries(row.human)
-              .map(
-                ([source, result]) => `
-                  <div>
-                    <span>${HUMAN_SOURCE_LABELS[source]}</span>
-                    <div><i style="width:${result.score}%"></i></div>
-                    <strong>${formatScore(result.score)}</strong>
-                  </div>`,
-              )
-              .join("")}
-          </div>
-        </section>
-        <section>
-          <h3>🎉 Fun components</h3>
-          ${
-            row.selfPlay.funComponents
-              ? `<div class="benchmark-bars">
-                  ${Object.entries(row.selfPlay.funComponents)
-                    .map(
-                      ([component, value]) => `
-                        <div>
-                          <span>${capitalize(component)}</span>
-                          <div><i style="width:${value}%"></i></div>
-                          <strong>${formatScore(value)}</strong>
-                        </div>`,
-                    )
-                    .join("")}
-                </div>`
-              : `<p class="benchmark-empty-detail">The sampled hosted run records the total Fun score and game outcomes, but not its component breakdown.</p>`
-          }
-        </section>
-      </div>
-      <p class="benchmark-evidence-note">
-        Self-play: ${row.evidence.selfPlayBoards} boards · Transfer:
-        ${
-          row.evidence.transferBoards > 0
-            ? `${row.evidence.transferBoards} paired boards`
-            : "not run"
-        }. Transfer remains a gate and does not add hidden headline-score points.
-      </p>`;
-  }
-
-  function scoredRows() {
-    return SCORECARD.rows.map((row) => ({
-      ...row,
-      score: scoreBenchmarkRow(row, humanWeight),
-    }));
+    const row = rows.find(({ id }) => id === activeCandidateId);
+    elements.details.innerHTML = row
+      ? renderCandidateDetails(row)
+      : renderBaselineDetails();
   }
 }
 
@@ -394,70 +259,194 @@ function buildShell() {
     <header class="benchmark-heading">
       <div>
         <span class="eyebrow">Hidden evaluation lab</span>
-        <h2>Benchmark scorecard</h2>
-        <p>Each row is one complete settings combination. Adjust the headline objective, compare deltas, then inspect the human, self-play, and transfer evidence separately.</p>
+        <h2>Benchmark comparison</h2>
+        <p>The canonical report owns every score, delta, interval, gate, and verdict. This page is a compact evidence browser.</p>
       </div>
-      <span class="benchmark-version">Objective v${SCORECARD.objective.version}</span>
+      <span class="benchmark-version">Report v${REPORT.schemaVersion}</span>
     </header>
-    <section class="benchmark-objective" aria-labelledby="benchmark-objective-title">
-      <div>
-        <span class="eyebrow">Headline objective</span>
-        <h3 id="benchmark-objective-title">Human evidence + self-play Fun</h3>
-        <p>Transfer remains a promotion gate, not a point source.</p>
-      </div>
-      <label for="benchmark-human-weight">
-        <span>Human <output id="benchmark-human-weight-value">60%</output></span>
-        <input id="benchmark-human-weight" type="range" min="0" max="100" step="5" value="60" />
-        <span>Self-play <output id="benchmark-fun-weight-value">40%</output></span>
-      </label>
-    </section>
-    <section id="benchmark-summary" class="benchmark-summary" aria-label="Benchmark summary"></section>
-    <section class="benchmark-results" aria-labelledby="benchmark-results-title">
+    <div class="benchmark-tabs" role="tablist" aria-label="Benchmark views">
+      <button
+        id="benchmark-tab-scorecard"
+        type="button"
+        role="tab"
+        aria-selected="true"
+        aria-controls="benchmark-panel-scorecard"
+        data-benchmark-tab="scorecard"
+      >📊 Scorecard</button>
+      <button
+        id="benchmark-tab-evidence"
+        type="button"
+        role="tab"
+        aria-selected="false"
+        aria-controls="benchmark-panel-evidence"
+        data-benchmark-tab="evidence"
+        tabindex="-1"
+      >🧾 Tests &amp; data</button>
+    </div>
+    <div
+      id="benchmark-panel-scorecard"
+      class="benchmark-panel"
+      role="tabpanel"
+      aria-labelledby="benchmark-tab-scorecard"
+      data-benchmark-panel="scorecard"
+    >
+      <section id="benchmark-summary" class="benchmark-summary" aria-label="Benchmark summary"></section>
+      <section class="benchmark-results" aria-labelledby="benchmark-results-title">
       <div class="benchmark-results-heading">
         <div>
-          <span class="eyebrow">Configuration matrix</span>
-          <h2 id="benchmark-results-title">Checked combinations</h2>
+          <span class="eyebrow">Baseline versus candidates</span>
+          <h2 id="benchmark-results-title">Checked comparisons</h2>
         </div>
         <div class="benchmark-controls">
           <label>Sort
             <select id="benchmark-sort">
-              <option value="score">Headline score</option>
-              <option value="human">Human alignment</option>
-              <option value="fun">Self-play Fun</option>
+              <option value="verdict">Verdict</option>
+              <option value="regressions">Regressions</option>
               <option value="label">Configuration</option>
             </select>
           </label>
-          <label>Status
+          <label>Verdict
             <select id="benchmark-filter">
-              <option value="all">All evidence</option>
-              <option value="production">Production</option>
-              <option value="needs-transfer">Needs transfer</option>
-              <option value="blocked">Blocked</option>
+              <option value="all">All</option>
+              <option value="promote">Promote</option>
+              <option value="needs-more-data">Needs evidence</option>
+              <option value="block">Blocked</option>
             </select>
           </label>
         </div>
       </div>
-      <p class="benchmark-scroll-hint">Scroll horizontally to compare every score.</p>
+      <p class="benchmark-scroll-hint">Scroll horizontally to compare every status.</p>
       <div class="benchmark-table-wrap">
         <table class="benchmark-table">
           <thead>
             <tr>
-              <th data-benchmark-column="combination">🧪 Combination</th>
-              <th data-benchmark-column="score">🎯 Score</th>
-              <th data-benchmark-column="status">📌 Status</th>
-              <th data-benchmark-column="human">👥 Human</th>
-              <th data-benchmark-column="fun">🎉 Fun</th>
-              <th data-benchmark-column="correct-turn">✅ Correct / turn</th>
-              <th data-benchmark-column="cross-correct">🔀 Cross correct</th>
-              <th data-benchmark-column="cross-danger">⚠️ Cross danger</th>
+              <th data-benchmark-column="configuration">🧪 Configuration</th>
+              <th data-benchmark-column="verdict">📌 Verdict</th>
+              <th data-benchmark-column="evidence">🧾 Evidence</th>
+              <th data-benchmark-column="improved">✅ Improved</th>
+              <th data-benchmark-column="regressed">⚠️ Regressed</th>
+              <th data-benchmark-column="uncertain">❓ Uncertain</th>
+              <th data-benchmark-column="human">👥 Human sources</th>
             </tr>
           </thead>
           <tbody id="benchmark-table-body"></tbody>
         </table>
       </div>
-    </section>
-    <section id="benchmark-details" class="benchmark-details" aria-live="polite"></section>`;
+      <p id="benchmark-empty" class="benchmark-empty-detail" hidden>
+        No candidate comparison is attached. The accepted baseline below is recorded without invented deltas, gates, or a promotion verdict.
+      </p>
+      </section>
+      <section id="benchmark-details" class="benchmark-details" aria-live="polite"></section>
+    </div>
+    <section
+      id="benchmark-panel-evidence"
+      class="benchmark-panel benchmark-methodology"
+      role="tabpanel"
+      aria-labelledby="benchmark-tab-evidence"
+      data-benchmark-panel="evidence"
+      hidden
+    >${renderEvidenceGuide()}</section>`;
   return shell;
+}
+
+function renderEvidenceGuide() {
+  const layers = REPORT.methodology?.evidenceLayers;
+  if (!layers) {
+    return `<p class="benchmark-empty-detail">
+      This report does not include the evidence-layer metadata needed to explain its test flow.
+    </p>`;
+  }
+  const slices = REPORT.evidenceFamilies?.humanAlignment?.slices ?? [];
+  const selfPlay = layers.fixedBoardSelfPlay;
+  const guardrails = layers.gameplaySafety;
+  const flow = layers.promotionFlow;
+  return `
+    <div class="benchmark-methodology-heading">
+      <div>
+        <span class="eyebrow">Artifact evidence</span>
+        <h2>Tests &amp; data</h2>
+      </div>
+      <small>Displayed from report v${REPORT.schemaVersion}</small>
+    </div>
+    <div class="benchmark-evidence-grid">
+      <article>
+        <h3>1. 👥 ${escapeHtml(layers.humanAlignment.label)}</h3>
+        <p>${escapeHtml(layers.humanAlignment.role)}</p>
+        <div class="benchmark-source-list">
+          ${
+            slices.length > 0
+              ? slices.map(renderEvidenceSource).join("")
+              : `<p class="benchmark-empty-detail">
+                  No source-separated human or reviewed gold slices are attached to this artifact.
+                </p>`
+          }
+        </div>
+      </article>
+      <article>
+        <h3>2. 🎲 ${escapeHtml(selfPlay.label)}</h3>
+        <p>${escapeHtml(selfPlay.role)}</p>
+        <dl class="benchmark-split-list">
+          ${selfPlay.splits
+            .map(
+              (split) => `
+                <div data-benchmark-split="${escapeHtml(split.id)}">
+                  <dt>${escapeHtml(humanize(split.id))}</dt>
+                  <dd><strong>${formatInteger(
+                    split.boardCount,
+                  )} boards</strong><span>${escapeHtml(split.role)}</span></dd>
+                </div>`,
+            )
+            .join("")}
+        </dl>
+      </article>
+      <article>
+        <h3>3. 🛡️ ${escapeHtml(guardrails.label)}</h3>
+        <p>${escapeHtml(guardrails.role)}</p>
+        <ul class="benchmark-guardrail-list">
+          ${guardrails.metrics
+            .map((metric) => `<li>${escapeHtml(metric)}</li>`)
+            .join("")}
+        </ul>
+      </article>
+      <article>
+        <h3>4. 🔁 ${escapeHtml(layers.crossModelTransfer.label)}</h3>
+        <p>${escapeHtml(layers.crossModelTransfer.role)}</p>
+      </article>
+    </div>
+    <section class="benchmark-flow" aria-labelledby="benchmark-flow-title">
+      <h3 id="benchmark-flow-title">🚦 Promotion flow</h3>
+      <ol>
+        ${flow.steps
+          .map(
+            (step) => `
+              <li>
+                <strong>${escapeHtml(step.label)}</strong>
+                <span>${escapeHtml(step.role)}</span>
+              </li>`,
+          )
+          .join("")}
+      </ol>
+      <ul class="benchmark-flow-rules">
+        ${flow.rules
+          .map((rule) => `<li>${escapeHtml(rule)}</li>`)
+          .join("")}
+      </ul>
+    </section>`;
+}
+
+function renderEvidenceSource(slice) {
+  const revision = slice.source?.revision;
+  return `<div class="benchmark-source-item">
+    <strong>${escapeHtml(slice.source?.name ?? slice.id ?? "Unnamed source")}</strong>
+    <span>${formatInteger(slice.observation?.count)} ${escapeHtml(
+      slice.observation?.unit ?? "observations",
+    )}</span>
+    <small>${
+      revision
+        ? `Revision ${escapeHtml(revision.kind)}:${escapeHtml(revision.value)}`
+        : "Revision not recorded"
+    }</small>
+  </div>`;
 }
 
 function attachColumnInfo(root) {
@@ -475,107 +464,246 @@ function attachColumnInfo(root) {
   }
 }
 
-function metricCell(label, value, baseline, formatter) {
-  return `<td data-label="${label}">
-    <strong>${formatter(value)}</strong>
-    ${deltaMarkup(scoreDelta(value, baseline))}
-  </td>`;
+function renderBaselineDetails() {
+  return `
+    <div class="benchmark-details-heading">
+      <div>
+        <span class="eyebrow">Accepted baseline</span>
+        <h2>${escapeHtml(REPORT.baseline.id)}</h2>
+        <p>${formatInteger(
+          REPORT.evidence.pairedBoards,
+        )} ${escapeHtml(REPORT.evidence.split)} boards. Candidate evidence has not been attached.</p>
+      </div>
+      <span class="benchmark-status" data-state="baseline">📍 Baseline</span>
+    </div>
+    ${renderConfiguration(REPORT.baseline)}
+    ${renderProvenance(REPORT.baseline)}`;
 }
 
-function scoreCard(
-  label,
-  value,
-  baseline,
-  formatter,
-  invert = false,
-  deltaFormatter = formatDelta,
-) {
-  return `<article>
-    <span>${label}</span>
-    <strong>${formatter(value)}</strong>
-    ${deltaMarkup(scoreDelta(value, baseline, invert), deltaFormatter)}
+function renderCandidateDetails(row) {
+  const status = VERDICTS[row.verdict.status];
+  const slices = humanAlignmentSlices(REPORT, row.id);
+  return `
+    <div class="benchmark-details-heading">
+      <div>
+        <span class="eyebrow">Selected comparison</span>
+        <h2>${escapeHtml(row.id)}</h2>
+        <p>${escapeHtml(status.detail)}</p>
+      </div>
+      <span class="benchmark-status" data-state="${escapeHtml(
+        row.verdict.status,
+      )}">${status.icon} ${status.label}</span>
+    </div>
+    ${renderConfiguration(row.artifact)}
+    <section class="benchmark-detail-section">
+      <h3>📏 Play metrics</h3>
+      <div class="benchmark-table-wrap">
+        <table class="benchmark-table benchmark-metric-table">
+          <thead>
+            <tr>
+              <th>📏 Metric</th>
+              <th>📍 Baseline</th>
+              <th>🧪 Candidate</th>
+              <th>Δ Candidate</th>
+              <th>📐 95% interval</th>
+              <th>📌 Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${Object.values(row.metrics)
+              .map(renderMetricRow)
+              .join("")}
+          </tbody>
+        </table>
+      </div>
+    </section>
+    <section class="benchmark-detail-section">
+      <h3>🚦 Promotion gates</h3>
+      <div class="benchmark-gate-grid">
+        ${Object.entries(row.promotion.gates)
+          .map(([id, gate]) => renderGate(id, gate))
+          .join("")}
+      </div>
+    </section>
+    <section class="benchmark-detail-section">
+      <h3>👥 Human alignment</h3>
+      ${
+        slices.length > 0
+          ? slices.map(renderHumanSlice).join("")
+          : '<p class="benchmark-empty-detail">No source-separated human comparison is attached.</p>'
+      }
+    </section>
+    <section class="benchmark-detail-section">
+      <h3>📌 Decision evidence</h3>
+      <ul class="benchmark-reason-list">
+        ${[...row.verdict.reasons, ...row.verdict.requiredEvidence]
+          .map((reason) => `<li>${escapeHtml(reason)}</li>`)
+          .join("")}
+      </ul>
+    </section>
+    ${renderProvenance(row.artifact)}`;
+}
+
+function renderConfiguration(artifact) {
+  return `
+    <div class="benchmark-setting-chips">
+      ${Object.entries(artifact.configurationLabels)
+        .map(
+          ([label, value]) =>
+            `<span><b>${escapeHtml(label)}</b>${escapeHtml(value)}</span>`,
+        )
+        .join("")}
+    </div>
+    <p class="benchmark-fingerprint">
+      <b>Configuration fingerprint</b>
+      <code>${escapeHtml(artifact.configurationFingerprint)}</code>
+    </p>
+    <details class="benchmark-disclosure">
+      <summary>Full canonical configuration</summary>
+      <pre>${escapeHtml(JSON.stringify(artifact.configuration, null, 2))}</pre>
+    </details>`;
+}
+
+function renderMetricRow(metric) {
+  const [icon, label] =
+    METRIC_STATUS[metric.status] ?? ["⚪", metric.status];
+  return `<tr>
+    <td><strong>${escapeHtml(metric.label)}</strong></td>
+    <td>${formatNumber(metric.baseline)}</td>
+    <td>${formatNumber(metric.candidate)}</td>
+    <td>${formatSigned(metric.delta.estimate)}</td>
+    <td>${formatInterval(metric.delta)}</td>
+    <td><span class="benchmark-metric-status" data-state="${escapeHtml(
+      metric.status,
+    )}">${icon} ${escapeHtml(label)}</span></td>
+  </tr>`;
+}
+
+function renderGate(id, gate) {
+  const labels = {
+    pass: ["✅", "Pass"],
+    block: ["🚫", "Block"],
+    "needs-more-data": ["⬜", "Needs evidence"],
+  };
+  const [icon, label] = labels[gate.status];
+  return `<article data-state="${escapeHtml(gate.status)}">
+    <span>${escapeHtml(humanize(id))}</span>
+    <strong>${icon} ${label}</strong>
   </article>`;
 }
 
-function deltaMarkup(delta, formatter = formatDelta) {
-  if (!Number.isFinite(delta)) {
-    return "<small>no baseline</small>";
-  }
-  const state =
-    Math.abs(delta) < 0.05
-      ? "same"
-      : delta > 0
-        ? "better"
-        : "worse";
-  const label =
-    state === "same"
-      ? "baseline"
-      : formatter(delta);
-  return `<small class="benchmark-delta" data-state="${state}">${label}</small>`;
+function renderHumanSlice(slice) {
+  return `<details class="benchmark-disclosure benchmark-human-slice">
+    <summary>
+      <span>${escapeHtml(slice.source.name)}</span>
+      <small>${escapeHtml(slice.role)} · ${formatInteger(
+        slice.observation.count,
+      )} ${escapeHtml(slice.observation.unit)}</small>
+    </summary>
+    <p>${escapeHtml(slice.source.format)}</p>
+    <p><b>Revision</b> <code>${escapeHtml(
+      slice.source.revision.kind,
+    )}:${escapeHtml(slice.source.revision.value)}</code></p>
+    <div class="benchmark-table-wrap">
+      <table class="benchmark-table benchmark-metric-table">
+        <thead>
+          <tr>
+            <th>📏 Metric</th>
+            <th>📍 Baseline</th>
+            <th>🧪 Candidate</th>
+            <th>Δ Candidate</th>
+            <th>📐 Interval</th>
+            <th>📌 Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${Object.entries(slice.metrics)
+            .map(([id, metric]) =>
+              renderHumanMetricRow(id, metric),
+            )
+            .join("")}
+        </tbody>
+      </table>
+    </div>
+  </details>`;
+}
+
+function renderHumanMetricRow(id, metric) {
+  const [icon, label] =
+    METRIC_STATUS[metric.status] ?? ["⚪", metric.status];
+  return `<tr>
+    <td><strong>${escapeHtml(humanize(id))}</strong><small>${escapeHtml(
+      metric.definition,
+    )}</small></td>
+    <td>${formatNumber(metric.baseline)}</td>
+    <td>${formatNumber(metric.candidate)}</td>
+    <td>${formatSigned(metric.delta)}</td>
+    <td>${metric.interval ? escapeHtml(JSON.stringify(metric.interval)) : "N/A"}</td>
+    <td>${icon} ${escapeHtml(label)}</td>
+  </tr>`;
+}
+
+function renderProvenance(artifact) {
+  return `<p class="benchmark-evidence-note">
+    Artifact <code>${escapeHtml(artifact.sha256)}</code> · ${escapeHtml(
+      artifact.path,
+    )}
+  </p>`;
 }
 
 function rowSorter(sortBy) {
   if (sortBy === "label") {
-    return (left, right) => left.label.localeCompare(right.label);
+    return (left, right) => left.id.localeCompare(right.id);
   }
-  const getter =
-    sortBy === "human"
-      ? (row) => row.scores.humanAlignment
-      : sortBy === "fun"
-        ? (row) => row.scores.selfPlayFun
-        : (row) => row.score;
+  if (sortBy === "regressions") {
+    return (left, right) =>
+      right.summary.playMetrics.regressed -
+        left.summary.playMetrics.regressed ||
+      left.id.localeCompare(right.id);
+  }
+  const order = {
+    promote: 0,
+    "needs-more-data": 1,
+    block: 2,
+  };
   return (left, right) =>
-    getter(right) - getter(left) ||
-    left.label.localeCompare(right.label);
+    order[left.verdict.status] - order[right.verdict.status] ||
+    left.id.localeCompare(right.id);
 }
 
-function settingLabel(key) {
-  return {
-    language: "Language",
-    wordSet: "Words",
-    embedding: "Embedding",
-    provider: "Runtime",
-    transform: "Transform",
-    candidates: "Clues",
-    scoring: "Scoring",
-    multiTolerance: "Tolerance",
-    aggression: "Operative",
-    bonusGuesses: "Bonus",
-  }[key];
+function formatNumber(value) {
+  return Number.isFinite(value) ? Number(value).toFixed(4) : "N/A";
 }
 
-function formatSetting(value) {
-  return typeof value === "number" ? value.toLocaleString() : value;
-}
-
-function formatScore(value) {
-  return Number.isFinite(value) ? Number(value).toFixed(1) : "N/A";
-}
-
-function formatDecimal(value) {
-  return Number.isFinite(value) ? Number(value).toFixed(2) : "N/A";
-}
-
-function formatPercent(value) {
+function formatSigned(value) {
   return Number.isFinite(value)
-    ? `${(Number(value) * 100).toFixed(1)}%`
+    ? `${value > 0 ? "+" : ""}${Number(value).toFixed(4)}`
     : "N/A";
 }
 
-function formatDelta(value) {
-  return `${value > 0 ? "+" : ""}${value.toFixed(1)}`;
+function formatInterval(value) {
+  return value &&
+    Number.isFinite(value.lower) &&
+    Number.isFinite(value.upper)
+    ? `${formatSigned(value.lower)} to ${formatSigned(value.upper)}`
+    : "N/A";
 }
 
-function formatPercentagePointDelta(value) {
-  return `${value > 0 ? "+" : ""}${(value * 100).toFixed(1)} pp`;
+function formatInteger(value) {
+  return Number.isFinite(value)
+    ? Number(value).toLocaleString("en-US")
+    : "Unknown";
 }
 
-function capitalize(value) {
-  return value.charAt(0).toUpperCase() + value.slice(1);
+function humanize(value) {
+  return String(value)
+    .replace(/([a-z])([A-Z])/gu, "$1 $2")
+    .replaceAll("-", " ")
+    .replace(/^./u, (character) => character.toUpperCase());
 }
 
 function escapeHtml(value) {
-  return String(value)
+  return String(value ?? "")
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;")

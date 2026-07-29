@@ -298,7 +298,7 @@ Generated Italian clues also receive a pairwise `0.23` similarity penalty for lo
 | 🎮 `npm run benchmark:compare` | [`mixedbread-bridge-reranker-full-game-comparison.json`](evaluations/operative-ranking/mixedbread-bridge-reranker-full-game-comparison.json) | Strongest eligible reranker full-game effects |
 | 🛡️ `npm run benchmark:compare` | [`bridge-reranker-cross-model-comparison.json`](evaluations/operative-ranking/bridge-reranker-cross-model-comparison.json) | Guarded transfer fallback |
 | 👥 `npm run summarize:human-data` | [`human-data-embedding-comparison.json`](../scripts/generated/human-data-embedding-comparison.json) | Local and hosted human alignment |
-| 🧪 `npm run summarize:benchmarks` | [`benchmark-scorecard.json`](../scripts/generated/benchmark-scorecard.json) | Comparable settings scorecards |
+| 🧪 `npm run benchmark:compare` | [`play-model-comparison-v3.json`](../scripts/generated/play-model-comparison-v3.json) | Canonical baseline and candidate scorecard |
 | 📚 `npm run evaluate:candidates` | [`candidate-coverage.json`](../scripts/generated/candidate-coverage.json) | Human clue coverage |
 | 💬 `npm run evaluate:explanations -- --max-cost-usd 0.08` | [`recommendation-explanation-evaluation.json`](../scripts/generated/recommendation-explanation-evaluation.json) | Plain-language explanation quality and model cost |
 | ⏱️ `npm run benchmark:picker` | [`model-picker-benchmark.json`](../scripts/generated/model-picker-benchmark.json) | Controlled scoring cost |

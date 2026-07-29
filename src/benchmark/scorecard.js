@@ -1,32 +1,50 @@
-export const DEFAULT_HUMAN_WEIGHT = 60;
+export const BENCHMARK_REPORT_SCHEMA_VERSION = 3;
 
-export function scoreBenchmarkRow(
-  row,
-  humanWeight = DEFAULT_HUMAN_WEIGHT,
-) {
-  const human = Number(row?.scores?.humanAlignment);
-  const fun = Number(row?.scores?.selfPlayFun);
-  if (!Number.isFinite(human) || !Number.isFinite(fun)) {
-    return null;
+export function validateBenchmarkReport(report) {
+  if (report?.schemaVersion !== BENCHMARK_REPORT_SCHEMA_VERSION) {
+    throw new Error(
+      `Expected benchmark report schema ${BENCHMARK_REPORT_SCHEMA_VERSION}.`,
+    );
   }
-  const normalizedHumanWeight = clampWeight(humanWeight) / 100;
-  return round(
-    human * normalizedHumanWeight +
-      fun * (1 - normalizedHumanWeight),
+  if (!report.baseline || !Array.isArray(report.candidates)) {
+    throw new Error(
+      "Benchmark report must include baseline and candidates roots.",
+    );
+  }
+  if (
+    report.baseline.configurationContract !== "canonical-v1" ||
+    !report.baseline.configuration ||
+    !report.baseline.configurationFingerprint
+  ) {
+    throw new Error(
+      "Benchmark report baseline must use the canonical configuration contract.",
+    );
+  }
+  if (!report.summary || !report.evidenceFamilies?.humanAlignment) {
+    throw new Error(
+      "Benchmark report must include presentation summary and evidence families.",
+    );
+  }
+  return report;
+}
+
+export function benchmarkRows(report) {
+  validateBenchmarkReport(report);
+  const summaryById = new Map(
+    report.summary.candidates.map((candidate) => [
+      candidate.id,
+      candidate,
+    ]),
   );
+  return report.candidates.map((candidate) => ({
+    ...candidate,
+    summary: summaryById.get(candidate.id),
+  }));
 }
 
-export function scoreDelta(value, baseline, invert = false) {
-  if (!Number.isFinite(value) || !Number.isFinite(baseline)) {
-    return null;
-  }
-  return round((value - baseline) * (invert ? -1 : 1));
-}
-
-export function clampWeight(value) {
-  return Math.min(100, Math.max(0, Number(value) || 0));
-}
-
-function round(value) {
-  return Number(value.toFixed(1));
+export function humanAlignmentSlices(report, candidateId) {
+  validateBenchmarkReport(report);
+  return report.evidenceFamilies.humanAlignment.slices.filter(
+    (slice) => slice.candidateId === candidateId,
+  );
 }

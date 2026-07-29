@@ -193,13 +193,21 @@ export function createFinalVerdict({
     requiredEvidence.push(
       "Record the reviewed gross-failure verdict for the blinded human calibration.",
     );
+  } else if (
+    humanEvidence.verdict === "pass" &&
+    humanEvidence.promotionEligible !== true
+  ) {
+    requiredEvidence.push(
+      "Attach an explicitly held-out blinded human calibration pass. Tuning and feedback data cannot promote.",
+    );
   }
   if (
     promotion.playGateStatus === "pass" &&
     split === "test" &&
     heldOutProtocol &&
     canonicalConfiguration &&
-    humanEvidence?.verdict === "pass"
+    humanEvidence?.verdict === "pass" &&
+    humanEvidence?.promotionEligible === true
   ) {
     return {
       status: "promote",
@@ -234,6 +242,14 @@ export function humanEvidenceRecord({
   if (!["pass", "fail", "unreviewed"].includes(verdict)) {
     throw new Error(`Invalid human verdict for ${candidateId}: ${verdict}.`);
   }
+  const alignmentSlices = createCalibrationAlignmentSlices({
+    baselineId,
+    candidateId,
+    path,
+    bytes,
+    report,
+    verdict,
+  });
   return {
     path,
     sha256: createHash("sha256").update(bytes).digest("hex"),
@@ -245,14 +261,10 @@ export function humanEvidenceRecord({
     automaticThreshold: null,
     note:
       "The comparator records the reviewed gross-failure decision but does not invent a human threshold.",
-    alignmentSlices: createCalibrationAlignmentSlices({
-      baselineId,
-      candidateId,
-      path,
-      bytes,
-      report,
-      verdict,
-    }),
+    promotionEligible: alignmentSlices.some(
+      ({ role }) => role === "held-out",
+    ),
+    alignmentSlices,
   };
 }
 
@@ -441,6 +453,24 @@ export function deterministicGeneratedAt(reports) {
 }
 
 export function renderBenchmarkComparisonSummary(report) {
+  if (report.candidates.length === 0) {
+    const labels = report.baseline.configurationLabels;
+    const configurationLines = labels
+      ? Object.entries(labels)
+          .map(([name, value]) => `- ${name}: ${value}`)
+          .join("\n")
+      : "- Legacy baseline without canonical configuration labels.";
+    return `# Accepted Play benchmark baseline
+
+- 🧾 Evidence: ${report.evidence.pairedBoards} ${report.evidence.split} boards (${report.evidence.splitRole})
+- 🔐 Artifact: \`${report.baseline.sha256}\`
+- 🔧 Configuration: \`${report.baseline.configurationFingerprint ?? "legacy"}\`
+
+${configurationLines}
+
+No candidate comparison is attached. This artifact records the accepted baseline without inventing deltas, intervals, gates, or a promotion verdict.
+`;
+  }
   const rows = report.candidates
     .map((candidate) => {
       const statuses = Object.values(candidate.metrics);
@@ -723,7 +753,7 @@ function createCalibrationAlignmentSlices({
       ? report.rounds.map((round) => ({
           id: round.roundId,
           name: round.title ?? round.roundId,
-          role: round.role ?? "held-out",
+          role: round.role ?? "tuning",
           revision: round.source?.revision ?? {
             kind: "artifact-sha256",
             value: artifactSha256,
@@ -738,7 +768,7 @@ function createCalibrationAlignmentSlices({
           {
             id: report.roundId ?? "blinded-human-calibration",
             name: report.title ?? "Blinded human calibration",
-            role: "held-out",
+            role: report.role ?? "tuning",
             revision: {
               kind: "artifact-sha256",
               value: artifactSha256,
@@ -795,7 +825,9 @@ function createCalibrationAlignmentSlices({
         excludedMetricIds: ["answeredTasks", "judgment"],
         status: verdict,
         note:
-          "This held-out blinded round is a reviewed gross-failure screen, not a model-ranking score.",
+          source.role === "held-out"
+            ? "This held-out blinded round is a reviewed gross-failure screen, not a model-ranking score."
+            : "This tuning round may block or request more evidence, but it cannot promote.",
       });
     });
 }

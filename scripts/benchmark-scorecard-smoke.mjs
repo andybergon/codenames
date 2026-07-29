@@ -1,47 +1,97 @@
-import SCORECARD from "./generated/benchmark-scorecard.json" with {
+import assert from "node:assert/strict";
+import REPORT from "./generated/play-model-comparison-v3.json" with {
   type: "json",
 };
 import {
-  DEFAULT_HUMAN_WEIGHT,
-  scoreBenchmarkRow,
-  scoreDelta,
+  BENCHMARK_REPORT_SCHEMA_VERSION,
+  benchmarkRows,
+  humanAlignmentSlices,
+  validateBenchmarkReport,
 } from "../src/benchmark/scorecard.js";
 
-if (SCORECARD.schemaVersion !== 1) {
-  throw new Error("Unexpected benchmark scorecard schema.");
-}
-if (SCORECARD.rows.length !== 5) {
-  throw new Error(
-    `Expected five benchmark configurations, found ${SCORECARD.rows.length}.`,
-  );
-}
-const baseline = SCORECARD.rows.find(
-  ({ id }) => id === SCORECARD.baselineId,
+assert.equal(
+  validateBenchmarkReport(REPORT).schemaVersion,
+  BENCHMARK_REPORT_SCHEMA_VERSION,
 );
-const voyage = SCORECARD.rows.find(
-  ({ id }) => id === "voyage-hybrid-dynamic",
+assert.equal(
+  REPORT.baseline.configurationFingerprint.length,
+  64,
 );
-if (!baseline || !voyage) {
-  throw new Error("Required benchmark configurations are missing.");
-}
-if (
-  scoreBenchmarkRow(baseline, DEFAULT_HUMAN_WEIGHT) !== 67.7
-) {
-  throw new Error("Default baseline score drifted.");
-}
-if (
-  scoreBenchmarkRow(voyage, 100) !==
-  Number(voyage.scores.humanAlignment.toFixed(1))
-) {
-  throw new Error("Human-only weighting is inconsistent.");
-}
-if (
-  scoreDelta(
-    voyage.transfer.correctCardsPerTurn,
-    baseline.transfer.correctCardsPerTurn,
-  ) >= 0
-) {
-  throw new Error("Voyage transfer regression is not represented.");
-}
+assert.equal(benchmarkRows(REPORT).length, REPORT.candidates.length);
+assert.deepEqual(
+  REPORT.methodology.evidenceLayers.fixedBoardSelfPlay.splits.map(
+    ({ id, boardCount }) => [id, boardCount],
+  ),
+  [
+    ["smoke", 20],
+    ["calibration", 100],
+    ["development", 128],
+    ["test", 150],
+  ],
+);
+assert.deepEqual(
+  REPORT.methodology.evidenceLayers.gameplaySafety.metrics,
+  [
+    "Assassin hits",
+    "Wrong-team hits",
+    "Neutral hits",
+    "Fallback clues",
+    "Stalls",
+  ],
+);
+assert.match(
+  REPORT.methodology.evidenceLayers.promotionFlow.rules.join(" "),
+  /cannot promote/u,
+);
+
+const syntheticSlice = {
+  candidateId: "synthetic-candidate",
+  source: { name: "Synthetic source" },
+};
+const comparisonFixture = {
+  ...REPORT,
+  candidates: [
+    {
+      id: "synthetic-candidate",
+      humanAlignmentSlices: [syntheticSlice],
+    },
+  ],
+  summary: {
+    ...REPORT.summary,
+    candidateCount: 1,
+    candidates: [
+      {
+        id: "synthetic-candidate",
+        playMetrics: {
+          improved: 1,
+          regressed: 0,
+          uncertain: 1,
+          changed: 0,
+          unchanged: 0,
+        },
+        humanAlignment: {
+          slices: 1,
+          tuningSlices: 1,
+          heldOutSlices: 0,
+          reviewedStatus: "not-attached",
+        },
+      },
+    ],
+  },
+  evidenceFamilies: {
+    humanAlignment: {
+      slices: [syntheticSlice],
+      aggregation: REPORT.evidenceFamilies.humanAlignment.aggregation,
+    },
+  },
+};
+assert.equal(benchmarkRows(comparisonFixture).length, 1);
+assert.deepEqual(
+  humanAlignmentSlices(
+    comparisonFixture,
+    "synthetic-candidate",
+  ),
+  [syntheticSlice],
+);
 
 console.log("Benchmark scorecard smoke checks passed.");

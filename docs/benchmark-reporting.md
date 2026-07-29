@@ -4,14 +4,26 @@
 
 ## Run the pipeline
 
-Generate baseline and candidate artifacts on the same frozen split:
+Generate the accepted production baseline on the frozen development split:
 
 ```sh
 npm run benchmark:play -- \
   --split development \
   --comparison-only \
-  --output .cache/benchmarks/accepted-development.json
+  --output scripts/generated/play-accepted-baseline-development.json
 
+npm run benchmark:compare -- \
+  --baseline scripts/generated/play-accepted-baseline-development.json \
+  --baseline-id accepted-production-development \
+  --baseline-only \
+  --output scripts/generated/play-model-comparison-v3.json
+```
+
+The baseline-only v3 report is the scorecard source until real candidate evidence is available. It records the accepted artifact, full configuration and fingerprint, provenance, split, and sample size without creating deltas, intervals, gates, or a promotion verdict.
+
+Generate a candidate on the same frozen split:
+
+```sh
 npm run benchmark:play -- \
   --split development \
   --comparison-only \
@@ -23,13 +35,34 @@ Compare them:
 
 ```sh
 npm run benchmark:compare -- \
-  --baseline .cache/benchmarks/accepted-development.json \
-  --baseline-id accepted-bge-small \
+  --baseline scripts/generated/play-accepted-baseline-development.json \
+  --baseline-id accepted-production-development \
   --candidate candidate=.cache/benchmarks/candidate-development.json \
-  --output scripts/generated/candidate-development-comparison.json
+  --output scripts/generated/play-model-comparison-v3.json
 ```
 
-The comparison command also writes `candidate-development-comparison.md`. Repeating the command with identical artifacts, seed, and iteration count produces the same statistics, artifact hashes, comparison fingerprint, and report timestamp. The timestamp is the latest source-artifact timestamp rather than the wall-clock comparison time.
+The comparison command also writes `play-model-comparison-v3.md`. Repeating the command with identical artifacts, seed, and iteration count produces the same statistics, artifact hashes, comparison fingerprint, and report timestamp. The timestamp is the latest source-artifact timestamp rather than the wall-clock comparison time. Run `npm run validate:benchmark-report` after refreshing the checked report.
+
+### Accepted development baseline
+
+The checked baseline uses the documented current English production behavior on development boards 120 through 247:
+
+- Generated at: `2026-07-29T03:40:12.862Z`.
+- Full artifact: [`play-accepted-baseline-development.json`](../scripts/generated/play-accepted-baseline-development.json), SHA-256 `4d4bf6e12354c865f4db933925fe207fff816bc3f689e0f4fb6e908d1857085e`.
+- Canonical configuration fingerprint: `cf888693ae7567c012460f8b697231911be13352d88a7e122d4cb19879c3633b`.
+- Behavior implementation: SHA-256 `233e0fabc574c8ad101d62e7f0618da7cfb5c963920728939d24d99b3650e9a4`.
+- BGE-small manifest: SHA-256 `df9997658cb028aac476db5291b03d2fb88a7923304036c651da7206968da8fb`, with exact selected shard hashes retained in the artifact.
+- Official English word pool: SHA-256 `b2bdf45505d9a23da8f127923c62a33be570d9fc1646400ad8038a18e78ab9a2`.
+- WordNet concept assets: version 2, SHA-256 `d23c4a06d0dfb491b512349659e2a95bf05b9b8cb15a8a52bc648fbb45c77c01`.
+- Canonical v3 scorecard report: [`play-model-comparison-v3.json`](../scripts/generated/play-model-comparison-v3.json), comparison fingerprint `68f7e3b4a1a58393a0768ddc171969d46267c59bc5d21afa2aa3940050761b0a`.
+
+This development artifact is accepted as the reproducible baseline for tuning comparisons. It is not held-out promotion evidence.
+
+### Board-vector cache
+
+Local transformer-backed benchmarks cache centered board vectors under `.cache/benchmark-board-vectors/`. The content-addressed key includes the cache format, language, word set and exact word content, model and revision, task prefix, dimensions, full index manifest hash, and centering method and mean.
+
+For the fixed 20-board smoke split on the same machine, the cold vector stage took `11966.7 ms`; the identical warm stage took `3.6 ms`. Total warm smoke runtime was `41.45 s`. Cache mismatch, corruption, or truncation regenerates the vectors, and the fixed board counts and gates do not change.
 
 Attach an evaluated blinded human report only after its gross-failure decision has been reviewed:
 
@@ -42,7 +75,7 @@ npm run benchmark:compare -- \
   --output <held-out-comparison.json>
 ```
 
-The comparator records the reviewed `pass` or `fail`. It does not invent a numeric human threshold or use the human round as a model ranker.
+The comparator records the reviewed `pass` or `fail`. It does not invent a numeric human threshold or use the human round as a model ranker. Only an explicitly held-out round can satisfy the human promotion requirement. Tuning, calibration, and player-feedback evidence can block or request more evidence, but cannot promote.
 
 `npm run calibration:evaluate` writes each answered blinded round separately in `rounds[]`, pins its public definition plus answer key by SHA-256, and retains the aggregate `models` object for older consumers. The decision report emits one held-out slice per round only when both the accepted baseline and candidate have observations in that round.
 
@@ -147,6 +180,7 @@ Schema version 3 keeps `baseline` and `candidates[]` as the stable presentation 
 
 - `summary`, a compact candidate and verdict inventory with Play metric-status counts and human-evidence coverage.
 - `evidenceFamilies.humanAlignment.slices[]`, one expandable slice per source and game or task format.
+- `methodology.evidenceLayers`, the artifact-owned human, fixed-board, safety, transfer, and promotion-flow explanation rendered by the scorecard's Tests & data tab.
 
 Every human-alignment slice includes:
 

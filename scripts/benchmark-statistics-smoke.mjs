@@ -230,9 +230,20 @@ const promote = createFinalVerdict({
   promotion: assessment,
   split: "test",
   heldOutProtocol: { sha256: "protocol" },
-  humanEvidence: { verdict: "pass" },
+  humanEvidence: { verdict: "pass", promotionEligible: true },
 });
 assert.equal(promote.status, "promote");
+const tuningCannotPromote = createFinalVerdict({
+  promotion: assessment,
+  split: "test",
+  heldOutProtocol: { sha256: "protocol" },
+  humanEvidence: { verdict: "pass", promotionEligible: false },
+});
+assert.equal(tuningCannotPromote.status, "needs-more-data");
+assert.match(
+  tuningCannotPromote.requiredEvidence.join(" "),
+  /Tuning and feedback data cannot promote/u,
+);
 const humanEvidence = humanEvidenceRecord({
   candidateId: "candidate",
   path: "human.json",
@@ -298,6 +309,7 @@ const humanEvidence = humanEvidenceRecord({
 });
 assert.equal(humanEvidence.sampleSize, 10);
 assert.equal(humanEvidence.verdict, "pass");
+assert.equal(humanEvidence.promotionEligible, true);
 assert.equal(humanEvidence.automaticThreshold, null);
 assert.equal(humanEvidence.alignmentSlices.length, 1);
 assert.equal(
@@ -606,6 +618,22 @@ assert.match(summary, /Board 1/u);
 assert.match(summary, /Cultural Codes/u);
 assert.match(summary, /targetRecallAtCount/u);
 assert.match(summary, /abc123/u);
+
+const baselineSummary = renderBenchmarkComparisonSummary({
+  baseline: {
+    sha256: "baseline-artifact",
+    configurationFingerprint: "baseline-configuration",
+    configurationLabels: canonical.configurationLabels,
+  },
+  evidence: {
+    split: "development",
+    splitRole: "tuning",
+    pairedBoards: 20,
+  },
+  candidates: [],
+});
+assert.match(baselineSummary, /Accepted Play benchmark baseline/u);
+assert.match(baselineSummary, /No candidate comparison is attached/u);
 
 console.log("Benchmark statistics smoke checks passed.");
 

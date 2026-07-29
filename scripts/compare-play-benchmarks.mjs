@@ -146,9 +146,90 @@ const methodology = {
     "Improved or regressed requires the full paired 95% interval to clear zero. Otherwise the result is uncertain.",
   gateStatus:
     "A point estimate beyond an existing promotion threshold blocks. A point estimate within the threshold with a confidence bound outside it needs more data.",
+  evidenceLayers: {
+    humanAlignment: {
+      label: "Human and gold evidence",
+      role:
+        "Source-separated human alignment plus reviewed manual or golden evidence screens real clue and guess behavior.",
+    },
+    fixedBoardSelfPlay: {
+      label: "Fixed-board same-model self-play",
+      role:
+        "Deterministic paired boards provide fast regression, tuning, and sealed promotion evidence without claiming human realism.",
+      splits: [
+        {
+          id: "smoke",
+          boardCount: 20,
+          role: "Fast regression screen",
+        },
+        {
+          id: "calibration",
+          boardCount: 100,
+          role: "Similarity calibration and tuning",
+        },
+        {
+          id: "development",
+          boardCount: 128,
+          role: "Frozen candidate comparison",
+        },
+        {
+          id: "test",
+          boardCount: 150,
+          role: "Sealed held-out promotion",
+        },
+      ],
+    },
+    gameplaySafety: {
+      label: "Gameplay and safety guardrails",
+      role:
+        "Recorded gates cover severe errors and bounded-play failures even when a headline metric improves.",
+      metrics: [
+        "Assassin hits",
+        "Wrong-team hits",
+        "Neutral hits",
+        "Fallback clues",
+        "Stalls",
+      ],
+    },
+    crossModelTransfer: {
+      label: "Cross-model transfer",
+      role:
+        "A different operative embedding model stress-tests whether clue safety survives beyond same-model agreement.",
+    },
+    promotionFlow: {
+      steps: [
+        {
+          id: "human-gold",
+          label: "Human and gold screen",
+          role: "Screen candidate quality and gross failures.",
+        },
+        {
+          id: "smoke",
+          label: "Smoke",
+          role: "Catch fast deterministic regressions.",
+        },
+        {
+          id: "tuning-development",
+          label: "Calibration and development",
+          role: "Tune on calibration evidence and compare on frozen development boards.",
+        },
+        {
+          id: "held-out",
+          label: "Sealed held-out promotion",
+          role: "Run once with recorded protocol authorization.",
+        },
+      ],
+      rules: [
+        "Calibration and tuning evidence cannot promote.",
+        "Held-out promotion requires recorded protocol authorization.",
+        "A failed gate blocks promotion even when a headline metric improves.",
+      ],
+    },
+  },
 };
 const output = {
   schemaVersion: 3,
+  mode: results.length > 0 ? "comparison" : "baseline",
   generatedAt: deterministicGeneratedAt([
     baselineSource.report,
     ...candidateSources.map(({ report }) => report),
@@ -167,7 +248,10 @@ const output = {
     unit: baselineArtifact.evidence.unit,
     split: baselineArtifact.evidence.split,
     splitRole: baselineArtifact.evidence.splitRole,
-    pairedBoards: results[0].comparison.pairedBoards,
+    pairedBoards:
+      results[0]?.comparison.pairedBoards ??
+      baselineSource.report.methodology?.boardCount ??
+      null,
     humanRealismClaim: false,
   },
   methodology,
@@ -220,6 +304,7 @@ async function readArtifact(path) {
 function parseOptions(args) {
   const values = {
     baseline: null,
+    baselineOnly: false,
     baselineId: "accepted-baseline",
     candidates: [],
     output: "scripts/generated/play-model-comparison-v3.json",
@@ -237,6 +322,10 @@ function parseOptions(args) {
   for (let index = 0; index < args.length; index += 1) {
     const option = args[index];
     const value = args[index + 1];
+    if (option === "--baseline-only") {
+      values.baselineOnly = true;
+      continue;
+    }
     if (option === "--baseline") values.baseline = required(value, option);
     else if (option === "--baseline-id") {
       values.baselineId = required(value, option);
@@ -292,8 +381,11 @@ function parseOptions(args) {
     index += 1;
   }
   if (!values.baseline) throw new Error("--baseline is required.");
-  if (values.candidates.length === 0) {
+  if (!values.baselineOnly && values.candidates.length === 0) {
     throw new Error("At least one --candidate id=path is required.");
+  }
+  if (values.baselineOnly && values.candidates.length > 0) {
+    throw new Error("--baseline-only cannot be combined with --candidate.");
   }
   const candidateIds = values.candidates.map(({ id }) => id);
   if (new Set(candidateIds).size !== candidateIds.length) {

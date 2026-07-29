@@ -1,0 +1,488 @@
+{
+  "schemaVersion": 3,
+  "mode": "baseline",
+  "generatedAt": "2026-07-29T03:40:12.862Z",
+  "baseline": {
+    "path": "scripts/generated/play-accepted-baseline-development.json",
+    "methodology": {
+      "boardCount": 128,
+      "boardOffset": 120,
+      "split": "development",
+      "splitRole": "tuning",
+      "heldOutProtocol": null,
+      "gamesPerPolicy": 128,
+      "pairedBoards": true,
+      "comparisonOnly": true,
+      "wordSet": "official",
+      "language": "en",
+      "modelId": "bge-small",
+      "model": "Xenova/bge-small-en-v1.5",
+      "provider": "local",
+      "dimensions": 384,
+      "indexDirectory": "public/data/model-lab/bge-small",
+      "candidateCount": 30000,
+      "resultsPerTargetSize": 6,
+      "boardSeed": "Eight deterministic bytes: ASCII CODE followed by a big-endian 1-based board index.",
+      "decisionSeed": "Matches Play runtime: board seed, turn number, and history length for each action.",
+      "clueSelection": "Prefer the highest-scoring multi clue when it is within 5 points of the best clue; otherwise choose the best clue.",
+      "bonusGuesses": "Pass after reaching the declared clue number.",
+      "operative": "The bot guesser sees only public clue and unrevealed-card data from Xenova/bge-small-en-v1.5.",
+      "operativeRanking": "Weak multi-card clues use the local WordNet sense bridge when every direct card similarity is below 0.20. Other turns retain exact direct ranking.",
+      "reranker": null,
+      "operativeAggression": "Policy comparison uses dynamic for the clue-policy rows and holds hybrid clue scoring fixed across all three operative modes.",
+      "operativeNoise": "Operative candidates retain their exact association-score order.",
+      "missedTargetTiming": "Clue ranking uses late missed-target timing. The fresh-target bias is based on unresolved intended targets from prior clues and fades as never-targeted friendly cards run out.",
+      "repeatedClues": "The spymaster excludes every clue previously given by the same team before analysis, ranking, and fallback selection.",
+      "stalledGameResolution": "After two consecutive passes, the next operative takes its highest-ranked available guess. This keeps cross-model simulations bounded and is counted separately.",
+      "operativeAggressionModes": {
+        "conservative": "Uses the highest similarity and separation thresholds and does not adapt to score.",
+        "aggressive": "Uses the former production thresholds and pursues the declared clue number unless confidence is extremely low.",
+        "dynamic": "Uses public remaining-agent counts to lower thresholds for a possible win or urgent comeback and raise them with a comfortable lead."
+      },
+      "operativeModelId": "same",
+      "operativeModel": "Xenova/bge-small-en-v1.5",
+      "maxActionsPerGame": 100,
+      "similarityCalibration": {
+        "scale": 1,
+        "offset": 0,
+        "rawGeometry": {
+          "clueSamples": 128,
+          "boardWordSamples": 128,
+          "pairSamples": 16384,
+          "mean": 0.000556,
+          "standardDeviation": 0.082383,
+          "minimum": -0.24638,
+          "p05": -0.119213,
+          "median": -0.006416,
+          "p95": 0.146877,
+          "maximum": 0.636922
+        },
+        "calibratedGeometry": {
+          "clueSamples": 128,
+          "boardWordSamples": 128,
+          "pairSamples": 16384,
+          "mean": 0.000556,
+          "standardDeviation": 0.082383,
+          "minimum": -0.24638,
+          "p05": -0.119213,
+          "median": -0.006416,
+          "p95": 0.146877,
+          "maximum": 0.636922
+        },
+        "note": "Scale and offset are applied to clue-board and board-board similarities before scoring. Cross-model operative runs retain the operative model's native scale."
+      },
+      "rules": "Every simulation uses the production Play state machine. Games that exceed the action bound remain in the report as stalls.",
+      "fallback": "If the production analyzer has no ranked suggestion, use the legal indexed clue closest to one remaining agent, number 1, and count the turn.",
+      "firstHalf": "For each completed game, take the first ceiling(total clue turns / 2) clue turns, then aggregate their clue numbers.",
+      "funObjective": {
+        "definition": "A 0-100 proxy balancing ambitious clues, productive guesses, close finishes, and a playable game length.",
+        "caution": "The Fun Index ranks deterministic self-play experiments. Human embedding agreement remains a separate validity guardrail.",
+        "version": 1,
+        "weights": {
+          "ambition": 0.3,
+          "momentum": 0.3,
+          "suspense": 0.25,
+          "flow": 0.15
+        },
+        "targets": {
+          "multiClueRate": [
+            0.2,
+            0.6
+          ],
+          "firstHalfMeanClueNumber": [
+            1.2,
+            2.2
+          ],
+          "correctCardsPerTurn": [
+            1,
+            1.65
+          ],
+          "closeFinishRate": [
+            0.35,
+            0.75
+          ],
+          "idealTurnsPerGame": [
+            8,
+            12
+          ],
+          "playableTurnsPerGame": [
+            6,
+            16
+          ]
+        },
+        "guardrails": {
+          "assassinRate": 0.02,
+          "wrongTeamHitsPerGame": 0.15,
+          "neutralHitsPerGame": 0.35,
+          "fallbackClueRate": 0.01,
+          "stallRate": 0
+        }
+      },
+      "policies": {
+        "current": "Worth + current risk adjustment + state-dependent clue-number bonus + 18 x margin.",
+        "hybrid": "0.35 x Worth + 25 x expected net + 10 x success + 6 x margin + risk adjustment."
+      }
+    },
+    "id": "accepted-production-development",
+    "role": "accepted-baseline",
+    "sha256": "4d4bf6e12354c865f4db933925fe207fff816bc3f689e0f4fb6e908d1857085e",
+    "generatedAt": "2026-07-29T03:40:12.862Z",
+    "configuration": {
+      "schemaVersion": 1,
+      "evidence": {
+        "split": "development",
+        "splitRole": "tuning",
+        "boardOffset": 120,
+        "boardCount": 128,
+        "heldOutProtocol": null
+      },
+      "implementation": {
+        "files": [
+          {
+            "file": "src/board-share.js",
+            "sha256": "c5760a235e45c17296f801e8b15d2562ed64ef1b87d18d63f8bcd7e1f6f9aaf7"
+          },
+          {
+            "file": "src/clue-index.js",
+            "sha256": "296a0739d438a75dc40aabdfbdc50aed87a85cfd0dabd8a0c3734d562dd2fccc"
+          },
+          {
+            "file": "src/embeddings.js",
+            "sha256": "9a1ed10d867ccde86802fb645b2ef9667c422536b82fc6f3871b84a4cde5058f"
+          },
+          {
+            "file": "src/model.js",
+            "sha256": "184f556ef5e870af4731eb7f32070fe647712dfac9cd23fbbcc0ef1d707eb6a3"
+          },
+          {
+            "file": "src/play/bots.js",
+            "sha256": "832c6a9b89f7c8749973edd7a45e5d05bdcb1d8e69b83e2ed42b21ef28a56736"
+          },
+          {
+            "file": "src/play/concept-ranking.js",
+            "sha256": "2d065d9c75c61ad9aea69070312766977a27b41f354b975a041c5c40c42cb8c9"
+          },
+          {
+            "file": "src/play/game-state.js",
+            "sha256": "1b8879010672994e726e53b398c4497325abe23cce86445e056e2ee05af592b3"
+          },
+          {
+            "file": "src/play/settings.js",
+            "sha256": "fd7f6c92b324642a8c074e3992ef1a136dc788bc41adc849068c41c82ddda43d"
+          },
+          {
+            "file": "src/word-data.js",
+            "sha256": "05dd6b7f69008b429e025142a1ab493cfb8ccfdbb08ad29df66b0a8bb1b803a4"
+          }
+        ],
+        "contentSha256": "233e0fabc574c8ad101d62e7f0618da7cfb5c963920728939d24d99b3650e9a4"
+      },
+      "board": {
+        "language": "en",
+        "wordSet": "official",
+        "wordCount": 400,
+        "wordContentSha256": "b2bdf45505d9a23da8f127923c62a33be570d9fc1646400ad8038a18e78ab9a2",
+        "cardCount": 25,
+        "order": "random",
+        "wordReusePolicy": "fully-random",
+        "wordReuseHistoryBoards": 0,
+        "generationSeed": {
+          "deterministic": true,
+          "scheme": "Eight bytes: ASCII CODE followed by a big-endian 1-based board index.",
+          "firstBoardIndex": 120,
+          "lastBoardIndex": 247
+        }
+      },
+      "game": {
+        "simulationContractVersion": 1,
+        "startingSide": "blue",
+        "simulatedHumanSeat": {
+          "side": "blue",
+          "role": "spymaster"
+        },
+        "maxActionsPerGame": 100,
+        "forcedProgressAfterConsecutivePasses": 2,
+        "forcedProgressChoice": "highest-ranked-available-guess",
+        "fallbackClue": {
+          "enabled": true,
+          "number": 1,
+          "selection": "nearest-legal-indexed-clue-to-one-friendly-card"
+        }
+      },
+      "spymaster": {
+        "modelIndex": {
+          "id": "bge-small",
+          "model": "Xenova/bge-small-en-v1.5",
+          "revision": null,
+          "provider": "local",
+          "dimensions": 384,
+          "directory": "public/data/model-lab/bge-small",
+          "manifestSha256": "df9997658cb028aac476db5291b03d2fb88a7923304036c651da7206968da8fb",
+          "selectedShards": [
+            {
+              "start": 0,
+              "end": 3000,
+              "file": "clues-0-3000.json",
+              "bytes": 1578554,
+              "sha256": "e1b5ada2077983a8a544e1542cfda072639904896c958f7223619ac09fae5fe9"
+            },
+            {
+              "start": 3000,
+              "end": 10000,
+              "file": "clues-3000-10000.json",
+              "bytes": 3689892,
+              "sha256": "bcbb4440dbd82efcc22093348f4238b5998a783e0c4de8c35a4bacf19d497766"
+            },
+            {
+              "start": 10000,
+              "end": 30000,
+              "file": "clues-10000-30000.json",
+              "bytes": 10552271,
+              "sha256": "d10f3a629c61b33a0524b6d866125220c51d75ca5c9af983226cff4680767d82"
+            }
+          ],
+          "auxiliaryAssets": [],
+          "embeddingRuntime": "transformers",
+          "taskPrefix": null,
+          "quantization": {
+            "type": "symmetric-int8",
+            "scale": 127
+          },
+          "centeringMethod": "30000-clue-corpus-mean"
+        },
+        "vocabularySize": 30000,
+        "cluePolicyVariants": [
+          "hybrid"
+        ],
+        "comparisonPolicy": "hybrid",
+        "clueScoring": {
+          "current": "current-v1",
+          "hybrid": "hybrid-v1"
+        },
+        "clueSelection": "tempo",
+        "clueRandomShortlistSize": null,
+        "multiClueTolerance": 5,
+        "clueRepeatPolicy": "never",
+        "missedTargetTiming": "late",
+        "resultsPerTargetSize": 6
+      },
+      "operative": {
+        "modelIndex": {
+          "id": "same",
+          "model": "Xenova/bge-small-en-v1.5",
+          "revision": null,
+          "provider": "local",
+          "dimensions": 384,
+          "directory": "public/data/model-lab/bge-small",
+          "manifestSha256": "df9997658cb028aac476db5291b03d2fb88a7923304036c651da7206968da8fb",
+          "selectedShards": [
+            {
+              "start": 0,
+              "end": 3000,
+              "file": "clues-0-3000.json",
+              "bytes": 1578554,
+              "sha256": "e1b5ada2077983a8a544e1542cfda072639904896c958f7223619ac09fae5fe9"
+            },
+            {
+              "start": 3000,
+              "end": 10000,
+              "file": "clues-3000-10000.json",
+              "bytes": 3689892,
+              "sha256": "bcbb4440dbd82efcc22093348f4238b5998a783e0c4de8c35a4bacf19d497766"
+            },
+            {
+              "start": 10000,
+              "end": 30000,
+              "file": "clues-10000-30000.json",
+              "bytes": 10552271,
+              "sha256": "d10f3a629c61b33a0524b6d866125220c51d75ca5c9af983226cff4680767d82"
+            }
+          ],
+          "auxiliaryAssets": [],
+          "embeddingRuntime": "transformers",
+          "taskPrefix": null,
+          "quantization": {
+            "type": "symmetric-int8",
+            "scale": 127
+          },
+          "centeringMethod": "30000-clue-corpus-mean",
+          "resolvedModelId": "bge-small"
+        },
+        "aggression": "dynamic",
+        "additionalAggressionVariants": [
+          "dynamic"
+        ],
+        "conceptBridges": {
+          "playSetting": "guarded",
+          "requested": "concept",
+          "resolved": "guarded-wordnet",
+          "asset": {
+            "directory": "public/data/concepts",
+            "version": 2,
+            "source": {
+              "name": "Princeton WordNet 3.0",
+              "archiveSha256": "cbda5ea6eef7f36a97a43d4a75f85e07fccbb4f23657d27b4ccbc93e2646ab59",
+              "license": "WordNet 3.0"
+            },
+            "shardStrategy": {
+              "algorithm": "fnv1a-32",
+              "buckets": 256
+            },
+            "fileCount": 258,
+            "contentSha256": "d23c4a06d0dfb491b512349659e2a95bf05b9b8cb15a8a52bc648fbb45c77c01"
+          }
+        },
+        "reranker": null,
+        "guessVariation": "none",
+        "guessVariationRange": {
+          "minimum": 0,
+          "maximum": 0
+        },
+        "extraGuessPolicy": "pass"
+      },
+      "scoring": {
+        "similarityCalibration": {
+          "scale": 1,
+          "offset": 0
+        }
+      },
+      "randomness": {
+        "deterministic": true,
+        "boardSeed": "board-index",
+        "decisionSeed": "game-seed, turn-number, and event-history-length",
+        "operativeVariationSeed": "decision-seed",
+        "clueSelectionRandomized": false
+      }
+    },
+    "configurationFingerprint": "cf888693ae7567c012460f8b697231911be13352d88a7e122d4cb19879c3633b",
+    "configurationLabels": {
+      "modelIndex": "bge-small 30k",
+      "board": "en official",
+      "clue": "hybrid, tempo, tolerance 5, repeats never",
+      "operative": "same, dynamic, concept bridges, variation none, extra pass",
+      "split": "development 128 boards at 120"
+    },
+    "configurationContract": "canonical-v1",
+    "evidence": {
+      "source": "Deterministic Play full-game simulation",
+      "unit": "board",
+      "sampleSize": 128,
+      "split": "development",
+      "splitRole": "tuning",
+      "boardOffset": 120,
+      "pairedBoards": true,
+      "humanRealismClaim": false
+    }
+  },
+  "evidence": {
+    "source": "Deterministic Play full-game simulation",
+    "unit": "board",
+    "split": "development",
+    "splitRole": "tuning",
+    "pairedBoards": 128,
+    "humanRealismClaim": false
+  },
+  "methodology": {
+    "pairedByBoard": true,
+    "bootstrapUnit": "board",
+    "bootstrapIterations": 10000,
+    "confidence": 0.95,
+    "seed": "CODE-STATS",
+    "perExampleRegressionLimit": 10,
+    "metricStatus": "Improved or regressed requires the full paired 95% interval to clear zero. Otherwise the result is uncertain.",
+    "gateStatus": "A point estimate beyond an existing promotion threshold blocks. A point estimate within the threshold with a confidence bound outside it needs more data.",
+    "evidenceLayers": {
+      "humanAlignment": {
+        "label": "Human and gold evidence",
+        "role": "Source-separated human alignment plus reviewed manual or golden evidence screens real clue and guess behavior."
+      },
+      "fixedBoardSelfPlay": {
+        "label": "Fixed-board same-model self-play",
+        "role": "Deterministic paired boards provide fast regression, tuning, and sealed promotion evidence without claiming human realism.",
+        "splits": [
+          {
+            "id": "smoke",
+            "boardCount": 20,
+            "role": "Fast regression screen"
+          },
+          {
+            "id": "calibration",
+            "boardCount": 100,
+            "role": "Similarity calibration and tuning"
+          },
+          {
+            "id": "development",
+            "boardCount": 128,
+            "role": "Frozen candidate comparison"
+          },
+          {
+            "id": "test",
+            "boardCount": 150,
+            "role": "Sealed held-out promotion"
+          }
+        ]
+      },
+      "gameplaySafety": {
+        "label": "Gameplay and safety guardrails",
+        "role": "Recorded gates cover severe errors and bounded-play failures even when a headline metric improves.",
+        "metrics": [
+          "Assassin hits",
+          "Wrong-team hits",
+          "Neutral hits",
+          "Fallback clues",
+          "Stalls"
+        ]
+      },
+      "crossModelTransfer": {
+        "label": "Cross-model transfer",
+        "role": "A different operative embedding model stress-tests whether clue safety survives beyond same-model agreement."
+      },
+      "promotionFlow": {
+        "steps": [
+          {
+            "id": "human-gold",
+            "label": "Human and gold screen",
+            "role": "Screen candidate quality and gross failures."
+          },
+          {
+            "id": "smoke",
+            "label": "Smoke",
+            "role": "Catch fast deterministic regressions."
+          },
+          {
+            "id": "tuning-development",
+            "label": "Calibration and development",
+            "role": "Tune on calibration evidence and compare on frozen development boards."
+          },
+          {
+            "id": "held-out",
+            "label": "Sealed held-out promotion",
+            "role": "Run once with recorded protocol authorization."
+          }
+        ],
+        "rules": [
+          "Calibration and tuning evidence cannot promote.",
+          "Held-out promotion requires recorded protocol authorization.",
+          "A failed gate blocks promotion even when a headline metric improves."
+        ]
+      }
+    }
+  },
+  "candidates": [],
+  "summary": {
+    "candidateCount": 0,
+    "verdicts": {
+      "promote": 0,
+      "block": 0,
+      "needsMoreData": 0
+    },
+    "candidates": []
+  },
+  "evidenceFamilies": {
+    "humanAlignment": {
+      "slices": [],
+      "aggregation": "None. Each source and game or task format remains a separate slice."
+    }
+  },
+  "comparisonFingerprint": "68f7e3b4a1a58393a0768ddc171969d46267c59bc5d21afa2aa3940050761b0a"
+}
