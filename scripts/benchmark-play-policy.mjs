@@ -1,7 +1,13 @@
 import { cpus, platform, release } from "node:os";
 import { createHash } from "node:crypto";
-import { access, readFile, readdir, writeFile } from "node:fs/promises";
-import { isAbsolute, resolve } from "node:path";
+import {
+  access,
+  mkdir,
+  readFile,
+  readdir,
+  writeFile,
+} from "node:fs/promises";
+import { dirname, isAbsolute, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { performance } from "node:perf_hooks";
 import {
@@ -70,6 +76,10 @@ import {
   createBenchmarkConfiguration,
   stableFingerprint,
 } from "./benchmark-configuration.mjs";
+import {
+  boardVectorCacheIdentity,
+  loadOrCreateBoardVectors,
+} from "./benchmark-board-vector-cache.mjs";
 
 const ROOT = resolve(fileURLToPath(new URL("..", import.meta.url)));
 env.cacheDir =
@@ -171,14 +181,38 @@ const modelAsset = modelIndexAsset({
 });
 
 const boardWords = getWordsForSet(options.wordSet, options.language);
-const centeredBoardWords =
+const boardVectorStartedAt = performance.now();
+const boardVectorResult =
   manifest.embeddingRuntime === "precomputed"
-    ? await loadPrecomputedBoardVectors(
-        manifestDirectory,
-        manifest,
-        boardWords,
-      )
-    : await embedLocalBoardWords(boardWords, manifest, clueIndex);
+    ? {
+        cache: "precomputed",
+        vectors: await loadPrecomputedBoardVectors(
+          manifestDirectory,
+          manifest,
+          boardWords,
+        ),
+      }
+    : await loadOrCreateBoardVectors({
+        cacheDirectory: resolve(
+          ROOT,
+          ".cache/benchmark-board-vectors",
+        ),
+        identity: boardVectorCacheIdentity({
+          language: options.language,
+          wordSet: options.wordSet,
+          words: boardWords,
+          manifestBytes,
+          manifest,
+        }),
+        create: () =>
+          embedLocalBoardWords(boardWords, manifest, clueIndex),
+      });
+const centeredBoardWords = boardVectorResult.vectors;
+console.log(
+  `Board vectors: ${boardVectorResult.cache} in ${(
+    performance.now() - boardVectorStartedAt
+  ).toFixed(1)} ms.`,
+);
 const similarityCalibration = {
   scale: options.similarityScale,
   offset: options.similarityOffset,
@@ -519,6 +553,10 @@ const report = {
 
 const outputReport =
   options.reportDetail === "compact" ? compactReport(report) : report;
+await Promise.all([
+  mkdir(dirname(outputPath), { recursive: true }),
+  mkdir(dirname(summaryOutputPath), { recursive: true }),
+]);
 await writeFile(outputPath, `${JSON.stringify(outputReport, null, 2)}\n`);
 if (!options.comparisonOnly) {
   await writePlayPolicySummary(report, summaryOutputPath);
