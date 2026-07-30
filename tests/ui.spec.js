@@ -6134,7 +6134,9 @@ test("benchmark scorecard presents the canonical accepted baseline", async ({
   await expect(page.locator("#benchmark-details")).toContainText(
     "128 development boards",
   );
-  await expect(page.locator(".benchmark-fingerprint code")).toHaveText(
+  await expect(
+    page.locator("#benchmark-details .benchmark-fingerprint code"),
+  ).toHaveText(
     "189fd1ea518cf07159e9ce7ad5efc679ac9dc0228bc11fd365f402f4f4a8adac",
   );
   await page
@@ -6150,15 +6152,15 @@ test("benchmark tests and data tab explains artifact evidence", async ({
 }) => {
   await page.goto("/?mode=benchmarks");
 
-  const scorecardTab = page.getByRole("tab", { name: "Scorecard" });
-  const evidenceTab = page.getByRole("tab", { name: "Tests & data" });
+  const scorecardTab = page.getByRole("tab", { name: "Overview" });
+  const evidenceTab = page.getByRole("tab", { name: "Testing stages" });
   await expect(scorecardTab).toHaveAttribute("aria-selected", "true");
   await evidenceTab.click();
   await expect(evidenceTab).toHaveAttribute("aria-selected", "true");
   await expect(page.locator("#benchmark-panel-scorecard")).toBeHidden();
   await expect(page.locator("#benchmark-panel-evidence")).toBeVisible();
   await expect(
-    page.getByRole("heading", { name: "Tests & data" }),
+    page.getByRole("heading", { name: "Testing stages" }),
   ).toBeVisible();
   const splitExpectations = [
     ["smoke", "Smoke", "20 boards", "Fast regression screen"],
@@ -6195,9 +6197,110 @@ test("benchmark tests and data tab explains artifact evidence", async ({
     "No source-separated human or reviewed gold slices are attached",
   );
 
-  await evidenceTab.press("ArrowLeft");
+  await evidenceTab.press("Home");
   await expect(scorecardTab).toHaveAttribute("aria-selected", "true");
   await expect(scorecardTab).toBeFocused();
+});
+
+test("benchmark settings audit shows tested configurations and stage outcomes", async ({
+  page,
+}) => {
+  await page.goto("/?mode=benchmarks");
+  await page.getByRole("tab", { name: "Settings audit" }).click();
+
+  await expect(page.locator("#benchmark-panel-settings")).toBeVisible();
+  await expect(
+    page.getByRole("heading", {
+      name: "English Play default one-factor audit",
+    }),
+  ).toBeVisible();
+
+  const rows = page.locator(".benchmark-audit-table tbody tr");
+  await expect(rows).toHaveCount(17);
+  await expect(
+    page.locator('[data-audit-result="alternative-promising"]'),
+  ).toHaveCount(3);
+
+  const miniLm = rows.filter({ hasText: "MiniLM-L6" });
+  await expect(miniLm).toHaveCount(1);
+  await expect(miniLm).toContainText("Embedding model");
+  await expect(miniLm).toContainText("MiniLM-L6");
+  await expect(miniLm).toContainText("Smoke");
+  await expect(miniLm).toContainText("20 boards");
+  await expect(miniLm).toContainText("Default justified");
+  await expect(miniLm).toContainText("0 improved");
+  await expect(miniLm).toContainText("1 regressed");
+  await expect(miniLm).toContainText("0 uncertain");
+  await expect(miniLm).toContainText("Blocked");
+  await miniLm.getByText("View configuration", { exact: true }).click();
+  await expect(miniLm).toContainText("minilm-l6 30k");
+  await expect(miniLm.locator(".benchmark-fingerprint code")).toHaveText(
+    "d9eccd852f8541572e37e67e5e0b7201782748013d31fda426b98eb4d58d7a1e",
+  );
+
+  const vocabulary100k = rows.filter({ hasText: "100,000" });
+  await expect(vocabulary100k).toHaveCount(1);
+  await expect(vocabulary100k).toContainText("Development");
+  await expect(vocabulary100k).toContainText("128 boards");
+  await expect(vocabulary100k).toContainText("Promising signal");
+  await expect(page.locator("#benchmark-panel-settings")).toContainText(
+    "0 held-out boards used",
+  );
+  await expect(page.locator("#benchmark-panel-settings")).toContainText(
+    "No promotion claim",
+  );
+});
+
+test("benchmark CLI research shows stage scores and blocking reasons", async ({
+  page,
+}) => {
+  await page.goto("/?mode=benchmarks");
+  await page.getByRole("tab", { name: "CLI research" }).click();
+
+  await expect(page.locator("#benchmark-panel-cli")).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Subscription CLI research" }),
+  ).toBeVisible();
+  const models = page.locator(".benchmark-cli-model");
+  await expect(models).toHaveCount(3);
+
+  const sol = models.filter({ hasText: "GPT-5.6 Sol" });
+  await expect(sol).toHaveCount(1);
+  await expect(sol.locator("tbody tr")).toHaveCount(3);
+  const solSmoke = sol.locator("tbody tr").filter({
+    hasText: "Same-model smoke",
+  });
+  await expect(solSmoke).toContainText("1.6421");
+  await expect(solSmoke).toContainText("1.4465");
+  await expect(solSmoke).toContainText("-0.1956");
+  await expect(solSmoke).toContainText("-0.2954 to -0.0981");
+  await expect(solSmoke).toContainText("Blocked");
+  await expect(solSmoke).toContainText(
+    "At least one Play promotion gate conclusively failed.",
+  );
+  const solTransfer = sol.locator("tbody tr").filter({
+    hasText: "MiniLM-L6 transfer smoke",
+  });
+  await expect(solTransfer).toContainText("Needs evidence");
+  await expect(solTransfer).toContainText(
+    "The recorded interval remains uncertain.",
+  );
+
+  const opus = models.filter({ hasText: "Claude Opus" });
+  await expect(opus).toHaveCount(1);
+  await expect(opus.locator("tbody tr")).toHaveCount(1);
+  await expect(opus.locator(".benchmark-interruption")).toContainText(
+    "Monthly subscription limit",
+  );
+  await expect(opus.locator(".benchmark-interruption")).toContainText(
+    "Development stopped after 65.3 minutes. Transfer was not run.",
+  );
+  await expect(page.locator("#benchmark-panel-cli")).toContainText(
+    "0 held-out boards used",
+  );
+  await expect(page.locator("#benchmark-panel-cli")).toContainText(
+    "Human or gold screen unavailable",
+  );
 });
 
 test("benchmark columns explain their metrics on hover", async ({ page }) => {
@@ -6249,7 +6352,7 @@ test("benchmark scorecard is responsive and keeps its matrix scrollable", async 
     await expect(
       page.getByRole("heading", { name: "Benchmark comparison" }),
     ).toBeVisible();
-    await page.getByRole("tab", { name: "Tests & data" }).click();
+    await page.getByRole("tab", { name: "Testing stages" }).click();
 
     const layout = await page.evaluate(() => {
       const methodology = document.querySelector("#benchmark-panel-evidence");
@@ -6270,7 +6373,7 @@ test("benchmark scorecard is responsive and keeps its matrix scrollable", async 
       `methodology clipping at ${viewport.width}px`,
     ).toBe(true);
 
-    await page.getByRole("tab", { name: "Scorecard" }).click();
+    await page.getByRole("tab", { name: "Overview" }).click();
     const matrixLayout = await page.evaluate(() => {
       const matrix = document.querySelector(".benchmark-table-wrap");
       const scorecard = document.querySelector("#benchmark-details");
@@ -6297,6 +6400,47 @@ test("benchmark scorecard is responsive and keeps its matrix scrollable", async 
       matrixLayout.scorecardFits,
       `scorecard clipping at ${viewport.width}px`,
     ).toBe(true);
+
+    for (const [tabName, panelId] of [
+      ["Settings audit", "benchmark-panel-settings"],
+      ["CLI research", "benchmark-panel-cli"],
+    ]) {
+      await page.getByRole("tab", { name: tabName }).click();
+      const artifactLayout = await page.evaluate((id) => {
+        const panel = document.querySelector(`#${id}`);
+        const bounds = panel.getBoundingClientRect();
+        return {
+          pageOverflows:
+            document.documentElement.scrollWidth >
+            document.documentElement.clientWidth,
+          panelFits:
+            bounds.left >= 0 &&
+            bounds.right <= document.documentElement.clientWidth,
+          tablesFit: [...panel.querySelectorAll(".benchmark-table-wrap")].every(
+            (table) => {
+              const tableBounds = table.getBoundingClientRect();
+              return (
+                tableBounds.left >= 0 &&
+                tableBounds.right <= document.documentElement.clientWidth
+              );
+            },
+          ),
+        };
+      }, panelId);
+      expect(
+        artifactLayout.pageOverflows,
+        `${tabName} page overflow at ${viewport.width}px`,
+      ).toBe(false);
+      expect(
+        artifactLayout.panelFits,
+        `${tabName} panel clipping at ${viewport.width}px`,
+      ).toBe(true);
+      expect(
+        artifactLayout.tablesFit,
+        `${tabName} table clipping at ${viewport.width}px`,
+      ).toBe(true);
+    }
+    await page.getByRole("tab", { name: "Overview" }).click();
 
     const configurationInfo = page.getByRole("button", {
       name: "About Configuration",

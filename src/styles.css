@@ -5324,6 +5324,7 @@ button.play-card:not(:disabled):hover {
   display: flex;
   width: fit-content;
   max-width: 100%;
+  flex-wrap: wrap;
   gap: 4px;
   border: 1px solid var(--line);
   border-radius: 9px;
@@ -5353,7 +5354,9 @@ button.play-card:not(:disabled):hover {
 .benchmark-summary article,
 .benchmark-results,
 .benchmark-details,
-.benchmark-methodology {
+.benchmark-methodology,
+.benchmark-artifact-view,
+.benchmark-cli-model {
   border: 1px solid var(--line);
   border-radius: 10px;
   background: var(--panel-fill);
@@ -5662,6 +5665,22 @@ button.play-card:not(:disabled):hover {
   color: var(--orange);
 }
 
+.benchmark-status[data-state="tuning"] {
+  background: var(--blue-soft);
+  color: var(--blue-text);
+}
+
+.benchmark-status[data-state="default-locally-justified"] {
+  background: var(--green-soft);
+  color: var(--green);
+}
+
+.benchmark-status[data-state="alternative-promising"],
+.benchmark-status[data-state="uncertain"] {
+  background: var(--orange-soft);
+  color: var(--orange);
+}
+
 .benchmark-delta[data-state="better"] {
   color: var(--green);
 }
@@ -5922,6 +5941,165 @@ button.play-card:not(:disabled):hover {
   padding-top: 10px;
 }
 
+.benchmark-artifact-view {
+  display: grid;
+  min-width: 0;
+  gap: 12px;
+  padding: 16px;
+}
+
+.benchmark-artifact-heading,
+.benchmark-cli-model-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.benchmark-artifact-heading h2,
+.benchmark-artifact-heading p,
+.benchmark-cli-model-heading h3,
+.benchmark-cli-model-heading p,
+.benchmark-artifact-note {
+  margin: 0;
+}
+
+.benchmark-artifact-heading h2 {
+  margin-top: 3px;
+  font-size: 1rem;
+}
+
+.benchmark-artifact-heading p,
+.benchmark-artifact-note,
+.benchmark-cli-model-heading p {
+  color: var(--muted);
+  font-size: 0.68rem;
+  line-height: 1.45;
+}
+
+.benchmark-artifact-heading p {
+  max-width: 780px;
+  margin-top: 4px;
+}
+
+.benchmark-boundary-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.benchmark-boundary-strip span {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 5px 8px;
+  background: var(--subtle-fill);
+  color: var(--muted);
+  font-size: 0.65rem;
+  font-weight: 750;
+}
+
+.benchmark-audit-table {
+  min-width: 1640px;
+}
+
+.benchmark-audit-table td:nth-child(4),
+.benchmark-audit-table td:nth-child(7) {
+  max-width: 280px;
+  white-space: normal;
+}
+
+.benchmark-metric-totals {
+  display: grid;
+  gap: 3px;
+}
+
+.benchmark-metric-totals span {
+  font-size: 0.66rem;
+  font-weight: 800;
+}
+
+.benchmark-metric-totals [data-state="improved"] {
+  color: var(--green);
+}
+
+.benchmark-metric-totals [data-state="regressed"] {
+  color: var(--red-text);
+}
+
+.benchmark-metric-totals [data-state="uncertain"] {
+  color: var(--orange);
+}
+
+.benchmark-audit-configuration {
+  width: min(330px, 70vw);
+  white-space: normal;
+}
+
+.benchmark-audit-configuration summary {
+  cursor: pointer;
+  font-size: 0.68rem;
+  font-weight: 850;
+}
+
+.benchmark-audit-configuration .benchmark-setting-chips {
+  margin-top: 8px;
+}
+
+.benchmark-audit-configuration .benchmark-setting-chips span {
+  border-radius: 7px;
+  white-space: normal;
+}
+
+.benchmark-audit-configuration .benchmark-fingerprint {
+  margin-top: 8px;
+}
+
+.benchmark-cli-models {
+  display: grid;
+  gap: 10px;
+}
+
+.benchmark-cli-model {
+  display: grid;
+  min-width: 0;
+  gap: 10px;
+  padding: 13px;
+}
+
+.benchmark-cli-model-heading {
+  align-items: center;
+}
+
+.benchmark-cli-model-heading h3 {
+  font-size: 0.9rem;
+}
+
+.benchmark-cli-table {
+  min-width: 1260px;
+}
+
+.benchmark-cli-table td:first-child {
+  min-width: 210px;
+}
+
+.benchmark-cli-table td:last-child {
+  max-width: 260px;
+  white-space: normal;
+}
+
+.benchmark-interruption {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 5px 10px;
+  border: 1px solid color-mix(in srgb, var(--orange) 35%, var(--line));
+  border-radius: 8px;
+  padding: 9px 10px;
+  background: var(--orange-soft);
+  color: var(--orange);
+  font-size: 0.68rem;
+}
+
 .benchmark-methodology {
   display: grid;
   gap: 12px;
@@ -5937,6 +6115,7 @@ button.play-card:not(:disabled):hover {
 
 .benchmark-methodology-heading h2,
 .benchmark-methodology-heading small,
+.benchmark-methodology-heading p,
 .benchmark-evidence-grid h3,
 .benchmark-evidence-grid p,
 .benchmark-flow h3 {
@@ -5949,6 +6128,7 @@ button.play-card:not(:disabled):hover {
 }
 
 .benchmark-methodology-heading small,
+.benchmark-methodology-heading p,
 .benchmark-evidence-grid p {
   color: var(--muted);
   font-size: 0.68rem;
@@ -6099,7 +6279,9 @@ button.play-card:not(:disabled):hover {
 .benchmark-heading,
   .benchmark-objective,
   .benchmark-results-heading,
-  .benchmark-details-heading {
+  .benchmark-details-heading,
+  .benchmark-artifact-heading,
+  .benchmark-cli-model-heading {
     align-items: stretch;
     flex-direction: column;
     gap: 12px;

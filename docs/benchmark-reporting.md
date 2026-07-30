@@ -45,6 +45,17 @@ The comparison command also writes `play-model-comparison-v3.md`. Repeating the 
 
 `npm run benchmark:audit:summary` consolidates isolated smoke and development comparisons under `.cache/benchmark-audit/` into the checked [English Play default one-factor audit](evaluations/play-default-audit/play-default-audit.md). The audit keeps the accepted baseline immutable, uses six workers by default, stops smoke gate failures before development, and never consumes held-out boards. `--clue-policy current` or `--clue-policy hybrid` selects one exact scoring policy for comparison-only runs.
 
+### Local benchmark views
+
+The localhost-only Lab navigation opens `?mode=benchmarks`. Its views keep completed evidence separated by owning artifact:
+
+- **Overview** renders the canonical v3 accepted baseline and any canonical candidate comparisons from `scripts/generated/play-model-comparison-v3.json`.
+- **Settings audit** renders the 17 one-factor tuning comparisons from `docs/evaluations/play-default-audit/play-default-audit.json`, including each exact configuration, stage, metric-status counts, comparison verdict, and compatible human or gold screen.
+- **CLI research** renders the subscription screen from `docs/evaluations/subscription-cli-reranker/subscription-cli-reranker-screen.json`, including each completed stage's recorded baseline score, candidate score, delta, interval, verdict, and blocking reason.
+- **Testing stages** renders the canonical report's artifact-owned evidence-layer and promotion-flow definitions.
+
+The page does not merge the settings audit's configuration schema 1 evidence into the canonical schema 2 report. It does not calculate scores, deltas, intervals, gates, verdicts, or cross-artifact summaries. Tuning and subscription CLI results remain explicitly ineligible for promotion, and interrupted or unavailable stages remain distinct from blocked or uncertain results.
+
 ### Accepted development baseline
 
 The checked baseline uses the documented current English production behavior on development boards 120 through 247:

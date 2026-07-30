@@ -1,4 +1,6 @@
 import REPORT from "../../scripts/generated/play-model-comparison-v3.json" with { type: "json" };
+import SETTINGS_AUDIT from "../../docs/evaluations/play-default-audit/play-default-audit.json" with { type: "json" };
+import CLI_SCREEN from "../../docs/evaluations/subscription-cli-reranker/subscription-cli-reranker-screen.json" with { type: "json" };
 import {
   benchmarkRows,
   humanAlignmentSlices,
@@ -33,6 +35,36 @@ const METRIC_STATUS = {
   unchanged: ["⚪", "Unchanged"],
   changed: ["🔵", "Changed"],
   reported: ["🔵", "Reported"],
+};
+
+const AUDIT_ASSESSMENTS = {
+  "default-locally-justified": {
+    icon: "🟢",
+    label: "Default justified",
+    detail: "The tested alternative did not beat the accepted default locally.",
+  },
+  "alternative-promising": {
+    icon: "🟡",
+    label: "Promising signal",
+    detail: "The alternative showed a tuning signal, not promotion evidence.",
+  },
+  uncertain: {
+    icon: "🟠",
+    label: "Uncertain",
+    detail: "The recorded evidence did not establish a direction.",
+  },
+};
+
+const SCREEN_RESULTS = {
+  block: ["🚫", "Blocked"],
+  "needs-more-data": ["⬜", "Needs evidence"],
+  promote: ["✅", "Passed"],
+};
+
+const AUDIT_SCREEN_RESULTS = {
+  "baseline-favored": ["🟢", "Default favored"],
+  "alternative-favored": ["🟡", "Alternative favored"],
+  "not-applicable": ["⚪", "Not available"],
 };
 
 const COLUMN_INFO = [
@@ -272,7 +304,25 @@ function buildShell() {
         aria-selected="true"
         aria-controls="benchmark-panel-scorecard"
         data-benchmark-tab="scorecard"
-      >📊 Scorecard</button>
+      >📊 Overview</button>
+      <button
+        id="benchmark-tab-settings"
+        type="button"
+        role="tab"
+        aria-selected="false"
+        aria-controls="benchmark-panel-settings"
+        data-benchmark-tab="settings"
+        tabindex="-1"
+      >⚙️ Settings audit</button>
+      <button
+        id="benchmark-tab-cli"
+        type="button"
+        role="tab"
+        aria-selected="false"
+        aria-controls="benchmark-panel-cli"
+        data-benchmark-tab="cli"
+        tabindex="-1"
+      >🤖 CLI research</button>
       <button
         id="benchmark-tab-evidence"
         type="button"
@@ -281,7 +331,7 @@ function buildShell() {
         aria-controls="benchmark-panel-evidence"
         data-benchmark-tab="evidence"
         tabindex="-1"
-      >🧾 Tests &amp; data</button>
+      >🧾 Testing stages</button>
     </div>
     <div
       id="benchmark-panel-scorecard"
@@ -339,6 +389,22 @@ function buildShell() {
       <section id="benchmark-details" class="benchmark-details" aria-live="polite"></section>
     </div>
     <section
+      id="benchmark-panel-settings"
+      class="benchmark-panel"
+      role="tabpanel"
+      aria-labelledby="benchmark-tab-settings"
+      data-benchmark-panel="settings"
+      hidden
+    >${renderSettingsAudit()}</section>
+    <section
+      id="benchmark-panel-cli"
+      class="benchmark-panel"
+      role="tabpanel"
+      aria-labelledby="benchmark-tab-cli"
+      data-benchmark-panel="cli"
+      hidden
+    >${renderCliResearch()}</section>
+    <section
       id="benchmark-panel-evidence"
       class="benchmark-panel benchmark-methodology"
       role="tabpanel"
@@ -347,6 +413,248 @@ function buildShell() {
       hidden
     >${renderEvidenceGuide()}</section>`;
   return shell;
+}
+
+function renderSettingsAudit() {
+  return `
+    <section class="benchmark-artifact-view" aria-labelledby="benchmark-settings-title">
+      <div class="benchmark-artifact-heading">
+        <div>
+          <span class="eyebrow">One setting at a time</span>
+          <h2 id="benchmark-settings-title">${escapeHtml(
+            SETTINGS_AUDIT.title,
+          )}</h2>
+          <p>${escapeHtml(SETTINGS_AUDIT.methodology.design)}</p>
+        </div>
+        <span class="benchmark-status" data-state="tuning">🧪 Tuning only</span>
+      </div>
+      <div class="benchmark-boundary-strip">
+        <span>🔬 Smoke stops clear regressions early</span>
+        <span>🛠️ Development checks promising or uncertain alternatives</span>
+        <span>🔒 ${formatInteger(
+          SETTINGS_AUDIT.methodology.heldOutBoardsUsed,
+        )} held-out boards used</span>
+        <span>🚫 No promotion claim</span>
+      </div>
+      <p class="benchmark-artifact-note">${escapeHtml(
+        SETTINGS_AUDIT.methodology.interactionLimitation,
+      )}</p>
+      <div class="benchmark-table-wrap">
+        <table class="benchmark-table benchmark-audit-table">
+          <thead>
+            <tr>
+              <th>🧪 Setting</th>
+              <th>🔧 Alternative</th>
+              <th>🧾 Stage</th>
+              <th>📌 Local result</th>
+              <th>📊 Metric results</th>
+              <th>🚦 Comparison</th>
+              <th>👥 Human or gold</th>
+              <th>🔐 Exact configuration</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${SETTINGS_AUDIT.candidates.map(renderAuditRow).join("")}
+          </tbody>
+        </table>
+      </div>
+      <p class="benchmark-evidence-note">
+        Audit artifact <code>${escapeHtml(
+          SETTINGS_AUDIT.reportSha256,
+        )}</code>
+      </p>
+    </section>`;
+}
+
+function renderAuditRow(row) {
+  const assessment =
+    AUDIT_ASSESSMENTS[row.assessment.status] ??
+    AUDIT_ASSESSMENTS.uncertain;
+  const verdict = VERDICTS[row.verdict] ?? VERDICTS["needs-more-data"];
+  const humanScreen =
+    AUDIT_SCREEN_RESULTS[row.humanScreen.status] ??
+    AUDIT_SCREEN_RESULTS["not-applicable"];
+  return `<tr data-audit-result="${escapeHtml(row.assessment.status)}">
+    <td><strong>🧪 ${escapeHtml(row.setting)}</strong></td>
+    <td><strong>${escapeHtml(row.alternative)}</strong></td>
+    <td>
+      <strong>🧾 ${escapeHtml(humanize(row.phase))}</strong>
+      <small>${formatInteger(row.boardCount)} boards</small>
+    </td>
+    <td>
+      <span class="benchmark-status" data-state="${escapeHtml(
+        row.assessment.status,
+      )}">${assessment.icon} ${assessment.label}</span>
+      <small>${escapeHtml(row.assessment.note)}</small>
+    </td>
+    <td>${renderMetricTotals(row.metricStatus)}</td>
+    <td>
+      <span class="benchmark-status" data-state="${escapeHtml(
+        row.verdict,
+      )}">${verdict.icon} ${verdict.label}</span>
+    </td>
+    <td>
+      <strong>${humanScreen[0]} ${humanScreen[1]}</strong>
+      <small>${escapeHtml(row.humanScreen.note)}</small>
+    </td>
+    <td>${renderAuditConfiguration(row)}</td>
+  </tr>`;
+}
+
+function renderMetricTotals(metricStatus) {
+  return `<div class="benchmark-metric-totals">
+    <span data-state="improved">✅ ${formatInteger(
+      metricStatus.improved,
+    )} improved</span>
+    <span data-state="regressed">⚠️ ${formatInteger(
+      metricStatus.regressed,
+    )} regressed</span>
+    <span data-state="uncertain">❓ ${formatInteger(
+      metricStatus.uncertain,
+    )} uncertain</span>
+  </div>`;
+}
+
+function renderAuditConfiguration(row) {
+  const artifact = row.artifacts.candidate;
+  return `<details class="benchmark-audit-configuration">
+    <summary>View configuration</summary>
+    <div class="benchmark-setting-chips">
+      ${Object.entries(artifact.configurationLabels)
+        .map(
+          ([label, value]) =>
+            `<span><b>${escapeHtml(label)}</b>${escapeHtml(value)}</span>`,
+        )
+        .join("")}
+    </div>
+    <p class="benchmark-fingerprint">
+      <b>Configuration fingerprint</b>
+      <code>${escapeHtml(artifact.configurationFingerprint)}</code>
+    </p>
+  </details>`;
+}
+
+function renderCliResearch() {
+  return `
+    <section class="benchmark-artifact-view" aria-labelledby="benchmark-cli-title">
+      <div class="benchmark-artifact-heading">
+        <div>
+          <span class="eyebrow">Embedding shortlist rerankers</span>
+          <h2 id="benchmark-cli-title">Subscription CLI research</h2>
+          <p>Each model receives the same safe embedding shortlist. Scores below are artifact-recorded correct cards per turn, with candidate-minus-baseline intervals.</p>
+        </div>
+        <span class="benchmark-status" data-state="block">🚫 No rollout</span>
+      </div>
+      <div class="benchmark-boundary-strip">
+        <span>💳 Subscription CLI only</span>
+        <span>🔐 No API keys or fallback models</span>
+        <span>🧪 ${formatInteger(
+          CLI_SCREEN.protocol.fixedBoardSplits.heldOutTest,
+        )} held-out boards used</span>
+        <span>👥 Human or gold screen unavailable</span>
+      </div>
+      <p class="benchmark-artifact-note">${escapeHtml(
+        CLI_SCREEN.humanGold.blocker,
+      )}</p>
+      <div class="benchmark-cli-models">
+        ${CLI_SCREEN.models.map(renderCliModel).join("")}
+      </div>
+      <p class="benchmark-evidence-note">${escapeHtml(
+        CLI_SCREEN.scientificBoundary.runtimeBoundary,
+      )}</p>
+    </section>`;
+}
+
+function renderCliModel(model) {
+  const overall =
+    SCREEN_RESULTS[model.overallStatus] ?? SCREEN_RESULTS["needs-more-data"];
+  const interruption = model.failure?.interruption;
+  return `<article class="benchmark-cli-model">
+    <div class="benchmark-cli-model-heading">
+      <div>
+        <h3>🤖 ${escapeHtml(model.label)}</h3>
+        <p>${escapeHtml(model.identity.resolvedModel ?? model.identity.selector)}</p>
+      </div>
+      <span class="benchmark-status" data-state="${escapeHtml(
+        model.overallStatus,
+      )}">${overall[0]} ${overall[1]}</span>
+    </div>
+    <div class="benchmark-setting-chips">
+      <span><b>shortlist</b>${escapeHtml(
+        model.identity.shortlistVersion,
+      )}</span>
+      <span><b>prompt</b>v${formatInteger(
+        model.identity.promptVersion,
+      )}</span>
+      <span><b>surface</b>${escapeHtml(
+        model.identity.subscriptionSurface,
+      )}</span>
+      <span><b>fallback</b>${escapeHtml(
+        model.identity.fallbackModel ?? "none",
+      )}</span>
+    </div>
+    <div class="benchmark-table-wrap">
+      <table class="benchmark-table benchmark-cli-table">
+        <thead>
+          <tr>
+            <th>🧾 Stage</th>
+            <th>📍 Baseline score</th>
+            <th>🤖 Candidate score</th>
+            <th>Δ Change</th>
+            <th>📐 95% interval</th>
+            <th>📌 Result</th>
+            <th>🚧 Blocking reason</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${model.screens.map(renderCliScreen).join("")}
+        </tbody>
+      </table>
+    </div>
+    ${
+      interruption
+        ? `<div class="benchmark-interruption">
+            <strong>⏸ ${escapeHtml(
+              humanize(interruption.class),
+            )}</strong>
+            <span>Development stopped after ${formatDuration(
+              interruption.run.seconds,
+            )}. Transfer was not run.</span>
+          </div>`
+        : ""
+    }
+  </article>`;
+}
+
+function renderCliScreen(screen) {
+  const metric = screen.metrics.correctCardsPerTurn;
+  const result =
+    SCREEN_RESULTS[screen.verdict] ?? SCREEN_RESULTS["needs-more-data"];
+  const reason =
+    screen.reasons?.[0] ??
+    (screen.verdict === "needs-more-data"
+      ? "The recorded interval remains uncertain."
+      : "No blocking reason recorded.");
+  return `<tr data-screen-result="${escapeHtml(screen.verdict)}">
+    <td>
+      <strong>🧾 ${escapeHtml(screen.label)}</strong>
+      <small>${formatInteger(screen.evidence.boardCount)} boards · operative ${escapeHtml(
+        screen.evidence.operativeModelId,
+      )}</small>
+    </td>
+    <td><strong>${formatNumber(metric.baseline)}</strong></td>
+    <td><strong>${formatNumber(metric.candidate)}</strong></td>
+    <td><strong class="benchmark-delta" data-state="${escapeHtml(
+      metric.status === "regressed" ? "worse" : "neutral",
+    )}">${formatSigned(metric.delta.estimate)}</strong></td>
+    <td>${formatInterval(metric.delta)}</td>
+    <td>
+      <span class="benchmark-status" data-state="${escapeHtml(
+        screen.verdict,
+      )}">${result[0]} ${result[1]}</span>
+    </td>
+    <td><small>${escapeHtml(reason)}</small></td>
+  </tr>`;
 }
 
 function renderEvidenceGuide() {
@@ -363,8 +671,9 @@ function renderEvidenceGuide() {
   return `
     <div class="benchmark-methodology-heading">
       <div>
-        <span class="eyebrow">Artifact evidence</span>
-        <h2>Tests &amp; data</h2>
+        <span class="eyebrow">How candidates advance</span>
+        <h2>Testing stages</h2>
+        <p>Definitions and promotion rules come from the canonical report. Completed setting and CLI results remain in their separate artifact views.</p>
       </div>
       <small>Displayed from report v${REPORT.schemaVersion}</small>
     </div>
@@ -693,6 +1002,12 @@ function formatInteger(value) {
   return Number.isFinite(value)
     ? Number(value).toLocaleString("en-US")
     : "Unknown";
+}
+
+function formatDuration(seconds) {
+  if (!Number.isFinite(seconds)) return "an unknown duration";
+  if (seconds < 60) return `${Number(seconds).toFixed(1)} seconds`;
+  return `${Number(seconds / 60).toFixed(1)} minutes`;
 }
 
 function humanize(value) {
