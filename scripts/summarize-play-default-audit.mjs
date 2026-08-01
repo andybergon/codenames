@@ -128,6 +128,11 @@ const report = {
     cacheInputsImmutable: true,
     isolatedCandidateArtifacts: true,
   },
+  summary: {
+    candidateCount: rows.length,
+    outcomes: countBy(rows, ({ assessment }) => assessment.status),
+    stages: countBy(rows, ({ phase }) => phase),
+  },
   candidates: rows,
 };
 report.reportSha256 = sha256(
@@ -142,6 +147,17 @@ console.log(`Wrote ${MARKDOWN}`);
 
 function candidate(id, setting, alternative, screen = "none") {
   return { id, setting, alternative, screen };
+}
+
+function countBy(values, selector) {
+  return Object.fromEntries(
+    [...new Set(values.map(selector))]
+      .sort()
+      .map((key) => [
+        key,
+        values.filter((value) => selector(value) === key).length,
+      ]),
+  );
 }
 
 function humanScreenFor(definition) {

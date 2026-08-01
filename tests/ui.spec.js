@@ -6109,7 +6109,7 @@ test("benchmark scorecard stays hidden outside its direct route", async ({ page 
   ).toHaveCount(0);
 });
 
-test("benchmark scorecard presents the canonical accepted baseline", async ({
+test("benchmark page leads with findings and the accepted baseline", async ({
   page,
 }) => {
   await page.goto("/?mode=benchmarks");
@@ -6121,101 +6121,89 @@ test("benchmark scorecard presents the canonical accepted baseline", async ({
     page.locator(".app-mode-switch").getByRole("button", { name: "Lab" }),
   ).toHaveAttribute("aria-pressed", "true");
   await expect(
-    page.getByRole("heading", { name: "Benchmark comparison" }),
+    page.getByRole("heading", { name: "What the benchmarks found" }),
   ).toBeVisible();
-  await expect(page.locator("#benchmark-table-body tr")).toHaveCount(0);
-  await expect(
-    page.locator(".benchmark-table thead .info-button"),
-  ).toHaveCount(7);
-  await expect(page.locator("#benchmark-empty")).toBeVisible();
-  await expect(page.locator("#benchmark-details")).toContainText(
-    "accepted-production-development",
+  await expect(page.locator(".benchmark-learning-summary")).toContainText(
+    "17 alternatives",
   );
-  await expect(page.locator("#benchmark-details")).toContainText(
+  await expect(page.locator(".benchmark-learning-summary")).toContainText(
+    "9 keep default · 3 worth deeper testing · 5 unclear",
+  );
+  await expect(page.locator(".benchmark-learning-summary")).toContainText(
+    "3 models",
+  );
+  await expect(page.locator(".benchmark-learning-summary")).toContainText(
+    "0 sealed boards",
+  );
+  await expect(page.locator(".benchmark-baseline-reference")).toContainText(
+    "bge-small 30k",
+  );
+  await expect(page.locator(".benchmark-baseline-reference")).toContainText(
     "128 development boards",
   );
+  await expect(page.locator(".benchmark-tabs")).toHaveCount(0);
+  await expect(page.locator(".benchmark-table-wrap")).toHaveCount(0);
+
+  await page
+    .getByText("Technical details and provenance", { exact: true })
+    .click();
   await expect(
-    page.locator("#benchmark-details .benchmark-fingerprint code"),
-  ).toHaveText(
+    page.locator(".benchmark-technical .benchmark-wide-chip code"),
+  ).toContainText(
     "189fd1ea518cf07159e9ce7ad5efc679ac9dc0228bc11fd365f402f4f4a8adac",
   );
-  await page
-    .getByText("Full canonical configuration", { exact: true })
-    .click();
-  await expect(page.locator(".benchmark-disclosure pre")).toContainText(
-    '"vocabularySize": 30000',
-  );
 });
 
-test("benchmark tests and data tab explains artifact evidence", async ({
+test("benchmark page explains the six testing stages and their use", async ({
   page,
 }) => {
   await page.goto("/?mode=benchmarks");
 
-  const scorecardTab = page.getByRole("tab", { name: "Overview" });
-  const evidenceTab = page.getByRole("tab", { name: "Testing stages" });
-  await expect(scorecardTab).toHaveAttribute("aria-selected", "true");
-  await evidenceTab.click();
-  await expect(evidenceTab).toHaveAttribute("aria-selected", "true");
-  await expect(page.locator("#benchmark-panel-scorecard")).toBeHidden();
-  await expect(page.locator("#benchmark-panel-evidence")).toBeVisible();
   await expect(
-    page.getByRole("heading", { name: "Testing stages" }),
+    page.getByRole("heading", { name: "How testing works" }),
   ).toBeVisible();
-  const splitExpectations = [
-    ["smoke", "Smoke", "20 boards", "Fast regression screen"],
+  const stageExpectations = [
+    ["human-gold", "Human or gold", "Used where compatible"],
     [
-      "calibration",
-      "Calibration",
-      "100 boards",
-      "Similarity calibration and tuning",
+      "smoke",
+      "Smoke · 20 boards",
+      "8 settings decided here · 3 CLI models completed",
     ],
-    [
-      "development",
-      "Development",
-      "128 boards",
-      "Frozen candidate comparison",
-    ],
-    ["test", "Test", "150 boards", "Sealed held-out promotion"],
+    ["calibration", "Calibration · 100 boards", "Not used here"],
+    ["development", "Development · 128 boards", "9 settings · 2 CLI models"],
+    ["transfer", "Transfer · 20 boards", "2 CLI models"],
+    ["held-out", "Sealed test · 150 boards", "0 used"],
   ];
-  for (const [id, label, count, role] of splitExpectations) {
-    const split = page.locator(`[data-benchmark-split="${id}"]`);
-    await expect(split.locator("dt")).toHaveText(label);
-    await expect(split.locator("strong")).toHaveText(count);
-    await expect(split.locator("span")).toHaveText(role);
+  for (const [id, label, count] of stageExpectations) {
+    const stage = page.locator(`[data-stage="${id}"]`);
+    await expect(stage.getByRole("heading")).toContainText(label);
+    await expect(stage.locator("strong")).toHaveText(count);
   }
-  await expect(page.locator(".benchmark-guardrail-list")).toContainText(
-    "Assassin hitsWrong-team hitsNeutral hitsFallback cluesStalls",
+  await expect(page.locator(".benchmark-stage-study")).toContainText(
+    "A safety-gate failure blocks a candidate even if one headline score improves.",
   );
-  await expect(page.locator(".benchmark-flow")).toContainText(
-    "Calibration and tuning evidence cannot promote.",
-  );
-  await expect(page.locator(".benchmark-flow")).toContainText(
-    "A failed gate blocks promotion even when a headline metric improves.",
-  );
-  await expect(page.locator(".benchmark-source-list")).toContainText(
-    "No source-separated human or reviewed gold slices are attached",
-  );
-
-  await evidenceTab.press("Home");
-  await expect(scorecardTab).toHaveAttribute("aria-selected", "true");
-  await expect(scorecardTab).toBeFocused();
 });
 
-test("benchmark settings audit shows tested configurations and stage outcomes", async ({
+test("benchmark settings study groups conclusions before exact evidence", async ({
   page,
 }) => {
   await page.goto("/?mode=benchmarks");
-  await page.getByRole("tab", { name: "Settings audit" }).click();
 
-  await expect(page.locator("#benchmark-panel-settings")).toBeVisible();
   await expect(
-    page.getByRole("heading", {
-      name: "English Play default one-factor audit",
-    }),
+    page.getByRole("heading", { name: "One change at a time" }),
   ).toBeVisible();
+  await expect(page.locator(".benchmark-outcome-group")).toHaveCount(3);
+  await expect(
+    page.locator('[data-outcome-group="alternative-promising"]'),
+  ).toHaveAttribute("open", "");
+  await expect(
+    page.locator('[data-outcome-group="default-locally-justified"]'),
+  ).not.toHaveAttribute("open", "");
+  await page
+    .locator('[data-outcome-group="default-locally-justified"] > summary')
+    .click();
 
-  const rows = page.locator(".benchmark-audit-table tbody tr");
+  const rows = page.locator(".benchmark-setting-result");
   await expect(rows).toHaveCount(17);
   await expect(
     page.locator('[data-audit-result="alternative-promising"]'),
@@ -6227,14 +6215,13 @@ test("benchmark settings audit shows tested configurations and stage outcomes", 
   await expect(miniLm).toContainText("MiniLM-L6");
   await expect(miniLm).toContainText("Smoke");
   await expect(miniLm).toContainText("20 boards");
-  await expect(miniLm).toContainText("Default justified");
-  await expect(miniLm).toContainText("0 improved");
-  await expect(miniLm).toContainText("1 regressed");
-  await expect(miniLm).toContainText("0 uncertain");
-  await expect(miniLm).toContainText("Blocked");
-  await miniLm.getByText("View configuration", { exact: true }).click();
+  await expect(miniLm).toContainText("Current default supported");
+  await expect(miniLm).toContainText(
+    "0 improved · 1 regressed · 0 uncertain",
+  );
+  await miniLm.getByText("Evidence and configuration", { exact: true }).click();
   await expect(miniLm).toContainText("minilm-l6 30k");
-  await expect(miniLm.locator(".benchmark-fingerprint code")).toHaveText(
+  await expect(miniLm.locator(".benchmark-wide-chip code")).toHaveText(
     "d9eccd852f8541572e37e67e5e0b7201782748013d31fda426b98eb4d58d7a1e",
   );
 
@@ -6242,232 +6229,133 @@ test("benchmark settings audit shows tested configurations and stage outcomes", 
   await expect(vocabulary100k).toHaveCount(1);
   await expect(vocabulary100k).toContainText("Development");
   await expect(vocabulary100k).toContainText("128 boards");
-  await expect(vocabulary100k).toContainText("Promising signal");
-  await expect(page.locator("#benchmark-panel-settings")).toContainText(
-    "0 held-out boards used",
-  );
-  await expect(page.locator("#benchmark-panel-settings")).toContainText(
-    "No promotion claim",
+  await expect(vocabulary100k).toContainText("Worth deeper testing");
+  await expect(page.locator(".benchmark-study").filter({ hasText: "One change at a time" })).toContainText(
+    "cannot establish global optimality",
   );
 });
 
-test("benchmark CLI research shows stage scores and blocking reasons", async ({
+test("benchmark CLI study shows scores and explicit missing stages", async ({
   page,
 }) => {
   await page.goto("/?mode=benchmarks");
-  await page.getByRole("tab", { name: "CLI research" }).click();
 
-  await expect(page.locator("#benchmark-panel-cli")).toBeVisible();
   await expect(
-    page.getByRole("heading", { name: "Subscription CLI research" }),
+    page.getByRole("heading", { name: "Could a coding CLI pick better clues?" }),
   ).toBeVisible();
   const models = page.locator(".benchmark-cli-model");
   await expect(models).toHaveCount(3);
 
   const sol = models.filter({ hasText: "GPT-5.6 Sol" });
   await expect(sol).toHaveCount(1);
-  await expect(sol.locator("tbody tr")).toHaveCount(3);
-  const solSmoke = sol.locator("tbody tr").filter({
-    hasText: "Same-model smoke",
-  });
-  await expect(solSmoke).toContainText("1.6421");
-  await expect(solSmoke).toContainText("1.4465");
-  await expect(solSmoke).toContainText("-0.1956");
-  await expect(solSmoke).toContainText("-0.2954 to -0.0981");
+  await expect(sol.locator(".benchmark-cli-stage")).toHaveCount(3);
+  const solSmoke = sol.locator('[data-cli-stage="smoke"]');
+  await expect(solSmoke).toContainText("1.64");
+  await expect(solSmoke).toContainText("1.45");
+  await expect(solSmoke).toContainText("-0.20");
+  await expect(solSmoke).toContainText("-0.30 to -0.10");
   await expect(solSmoke).toContainText("Blocked");
   await expect(solSmoke).toContainText(
     "At least one Play promotion gate conclusively failed.",
   );
-  const solTransfer = sol.locator("tbody tr").filter({
-    hasText: "MiniLM-L6 transfer smoke",
-  });
-  await expect(solTransfer).toContainText("Needs evidence");
+  const solTransfer = sol.locator('[data-cli-stage="transfer-smoke"]');
+  await expect(solTransfer).toContainText("Uncertain");
   await expect(solTransfer).toContainText(
-    "The recorded interval remains uncertain.",
+    "records no single reason",
+  );
+  await sol.getByText("Run notes", { exact: true }).click();
+  await expect(sol.locator(".benchmark-run-notes")).toContainText(
+    "Measurement limitations",
   );
 
   const opus = models.filter({ hasText: "Claude Opus" });
   await expect(opus).toHaveCount(1);
-  await expect(opus.locator("tbody tr")).toHaveCount(1);
-  await expect(opus.locator(".benchmark-interruption")).toContainText(
-    "Monthly subscription limit",
+  await expect(opus.locator(".benchmark-cli-stage")).toHaveCount(3);
+  await expect(opus.locator('[data-cli-stage="development"]')).toContainText(
+    "Not run",
   );
-  await expect(opus.locator(".benchmark-interruption")).toContainText(
-    "Development stopped after 65.3 minutes. Transfer was not run.",
+  await expect(opus.locator('[data-cli-stage="development"]')).toContainText(
+    "monthly subscription limit after 65.3 minutes",
   );
-  await expect(page.locator("#benchmark-panel-cli")).toContainText(
-    "0 held-out boards used",
-  );
-  await expect(page.locator("#benchmark-panel-cli")).toContainText(
-    "Human or gold screen unavailable",
+  await expect(opus.locator('[data-cli-stage="transfer-smoke"]')).toContainText(
+    "earlier development stage did not complete",
   );
 });
 
-test("benchmark columns explain their metrics on hover", async ({ page }) => {
+test("benchmark page defines the CLI score before showing model results", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/?mode=benchmarks");
 
-  const configurationInfo = page.getByRole("button", {
-    name: "About Configuration",
-    exact: true,
-  });
-  const humanInfo = page.getByRole("button", {
-    name: "About Human sources",
-    exact: true,
-  });
-  const evidenceInfo = page.getByRole("button", {
-    name: "About Evidence",
-    exact: true,
-  });
-
-  await configurationInfo.hover();
-  await expect(
-    page.locator("#info-benchmark-column-configuration"),
-  ).toBeVisible();
-  await expect(
-    page.locator("#info-benchmark-column-configuration"),
-  ).toContainText(
-    "exact configuration, fingerprint, artifact hash",
+  const guide = page.locator(".benchmark-score-guide");
+  await expect(guide).toContainText(
+    "ScoreCorrect cards per turn. Higher is better.",
   );
-
-  await humanInfo.hover();
-  await expect(page.locator("#info-benchmark-column-human")).toContainText(
-    "Tuning and feedback slices cannot promote",
+  await expect(guide).toContainText(
+    "ChangeModel score minus the current default.",
   );
-
-  await evidenceInfo.hover();
-  await expect(page.locator("#info-benchmark-column-evidence")).toContainText(
-    "fixed paired board split",
+  await expect(guide).toContainText(
+    "95% rangeThe likely range. Crossing zero means uncertain.",
+  );
+  await expect(guide).toContainText(
+    "Safety checksAssassin, wrong-team, neutral, fallback, and stall gates can block.",
   );
 });
 
-test("benchmark scorecard is responsive and keeps its matrix scrollable", async ({ page }) => {
+test("benchmark learning page fits phone, tablet, and desktop", async ({ page }) => {
   for (const viewport of [
-    { width: 390, height: 844, matrixScrolls: true },
-    { width: 768, height: 1024, matrixScrolls: true },
-    { width: 1440, height: 900, matrixScrolls: false },
+    { width: 390, height: 844, columns: 1, settingColumns: 1 },
+    { width: 768, height: 1024, columns: 2, settingColumns: 1 },
+    { width: 1440, height: 900, columns: 3, settingColumns: 2 },
   ]) {
     await page.setViewportSize(viewport);
     await page.goto("/?mode=benchmarks");
     await expect(
-      page.getByRole("heading", { name: "Benchmark comparison" }),
+      page.getByRole("heading", { name: "What the benchmarks found" }),
     ).toBeVisible();
-    await page.getByRole("tab", { name: "Testing stages" }).click();
-
     const layout = await page.evaluate(() => {
-      const methodology = document.querySelector("#benchmark-panel-evidence");
-      const methodologyBounds = methodology.getBoundingClientRect();
+      const pageWidth = document.documentElement.clientWidth;
+      const primaryCards = [
+        ".benchmark-learning-summary",
+        ".benchmark-stage-study",
+        ".benchmark-limitations",
+      ].map((selector) => document.querySelector(selector).getBoundingClientRect());
       return {
-        pageOverflows:
-          document.documentElement.scrollWidth >
-          document.documentElement.clientWidth,
-        methodologyFits:
-          methodologyBounds.left >= 0 &&
-          methodologyBounds.right <= document.documentElement.clientWidth,
+        pageOverflows: document.documentElement.scrollWidth > pageWidth,
+        cardsFit: primaryCards.every(
+          (bounds) => bounds.left >= 0 && bounds.right <= pageWidth,
+        ),
+        horizontalMatrices: document.querySelectorAll(".benchmark-table-wrap").length,
+        stageColumns: getComputedStyle(
+          document.querySelector(".benchmark-stage-strip"),
+        ).gridTemplateColumns.split(" ").length,
+        cliColumns: getComputedStyle(
+          document.querySelector(".benchmark-cli-stage-grid"),
+        ).gridTemplateColumns.split(" ").length,
+        settingColumns: getComputedStyle(
+          document.querySelector(".benchmark-setting-list"),
+        ).gridTemplateColumns.split(" ").length,
       };
     });
 
     expect(layout.pageOverflows, `page overflow at ${viewport.width}px`).toBe(false);
-    expect(
-      layout.methodologyFits,
-      `methodology clipping at ${viewport.width}px`,
-    ).toBe(true);
-
-    await page.getByRole("tab", { name: "Overview" }).click();
-    const matrixLayout = await page.evaluate(() => {
-      const matrix = document.querySelector(".benchmark-table-wrap");
-      const scorecard = document.querySelector("#benchmark-details");
-      const matrixBounds = matrix.getBoundingClientRect();
-      const scorecardBounds = scorecard.getBoundingClientRect();
-      return {
-        matrixScrolls: matrix.scrollWidth > matrix.clientWidth,
-        matrixFits:
-          matrixBounds.left >= 0 &&
-          matrixBounds.right <= document.documentElement.clientWidth,
-        scorecardFits:
-          scorecardBounds.left >= 0 &&
-          scorecardBounds.right <= document.documentElement.clientWidth,
-      };
-    });
-    expect(
-      matrixLayout.matrixScrolls,
-      `matrix scroll at ${viewport.width}px`,
-    ).toBe(viewport.matrixScrolls);
-    expect(matrixLayout.matrixFits, `matrix clipping at ${viewport.width}px`).toBe(
-      true,
+    expect(layout.cardsFit, `card clipping at ${viewport.width}px`).toBe(true);
+    expect(layout.horizontalMatrices).toBe(0);
+    expect(layout.stageColumns, `stage columns at ${viewport.width}px`).toBe(
+      viewport.columns,
+    );
+    expect(layout.cliColumns, `CLI columns at ${viewport.width}px`).toBe(
+      viewport.columns,
     );
     expect(
-      matrixLayout.scorecardFits,
-      `scorecard clipping at ${viewport.width}px`,
-    ).toBe(true);
+      layout.settingColumns,
+      `setting columns at ${viewport.width}px`,
+    ).toBe(viewport.settingColumns);
 
-    for (const [tabName, panelId] of [
-      ["Settings audit", "benchmark-panel-settings"],
-      ["CLI research", "benchmark-panel-cli"],
-    ]) {
-      await page.getByRole("tab", { name: tabName }).click();
-      const artifactLayout = await page.evaluate((id) => {
-        const panel = document.querySelector(`#${id}`);
-        const bounds = panel.getBoundingClientRect();
-        return {
-          pageOverflows:
-            document.documentElement.scrollWidth >
-            document.documentElement.clientWidth,
-          panelFits:
-            bounds.left >= 0 &&
-            bounds.right <= document.documentElement.clientWidth,
-          tablesFit: [...panel.querySelectorAll(".benchmark-table-wrap")].every(
-            (table) => {
-              const tableBounds = table.getBoundingClientRect();
-              return (
-                tableBounds.left >= 0 &&
-                tableBounds.right <= document.documentElement.clientWidth
-              );
-            },
-          ),
-        };
-      }, panelId);
-      expect(
-        artifactLayout.pageOverflows,
-        `${tabName} page overflow at ${viewport.width}px`,
-      ).toBe(false);
-      expect(
-        artifactLayout.panelFits,
-        `${tabName} panel clipping at ${viewport.width}px`,
-      ).toBe(true);
-      expect(
-        artifactLayout.tablesFit,
-        `${tabName} table clipping at ${viewport.width}px`,
-      ).toBe(true);
-    }
-    await page.getByRole("tab", { name: "Overview" }).click();
-
-    const configurationInfo = page.getByRole("button", {
-      name: "About Configuration",
-      exact: true,
-    });
-    await configurationInfo.scrollIntoViewIfNeeded();
-    await configurationInfo.hover();
-    const tooltipFits = await page
-      .locator("#info-benchmark-column-configuration")
-      .evaluate((tooltip) => {
-        const bounds = tooltip.getBoundingClientRect();
-        return (
-          bounds.left >= 0 &&
-          bounds.right <= document.documentElement.clientWidth &&
-          bounds.top >= 0 &&
-          bounds.bottom <= document.documentElement.clientHeight
-        );
-      });
-    expect(
-      tooltipFits,
-      `configuration tooltip clipping at ${viewport.width}px`,
-    ).toBe(true);
-
-    if (viewport.width <= 820) {
-      await expect(page.locator(".benchmark-scroll-hint")).toBeVisible();
-    } else {
-      await expect(page.locator(".benchmark-scroll-hint")).toBeHidden();
-    }
+    const promising = page.locator('[data-outcome-group="alternative-promising"]');
+    await promising.scrollIntoViewIfNeeded();
+    await expect(promising).toHaveAttribute("open", "");
+    const opus = page.locator('[data-cli-model="claude-opus"]');
+    await opus.scrollIntoViewIfNeeded();
+    await expect(opus.locator('[data-cli-stage="development"]')).toBeVisible();
   }
 });

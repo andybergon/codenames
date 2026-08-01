@@ -47,14 +47,15 @@ The comparison command also writes `play-model-comparison-v3.md`. Repeating the 
 
 ### Local benchmark views
 
-The localhost-only Lab navigation opens `?mode=benchmarks`. Its views keep completed evidence separated by owning artifact:
+The localhost-only Lab navigation opens `?mode=benchmarks`. The page is organized around the questions a reader needs answered:
 
-- **Overview** renders the canonical v3 accepted baseline and any canonical candidate comparisons from `scripts/generated/play-model-comparison-v3.json`.
-- **Settings audit** renders the 17 one-factor tuning comparisons from `docs/evaluations/play-default-audit/play-default-audit.json`, including each exact configuration, stage, metric-status counts, comparison verdict, and compatible human or gold screen.
-- **CLI research** renders the subscription screen from `docs/evaluations/subscription-cli-reranker/subscription-cli-reranker-screen.json`, including each completed stage's recorded baseline score, candidate score, delta, interval, verdict, and blocking reason.
-- **Testing stages** renders the canonical report's artifact-owned evidence-layer and promotion-flow definitions.
+1. **What we learned** leads with the artifact-owned setting and CLI outcome summaries, plus the accepted baseline reference.
+2. **How testing works** shows the six evidence stages once, including which stages each checked study reached and which remained unused.
+3. **Play settings** groups all 17 one-factor alternatives by local assessment. Promising development signals are open by default, while default-supported and uncertain results remain one click away.
+4. **LLM rerankers** gives every model the same smoke, development, and transfer slots. Completed stages show the recorded score, candidate-minus-baseline change, interval, and result. Missing and interrupted stages have explicit reasons.
+5. **Technical details and provenance** retains exact configurations, fingerprints, artifact identities, and scientific boundaries without making them compete with the conclusions.
 
-The page does not merge the settings audit's configuration schema 1 evidence into the canonical schema 2 report. It does not calculate scores, deltas, intervals, gates, verdicts, or cross-artifact summaries. Tuning and subscription CLI results remain explicitly ineligible for promotion, and interrupted or unavailable stages remain distinct from blocked or uncertain results.
+The settings audit and subscription CLI artifacts own the summary counts displayed by the page. The UI may group or expand artifact rows, but it does not calculate scores, deltas, intervals, gates, verdicts, or cross-artifact promotion claims. It does not merge the settings audit's configuration schema 1 evidence into the canonical schema 2 report. Tuning and subscription CLI results remain ineligible for promotion, and missing, interrupted, uncertain, and blocked states remain distinct.
 
 ### Accepted development baseline
 

@@ -2628,6 +2628,18 @@
       "measurementLimitations": []
     }
   ],
+  "summary": {
+    "modelCount": 3,
+    "outcomes": {
+      "block": 3
+    },
+    "completedStages": {
+      "smoke": 3,
+      "development": 2,
+      "transferSmoke": 2,
+      "heldOutTest": 0
+    }
+  },
   "conclusion": {
     "status": "incomplete-subscription-screen",
     "heldOutAuthorized": false,

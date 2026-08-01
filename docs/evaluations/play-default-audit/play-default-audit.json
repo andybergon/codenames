@@ -34,6 +34,18 @@
     "cacheInputsImmutable": true,
     "isolatedCandidateArtifacts": true
   },
+  "summary": {
+    "candidateCount": 17,
+    "outcomes": {
+      "alternative-promising": 3,
+      "default-locally-justified": 9,
+      "uncertain": 5
+    },
+    "stages": {
+      "development": 9,
+      "smoke": 8
+    }
+  },
   "candidates": [
     {
       "id": "model-minilm-l6",
@@ -5004,5 +5016,5 @@
       }
     }
   ],
-  "reportSha256": "f9e947264683514005f05d251832736864786503b4780a7d644440ed618ffcc4"
+  "reportSha256": "6f22be913f0b4fee541409c18e004c8aeb74dc70e374b3eee5f3acdad2af46dd"
 }

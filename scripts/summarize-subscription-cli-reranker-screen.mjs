@@ -322,6 +322,16 @@ const report = {
       "An initial simultaneous three-model pilot hit subscription connection failures and used schedule-dependent batching with incomplete cache provenance. A corrected Sol trial at four concurrent requests also stopped after repeated connection refusals. Both incomplete attempts were replaced by the corrected one-case protocol with one Codex request or two Claude requests in flight.",
   },
   models,
+  summary: {
+    modelCount: models.length,
+    outcomes: countBy(models, ({ overallStatus }) => overallStatus),
+    completedStages: {
+      smoke: countCompletedStage(models, "smoke"),
+      development: countCompletedStage(models, "development"),
+      transferSmoke: countCompletedStage(models, "transfer-smoke"),
+      heldOutTest: 0,
+    },
+  },
   conclusion: {
     status: models.some(({ availability }) => availability !== "available")
       ? "incomplete-subscription-screen"
@@ -332,6 +342,23 @@ const report = {
     promotionDeclared: false,
   },
 };
+
+function countBy(values, selector) {
+  return Object.fromEntries(
+    [...new Set(values.map(selector))]
+      .sort()
+      .map((key) => [
+        key,
+        values.filter((value) => selector(value) === key).length,
+      ]),
+  );
+}
+
+function countCompletedStage(values, stageId) {
+  return values.filter(({ screens }) =>
+    screens.some(({ id }) => id === stageId),
+  ).length;
+}
 
 await mkdir(OUTPUT_DIRECTORY, { recursive: true });
 await writeFile(
