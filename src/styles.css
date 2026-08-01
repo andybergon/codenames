@@ -2911,14 +2911,16 @@ h3 {
 }
 
 .seat-grid > button {
+  position: relative;
   display: grid;
-  min-height: 132px;
-  align-content: center;
-  justify-items: start;
+  min-width: 0;
+  min-height: 250px;
+  align-content: start;
+  justify-items: stretch;
   gap: 5px;
   border: 1px solid var(--line);
   border-radius: 9px;
-  padding: 15px;
+  padding: 12px;
   background: var(--surface);
   color: var(--ink);
   text-align: left;
@@ -2934,17 +2936,55 @@ h3 {
   outline-offset: -3px;
 }
 
+.seat-grid > button[aria-pressed="true"]::after {
+  content: "✓";
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: grid;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--blue);
+  color: white;
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
 .seat-grid > button[data-play-seat^="red"][aria-pressed="true"] {
   border-color: var(--red);
   outline-color: var(--red);
 }
 
+.seat-grid > button[data-play-seat^="red"][aria-pressed="true"]::after {
+  background: var(--red);
+}
+
+.seat-art {
+  display: block;
+  width: clamp(118px, 21vw, 160px);
+  height: clamp(118px, 21vw, 160px);
+  justify-self: center;
+  margin: 2px 0 4px;
+  clip-path: ellipse(50% 50% at 50% 50%);
+  object-fit: contain;
+}
+
+.seat-grid > button > strong {
+  width: 100%;
+  text-align: center;
+}
+
 .seat-grid > button > span:last-child {
+  width: 100%;
   color: var(--muted);
   font-size: 0.8rem;
+  text-align: center;
 }
 
 .seat-team {
+  justify-self: start;
   border-radius: 99px;
   padding: 3px 7px;
   font-size: 0.7rem;
@@ -3433,6 +3473,7 @@ h3 {
   display: inline-flex;
   align-items: center;
   gap: 9px;
+  min-width: 0;
   border: 1px solid var(--line);
   border-left: 5px solid var(--blue);
   border-radius: 8px;
@@ -3456,7 +3497,8 @@ h3 {
 .play-seat-identity {
   font-size: 0.9rem;
   font-weight: 900;
-  white-space: nowrap;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .play-score {
@@ -3936,7 +3978,8 @@ button.play-card:not(:disabled):hover {
   margin-bottom: 7px;
 }
 
-.play-section-heading span {
+.play-section-heading > span,
+.play-history-title > span {
   color: var(--muted);
   font-size: 0.72rem;
 }
@@ -4247,7 +4290,7 @@ button.play-card:not(:disabled):hover {
 
 .play-history-actions {
   display: grid;
-  gap: 0;
+  gap: 2px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -4598,7 +4641,12 @@ button.play-card:not(:disabled):hover {
 
   .play-game-actions {
     grid-area: actions;
-    justify-self: end;
+    width: 100%;
+    justify-self: stretch;
+  }
+
+  .play-game-actions .play-new-game-button {
+    margin-left: auto;
   }
 }
 
@@ -4999,6 +5047,24 @@ button.play-card:not(:disabled):hover {
 
 }
 
+@media (min-width: 521px) and (max-width: 820px) {
+  .play-game-header {
+    grid-template-areas:
+      "seat score"
+      "actions actions";
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px 12px;
+  }
+
+  .play-score {
+    justify-self: end;
+  }
+
+  .play-game-actions {
+    justify-self: stretch;
+  }
+}
+
 @media (min-width: 721px) and (max-width: 820px) {
   .play-history-team-lists {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -5006,6 +5072,20 @@ button.play-card:not(:disabled):hover {
 }
 
 @media (max-width: 520px) {
+  .play-game-actions {
+    display: grid;
+    grid-template-columns: repeat(3, 44px) minmax(0, 1fr);
+    gap: 5px;
+  }
+
+  .play-game-actions .play-new-game-button {
+    width: 100%;
+    min-width: 0;
+    margin-left: 0;
+    padding-inline: 10px;
+    font-size: 0.8rem;
+  }
+
   .play-card-annotations {
     inset: 3px;
     column-gap: 2px;

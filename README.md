@@ -1,25 +1,29 @@
-# Codenames
+# Treats
 
-A local-first Codenames clue trainer and one-human game. Train mode ranks clue options for every possible target count. Play mode fills the other three seats with bots and runs a standard two-team game entirely in the browser.
+A local-first word-association trainer and one-human game. Cat Owners give clues so Cats can find fish, while Dog Owners guide Dogs toward bones. Vegetables are neutral, and finding The Veterinarian ends the game.
 
-[Open Codenames](https://codenames.andybergon.me)
+[Open Treats](https://codenames.andybergon.me)
 
 ## Current product
 
 - 🎮 **Modes** · Play is the default · Train keeps the complete analysis workflow at `?mode=train`
 - 🌍 **Languages** · English remains the default · Italian Extended is available as a Train and Play beta
-- 🤖 **Play bots** · configurable model, vocabulary, clue policy, missed-target timing, operative aggression, local concept bridges, guess variation, and bonus guesses
+- 🤖 **Play bots** · configurable model, vocabulary, clue policy, missed-target timing, pet confidence, local concept bridges, guess variation, and bonus guesses
 - 🧠 **Train model** · MiniLM-L6 for English · Multilingual E5 small for Italian · browser-local inference
 - 📚 **Clue index** · selectable 3k, 10k, 30k, and experimental 100k tiers
 - 🛡️ **Recommendations** · safe clues for one to three targets · stretch clues for four to nine
 - 💬 **Explanations** · clue-to-target and clue-to-guess relationships · score-based danger stays separate
-- 🎴 **Board words** · Official 400-word set · Extended 800-word strict superset
+- 🎴 **Board words** · Core 400-word set · Extended 800-word strict superset
 - 🔁 **New boards** · fully random or avoid words from recent local games
 - 🔗 **Sharing** · board-only `?b=` links · resumable Play `?g=` links
 - 🎨 **Appearance** · system, light, and dark modes
 - 🔒 **Privacy** · local by default · Play links contain the full key and history · explanations send only the selected clue and words
 
 The first model load is cached by the browser. Italian Train and Play load about 123.6 MB on a cold browser, primarily the 118.3 MB E5 model. Training progress is session-local. Play progress, including language, is saved after every event and can be resumed or discarded from setup. During an active game, history can move backward and forward. Board-only links open Train without Play history. Play links reopen the current phase, revealed cards, and complete history so far. Completed games are also kept in a bounded local archive.
+
+## Public theme and compatibility
+
+The public theme maps Cat team to the stable `blue` side and Dog team to `red`. Owners use the internal `spymaster` role, pets use `operative`, fish use `friendly`, bones use `enemy`, Vegetables use `neutral`, and The Veterinarian uses `assassin`. Those internal values, storage keys, and export fields remain unchanged so existing saves, analytics records, and shared links continue to decode.
 
 ## Docs
 
@@ -72,17 +76,17 @@ npm run benchmark:picker
 
 ## Play mode
 
-Play defaults to the preserved table order. The top-right EN/IT control selects English or Italian Extended for a new game, while first-time visitors remain on English. Operatives see only unrevealed words and public card reveals. Spymasters see the full key, can switch between table and team-grouped order, type any one-word clue, and open clue suggestions only when wanted.
+Play defaults to the preserved table order. The top-right EN/IT control selects English or Italian Extended for a new game, while first-time visitors remain on English. Cats and Dogs see only unrevealed words and public card reveals. Cat Owners and Dog Owners see the full key, can switch between table and treat-grouped order, type any one-word clue, and open clue suggestions only when wanted.
 
-Play settings are grouped by ownership: Game controls the board word set and reuse policy, All bots controls the shared embedding model, Spymaster controls clue generation, and Operative controls guessing behavior. Bot settings remain independent from Train's Model picker and persist with each saved game. English defaults to BGE-small with 30,000 candidates. Italian uses Multilingual E5 small with 3,000 or 10,000 candidates and defaults to 10,000. Both default to hybrid scoring, a five-point multi-clue tolerance, fresh targets before missed targets, Dynamic operative aggression, deterministic ranking with no guess variation, and no automatic extra guess. English BGE also defaults Concept bridges to On.
+Play settings are grouped by ownership: Game controls the board word set and reuse policy, All bots controls the shared embedding model, Owners controls clue generation, and Pets controls guessing behavior. Bot settings remain independent from Train's Model picker and persist with each saved game. English defaults to BGE-small with 30,000 candidates. Italian uses Multilingual E5 small with 3,000 or 10,000 candidates and defaults to 10,000. Both default to hybrid scoring, a five-point multi-clue tolerance, fresh targets before missed targets, Dynamic pet confidence, deterministic ranking with no guess variation, and no automatic extra guess. English BGE also defaults Concept bridges to On.
 
-Retry missed targets controls when the bot spymaster returns to intended friendly words that remain unrevealed after an earlier clue. Late strongly prefers never-targeted words until few remain, Mid-game applies a lighter early bias, and Immediately leaves clue ranking unchanged. Operative aggression controls whether the guessing bot continues through weaker associations. Conservative passes on doubt, Aggressive pursues the declared clue number, and Dynamic adapts using only public remaining-agent counts. Concept bridges can be switched On or Off. On lets weak multi-card clues with the default English BGE-small model use local WordNet sense definitions to recover an association chain that direct embeddings miss. Off keeps direct similarity only. Other models and stronger direct matches always retain exact direct similarity ranking. Selected turn analysis shows the WordNet sense pairs that actually raised card rankings. Guess variation defaults Off. Standard adds a reproducible adjustment from `-0.0275` to `+0.0275` after association scoring without changing passing thresholds.
+Retry missed targets controls when a bot Owner returns to intended fish or bones that remain unrevealed after an earlier clue. Late strongly prefers never-targeted words until few remain, Mid-game applies a lighter early bias, and Immediately leaves clue ranking unchanged. Pet confidence controls whether the guessing bot continues through weaker associations. Conservative passes on doubt, Aggressive pursues the declared clue number, and Dynamic adapts using only public remaining-treat counts. Concept bridges can be switched On or Off. On lets weak multi-card clues with the default English BGE-small model use local WordNet sense definitions to recover an association chain that direct embeddings miss. Off keeps direct similarity only. Other models and stronger direct matches always retain exact direct similarity ranking. Selected turn analysis shows the WordNet sense pairs that actually raised card rankings. Guess variation defaults Off. Standard adds a reproducible adjustment from `-0.0275` to `+0.0275` after association scoring without changing passing thresholds.
 
-The final Developer settings section enables marked diagnostic games. Unlike other Play settings, enabling Developer mode also applies immediately to a saved game in progress. Once a game is marked, disabling the preference does not remove its developer provenance. Developer games store `developerMode: true` at the game root and on the canonical `game-started` event. They also retain versioned raw clue scores and bot decision traces on the related clue, guess, and pass events. Show live turn analysis reuses the post-game clue review while the game is active, including the reconstructed board, intended targets, guesses, roles, all operative scores, and selectable clue and guess rows that reveal explicit paid explanation actions. Its Score board order sorts the visible cards by current-turn operative association score. Turning live analysis off restores the playable current turn and preserved table order. The display resets off for each tab, but the developer provenance and collected data remain in the saved game so archives, review links, and later calibration can include or filter them.
+The final Developer settings section enables marked diagnostic games. Unlike other Play settings, enabling Developer mode also applies immediately to a saved game in progress. Once a game is marked, disabling the preference does not remove its developer provenance. Developer games store `developerMode: true` at the game root and on the canonical `game-started` event. They also retain versioned raw clue scores and bot decision traces on the related clue, guess, and pass events. Show live turn analysis reuses the post-game clue review while the game is active, including the reconstructed board, intended targets, guesses, roles, all pet scores, and selectable clue and guess rows that reveal explicit paid explanation actions. Its Score board order sorts the visible cards by current-turn pet association score. Turning live analysis off restores the playable current turn and preserved table order. The display resets off for each tab, but the developer provenance and collected data remain in the saved game so archives, review links, and later calibration can include or filter them.
 
 New boards remain fully random by default. The optional Avoid recent words policy records the last 32 local Play boards, uses every unseen word in the selected pool before the least-recently-used repeats, and warns when fewer than 25 unseen words remain. Clear history resets board reuse without changing the selected policy. History and policy stay local under `codenames-play-word-reuse-v1`.
 
-After a game ends, select any clue in the Game log to replay that turn from the event history. The review restores which cards were already revealed when the clue was given, marks intended targets and guess outcomes, and shows the configured operative model's association score for every board word. Selecting a full clue or guess row is free and reveals its explicit paid explanation action on that row. The review is completion-gated, so none of these annotations or hidden roles appear during live operative play. The header Share action always copies a `?mode=play&g=` link. Active links preserve the current phase, revealed cards, and turn history; completed links open the full review.
+After a game ends, select any clue in the Game log to replay that turn from the event history. The review restores which cards were already revealed when the clue was given, marks intended targets and guess outcomes, and shows the configured pet model's association score for every board word. Selecting a full clue or guess row is free and reveals its explicit paid explanation action on that row. The review is completion-gated, so none of these annotations or hidden roles appear while a Cat or Dog is playing. The header Share action always copies a `?mode=play&g=` link. Active links preserve the current phase, revealed cards, and turn history; completed links open the full review.
 
 Completed games are deduplicated into a 32-game local archive. The newest completed save keeps its prominent review action, while older records stay in a collapsed Past games section below Play Settings. Each archived game can be reviewed, copied as a link, or removed. Developer records retain raw diagnostics locally, while copied links contain only provenance plus the starting state, settings, and actions needed for replay. The export versions its format, rules, and settings separately; unsupported historical completed-game rules fall back to an action-log review without rewriting the original link. See [Play game sharing](docs/play-game-sharing.md) for the versioned export contract and privacy boundary.
 
@@ -91,7 +95,7 @@ The Play implementation keeps rules, bot choices, persistence, and rendering sep
 - `src/play/game-state.js` owns the rules, seat authorization, event history, public projection, win conditions, and completed-turn replay.
 - `src/play/game-share.js` owns the versioned active and completed Play export and validated replay.
 - `src/play/concept-ranking.js` adds a guarded local WordNet sense bridge for weak English multi-card clues.
-- `src/play/bots.js` chooses bot clues and guesses. The operative API accepts only public association scores and never receives card roles or intended targets.
+- `src/play/bots.js` chooses bot clues and guesses. The pet-facing API accepts only public association scores and never receives card roles or intended targets.
 - `src/play/session-store.js` persists the resumable game under `codenames-play-session-v1` and the bounded completed archive under `codenames-play-completed-v1`.
 - `src/play/analytics.js` owns eligible local-game uploads, retry coalescing, and player-feedback submission. `server/play-analytics-service.js` validates replay and owns the `analytics_` tables.
 - `src/developer-settings.js` persists the separate Developer mode preference under `codenames-developer-settings-v1`.
@@ -101,13 +105,13 @@ The Play implementation keeps rules, bot choices, persistence, and rendering sep
 
 Run `npm run benchmark:play` for English comparisons, `npm run benchmark:play:italian` for Italian E5 self-play, `npm run benchmark:play:italian-transfer` for the independent MiniLM operative stress test, `npm run evaluate:concept-ranking` for multi-reranker human, JOUST, bridge, latency, and memory checks, and `npm run analyze:play-clues` for controlled opening-board analysis. The optional hosted listwise fixture uses `npm run evaluate:hosted-reranker -- --preflight-only --max-cost-usd <cap>` before any paid run. The full-game benchmark accepts `--missed-target-timing late|balanced|immediate`, `--operative-ranking concept|concept-rerank|direct`, and `--operative-noise none|standard` for controlled comparisons. `concept-rerank` is an evaluation-only mode, not a Play setting. [Benchmark reporting](docs/benchmark-reporting.md) defines the canonical behavior configuration, stable fingerprints, frozen evidence splits, paired comparison report, uncertainty rules, and promotion verdict. The durable [operative-ranking evaluation archive](docs/evaluations/operative-ranking/README.md) preserves the bridge and reranker ablations, while the generated summaries retain the [English same-model benchmark](scripts/generated/play-policy-benchmark.md), [English cross-model stress test](scripts/generated/play-operative-aggression-cross-model.md), [Italian same-model result](scripts/generated/italian-play-policy-benchmark.md), and [Italian transfer result](scripts/generated/italian-play-minilm-transfer-benchmark.md).
 
-The benchmark also reports a 0-100 Fun Index that balances ambitious multi-card clues, productive guesses, close finishes, and games in the 8 to 12 turn range. Wrong-team hits, assassin losses, neutral hits, and fallbacks remain promotion guardrails rather than sources of points. Use `--operative-model <model-id>` to stress-test whether clues transfer to a different embedding geometry instead of relying only on optimistic same-model self-play.
+The benchmark also reports a 0-100 Fun Index that balances ambitious multi-card clues, productive guesses, close finishes, and games in the 8 to 12 turn range. Other-side hits, Veterinarian losses, Vegetable hits, and fallbacks remain promotion guardrails rather than sources of points. Use `--operative-model <model-id>` to stress-test whether clues transfer to a different embedding geometry instead of relying only on optimistic same-model self-play.
 
 Embedding selection uses frozen board splits, model-specific similarity calibration, paired bootstrap intervals, cross-model transfer gates, and a one-time blinded human round. Open `?mode=calibrate` directly to complete or correct the calibration, export answers, or import another versioned round. Choices, ratings, and notes save automatically in browser storage and sync to Postgres when configured; recording a pass remains an explicit action. The tool is intentionally absent from normal Play and Train navigation, and its public round data excludes the separate model answer key.
 
 ## Board word sets
 
-**Official** contains 400 unique words from the original English base game, including the printed multi-word entries `ICE CREAM`, `LOCH NESS`, `NEW YORK`, and `SCUBA DIVER`. It is based on a [public transcription](https://gist.github.com/siemanko/6cc17ee2a253089969b1b904660b4097) with obvious spelling errors normalized.
+**Core** contains the historical 400-word English pool, including the multi-word entries `ICE CREAM`, `LOCH NESS`, `NEW YORK`, and `SCUBA DIVER`. It is based on a [public transcription](https://gist.github.com/siemanko/6cc17ee2a253089969b1b904660b4097) with obvious spelling errors normalized. The internal value remains `official` for saved-link compatibility.
 
 **Extended** is a strict 800-word superset. Its 400 additions are selected from a reviewed candidate universe using frequency, association breadth, semantic-domain entropy, and category fit across 14 domains.
 
@@ -120,7 +124,7 @@ npm run generate:extended
 npm run generate:italian
 ```
 
-Version 4 share links encode Italian, the `it:extended-v1` asset version, and UTF-8 custom words. English remains on version 3. Version 1 retains the historical 366-word pool, and version 2 retains the former Official 400 and Extended 407 pools so existing shared boards remain reproducible.
+Version 4 share links encode Italian, the `it:extended-v1` asset version, and UTF-8 custom words. English remains on version 3. Version 1 retains the historical 366-word pool, and version 2 retains the former Core 400 and Extended 407 pools so existing shared boards remain reproducible.
 
 ## Generated assets
 

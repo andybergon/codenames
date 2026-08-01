@@ -1,5 +1,12 @@
 import { Share2, createIcons } from "lucide";
 import { createRandomSeed } from "../board-share.js";
+import {
+  cardCopyKey,
+  playerCopyKey,
+  playerEmoji,
+  sideCopyKey,
+  sideEmoji,
+} from "../brand.js";
 import PLAY_CLUE_BIAS_ANALYSIS from "../../scripts/generated/play-clue-bias-analysis.json" with { type: "json" };
 import PLAY_MODEL_BENCHMARK from "../../scripts/generated/play-model-benchmark.json" with { type: "json" };
 import {
@@ -220,12 +227,12 @@ const BOT_SETTING_INFO = Object.freeze({
     table: {
       headers: ["🧠 Policy", "🚫 Excludes"],
       rows: [
-        ["🛡️ Never", "All team clues"],
-        ["↩️ Previous", "Last team clue"],
+        ["🛡️ Never", "All side clues"],
+        ["↩️ Previous", "Last side clue"],
         ["🔁 Allow", "Nothing"],
       ],
     },
-    note: "Only clues previously given by the same team are affected. The other team's clues and earlier target words remain available.",
+    note: "Only clues previously given by the same side are affected. The other side's clues and earlier target words remain available.",
   },
   multiTolerance: {
     id: "multi-clue-preference",
@@ -245,7 +252,7 @@ const BOT_SETTING_INFO = Object.freeze({
     id: "missed-target-timing",
     label: "Retry missed targets",
     table: {
-      headers: ["🕵️ Timing", "🆕 Early game", "🔁 Retry"],
+      headers: ["👤 Timing", "🆕 Early game", "🔁 Retry"],
       rows: [
         ["🌱 Late", "Fresh first", "Late game"],
         ["⚖️ Mid-game", "Light bias", "Mid-game"],
@@ -256,9 +263,9 @@ const BOT_SETTING_INFO = Object.freeze({
   },
   operativeAggression: {
     id: "operative-aggression",
-    label: "Operative aggression",
+    label: "Pet confidence",
     table: {
-      headers: ["🔎 Mode", "🎯 Threshold", "🏁 Game state"],
+      headers: ["🐾 Mode", "🎯 Threshold", "🏁 Game state"],
       rows: [
         ["⚖️ Dynamic", "Adaptive", "Public score"],
         ["🛡️ Conservative", "Highest", "Ignored"],
@@ -2042,33 +2049,16 @@ export function createPlayMode(options = {}) {
   }
 
   function localizedSideLabel(side) {
-    return translate(
-      gameLanguage(),
-      side === SIDE.RED ? "red" : "blue",
-    );
+    return translate(gameLanguage(), sideCopyKey(side));
   }
 
-  function localizedRoleLabel(role) {
-    return translate(
-      gameLanguage(),
-      role === PLAYER_ROLE.SPYMASTER ? "spymaster" : "operative",
-    );
+  function localizedRoleLabel(side, role) {
+    return translate(gameLanguage(), playerCopyKey(side, role));
   }
 
   function localizedTeamLabel(team) {
-    if (team === "friendly") {
-      return translate(gameLanguage(), "blue");
-    }
-    if (team === "enemy") {
-      return translate(gameLanguage(), "red");
-    }
-    if (team === "neutral") {
-      return translate(gameLanguage(), "neutral");
-    }
-    if (team === "assassin") {
-      return translate(gameLanguage(), "assassinTeam");
-    }
-    return team;
+    const key = cardCopyKey(team);
+    return key ? translate(gameLanguage(), key) : team;
   }
 
   function renderGame() {
@@ -2104,11 +2094,15 @@ export function createPlayMode(options = {}) {
     seatContext.textContent = translate(gameLanguage(), "yourView");
     const seatIdentity = document.createElement("strong");
     seatIdentity.className = "play-seat-identity";
-    seatIdentity.textContent = `${sideEmoji(game.humanSeat.side)} ${localizedSideLabel(game.humanSeat.side)} ${roleEmoji(game.humanSeat.role)} ${localizedRoleLabel(game.humanSeat.role)}`;
+    const roleLabel = localizedRoleLabel(
+      game.humanSeat.side,
+      game.humanSeat.role,
+    );
+    seatIdentity.textContent = `${playerEmoji(game.humanSeat.side, game.humanSeat.role)} ${roleLabel}`;
     elements.humanSeat.setAttribute(
       "aria-label",
       translate(gameLanguage(), "yourViewLabel", {
-        identity: seatIdentity.textContent,
+        identity: `${localizedSideLabel(game.humanSeat.side)}, ${roleLabel}`,
       }),
     );
     elements.humanSeat.replaceChildren(seatContext, seatIdentity);
@@ -2135,7 +2129,8 @@ export function createPlayMode(options = {}) {
           selectedTurn?.side === side,
       );
       const label = document.createElement("span");
-      label.textContent = localizedSideLabel(side);
+      label.textContent = sideEmoji(side);
+      label.setAttribute("aria-hidden", "true");
       const value = document.createElement("strong");
       const remaining = remainingCardsForSide(cards, side);
       value.textContent = String(remaining);
@@ -3602,16 +3597,8 @@ function formatDeveloperNumber(value) {
   return Number.isFinite(value) ? value.toFixed(3) : "N/A";
 }
 
-function sideEmoji(side) {
-  return side === SIDE.RED ? "🔴" : "🔵";
-}
-
-function roleEmoji(role) {
-  return role === PLAYER_ROLE.SPYMASTER ? "🕵️" : "🔎";
-}
-
 function localizedSideLabelForLanguage(side, language) {
-  return translate(language, side === SIDE.RED ? "red" : "blue");
+  return translate(language, sideCopyKey(side));
 }
 
 function sideForTeam(team) {

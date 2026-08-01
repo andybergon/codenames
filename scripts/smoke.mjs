@@ -159,7 +159,7 @@ assert.deepEqual(
   {
     targetSummary: "Connects MOON and STAR, with STAR as the weakest match.",
     riskSummary:
-      "MARS is the closest danger, but the opposing agent stays clearly behind every target.",
+      "MARS is the closest danger, but the other side's treat stays clearly behind every target.",
   },
 );
 assert.equal(
@@ -171,7 +171,7 @@ assert.equal(
     closestDanger: { word: "MARS", team: "enemy", sim: 0.24 },
     margin: -0.04,
   }).riskSummary,
-  "MARS is the main risk: the opposing agent matches at least as strongly as STAR.",
+  "MARS is the main risk: the other side's treat matches at least as strongly as STAR.",
 );
 assert.equal(
   explainRecommendation({
@@ -179,7 +179,7 @@ assert.equal(
     closestDanger: { word: "BOMB", team: "assassin", sim: 0.12 },
     margin: 0.2,
   }).riskSummary,
-  "BOMB is the main risk: the assassin is also drawn to this clue.",
+  "BOMB is the main risk: the Veterinarian is also drawn to this clue.",
 );
 
 const morphologyBoard = [

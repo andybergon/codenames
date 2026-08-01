@@ -1,16 +1,16 @@
 const COPY = Object.freeze({
   en: {
     dangerLabels: {
-      neutral: "bystander",
-      enemy: "opposing agent",
-      assassin: "assassin",
+      neutral: "vegetable",
+      enemy: "other side's treat",
+      assassin: "Veterinarian",
     },
     nonTarget: "non-target",
     directLink: (word) => `A direct link to ${word}.`,
     connects: (words, weakest) =>
       `Connects ${formatNaturalList(words, "en")}, with ${weakest} as the weakest match.`,
     assassinRisk: (danger) =>
-      `${danger} is the main risk: the assassin is also drawn to this clue.`,
+      `${danger} is the main risk: the Veterinarian is also drawn to this clue.`,
     strongerRisk: (danger, dangerLabel, weakest) =>
       `${danger} is the main risk: the ${dangerLabel} matches at least as strongly as ${weakest}.`,
     closeRisk: (danger, dangerLabel, weakest) =>
@@ -20,16 +20,16 @@ const COPY = Object.freeze({
   },
   it: {
     dangerLabels: {
-      neutral: "carta neutrale",
-      enemy: "agente avversario",
-      assassin: "assassino",
+      neutral: "verdura",
+      enemy: "premio dell'altro lato",
+      assassin: "veterinario",
     },
     nonTarget: "carta non obiettivo",
     directLink: (word) => `Un collegamento diretto con ${word}.`,
     connects: (words, weakest) =>
       `Collega ${formatNaturalList(words, "it")}; ${weakest} è l'associazione più debole.`,
     assassinRisk: (danger) =>
-      `${danger} è il rischio principale: anche l'assassino è vicino a questo indizio.`,
+      `${danger} è il rischio principale: anche il veterinario è vicino a questo indizio.`,
     strongerRisk: (danger, dangerLabel, weakest) =>
       `${danger} è il rischio principale: ${dangerLabel} è almeno altrettanto vicino quanto ${weakest}.`,
     closeRisk: (danger, dangerLabel, weakest) =>

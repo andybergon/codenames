@@ -49,7 +49,7 @@ const SCENARIOS = Object.freeze([
     badge: "Completed",
     side: "blue",
     turn: 7,
-    team: "🔵 Blue",
+    team: "🐱 Cat team",
     clue: "ORBIT",
     number: 3,
     intended: [
@@ -72,7 +72,7 @@ const SCENARIOS = Object.freeze([
     badge: "Live analysis",
     side: "red",
     turn: 8,
-    team: "🔴 Red",
+    team: "🐶 Dog team",
     clue: "CHARGE",
     number: 2,
     intended: [

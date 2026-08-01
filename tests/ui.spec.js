@@ -623,13 +623,13 @@ test("global language switch creates a versioned Italian Train board and survive
     "insieme Esteso originale di 800 parole",
   );
   await expect(page.locator("#board-counts")).toContainText(
-    "Blu9Rossa8Neutrale7Assassino1",
+    "Pesce9Osso8Verdura7Il veterinario1",
   );
   await expect(page.locator("#board-metrics")).toContainText(
     "Complessità",
   );
   await expect(page.locator("#board-metrics")).toContainText(
-    "Blu contro Rossa",
+    "Gatti contro cani",
   );
   for (const [column, label] of [
     ["clue", "Indizio"],
@@ -718,11 +718,11 @@ test("Italian Train controls fit phone, tablet, and desktop viewports", async ({
   }
 });
 
-test("recommendation perspective can switch between Blue and Red", async ({ page }) => {
+test("recommendation perspective can switch between Cats and Dogs", async ({ page }) => {
   await page.goto(SHARED_BOARD);
 
-  const blue = page.getByRole("button", { name: "Blue", exact: true });
-  const red = page.getByRole("button", { name: "Red", exact: true });
+  const blue = page.getByRole("button", { name: "Cat team", exact: true });
+  const red = page.getByRole("button", { name: "Dog team", exact: true });
 
   await expect(blue).toHaveAttribute("aria-pressed", "true");
   await red.click();
@@ -735,8 +735,8 @@ test("recommendation perspective can switch between Blue and Red", async ({ page
 test("Play randomly assigns a seat and keeps all four overrides available", async ({ page }) => {
   await page.goto("/");
 
-  await expect(page.locator("#app-title")).toHaveText("Codenames");
-  await expect(page).toHaveTitle("Codenames");
+  await expect(page.locator("#app-title")).toHaveText("Treats");
+  await expect(page).toHaveTitle("Treats");
   await expect(page.getByRole("button", { name: "Play", exact: true })).toHaveAttribute(
     "aria-pressed",
     "true",
@@ -750,6 +750,43 @@ test("Play randomly assigns a seat and keeps all four overrides available", asyn
   await expect(page.locator("#play-setup .eyebrow")).toHaveCount(0);
   await expect(page.locator("#play-seat-note")).toHaveCount(0);
   await expect(page.locator("[data-play-seat][aria-pressed='true']")).toHaveCount(1);
+  expect(
+    await page.locator("[data-play-seat] strong").allTextContents(),
+  ).toEqual(["Cat Owner", "Cat", "Dog Owner", "Dog"]);
+  await expect(page.locator("[data-play-seat] img.seat-art")).toHaveCount(4);
+  expect(
+    await page.locator("[data-play-seat] img.seat-art").evaluateAll((images) =>
+      images.map((image) => ({
+        clipPath: getComputedStyle(image).clipPath,
+        loaded: image.complete && image.naturalWidth > 0,
+        src: new URL(image.src).pathname,
+      })),
+    ),
+  ).toEqual([
+    {
+      clipPath: "ellipse(50% 50% at 50% 50%)",
+      loaded: true,
+      src: "/role-art/cat-owner.webp",
+    },
+    {
+      clipPath: "ellipse(50% 50% at 50% 50%)",
+      loaded: true,
+      src: "/role-art/cat.webp",
+    },
+    {
+      clipPath: "ellipse(50% 50% at 50% 50%)",
+      loaded: true,
+      src: "/role-art/dog-owner.webp",
+    },
+    {
+      clipPath: "ellipse(50% 50% at 50% 50%)",
+      loaded: true,
+      src: "/role-art/dog.webp",
+    },
+  ]);
+  await expect(page.locator("#play-setup")).not.toContainText(
+    /\b(?:Spymaster|Operative|Assassin|Agent)\b/,
+  );
 
   for (const seat of [
     "blue:spymaster",
@@ -858,7 +895,7 @@ test("Play reuses the saved seat until Random explicitly changes it", async ({
     .getByRole("button", { name: "Review finished game", exact: true })
     .click();
   await expect(page.locator("#play-human-seat .play-seat-identity")).toHaveText(
-    "🔵 Blue 🕵️ Spymaster",
+    "👤 Cat Owner",
   );
 
   await page.getByRole("button", { name: "Start new game", exact: true }).click();
@@ -866,7 +903,7 @@ test("Play reuses the saved seat until Random explicitly changes it", async ({
 
   await page.getByRole("button", { name: "Start new game", exact: true }).click();
   await expect(page.locator("#play-human-seat .play-seat-identity")).toHaveText(
-    "🔵 Blue 🕵️ Spymaster",
+    "👤 Cat Owner",
   );
 
   await page.getByRole("button", { name: "Start new game", exact: true }).click();
@@ -891,12 +928,12 @@ test("Play reuses the saved seat until Random explicitly changes it", async ({
   expect(`${storedSeat.side}:${storedSeat.role}`).toBe(randomizedSeat);
 });
 
-test("Codenames title returns shared and Train views to Play home", async ({
+test("Treats title returns shared and Train views to Play home", async ({
   page,
 }) => {
   for (const source of [SHARED_BOARD, "/?mode=train"]) {
     await page.goto(source);
-    const title = page.getByRole("link", { name: "Codenames", exact: true });
+    const title = page.getByRole("link", { name: "Treats", exact: true });
     await expect(title).toHaveAttribute("href", "/");
     await title.click();
 
@@ -1446,7 +1483,7 @@ test("Play exposes and saves bot policy settings", async ({ page }) => {
 
   const settings = page.locator(".play-settings");
   await expect(settings).toContainText(
-    "Official, fully random, BGE-small, 30k, human-like, never repeat team clues, fresh targets first, dynamic operative, concept bridges, deterministic guesses, stop at number",
+    "Core, fully random, BGE-small, 30k, human-like, never repeat side clues, fresh targets first, dynamic pet, concept bridges, deterministic guesses, stop at number",
   );
   await expect(settings).not.toHaveAttribute("open", "");
   await expect(settings.locator(".play-settings-toggle")).toContainText("Edit");
@@ -1475,8 +1512,8 @@ test("Play exposes and saves bot policy settings", async ({ page }) => {
   );
   await expect(gameSettings.locator("legend")).toHaveText("🎮 Game");
   await expect(allBotSettings.locator("legend")).toHaveText("🤖 All bots");
-  await expect(spymasterSettings.locator("legend")).toHaveText("🕵️ Spymaster");
-  await expect(operativeSettings.locator("legend")).toHaveText("🔎 Operative");
+  await expect(spymasterSettings.locator("legend")).toHaveText("👤 Owners");
+  await expect(operativeSettings.locator("legend")).toHaveText("🐾 Pets");
   await expect(developerSettings.locator("legend")).toHaveText("🧪 Developer");
   await expect(
     settings.locator(".play-settings-section").last(),
@@ -1555,7 +1592,7 @@ test("Play exposes and saves bot policy settings", async ({ page }) => {
 
   await page.getByRole("button", { name: "Extended 800", exact: true }).click();
   await expect(settings).toContainText(
-    "Extended, fully random, BGE-small, 30k, human-like, never repeat team clues, fresh targets first, dynamic operative, concept bridges, deterministic guesses, stop at number",
+    "Extended, fully random, BGE-small, 30k, human-like, never repeat side clues, fresh targets first, dynamic pet, concept bridges, deterministic guesses, stop at number",
   );
   await page.locator("#play-operative-concepts").selectOption("direct");
   await expect(settings).toContainText("direct similarity");
@@ -1976,7 +2013,7 @@ test("Developer live analysis matches post-game role and target review", async (
   await expect(page.locator("#play-operative-controls")).toBeHidden();
   await expect(
     page.getByRole("button", {
-      name: "Review turn 1: Blue clue FIXTURE 2",
+      name: "Review turn 1: Cat team clue FIXTURE 2",
       exact: true,
     }),
   ).toHaveAttribute("aria-pressed", "true");
@@ -2054,7 +2091,7 @@ test("Developer live analysis orders the board by operative score", async ({
   await expect(scoreOrder).toBeEnabled();
   await expect(
     cards.first().locator(".play-card-operative-score"),
-  ).toHaveAttribute("title", "Operative association score");
+  ).toHaveAttribute("title", "Pet association score");
   await scoreOrder.click();
   await expect(scoreOrder).toHaveAttribute("aria-pressed", "true");
 
@@ -2373,7 +2410,7 @@ test("Play bot setting help explains measured tradeoffs and stays on-screen", as
       "friendly word targeted by an earlier clue",
     ],
     [
-      "Operative aggression",
+      "Pet confidence",
       ["Dynamic", "Conservative", "Aggressive"],
       "becoming bolder when behind",
     ],
@@ -2557,10 +2594,10 @@ test("Play enforces operative and spymaster information views", async ({ page })
   await page.goto("/?mode=play");
 
   await expect(page.locator('[data-play-seat="blue:spymaster"] strong')).toHaveText(
-    "🕵️ Spymaster",
+    "Cat Owner",
   );
   await expect(page.locator('[data-play-seat="blue:operative"] strong')).toHaveText(
-    "🔎 Operative",
+    "Cat",
   );
 
   await page.locator('[data-play-seat="blue:operative"]').click();
@@ -2570,7 +2607,7 @@ test("Play enforces operative and spymaster information views", async ({ page })
     "Your view",
   );
   await expect(page.locator("#play-human-seat .play-seat-identity")).toHaveText(
-    "🔵 Blue 🔎 Operative",
+    "🐱 Cat",
   );
   await expect(page.locator(".play-card")).toHaveCount(25);
   await expect(page.locator('.play-card[data-team="hidden"]')).toHaveCount(25);
@@ -2712,13 +2749,13 @@ test("Play keeps game creation actions prominent across responsive states", asyn
   page,
 }) => {
   for (const viewport of [
-    { width: 390, height: 844, setupActionBelow: true },
-    { width: 430, height: 998, setupActionBelow: true },
-    { width: 625, height: 998, setupActionBelow: false },
-    { width: 768, height: 1024, setupActionBelow: false },
-    { width: 846, height: 998, setupActionBelow: false },
-    { width: 1440, height: 900, setupActionBelow: false },
-    { width: 1920, height: 1080, setupActionBelow: false },
+    { width: 390, height: 844, setupActionBelow: true, compactGameHeader: false },
+    { width: 430, height: 998, setupActionBelow: true, compactGameHeader: false },
+    { width: 625, height: 998, setupActionBelow: false, compactGameHeader: true },
+    { width: 768, height: 1024, setupActionBelow: false, compactGameHeader: true },
+    { width: 846, height: 998, setupActionBelow: false, compactGameHeader: true },
+    { width: 1440, height: 900, setupActionBelow: false, compactGameHeader: true },
+    { width: 1920, height: 1080, setupActionBelow: false, compactGameHeader: true },
   ]) {
     await page.setViewportSize(viewport);
     await page.goto("/?mode=play");
@@ -2811,6 +2848,8 @@ test("Play keeps game creation actions prominent across responsive states", asyn
       const header = document.querySelector(".play-game-header");
       const actions = document.querySelector(".play-game-actions");
       const newGameButton = document.querySelector("#leave-play-game");
+      const seat = document.querySelector("#play-human-seat");
+      const score = document.querySelector("#play-score");
       return {
         pageOverflows:
           document.documentElement.scrollWidth > document.documentElement.clientWidth,
@@ -2820,6 +2859,12 @@ test("Play keeps game creation actions prominent across responsive states", asyn
         newGameIsLarger:
           newGameButton.getBoundingClientRect().width >
           actions.querySelector(".icon-button").getBoundingClientRect().width,
+        seatAndScoreShareRow:
+          Math.abs(
+            (seat.getBoundingClientRect().top + seat.getBoundingClientRect().bottom) / 2 -
+              (score.getBoundingClientRect().top + score.getBoundingClientRect().bottom) /
+                2,
+          ) <= 1,
       };
     });
     expect(activeLayout.pageOverflows, `active overflow at ${viewport.width}px`).toBe(false);
@@ -2831,6 +2876,10 @@ test("Play keeps game creation actions prominent across responsive states", asyn
       activeLayout.newGameIsLarger,
       `active new game prominence at ${viewport.width}px`,
     ).toBe(true);
+    expect(
+      activeLayout.seatAndScoreShareRow,
+      `active header organization at ${viewport.width}px`,
+    ).toBe(viewport.compactGameHeader);
 
     await newGame.click();
     await expect(page.locator("#play-setup")).toBeVisible();
@@ -2880,7 +2929,7 @@ test("Play validates human clues and resumes the saved seat", async ({ page }) =
     "Your view",
   );
   await expect(page.locator("#play-human-seat .play-seat-identity")).toHaveText(
-    "🔵 Blue 🕵️ Spymaster",
+    "👤 Cat Owner",
   );
   await expect(page.locator("#play-game")).toBeVisible();
 });
@@ -3179,12 +3228,12 @@ test("Play moves through history and groups fully automated turns", async ({ pag
   await expect(forward).toBeDisabled();
 
   await undo.click();
-  await expect(turn).toContainText("Blue turn");
+  await expect(turn).toContainText("Cat team turn");
   await expect(turn).toContainText("Give a clue");
   await expect(forward).toBeEnabled();
 
   await undo.click();
-  await expect(turn).toContainText("Red turn");
+  await expect(turn).toContainText("Dog team turn");
   await expect(turn).toHaveAttribute("data-side", "red");
   await expect(page.locator('.play-card[data-layout-id="9"]')).not.toHaveClass(/is-done/);
   await expect(redScore).toHaveText("8");
@@ -3192,7 +3241,7 @@ test("Play moves through history and groups fully automated turns", async ({ pag
   await expect(turn).toHaveAttribute("data-side", "red");
 
   await forward.click();
-  await expect(turn).toContainText("Blue turn");
+  await expect(turn).toContainText("Cat team turn");
   await expect(turn).toContainText("Give a clue");
   await expect(page.locator('.play-card[data-layout-id="9"]')).toHaveClass(/is-done/);
   await expect(redScore).toHaveText("7");
@@ -3204,7 +3253,7 @@ test("Play moves through history and groups fully automated turns", async ({ pag
 
   await undo.click();
   await undo.click();
-  await expect(turn).toContainText("Red turn");
+  await expect(turn).toContainText("Dog team turn");
   await expect(turn).toHaveAttribute("data-side", "red");
 
   await undo.click();
@@ -3219,7 +3268,7 @@ test("Play moves through history and groups fully automated turns", async ({ pag
   await expect(blueScore).toHaveText("9");
 
   await undo.click();
-  await expect(turn).toContainText("Blue turn");
+  await expect(turn).toContainText("Cat team turn");
   await expect(turn).toContainText("Give a clue");
   await expect(undo).toBeDisabled();
   await expect(forward).toBeEnabled();
@@ -3402,12 +3451,12 @@ test("Play keeps player perspective separate from the current turn", async ({ pa
 
   await expect(perspective.locator(".play-seat-context")).toHaveText("Your view");
   await expect(perspective.locator(".play-seat-identity")).toHaveText(
-    "🔵 Blue 🕵️ Spymaster",
+    "👤 Cat Owner",
   );
-  await expect(turn.locator(".play-turn-team")).toHaveText("Blue turn");
+  await expect(turn.locator(".play-turn-team")).toHaveText("Cat team turn");
   await expect(turn.locator("strong")).toHaveText("Give a clue");
-  await expect(turn).not.toContainText("Blue Spymaster");
-  await expect(turn).not.toContainText("Spymaster");
+  await expect(turn).not.toContainText("Cat Owner");
+  await expect(turn).not.toContainText("Owner");
   await expect(turn).not.toContainText("🕵️");
 });
 
@@ -3418,7 +3467,7 @@ test("Play color-codes turns and lets spymasters switch board order", async ({ p
 
   const turn = page.locator("#play-clue-display");
   await expect(turn).toHaveAttribute("data-side", "blue");
-  await expect(turn.locator(".play-turn-team")).toHaveText("Blue turn");
+  await expect(turn.locator(".play-turn-team")).toHaveText("Cat team turn");
   await expect(turn.locator("strong")).toHaveText("Give a clue");
 
   const cards = page.locator(".play-card");
@@ -3426,8 +3475,8 @@ test("Play color-codes turns and lets spymasters switch board order", async ({ p
     items.map((item) => item.dataset.layoutId),
   );
   await expect(page.locator("#play-board-toolbar")).toBeVisible();
-  await page.getByRole("button", { name: "🗂️ Teams", exact: true }).click();
-  await expect(page.getByRole("button", { name: "🗂️ Teams", exact: true })).toHaveAttribute(
+  await page.getByRole("button", { name: "🗂️ Treats", exact: true }).click();
+  await expect(page.getByRole("button", { name: "🗂️ Treats", exact: true })).toHaveAttribute(
     "aria-pressed",
     "true",
   );
@@ -3446,7 +3495,7 @@ test("Play color-codes turns and lets spymasters switch board order", async ({ p
   );
 });
 
-test("Play uses the Red turn treatment for an active Red spymaster", async ({ page }) => {
+test("Play uses the Dog turn treatment for an active Dog Owner", async ({ page }) => {
   const teams = [
     ...Array(9).fill("friendly"),
     ...Array(8).fill("enemy"),
@@ -3488,11 +3537,11 @@ test("Play uses the Red turn treatment for an active Red spymaster", async ({ pa
 
   await expect(page.locator("#play-human-seat")).toHaveAttribute("data-side", "red");
   await expect(page.locator("#play-human-seat .play-seat-identity")).toHaveText(
-    "🔴 Red 🕵️ Spymaster",
+    "👤 Dog Owner",
   );
   await expect(page.locator("#play-clue-display")).toHaveAttribute("data-side", "red");
   await expect(page.locator("#play-clue-display .play-turn-team")).toHaveText(
-    "Red turn",
+    "Dog team turn",
   );
   await expect(page.locator("#play-clue-display strong")).toHaveText("Give a clue");
   await expect(page.locator("#play-suggestions")).toBeHidden();
@@ -3504,13 +3553,29 @@ test("Play game log shows clear empty states in both views", async ({ page }) =>
   await expect(page.locator("#play-history-count")).toHaveText("0 events");
   await expect(page.locator("#play-history-list")).toHaveText("No game actions yet.");
 
-  const teamsView = page.getByRole("button", { name: "↔️ By team", exact: true });
+  const timelineView = page.getByRole("button", { name: "🕒 Timeline", exact: true });
+  expect(
+    await timelineView.evaluate(
+      (button) =>
+        getComputedStyle(button).color ===
+        getComputedStyle(button.querySelector("span")).color,
+    ),
+  ).toBe(true);
+
+  const teamsView = page.getByRole("button", { name: "↔️ By side", exact: true });
   await teamsView.click();
 
   await expect(teamsView).toHaveAttribute("aria-pressed", "true");
+  expect(
+    await teamsView.evaluate(
+      (button) =>
+        getComputedStyle(button).color ===
+        getComputedStyle(button.querySelector("span")).color,
+    ),
+  ).toBe(true);
   await expect(page.locator("#play-history-list")).toBeHidden();
-  await expect(page.locator("#play-history-blue-list")).toHaveText("No Blue actions yet.");
-  await expect(page.locator("#play-history-red-list")).toHaveText("No Red actions yet.");
+  await expect(page.locator("#play-history-blue-list")).toHaveText("No Cat team actions yet.");
+  await expect(page.locator("#play-history-red-list")).toHaveText("No Dog team actions yet.");
 });
 
 test("Play game log color-codes each guessed card as a word pill", async ({ page }) => {
@@ -3533,10 +3598,10 @@ test("Play game log color-codes each guessed card as a word pill", async ({ page
   expect(await pills.evaluateAll((items) => items.map((item) => item.dataset.team))).toEqual(
     teams,
   );
-  await expect(pills.nth(0)).toHaveAttribute("aria-label", "WORD0, Blue card");
-  await expect(pills.nth(1)).toHaveAttribute("aria-label", "WORD1, Red card");
-  await expect(pills.nth(2)).toHaveAttribute("aria-label", "WORD2, Neutral card");
-  await expect(pills.nth(3)).toHaveAttribute("aria-label", "WORD3, Assassin card");
+  await expect(pills.nth(0)).toHaveAttribute("aria-label", "WORD0, Fish");
+  await expect(pills.nth(1)).toHaveAttribute("aria-label", "WORD1, Bone");
+  await expect(pills.nth(2)).toHaveAttribute("aria-label", "WORD2, Vegetable");
+  await expect(pills.nth(3)).toHaveAttribute("aria-label", "WORD3, The Veterinarian");
   expect(
     await page
       .locator("#play-history-list .play-history-action")
@@ -3547,6 +3612,10 @@ test("Play game log color-codes each guessed card as a word pill", async ({ page
     "Guess: WORD2",
     "Guess: WORD3",
   ]);
+  await expect(page.locator("#play-history-list .play-history-actions")).toHaveCSS(
+    "row-gap",
+    "2px",
+  );
 });
 
 test("Play game log groups actions by turn and switches between views", async ({
@@ -3589,7 +3658,7 @@ test("Play game log groups actions by turn and switches between views", async ({
   ]);
 
   const timelineView = page.getByRole("button", { name: "🕒 Timeline", exact: true });
-  const teamsView = page.getByRole("button", { name: "↔️ By team", exact: true });
+  const teamsView = page.getByRole("button", { name: "↔️ By side", exact: true });
   const timeline = page.locator("#play-history-list");
 
   await expect(timelineView).toHaveAttribute("aria-pressed", "true");
@@ -3599,7 +3668,7 @@ test("Play game log groups actions by turn and switches between views", async ({
   await expect(timeline.locator(".explain-recommendation-button")).toHaveCount(0);
   expect(
     await timeline.locator(".play-history-turn-header").allTextContents(),
-  ).toEqual(["🔵 Blue · Turn 1", "🔴 Red · Turn 2"]);
+  ).toEqual(["🐱 Cat team · Turn 1", "🐶 Dog team · Turn 2"]);
   expect(
     await timeline.locator(".play-history-action").allTextContents(),
   ).toEqual([
@@ -3616,7 +3685,7 @@ test("Play game log groups actions by turn and switches between views", async ({
     const clueBounds = clue.getBoundingClientRect();
     const guessBounds = guess.getBoundingClientRect();
     return {
-      teamMentions: (turn.innerText.match(/blue/gi) ?? []).length,
+      teamMentions: (turn.innerText.match(/cat team/gi) ?? []).length,
       guessIndented: guessBounds.left > clueBounds.left,
       turnBorder: getComputedStyle(turn).borderTopWidth,
     };
@@ -3714,7 +3783,7 @@ test("long Play logs remain complete and responsive in both views", async ({ pag
     ),
   ).toBe(true);
 
-  await page.getByRole("button", { name: "↔️ By team", exact: true }).click();
+  await page.getByRole("button", { name: "↔️ By side", exact: true }).click();
   await expect(
     page.locator("#play-history-blue-list .play-history-turn"),
   ).toHaveCount(6);
@@ -3924,7 +3993,7 @@ test("completed Play sessions replay turns and explain clues and guesses", async
     .getByRole("button", { name: "Review finished game", exact: true })
     .click();
 
-  await expect(page.locator("#play-post-game-outcome")).toContainText("Blue won");
+  await expect(page.locator("#play-post-game-outcome")).toContainText("Cat team won");
   await expect(page.locator("#play-history-heading-label")).toHaveText(
     "Post-game analysis",
   );
@@ -3948,11 +4017,11 @@ test("completed Play sessions replay turns and explain clues and guesses", async
     page.locator("#play-history-list .explain-recommendation-button"),
   ).toHaveCount(4);
   const firstClue = page.getByRole("button", {
-    name: "Review turn 1: Blue clue FIRST 2",
+    name: "Review turn 1: Cat team clue FIRST 2",
     exact: true,
   });
   const secondClue = page.getByRole("button", {
-    name: "Review turn 2: Red clue SECOND 1",
+    name: "Review turn 2: Dog team clue SECOND 1",
     exact: true,
   });
   await expect(firstClue).toHaveAttribute("aria-pressed", "true");
@@ -3982,7 +4051,7 @@ test("completed Play sessions replay turns and explain clues and guesses", async
     }),
   ]);
   expect(initialTurnRows[0].text).toContain("Pass");
-  expect(initialTurnRows[1].text).toContain("Blue won by assassin");
+  expect(initialTurnRows[1].text).toContain("Cat team won by the Veterinarian");
   const historyList = page.locator("#play-history-list");
   await historyList.evaluate((list) => {
     list.scrollTop = 40;
@@ -4375,7 +4444,7 @@ test("completed Play sessions replay turns and explain clues and guesses", async
     expect(
       actionSpacing.maximumGap,
       `history action gap at ${viewport.width}px`,
-    ).toBeLessThanOrEqual(1);
+    ).toBe(2);
     expect(
       actionSpacing.maximumBlockPadding,
       `history action padding at ${viewport.width}px`,
@@ -4452,7 +4521,7 @@ test("completed Play sessions replay turns and explain clues and guesses", async
     ).toHaveCount(1);
     expect(explanationRequests).toHaveLength(0);
   }
-  const teamsView = page.getByRole("button", { name: "↔️ By team", exact: true });
+  const teamsView = page.getByRole("button", { name: "↔️ By side", exact: true });
   const timelineView = page.getByRole("button", { name: "🕒 Timeline", exact: true });
   await teamsView.click();
   await expect(
@@ -4791,7 +4860,7 @@ test("completed Play links reopen full games and stay in the local archive", asy
   expect(code.length).toBeLessThan(2_048);
   await page.goto(`/?mode=play&g=${code}`);
 
-  await expect(page.locator("#play-post-game-outcome")).toContainText("Red won");
+  await expect(page.locator("#play-post-game-outcome")).toContainText("Dog team won");
   await expect(page.locator("#play-history-list")).toContainText("FIRST");
   await expect(page.locator("#play-history-list")).toContainText("WORD24");
   await expect(
@@ -4846,7 +4915,7 @@ test("completed Play links reopen full games and stay in the local archive", asy
   ).toBeTruthy();
   await page.locator("#completed-play-games > summary").click();
   await expect(page.locator("#completed-play-games-list")).toContainText(
-    "Red won by assassin, 1 clue",
+    "Dog team won by the Veterinarian, 1 clue",
   );
   expect(
     await page.evaluate(() =>
@@ -4855,7 +4924,7 @@ test("completed Play links reopen full games and stay in the local archive", asy
   ).toHaveLength(1);
 
   await page.getByRole("button", { name: "Review", exact: true }).click();
-  await expect(page.locator("#play-post-game-outcome")).toContainText("Red won");
+  await expect(page.locator("#play-post-game-outcome")).toContainText("Dog team won");
   expect(new URL(page.url()).searchParams.get("g")).toBe(code);
 });
 
@@ -4884,7 +4953,7 @@ test("unsupported historical rules still open and preserve their original action
   await page.goto(`/?mode=play&g=${historicalCode}`);
 
   await expect(page.locator("#play-post-game-outcome")).toContainText(
-    "Red won",
+    "Dog team won",
   );
   await expect(page.locator("#play-history-list")).toContainText("FIRST");
   await expect(page.locator("#play-history-list")).toContainText("WORD24");
@@ -4933,7 +5002,7 @@ test("archiving a completed save keeps its finished-game review entry point", as
 
   await page.locator("#resume-play-session").click();
   await expect(page.locator("#play-post-game-outcome")).toContainText(
-    "Red won",
+    "Dog team won",
   );
 });
 
@@ -5070,7 +5139,7 @@ test("Italian Play uses E5, persists its session, and shares the active game", a
     "La tua vista",
   );
   await expect(page.locator("#play-human-seat .play-seat-identity")).toContainText(
-    "Blu 🕵️ Capo agenzia",
+    "👤 Proprietario dei gatti",
   );
 
   await page.locator("#share-play-game").click();
@@ -5095,7 +5164,7 @@ test("Italian Play uses E5, persists its session, and shares the active game", a
     "La tua vista",
   );
   await expect(page.locator("#play-human-seat .play-seat-identity")).toContainText(
-    "Blu 🕵️ Capo agenzia",
+    "👤 Proprietario dei gatti",
   );
 });
 
@@ -5260,7 +5329,7 @@ test("recommendations collapse without losing controls or results state", async 
   const content = page.locator("#recommendation-content");
   const sort = page.locator("#mobile-suggestion-sort");
   const advanced = page.locator("#advanced-metrics");
-  const red = page.getByRole("button", { name: "Red", exact: true });
+  const red = page.getByRole("button", { name: "Dog team", exact: true });
 
   await sort.selectOption("number:desc");
   await advanced.check();
@@ -5544,8 +5613,8 @@ test("analytics review authenticates, filters, reviews games, and stays responsi
   });
 
   await page.goto("/?mode=analytics");
-  await expect(page.locator("#app-title")).toHaveText("Codenames");
-  await expect(page).toHaveTitle("Codenames");
+  await expect(page.locator("#app-title")).toHaveText("Treats");
+  await expect(page).toHaveTitle("Treats");
   await expect(page.locator("#analytics-review-auth")).toBeVisible();
   await page.locator("#analytics-review-key").fill("review-key");
   await page.getByRole("button", { name: "Open review" }).click();
@@ -5836,7 +5905,7 @@ test("benchmark scorecard presents the canonical accepted baseline", async ({
 }) => {
   await page.goto("/?mode=benchmarks");
 
-  await expect(page).toHaveTitle("Codenames benchmarks");
+  await expect(page).toHaveTitle("Treats benchmarks");
   await expect(page.locator(".app-mode-switch")).toBeHidden();
   await expect(
     page.getByRole("heading", { name: "Benchmark comparison" }),

@@ -1,6 +1,14 @@
-# Codenames Trainer
+# Treats
 
-Local-first Vite application for embedding-powered Codenames clue recommendations.
+Local-first Vite application for embedding-powered word-association clue recommendations and one-human play.
+
+## Public Theme
+
+- Public copy uses Treats. Cat Owners give clues to Cats seeking fish; Dog Owners give clues to Dogs seeking bones; Vegetables are neutral; The Veterinarian ends the game.
+- Preserve compatibility identifiers in saved games, shared links, analytics, tests, and code: Cat team is `blue`, Dog team is `red`, Owners are `spymaster`, pets are `operative`, fish are `friendly`, bones are `enemy`, Vegetables are `neutral`, and The Veterinarian is `assassin`.
+- `src/brand.js` owns public copy-key and emoji mappings. `src/locales.js` owns translated labels. Keep both aligned with `README.md` and the static English fallbacks in `index.html`.
+- `public/role-art/` contains the generated setup-card illustrations. Keep them decorative in markup so the localized role text remains the accessible name, and use optimized project-local assets instead of loading external image URLs.
+- Keep existing `codenames-*` storage keys, export schemas, deployment identifiers, dataset attribution, and historical decoder names stable unless an explicit migration is implemented.
 
 ## Checks
 

@@ -3,7 +3,11 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Codenames</title>
+    <title>Treats</title>
+    <meta
+      name="description"
+      content="A local-first word-association game where cats find fish and dogs find bones."
+    />
     <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="icon" type="image/png" href="/favicon.png" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
@@ -30,7 +34,7 @@
   <body>
     <main class="app-shell">
       <header class="topbar">
-        <h1><a id="app-title" href="/">Codenames</a></h1>
+        <h1><a id="app-title" href="/">Treats</a></h1>
         <div class="app-mode-switch" role="group" aria-label="App mode">
           <button type="button" data-app-mode="play" data-i18n="play" aria-pressed="true">Play</button>
           <button type="button" data-app-mode="train" data-i18n="train" aria-pressed="false">Train</button>
@@ -98,7 +102,7 @@
       </section>
 
       <section id="trainer-workspace" class="workspace">
-        <div class="board-panel" aria-label="Codenames board editor">
+        <div class="board-panel" aria-label="Treats board editor">
           <div class="panel-header board-header">
             <div class="board-primary-row">
               <div class="board-title-row">
@@ -165,7 +169,7 @@
                       type="button"
                       aria-label="Show cards sorted by role"
                       aria-pressed="true"
-                      title="Group cards by Friendly, Enemy, Neutral, and Assassin"
+                      title="Group cards by Fish, Bone, Vegetable, and The Veterinarian"
                     >
                       <span data-i18n="sorted">Sorted</span>
                     </button>
@@ -324,24 +328,24 @@
           <div id="recommendation-content">
             <div class="recommendation-table-controls">
               <div class="turn-controls">
-                <div class="side-switch" role="group" aria-label="Recommendation team">
+                <div class="side-switch" role="group" aria-label="Recommendation side">
                   <button
                     type="button"
                     data-recommendation-side="blue"
                     aria-pressed="true"
-                    title="Show Blue recommendations"
+                    title="Show Cat team recommendations"
                   >
                     <span class="side-dot" aria-hidden="true"></span>
-                    <span data-i18n="blue">Blue</span>
+                    <span data-i18n="blue">Cat team</span>
                   </button>
                   <button
                     type="button"
                     data-recommendation-side="red"
                     aria-pressed="false"
-                    title="Show Red recommendations"
+                    title="Show Dog team recommendations"
                   >
                     <span class="side-dot" aria-hidden="true"></span>
-                    <span data-i18n="red">Red</span>
+                    <span data-i18n="red">Dog team</span>
                   </button>
                 </div>
                 <span id="turn-status" class="turn-status" role="status"></span>
@@ -362,7 +366,7 @@
         </aside>
       </section>
 
-      <section id="play-mode" class="play-mode" aria-label="Codenames Play" hidden>
+      <section id="play-mode" class="play-mode" aria-label="Treats Play" hidden>
         <section id="play-setup" class="play-setup">
           <div class="play-setup-heading">
             <div class="play-setup-title">
@@ -406,24 +410,60 @@
           </div>
           <div class="seat-grid" role="group" aria-label="Your Play seat">
             <button type="button" data-play-seat="blue:spymaster" aria-pressed="false">
-              <span class="seat-team blue" data-i18n="blue">Blue</span>
-              <strong><span aria-hidden="true">🕵️</span> <span data-i18n="spymaster">Spymaster</span></strong>
+              <span class="seat-team blue" data-i18n="blue">Cat team</span>
+              <img
+                class="seat-art"
+                src="/role-art/cat-owner.webp"
+                alt=""
+                aria-hidden="true"
+                width="640"
+                height="640"
+                decoding="async"
+              />
+              <strong data-i18n="catOwner">Cat Owner</strong>
               <span data-i18n="giveClues">Give clues</span>
             </button>
             <button type="button" data-play-seat="blue:operative" aria-pressed="false">
-              <span class="seat-team blue" data-i18n="blue">Blue</span>
-              <strong><span aria-hidden="true">🔎</span> <span data-i18n="operative">Operative</span></strong>
-              <span data-i18n="guessCards">Guess cards</span>
+              <span class="seat-team blue" data-i18n="blue">Cat team</span>
+              <img
+                class="seat-art"
+                src="/role-art/cat.webp"
+                alt=""
+                aria-hidden="true"
+                width="640"
+                height="640"
+                decoding="async"
+              />
+              <strong data-i18n="cat">Cat</strong>
+              <span data-i18n="searchForFish">Search for fish</span>
             </button>
             <button type="button" data-play-seat="red:spymaster" aria-pressed="false">
-              <span class="seat-team red" data-i18n="red">Red</span>
-              <strong><span aria-hidden="true">🕵️</span> <span data-i18n="spymaster">Spymaster</span></strong>
+              <span class="seat-team red" data-i18n="red">Dog team</span>
+              <img
+                class="seat-art"
+                src="/role-art/dog-owner.webp"
+                alt=""
+                aria-hidden="true"
+                width="640"
+                height="640"
+                decoding="async"
+              />
+              <strong data-i18n="dogOwner">Dog Owner</strong>
               <span data-i18n="giveClues">Give clues</span>
             </button>
             <button type="button" data-play-seat="red:operative" aria-pressed="false">
-              <span class="seat-team red" data-i18n="red">Red</span>
-              <strong><span aria-hidden="true">🔎</span> <span data-i18n="operative">Operative</span></strong>
-              <span data-i18n="guessCards">Guess cards</span>
+              <span class="seat-team red" data-i18n="red">Dog team</span>
+              <img
+                class="seat-art"
+                src="/role-art/dog.webp"
+                alt=""
+                aria-hidden="true"
+                width="640"
+                height="640"
+                decoding="async"
+              />
+              <strong data-i18n="dog">Dog</strong>
+              <span data-i18n="searchForBones">Search for bones</span>
             </button>
           </div>
 
@@ -522,7 +562,7 @@
                 class="play-settings-section play-settings-section-wide"
                 data-play-settings-section="spymaster"
               >
-                <legend><span aria-hidden="true">🕵️</span> <span data-i18n="spymaster">Spymaster</span></legend>
+                <legend><span aria-hidden="true">👤</span> <span data-i18n="spymaster">Owners</span></legend>
                 <div class="play-settings-fields">
                   <label class="play-setting">
                     <span class="play-setting-label">
@@ -553,7 +593,7 @@
                     </span>
                     <select id="play-clue-repeat-policy">
                       <option value="never" data-i18n="clueRepeatNever">Never repeat in this game</option>
-                      <option value="previous" data-i18n="clueRepeatPrevious">Block the team's previous clue</option>
+                      <option value="previous" data-i18n="clueRepeatPrevious">Block the side's previous clue</option>
                       <option value="allow" data-i18n="clueRepeatAllow">Allow repeats</option>
                     </select>
                   </label>
@@ -586,11 +626,11 @@
                 class="play-settings-section"
                 data-play-settings-section="operative"
               >
-                <legend><span aria-hidden="true">🔎</span> <span data-i18n="operative">Operative</span></legend>
+                <legend><span aria-hidden="true">🐾</span> <span data-i18n="operative">Pets</span></legend>
                 <div class="play-settings-fields">
                   <label class="play-setting">
                     <span class="play-setting-label">
-                      <span data-i18n="operativeAggression">Operative aggression</span>
+                      <span data-i18n="operativeAggression">Pet confidence</span>
                       <span id="play-operative-aggression-info"></span>
                     </span>
                     <select id="play-operative-aggression">
@@ -683,7 +723,7 @@
               id="play-score"
               class="play-score"
               role="group"
-              aria-label="Remaining team cards"
+              aria-label="Fish and bones remaining"
               data-i18n-label="remainingTeamCards"
             ></div>
             <div class="play-game-actions">
@@ -749,12 +789,12 @@
             <div class="play-board-panel">
               <div id="play-board-toolbar" class="play-board-toolbar" hidden>
                 <span data-i18n="boardOrder">Board order</span>
-                <div class="play-board-order" role="group" aria-label="Spymaster board order" data-i18n-label="spymasterBoardOrder">
+                <div class="play-board-order" role="group" aria-label="Owner board order" data-i18n-label="spymasterBoardOrder">
                   <button type="button" data-play-board-order="table" aria-pressed="true">
                     🎲 <span data-i18n="tableOrder">Table</span>
                   </button>
                   <button type="button" data-play-board-order="teams" aria-pressed="false">
-                    🗂️ <span data-i18n="teamOrder">Teams</span>
+                    🗂️ <span data-i18n="teamOrder">Treats</span>
                   </button>
                   <button
                     type="button"
@@ -767,7 +807,7 @@
                   </button>
                 </div>
               </div>
-              <div id="play-board-grid" class="play-board-grid" aria-label="Codenames play board" data-i18n-label="playBoard"></div>
+              <div id="play-board-grid" class="play-board-grid" aria-label="Treats play board" data-i18n-label="playBoard"></div>
             </div>
 
             <aside class="play-turn-panel" aria-label="Current Play turn" data-i18n-label="currentPlayTurn">
@@ -813,7 +853,7 @@
                 </label>
                 <div class="play-clue-actions">
                   <button class="button primary" type="submit">
-                    <span aria-hidden="true">🕵️</span> <span data-i18n="giveClueButton">Give clue</span>
+                    <span aria-hidden="true">👤</span> <span data-i18n="giveClueButton">Give clue</span>
                   </button>
                   <button
                     id="toggle-play-suggestions"
@@ -843,7 +883,7 @@
               <div id="play-operative-controls" class="play-operative-controls" hidden>
                 <p id="play-guess-progress"></p>
                 <button id="pass-play-turn" class="button secondary" type="button">
-                  <span aria-hidden="true">🔎</span> <span data-i18n="passTurn">Pass turn</span>
+                  <span aria-hidden="true">🐾</span> <span data-i18n="passTurn">Pass turn</span>
                 </button>
               </div>
 
@@ -946,7 +986,7 @@
                     data-play-history-view="teams"
                     aria-pressed="false"
                   >
-                    ↔️ <span data-i18n="byTeam">By team</span>
+                    ↔️ <span data-i18n="byTeam">By side</span>
                   </button>
                 </div>
               </div>
@@ -958,7 +998,7 @@
               ></ol>
               <div id="play-history-team-lists" class="play-history-team-lists" hidden>
                 <section class="play-history-team" data-side="blue">
-                  <h3 id="play-history-blue-title">🔵 <span data-i18n="blue">Blue</span></h3>
+                  <h3 id="play-history-blue-title">🐱 <span data-i18n="blue">Cat team</span></h3>
                   <ol
                     id="play-history-blue-list"
                     class="play-history-list"
@@ -966,7 +1006,7 @@
                   ></ol>
                 </section>
                 <section class="play-history-team" data-side="red">
-                  <h3 id="play-history-red-title">🔴 <span data-i18n="red">Red</span></h3>
+                  <h3 id="play-history-red-title">🐶 <span data-i18n="red">Dog team</span></h3>
                   <ol
                     id="play-history-red-list"
                     class="play-history-list"

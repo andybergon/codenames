@@ -1,4 +1,7 @@
+import { cardCopyKey, sideCopyKey, sideEmoji } from "../brand.js";
+import { translate } from "../locales.js";
 import { replayPlayActionStates } from "../play/game-state.js";
+import { LANGUAGE } from "../word-data.js";
 
 const DEFAULT_ENDPOINT = "/api/play-analytics";
 const LIST_PAGE_SIZE = 40;
@@ -862,19 +865,13 @@ function historyCardPill(word, team) {
   return pill;
 }
 
-function sideEmoji(side) {
-  return side === "red" ? "🔴" : "🔵";
-}
-
 function sideLabel(side) {
-  return side === "red" ? "Red" : "Blue";
+  return translate(LANGUAGE.ENGLISH, sideCopyKey(side));
 }
 
 function teamLabel(team) {
-  if (team === "friendly") return "Blue";
-  if (team === "enemy") return "Red";
-  if (team === "neutral") return "Neutral";
-  return "Assassin";
+  const key = cardCopyKey(team);
+  return key ? translate(LANGUAGE.ENGLISH, key) : team;
 }
 
 function formatAnalyticsTimestamp(value) {

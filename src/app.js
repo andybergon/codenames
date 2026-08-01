@@ -22,6 +22,7 @@ import {
   decodeBoardParam,
   encodeBoardParam,
 } from "./board-share.js";
+import { APP_NAME, cardCopyKey } from "./brand.js";
 import { loadShardedClueIndex } from "./clue-index.js";
 import { centerEmbeddings, embedTerms } from "./embeddings.js";
 import {
@@ -70,13 +71,13 @@ const BOARD_METRIC_DEFINITIONS = {
     label: "Board complexity",
     key: "board-complexity",
     info:
-      "100 minus the average Blue and Red ease scores. Ease is 65% average Worth of the best three safe clues, 20% average Worth of the best three stretch clues, and 15% safe-option breadth; four safe options earns full credit. 0-32 is Easy, 33-65 Moderate, and 66-100 Hard.",
+      "100 minus the average Cat and Dog ease scores. Ease is 65% average Worth of the best three safe clues, 20% average Worth of the best three stretch clues, and 15% safe-option breadth; four safe options earns full credit. 0-32 is Easy, 33-65 Moderate, and 66-100 Hard.",
   },
   edge: {
-    label: "Blue vs red",
+    label: "Cats vs dogs",
     key: "side-edge",
     info:
-      "Blue ease minus Red ease after scoring the board again with Blue and Red roles swapped. Positive favors Blue, negative favors Red, and a difference within 3 points is shown as Even. B and R show each side's 0-100 ease score.",
+      "Cat ease minus Dog ease after scoring the board again with Fish and Bone roles swapped. Positive favors Cats, negative favors Dogs, and a difference within 3 points is shown as Even. Each side shows its 0-100 ease score.",
   },
 };
 const MOBILE_METRIC_DEFINITION = {
@@ -805,10 +806,10 @@ function renderAppMode() {
   elements.appModeSwitch.hidden = isHiddenMode;
   elements.appLanguageSwitch.hidden = isHiddenMode;
   elements.appTitle.textContent = isCalibration
-    ? "Codenames calibration"
+    ? `${APP_NAME} calibration`
     : isBenchmark
-      ? "Codenames benchmarks"
-      : "Codenames";
+      ? `${APP_NAME} benchmarks`
+      : APP_NAME;
   document.title = elements.appTitle.textContent;
   void calibrationMode.setActive(isCalibration);
   void analyticsReviewMode.setActive(isAnalytics);
@@ -2328,12 +2329,7 @@ function sideEdgeTone(edge) {
 }
 
 function teamLabel(teamId) {
-  const key = {
-    friendly: "blue",
-    enemy: "red",
-    neutral: "neutral",
-    assassin: "assassinTeam",
-  }[teamId];
+  const key = cardCopyKey(teamId);
   return key
     ? translate(boardLanguage, key)
     : TEAM_BY_ID.get(teamId)?.label ?? teamId;

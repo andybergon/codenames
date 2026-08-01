@@ -8,10 +8,10 @@ import {
 } from "./generated/italian-word-data.js";
 
 export const TEAMS = [
-  { id: "friendly", label: "Blue", short: "B" },
-  { id: "enemy", label: "Red", short: "R" },
-  { id: "neutral", label: "Neutral", short: "N" },
-  { id: "assassin", label: "Assassin", short: "X" },
+  { id: "friendly", label: "Fish", short: "🐟" },
+  { id: "enemy", label: "Bone", short: "🦴" },
+  { id: "neutral", label: "Vegetable", short: "🥕" },
+  { id: "assassin", label: "The Veterinarian", short: "🩺" },
 ];
 
 export const ROLE_SEQUENCE = [
