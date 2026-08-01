@@ -15,6 +15,13 @@
 
 ## 🔴 High
 
+- 🐾 Rebrand the app with an original name and animal-themed game concepts.
+  - Replace public-facing Codenames, agent, operative, spymaster, assassin, and team terminology to reduce intellectual-property risk while preserving the underlying word-association game.
+  - Working concept: Cat Owners give clues, Cats search for fish, Dog Owners give clues, Dogs search for bones, Vegetables are neutral cards, and The Veterinarian is the loss card.
+  - Rename visible app copy, role selection, board treatments, help text, metadata, documentation, and accessibility labels consistently.
+  - Preserve existing saved games and shared-link compatibility through stable internal schemas or explicit migrations.
+  - Treat the concept and name as a working direction, not a completed legal clearance.
+
 - 🔐 Add informed consent and privacy controls for Play analytics.
   - Initial analytics collection may ship without a banner, but treat that as a temporary privacy gap and keep this item high priority.
   - Current collection begins after one completed turn, stores replayable snapshots under a random HTTP-only browser cookie, and keeps Developer and loopback-local games as separate cohorts.
