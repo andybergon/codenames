@@ -74,6 +74,31 @@ export function analyzeEmbeddedBoard(board, boardVectors, clueIndex, options = {
     hazards,
     clueIndex,
   });
+  const overriddenCandidateSimilarities = applyCandidateSimilarityOverrides(
+    candidateSimilarities,
+    entries,
+    clueIndex.clues.length,
+    options.candidateSimilarityOverrides,
+  );
+  const overriddenPreparedCandidates =
+    overriddenCandidateSimilarities === candidateSimilarities
+      ? preparedCandidates
+      : prepareCandidates({
+          candidateIndices,
+          candidateSimilarities: overriddenCandidateSimilarities,
+          entries,
+          hazards,
+          clueIndex,
+        });
+  const overrideScoring =
+    overriddenCandidateSimilarities === candidateSimilarities
+      ? null
+      : {
+          candidateSimilarities: overriddenCandidateSimilarities,
+          minimumTargetSize:
+            options.candidateSimilarityOverrides.minimumTargetSize ?? 2,
+          preparedCandidates: overriddenPreparedCandidates,
+        };
 
   const safeSizes = range(1, Math.min(SAFE_MAX_SIZE, friendlies.length));
   const safe = rankSuggestionsBySize({
@@ -83,6 +108,7 @@ export function analyzeEmbeddedBoard(board, boardVectors, clueIndex, options = {
     limit,
     preparedCandidates,
     candidateSimilarities,
+    overrideScoring,
     boardSimilarities,
     entryCount: entries.length,
   });
@@ -95,6 +121,7 @@ export function analyzeEmbeddedBoard(board, boardVectors, clueIndex, options = {
     limit,
     preparedCandidates,
     candidateSimilarities,
+    overrideScoring,
     boardSimilarities,
     entryCount: entries.length,
   });
@@ -615,6 +642,45 @@ function buildCandidateSimilarities(
   return similarities;
 }
 
+function applyCandidateSimilarityOverrides(
+  similarities,
+  entries,
+  candidateCount,
+  overrides,
+) {
+  if (!(overrides?.rows instanceof Map) || overrides.rows.size === 0) {
+    return similarities;
+  }
+
+  const completeRows = [];
+  for (const [candidateIndex, scoresByLayoutId] of overrides.rows) {
+    if (
+      !Number.isInteger(candidateIndex) ||
+      candidateIndex < 0 ||
+      candidateIndex >= candidateCount ||
+      !(scoresByLayoutId instanceof Map)
+    ) {
+      continue;
+    }
+    const row = entries.map(({ layoutId }) => scoresByLayoutId.get(layoutId));
+    if (row.every(Number.isFinite)) {
+      completeRows.push({ candidateIndex, row });
+    }
+  }
+  if (completeRows.length === 0) {
+    return similarities;
+  }
+
+  const overridden = similarities.slice();
+  for (const { candidateIndex, row } of completeRows) {
+    const rowOffset = candidateIndex * entries.length;
+    row.forEach((score, entryIndex) => {
+      overridden[rowOffset + entryIndex] = score;
+    });
+  }
+  return overridden;
+}
+
 function buildBoardSimilarities(entries, similarityCalibration) {
   const similarities = new Float32Array(entries.length * entries.length);
 
@@ -715,12 +781,23 @@ function rankSuggestions({
 }
 
 function rankSuggestionsBySize({ sizes, ...options }) {
-  return sizes.flatMap((size) =>
-    rankSuggestions({
+  return sizes.flatMap((size) => {
+    const useOverrides =
+      options.overrideScoring &&
+      size >= options.overrideScoring.minimumTargetSize;
+    return rankSuggestions({
       ...options,
+      ...(useOverrides
+        ? {
+            candidateSimilarities:
+              options.overrideScoring.candidateSimilarities,
+            preparedCandidates:
+              options.overrideScoring.preparedCandidates,
+          }
+        : {}),
       sizes: [size],
-    }),
-  );
+    });
+  });
 }
 
 function buildTargetContext(targets, boardSimilarities, entryCount) {

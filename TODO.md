@@ -34,6 +34,11 @@
 
 ## 🟡 Medium
 
+- 🧠 Validate concept-aware Owner clue generation.
+  - The checked 16-case local smoke changed 1 Owner decision and recovered the forced JOUST bridge, but JOUST remains outside the production 30,000-clue prefix.
+  - Next: run a frozen 100-board development screen, inspect every changed or near-miss clue, then build a blinded human clue-rating and guessing comparison before any full-game promotion run.
+  - Keep same-model results as regression evidence only. Require cross-model wrong-team, neutral, and assassin gates plus an acceptable browser latency budget before runtime use.
+
 - 🧪 Isolate embedding-backed UI tests from external model downloads.
   - `npm test` can fail in Italian Train and completed Play post-game analysis when the browser cannot fetch embedding model assets, including on unchanged `main`.
   - A repeated post-game run captured `Failed to fetch dynamically imported module` for jsDelivr's `ort-wasm-simd-threaded.jsep.mjs`; the next isolated Italian run passed in 5.1 seconds.

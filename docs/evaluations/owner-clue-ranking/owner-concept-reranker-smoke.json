@@ -1,0 +1,2601 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-08-02T02:35:41.431Z",
+  "status": "evaluation-only",
+  "conclusion": "Concept rescoring changes at least one opening Owner decision. Human and cross-model evidence are required before runtime use.",
+  "configuration": {
+    "language": "en",
+    "modelId": "bge-small",
+    "model": "Xenova/bge-small-en-v1.5",
+    "candidateCount": 30000,
+    "candidatePoolLimit": 64,
+    "boardCount": 8,
+    "sideCount": 16,
+    "candidatePool": "Up to 64 legal clues with WordNet definitions, weak direct similarity to every active card, and the strongest two-friendly direct support.",
+    "conceptOffset": 0.05,
+    "activationCeiling": 0.2,
+    "minimumTargetSize": 2,
+    "cluePolicy": "hybrid",
+    "multiTolerance": 5,
+    "fallback": "Missing definitions, inactive candidates, and incomplete override rows retain exact direct similarities."
+  },
+  "joustFixture": {
+    "candidateVocabularyPosition": 39742,
+    "inProductionPrefix": false,
+    "directGenerated": false,
+    "conceptGenerated": true,
+    "allIntendedAbovePiano": true,
+    "direct": null,
+    "concept": {
+      "clue": "joust",
+      "number": 4,
+      "targets": [
+        "match",
+        "glove",
+        "crown",
+        "belt"
+      ],
+      "closestDanger": "piano",
+      "closestDangerTeam": "neutral",
+      "margin": 0.018,
+      "expectedNet": 1.0461,
+      "worth": 62,
+      "risk": "risky"
+    },
+    "cardScores": [
+      {
+        "word": "match",
+        "direct": 0.1418,
+        "concept": 0.4752,
+        "association": 0.4252
+      },
+      {
+        "word": "glove",
+        "direct": 0.019,
+        "concept": 0.3046,
+        "association": 0.2546
+      },
+      {
+        "word": "crown",
+        "direct": 0.045,
+        "concept": 0.2719,
+        "association": 0.2219
+      },
+      {
+        "word": "belt",
+        "direct": -0.1073,
+        "concept": 0.2665,
+        "association": 0.2165
+      },
+      {
+        "word": "piano",
+        "direct": 0.1985,
+        "concept": 0.1022,
+        "association": 0.1985
+      }
+    ]
+  },
+  "summary": {
+    "cases": 16,
+    "activatedCases": 16,
+    "changedCases": 1,
+    "changedRate": 0.0625,
+    "candidatePoolMedian": 64,
+    "activatedCandidatesMedian": 64,
+    "timingMs": {
+      "directAnalysisMedian": 341.3362,
+      "candidateRetrievalMedian": 569.2133,
+      "conceptPreparationMedian": 254.9216,
+      "rerankAnalysisMedian": 349.6406
+    }
+  },
+  "cases": [
+    {
+      "boardIndex": 0,
+      "seed": "Q09ERQAAAAE",
+      "side": "blue",
+      "board": [
+        {
+          "word": "state",
+          "team": "friendly"
+        },
+        {
+          "word": "seal",
+          "team": "friendly"
+        },
+        {
+          "word": "hand",
+          "team": "friendly"
+        },
+        {
+          "word": "lawyer",
+          "team": "friendly"
+        },
+        {
+          "word": "lead",
+          "team": "friendly"
+        },
+        {
+          "word": "moon",
+          "team": "friendly"
+        },
+        {
+          "word": "rose",
+          "team": "friendly"
+        },
+        {
+          "word": "nut",
+          "team": "friendly"
+        },
+        {
+          "word": "calf",
+          "team": "friendly"
+        },
+        {
+          "word": "lock",
+          "team": "enemy"
+        },
+        {
+          "word": "change",
+          "team": "enemy"
+        },
+        {
+          "word": "cook",
+          "team": "enemy"
+        },
+        {
+          "word": "star",
+          "team": "enemy"
+        },
+        {
+          "word": "pie",
+          "team": "enemy"
+        },
+        {
+          "word": "olive",
+          "team": "enemy"
+        },
+        {
+          "word": "ambulance",
+          "team": "enemy"
+        },
+        {
+          "word": "roulette",
+          "team": "enemy"
+        },
+        {
+          "word": "platypus",
+          "team": "neutral"
+        },
+        {
+          "word": "germany",
+          "team": "neutral"
+        },
+        {
+          "word": "alien",
+          "team": "neutral"
+        },
+        {
+          "word": "ship",
+          "team": "neutral"
+        },
+        {
+          "word": "scuba diver",
+          "team": "neutral"
+        },
+        {
+          "word": "fan",
+          "team": "neutral"
+        },
+        {
+          "word": "note",
+          "team": "neutral"
+        },
+        {
+          "word": "scale",
+          "team": "assassin"
+        }
+      ],
+      "candidatePoolSize": 64,
+      "candidatesWithDefinitions": 64,
+      "activatedCandidates": 64,
+      "conceptTexts": 249,
+      "direct": {
+        "clue": "thumbs",
+        "number": 2,
+        "targets": [
+          "hand",
+          "nut"
+        ],
+        "closestDanger": "pie",
+        "closestDangerTeam": "enemy",
+        "margin": 0.1885,
+        "expectedNet": 1.5299,
+        "worth": 80,
+        "risk": "safe"
+      },
+      "concept": {
+        "clue": "thumbs",
+        "number": 2,
+        "targets": [
+          "hand",
+          "nut"
+        ],
+        "closestDanger": "pie",
+        "closestDangerTeam": "enemy",
+        "margin": 0.1885,
+        "expectedNet": 1.5299,
+        "worth": 80,
+        "risk": "safe"
+      },
+      "conceptSelectedCardScores": null,
+      "changed": false,
+      "timingMs": {
+        "directAnalysis": 377.1379,
+        "candidateRetrieval": 569.2133,
+        "conceptPreparation": 489.5259,
+        "rerankAnalysis": 367.298
+      }
+    },
+    {
+      "boardIndex": 0,
+      "seed": "Q09ERQAAAAE",
+      "side": "red",
+      "board": [
+        {
+          "word": "state",
+          "team": "enemy"
+        },
+        {
+          "word": "seal",
+          "team": "enemy"
+        },
+        {
+          "word": "hand",
+          "team": "enemy"
+        },
+        {
+          "word": "lawyer",
+          "team": "enemy"
+        },
+        {
+          "word": "lead",
+          "team": "enemy"
+        },
+        {
+          "word": "moon",
+          "team": "enemy"
+        },
+        {
+          "word": "rose",
+          "team": "enemy"
+        },
+        {
+          "word": "nut",
+          "team": "enemy"
+        },
+        {
+          "word": "calf",
+          "team": "enemy"
+        },
+        {
+          "word": "lock",
+          "team": "friendly"
+        },
+        {
+          "word": "change",
+          "team": "friendly"
+        },
+        {
+          "word": "cook",
+          "team": "friendly"
+        },
+        {
+          "word": "star",
+          "team": "friendly"
+        },
+        {
+          "word": "pie",
+          "team": "friendly"
+        },
+        {
+          "word": "olive",
+          "team": "friendly"
+        },
+        {
+          "word": "ambulance",
+          "team": "friendly"
+        },
+        {
+          "word": "roulette",
+          "team": "friendly"
+        },
+        {
+          "word": "platypus",
+          "team": "neutral"
+        },
+        {
+          "word": "germany",
+          "team": "neutral"
+        },
+        {
+          "word": "alien",
+          "team": "neutral"
+        },
+        {
+          "word": "ship",
+          "team": "neutral"
+        },
+        {
+          "word": "scuba diver",
+          "team": "neutral"
+        },
+        {
+          "word": "fan",
+          "team": "neutral"
+        },
+        {
+          "word": "note",
+          "team": "neutral"
+        },
+        {
+          "word": "scale",
+          "team": "assassin"
+        }
+      ],
+      "candidatePoolSize": 64,
+      "candidatesWithDefinitions": 64,
+      "activatedCandidates": 64,
+      "conceptTexts": 274,
+      "direct": {
+        "clue": "pastry",
+        "number": 3,
+        "targets": [
+          "pie",
+          "olive",
+          "cook"
+        ],
+        "closestDanger": "seal",
+        "closestDangerTeam": "enemy",
+        "margin": 0.1268,
+        "expectedNet": 1.9741,
+        "worth": 86,
+        "risk": "safe"
+      },
+      "concept": {
+        "clue": "pastry",
+        "number": 3,
+        "targets": [
+          "pie",
+          "olive",
+          "cook"
+        ],
+        "closestDanger": "seal",
+        "closestDangerTeam": "enemy",
+        "margin": 0.1268,
+        "expectedNet": 1.9741,
+        "worth": 86,
+        "risk": "safe"
+      },
+      "conceptSelectedCardScores": null,
+      "changed": false,
+      "timingMs": {
+        "directAnalysis": 278.5571,
+        "candidateRetrieval": 569.3279,
+        "conceptPreparation": 289.7225,
+        "rerankAnalysis": 311.0629
+      }
+    },
+    {
+      "boardIndex": 1,
+      "seed": "Q09ERQAAAAI",
+      "side": "blue",
+      "board": [
+        {
+          "word": "pin",
+          "team": "friendly"
+        },
+        {
+          "word": "tube",
+          "team": "friendly"
+        },
+        {
+          "word": "palm",
+          "team": "friendly"
+        },
+        {
+          "word": "plastic",
+          "team": "friendly"
+        },
+        {
+          "word": "plate",
+          "team": "friendly"
+        },
+        {
+          "word": "box",
+          "team": "friendly"
+        },
+        {
+          "word": "root",
+          "team": "friendly"
+        },
+        {
+          "word": "london",
+          "team": "friendly"
+        },
+        {
+          "word": "smuggler",
+          "team": "friendly"
+        },
+        {
+          "word": "heart",
+          "team": "enemy"
+        },
+        {
+          "word": "screen",
+          "team": "enemy"
+        },
+        {
+          "word": "cast",
+          "team": "enemy"
+        },
+        {
+          "word": "scorpion",
+          "team": "enemy"
+        },
+        {
+          "word": "dice",
+          "team": "enemy"
+        },
+        {
+          "word": "code",
+          "team": "enemy"
+        },
+        {
+          "word": "undertaker",
+          "team": "enemy"
+        },
+        {
+          "word": "track",
+          "team": "enemy"
+        },
+        {
+          "word": "paste",
+          "team": "neutral"
+        },
+        {
+          "word": "straw",
+          "team": "neutral"
+        },
+        {
+          "word": "pirate",
+          "team": "neutral"
+        },
+        {
+          "word": "beach",
+          "team": "neutral"
+        },
+        {
+          "word": "state",
+          "team": "neutral"
+        },
+        {
+          "word": "mass",
+          "team": "neutral"
+        },
+        {
+          "word": "pool",
+          "team": "neutral"
+        },
+        {
+          "word": "cross",
+          "team": "assassin"
+        }
+      ],
+      "candidatePoolSize": 64,
+      "candidatesWithDefinitions": 64,
+      "activatedCandidates": 64,
+      "conceptTexts": 282,
+      "direct": {
+        "clue": "cradle",
+        "number": 2,
+        "targets": [
+          "palm",
+          "root"
+        ],
+        "closestDanger": "scorpion",
+        "closestDangerTeam": "enemy",
+        "margin": 0.1585,
+        "expectedNet": 1.4816,
+        "worth": 78,
+        "risk": "safe"
+      },
+      "concept": {
+        "clue": "cradle",
+        "number": 2,
+        "targets": [
+          "palm",
+          "root"
+        ],
+        "closestDanger": "scorpion",
+        "closestDangerTeam": "enemy",
+        "margin": 0.1585,
+        "expectedNet": 1.4816,
+        "worth": 78,
+        "risk": "safe"
+      },
+      "conceptSelectedCardScores": null,
+      "changed": false,
+      "timingMs": {
+        "directAnalysis": 366.0073,
+        "candidateRetrieval": 553.2639,
+        "conceptPreparation": 366.0532,
+        "rerankAnalysis": 552.3765
+      }
+    },
+    {
+      "boardIndex": 1,
+      "seed": "Q09ERQAAAAI",
+      "side": "red",
+      "board": [
+        {
+          "word": "pin",
+          "team": "enemy"
+        },
+        {
+          "word": "tube",
+          "team": "enemy"
+        },
+        {
+          "word": "palm",
+          "team": "enemy"
+        },
+        {
+          "word": "plastic",
+          "team": "enemy"
+        },
+        {
+          "word": "plate",
+          "team": "enemy"
+        },
+        {
+          "word": "box",
+          "team": "enemy"
+        },
+        {
+          "word": "root",
+          "team": "enemy"
+        },
+        {
+          "word": "london",
+          "team": "enemy"
+        },
+        {
+          "word": "smuggler",
+          "team": "enemy"
+        },
+        {
+          "word": "heart",
+          "team": "friendly"
+        },
+        {
+          "word": "screen",
+          "team": "friendly"
+        },
+        {
+          "word": "cast",
+          "team": "friendly"
+        },
+        {
+          "word": "scorpion",
+          "team": "friendly"
+        },
+        {
+          "word": "dice",
+          "team": "friendly"
+        },
+        {
+          "word": "code",
+          "team": "friendly"
+        },
+        {
+          "word": "undertaker",
+          "team": "friendly"
+        },
+        {
+          "word": "track",
+          "team": "friendly"
+        },
+        {
+          "word": "paste",
+          "team": "neutral"
+        },
+        {
+          "word": "straw",
+          "team": "neutral"
+        },
+        {
+          "word": "pirate",
+          "team": "neutral"
+        },
+        {
+          "word": "beach",
+          "team": "neutral"
+        },
+        {
+          "word": "state",
+          "team": "neutral"
+        },
+        {
+          "word": "mass",
+          "team": "neutral"
+        },
+        {
+          "word": "pool",
+          "team": "neutral"
+        },
+        {
+          "word": "cross",
+          "team": "assassin"
+        }
+      ],
+      "candidatePoolSize": 64,
+      "candidatesWithDefinitions": 64,
+      "activatedCandidates": 64,
+      "conceptTexts": 300,
+      "direct": {
+        "clue": "pace",
+        "number": 2,
+        "targets": [
+          "track",
+          "heart"
+        ],
+        "closestDanger": "plate",
+        "closestDangerTeam": "enemy",
+        "margin": 0.2036,
+        "expectedNet": 1.5507,
+        "worth": 81,
+        "risk": "safe"
+      },
+      "concept": {
+        "clue": "pace",
+        "number": 2,
+        "targets": [
+          "track",
+          "heart"
+        ],
+        "closestDanger": "plate",
+        "closestDangerTeam": "enemy",
+        "margin": 0.2036,
+        "expectedNet": 1.5507,
+        "worth": 81,
+        "risk": "safe"
+      },
+      "conceptSelectedCardScores": null,
+      "changed": false,
+      "timingMs": {
+        "directAnalysis": 280.1116,
+        "candidateRetrieval": 561.1482,
+        "conceptPreparation": 213.9252,
+        "rerankAnalysis": 297.4416
+      }
+    },
+    {
+      "boardIndex": 2,
+      "seed": "Q09ERQAAAAM",
+      "side": "blue",
+      "board": [
+        {
+          "word": "trip",
+          "team": "friendly"
+        },
+        {
+          "word": "capital",
+          "team": "friendly"
+        },
+        {
+          "word": "screen",
+          "team": "friendly"
+        },
+        {
+          "word": "park",
+          "team": "friendly"
+        },
+        {
+          "word": "hotel",
+          "team": "friendly"
+        },
+        {
+          "word": "back",
+          "team": "friendly"
+        },
+        {
+          "word": "web",
+          "team": "friendly"
+        },
+        {
+          "word": "robot",
+          "team": "friendly"
+        },
+        {
+          "word": "mexico",
+          "team": "friendly"
+        },
+        {
+          "word": "new york",
+          "team": "enemy"
+        },
+        {
+          "word": "band",
+          "team": "enemy"
+        },
+        {
+          "word": "beach",
+          "team": "enemy"
+        },
+        {
+          "word": "cloak",
+          "team": "enemy"
+        },
+        {
+          "word": "trunk",
+          "team": "enemy"
+        },
+        {
+          "word": "ship",
+          "team": "enemy"
+        },
+        {
+          "word": "brush",
+          "team": "enemy"
+        },
+        {
+          "word": "slip",
+          "team": "enemy"
+        },
+        {
+          "word": "buck",
+          "team": "neutral"
+        },
+        {
+          "word": "spot",
+          "team": "neutral"
+        },
+        {
+          "word": "straw",
+          "team": "neutral"
+        },
+        {
+          "word": "hollywood",
+          "team": "neutral"
+        },
+        {
+          "word": "scale",
+          "team": "neutral"
+        },
+        {
+          "word": "air",
+          "team": "neutral"
+        },
+        {
+          "word": "casino",
+          "team": "neutral"
+        },
+        {
+          "word": "mount",
+          "team": "assassin"
+        }
+      ],
+      "candidatePoolSize": 64,
+      "candidatesWithDefinitions": 64,
+      "activatedCandidates": 64,
+      "conceptTexts": 255,
+      "direct": {
+        "clue": "computer",
+        "number": 3,
+        "targets": [
+          "web",
+          "robot",
+          "screen"
+        ],
+        "closestDanger": "hollywood",
+        "closestDangerTeam": "neutral",
+        "margin": 0.1894,
+        "expectedNet": 2.3927,
+        "worth": 93,
+        "risk": "safe"
+      },
+      "concept": {
+        "clue": "computer",
+        "number": 3,
+        "targets": [
+          "web",
+          "robot",
+          "screen"
+        ],
+        "closestDanger": "hollywood",
+        "closestDangerTeam": "neutral",
+        "margin": 0.1894,
+        "expectedNet": 2.3927,
+        "worth": 93,
+        "risk": "safe"
+      },
+      "conceptSelectedCardScores": null,
+      "changed": false,
+      "timingMs": {
+        "directAnalysis": 350.0845,
+        "candidateRetrieval": 568.0875,
+        "conceptPreparation": 234.178,
+        "rerankAnalysis": 369.853
+      }
+    },
+    {
+      "boardIndex": 2,
+      "seed": "Q09ERQAAAAM",
+      "side": "red",
+      "board": [
+        {
+          "word": "trip",
+          "team": "enemy"
+        },
+        {
+          "word": "capital",
+          "team": "enemy"
+        },
+        {
+          "word": "screen",
+          "team": "enemy"
+        },
+        {
+          "word": "park",
+          "team": "enemy"
+        },
+        {
+          "word": "hotel",
+          "team": "enemy"
+        },
+        {
+          "word": "back",
+          "team": "enemy"
+        },
+        {
+          "word": "web",
+          "team": "enemy"
+        },
+        {
+          "word": "robot",
+          "team": "enemy"
+        },
+        {
+          "word": "mexico",
+          "team": "enemy"
+        },
+        {
+          "word": "new york",
+          "team": "friendly"
+        },
+        {
+          "word": "band",
+          "team": "friendly"
+        },
+        {
+          "word": "beach",
+          "team": "friendly"
+        },
+        {
+          "word": "cloak",
+          "team": "friendly"
+        },
+        {
+          "word": "trunk",
+          "team": "friendly"
+        },
+        {
+          "word": "ship",
+          "team": "friendly"
+        },
+        {
+          "word": "brush",
+          "team": "friendly"
+        },
+        {
+          "word": "slip",
+          "team": "friendly"
+        },
+        {
+          "word": "buck",
+          "team": "neutral"
+        },
+        {
+          "word": "spot",
+          "team": "neutral"
+        },
+        {
+          "word": "straw",
+          "team": "neutral"
+        },
+        {
+          "word": "hollywood",
+          "team": "neutral"
+        },
+        {
+          "word": "scale",
+          "team": "neutral"
+        },
+        {
+          "word": "air",
+          "team": "neutral"
+        },
+        {
+          "word": "casino",
+          "team": "neutral"
+        },
+        {
+          "word": "mount",
+          "team": "assassin"
+        }
+      ],
+      "candidatePoolSize": 64,
+      "candidatesWithDefinitions": 64,
+      "activatedCandidates": 64,
+      "conceptTexts": 273,
+      "direct": {
+        "clue": "seas",
+        "number": 2,
+        "targets": [
+          "beach",
+          "ship"
+        ],
+        "closestDanger": "mexico",
+        "closestDangerTeam": "enemy",
+        "margin": 0.2349,
+        "expectedNet": 1.7864,
+        "worth": 91,
+        "risk": "safe"
+      },
+      "concept": {
+        "clue": "seas",
+        "number": 2,
+        "targets": [
+          "beach",
+          "ship"
+        ],
+        "closestDanger": "mexico",
+        "closestDangerTeam": "enemy",
+        "margin": 0.2349,
+        "expectedNet": 1.7864,
+        "worth": 91,
+        "risk": "safe"
+      },
+      "conceptSelectedCardScores": null,
+      "changed": false,
+      "timingMs": {
+        "directAnalysis": 279.5625,
+        "candidateRetrieval": 608.1497,
+        "conceptPreparation": 195.8066,
+        "rerankAnalysis": 309.3428
+      }
+    },
+    {
+      "boardIndex": 3,
+      "seed": "Q09ERQAAAAQ",
+      "side": "blue",
+      "board": [
+        {
+          "word": "ketchup",
+          "team": "friendly"
+        },
+        {
+          "word": "snow",
+          "team": "friendly"
+        },
+        {
+          "word": "ship",
+          "team": "friendly"
+        },
+        {
+          "word": "force",
+          "team": "friendly"
+        },
+        {
+          "word": "pirate",
+          "team": "friendly"
+        },
+        {
+          "word": "check",
+          "team": "friendly"
+        },
+        {
+          "word": "figure",
+          "team": "friendly"
+        },
+        {
+          "word": "robin",
+          "team": "friendly"
+        },
+        {
+          "word": "time",
+          "team": "friendly"
+        },
+        {
+          "word": "bugle",
+          "team": "enemy"
+        },
+        {
+          "word": "novel",
+          "team": "enemy"
+        },
+        {
+          "word": "witch",
+          "team": "enemy"
+        },
+        {
+          "word": "fall",
+          "team": "enemy"
+        },
+        {
+          "word": "gold",
+          "team": "enemy"
+        },
+        {
+          "word": "oil",
+          "team": "enemy"
+        },
+        {
+          "word": "shop",
+          "team": "enemy"
+        },
+        {
+          "word": "copper",
+          "team": "enemy"
+        },
+        {
+          "word": "lead",
+          "team": "neutral"
+        },
+        {
+          "word": "skyscraper",
+          "team": "neutral"
+        },
+        {
+          "word": "pit",
+          "team": "neutral"
+        },
+        {
+          "word": "hollywood",
+          "team": "neutral"
+        },
+        {
+          "word": "spine",
+          "team": "neutral"
+        },
+        {
+          "word": "charge",
+          "team": "neutral"
+        },
+        {
+          "word": "bolt",
+          "team": "neutral"
+        },
+        {
+          "word": "moscow",
+          "team": "assassin"
+        }
+      ],
+      "candidatePoolSize": 64,
+      "candidatesWithDefinitions": 64,
+      "activatedCandidates": 64,
+      "conceptTexts": 305,
+      "direct": {
+        "clue": "sloop",
+        "number": 2,
+        "targets": [
+          "ship",
+          "pirate"
+        ],
+        "closestDanger": "pit",
+        "closestDangerTeam": "neutral",
+        "margin": 0.2292,
+        "expectedNet": 1.8188,
+        "worth": 88,
+        "risk": "safe"
+      },
+      "concept": {
+        "clue": "sloop",
+        "number": 2,
+        "targets": [
+          "ship",
+          "pirate"
+        ],
+        "closestDanger": "pit",
+        "closestDangerTeam": "neutral",
+        "margin": 0.2292,
+        "expectedNet": 1.8188,
+        "worth": 88,
+        "risk": "safe"
+      },
+      "conceptSelectedCardScores": null,
+      "changed": false,
+      "timingMs": {
+        "directAnalysis": 348.5739,
+        "candidateRetrieval": 574.6559,
+        "conceptPreparation": 439.461,
+        "rerankAnalysis": 349.7174
+      }
+    },
+    {
+      "boardIndex": 3,
+      "seed": "Q09ERQAAAAQ",
+      "side": "red",
+      "board": [
+        {
+          "word": "ketchup",
+          "team": "enemy"
+        },
+        {
+          "word": "snow",
+          "team": "enemy"
+        },
+        {
+          "word": "ship",
+          "team": "enemy"
+        },
+        {
+          "word": "force",
+          "team": "enemy"
+        },
+        {
+          "word": "pirate",
+          "team": "enemy"
+        },
+        {
+          "word": "check",
+          "team": "enemy"
+        },
+        {
+          "word": "figure",
+          "team": "enemy"
+        },
+        {
+          "word": "robin",
+          "team": "enemy"
+        },
+        {
+          "word": "time",
+          "team": "enemy"
+        },
+        {
+          "word": "bugle",
+          "team": "friendly"
+        },
+        {
+          "word": "novel",
+          "team": "friendly"
+        },
+        {
+          "word": "witch",
+          "team": "friendly"
+        },
+        {
+          "word": "fall",
+          "team": "friendly"
+        },
+        {
+          "word": "gold",
+          "team": "friendly"
+        },
+        {
+          "word": "oil",
+          "team": "friendly"
+        },
+        {
+          "word": "shop",
+          "team": "friendly"
+        },
+        {
+          "word": "copper",
+          "team": "friendly"
+        },
+        {
+          "word": "lead",
+          "team": "neutral"
+        },
+        {
+          "word": "skyscraper",
+          "team": "neutral"
+        },
+        {
+          "word": "pit",
+          "team": "neutral"
+        },
+        {
+          "word": "hollywood",
+          "team": "neutral"
+        },
+        {
+          "word": "spine",
+          "team": "neutral"
+        },
+        {
+          "word": "charge",
+          "team": "neutral"
+        },
+        {
+          "word": "bolt",
+          "team": "neutral"
+        },
+        {
+          "word": "moscow",
+          "team": "assassin"
+        }
+      ],
+      "candidatePoolSize": 64,
+      "candidatesWithDefinitions": 64,
+      "activatedCandidates": 64,
+      "conceptTexts": 269,
+      "direct": {
+        "clue": "commodities",
+        "number": 3,
+        "targets": [
+          "gold",
+          "copper",
+          "oil"
+        ],
+        "closestDanger": "ship",
+        "closestDangerTeam": "enemy",
+        "margin": 0.1136,
+        "expectedNet": 2.2253,
+        "worth": 92,
+        "risk": "safe"
+      },
+      "concept": {
+        "clue": "commodities",
+        "number": 3,
+        "targets": [
+          "gold",
+          "copper",
+          "oil"
+        ],
+        "closestDanger": "ship",
+        "closestDangerTeam": "enemy",
+        "margin": 0.1136,
+        "expectedNet": 2.2253,
+        "worth": 92,
+        "risk": "safe"
+      },
+      "conceptSelectedCardScores": null,
+      "changed": false,
+      "timingMs": {
+        "directAnalysis": 282.4377,
+        "candidateRetrieval": 582.7072,
+        "conceptPreparation": 322.4414,
+        "rerankAnalysis": 300.2088
+      }
+    },
+    {
+      "boardIndex": 4,
+      "seed": "Q09ERQAAAAU",
+      "side": "blue",
+      "board": [
+        {
+          "word": "lead",
+          "team": "friendly"
+        },
+        {
+          "word": "spring",
+          "team": "friendly"
+        },
+        {
+          "word": "block",
+          "team": "friendly"
+        },
+        {
+          "word": "jack",
+          "team": "friendly"
+        },
+        {
+          "word": "green",
+          "team": "friendly"
+        },
+        {
+          "word": "crown",
+          "team": "friendly"
+        },
+        {
+          "word": "row",
+          "team": "friendly"
+        },
+        {
+          "word": "europe",
+          "team": "friendly"
+        },
+        {
+          "word": "server",
+          "team": "friendly"
+        },
+        {
+          "word": "suit",
+          "team": "enemy"
+        },
+        {
+          "word": "organ",
+          "team": "enemy"
+        },
+        {
+          "word": "net",
+          "team": "enemy"
+        },
+        {
+          "word": "game",
+          "team": "enemy"
+        },
+        {
+          "word": "queen",
+          "team": "enemy"
+        },
+        {
+          "word": "tower",
+          "team": "enemy"
+        },
+        {
+          "word": "washer",
+          "team": "enemy"
+        },
+        {
+          "word": "eagle",
+          "team": "enemy"
+        },
+        {
+          "word": "time",
+          "team": "neutral"
+        },
+        {
+          "word": "snow",
+          "team": "neutral"
+        },
+        {
+          "word": "alien",
+          "team": "neutral"
+        },
+        {
+          "word": "antarctica",
+          "team": "neutral"
+        },
+        {
+          "word": "duck",
+          "team": "neutral"
+        },
+        {
+          "word": "robot",
+          "team": "neutral"
+        },
+        {
+          "word": "ray",
+          "team": "neutral"
+        },
+        {
+          "word": "atlantis",
+          "team": "assassin"
+        }
+      ],
+      "candidatePoolSize": 64,
+      "candidatesWithDefinitions": 64,
+      "activatedCandidates": 64,
+      "conceptTexts": 295,
+      "direct": {
+        "clue": "vegetation",
+        "number": 2,
+        "targets": [
+          "green",
+          "spring"
+        ],
+        "closestDanger": "snow",
+        "closestDangerTeam": "neutral",
+        "margin": 0.1364,
+        "expectedNet": 1.5139,
+        "worth": 77,
+        "risk": "safe"
+      },
+      "concept": {
+        "clue": "vegetation",
+        "number": 2,
+        "targets": [
+          "green",
+          "spring"
+        ],
+        "closestDanger": "snow",
+        "closestDangerTeam": "neutral",
+        "margin": 0.1364,
+        "expectedNet": 1.5139,
+        "worth": 77,
+        "risk": "safe"
+      },
+      "conceptSelectedCardScores": null,
+      "changed": false,
+      "timingMs": {
+        "directAnalysis": 341.3362,
+        "candidateRetrieval": 568.4072,
+        "conceptPreparation": 376.9202,
+        "rerankAnalysis": 369.8811
+      }
+    },
+    {
+      "boardIndex": 4,
+      "seed": "Q09ERQAAAAU",
+      "side": "red",
+      "board": [
+        {
+          "word": "lead",
+          "team": "enemy"
+        },
+        {
+          "word": "spring",
+          "team": "enemy"
+        },
+        {
+          "word": "block",
+          "team": "enemy"
+        },
+        {
+          "word": "jack",
+          "team": "enemy"
+        },
+        {
+          "word": "green",
+          "team": "enemy"
+        },
+        {
+          "word": "crown",
+          "team": "enemy"
+        },
+        {
+          "word": "row",
+          "team": "enemy"
+        },
+        {
+          "word": "europe",
+          "team": "enemy"
+        },
+        {
+          "word": "server",
+          "team": "enemy"
+        },
+        {
+          "word": "suit",
+          "team": "friendly"
+        },
+        {
+          "word": "organ",
+          "team": "friendly"
+        },
+        {
+          "word": "net",
+          "team": "friendly"
+        },
+        {
+          "word": "game",
+          "team": "friendly"
+        },
+        {
+          "word": "queen",
+          "team": "friendly"
+        },
+        {
+          "word": "tower",
+          "team": "friendly"
+        },
+        {
+          "word": "washer",
+          "team": "friendly"
+        },
+        {
+          "word": "eagle",
+          "team": "friendly"
+        },
+        {
+          "word": "time",
+          "team": "neutral"
+        },
+        {
+          "word": "snow",
+          "team": "neutral"
+        },
+        {
+          "word": "alien",
+          "team": "neutral"
+        },
+        {
+          "word": "antarctica",
+          "team": "neutral"
+        },
+        {
+          "word": "duck",
+          "team": "neutral"
+        },
+        {
+          "word": "robot",
+          "team": "neutral"
+        },
+        {
+          "word": "ray",
+          "team": "neutral"
+        },
+        {
+          "word": "atlantis",
+          "team": "assassin"
+        }
+      ],
+      "candidatePoolSize": 64,
+      "candidatesWithDefinitions": 64,
+      "activatedCandidates": 64,
+      "conceptTexts": 272,
+      "direct": {
+        "clue": "ringer",
+        "number": 2,
+        "targets": [
+          "washer",
+          "tower"
+        ],
+        "closestDanger": "time",
+        "closestDangerTeam": "neutral",
+        "margin": 0.1808,
+        "expectedNet": 1.2862,
+        "worth": 68,
+        "risk": "safe"
+      },
+      "concept": {
+        "clue": "ringer",
+        "number": 2,
+        "targets": [
+          "washer",
+          "tower"
+        ],
+        "closestDanger": "time",
+        "closestDangerTeam": "neutral",
+        "margin": 0.1808,
+        "expectedNet": 1.2862,
+        "worth": 68,
+        "risk": "safe"
+      },
+      "conceptSelectedCardScores": null,
+      "changed": false,
+      "timingMs": {
+        "directAnalysis": 283.3993,
+        "candidateRetrieval": 619.5698,
+        "conceptPreparation": 160.6733,
+        "rerankAnalysis": 302.6984
+      }
+    },
+    {
+      "boardIndex": 5,
+      "seed": "Q09ERQAAAAY",
+      "side": "blue",
+      "board": [
+        {
+          "word": "nut",
+          "team": "friendly"
+        },
+        {
+          "word": "van",
+          "team": "friendly"
+        },
+        {
+          "word": "circle",
+          "team": "friendly"
+        },
+        {
+          "word": "pin",
+          "team": "friendly"
+        },
+        {
+          "word": "robin",
+          "team": "friendly"
+        },
+        {
+          "word": "grass",
+          "team": "friendly"
+        },
+        {
+          "word": "log",
+          "team": "friendly"
+        },
+        {
+          "word": "whale",
+          "team": "friendly"
+        },
+        {
+          "word": "millionaire",
+          "team": "friendly"
+        },
+        {
+          "word": "green",
+          "team": "enemy"
+        },
+        {
+          "word": "dog",
+          "team": "enemy"
+        },
+        {
+          "word": "undertaker",
+          "team": "enemy"
+        },
+        {
+          "word": "horn",
+          "team": "enemy"
+        },
+        {
+          "word": "cliff",
+          "team": "enemy"
+        },
+        {
+          "word": "theater",
+          "team": "enemy"
+        },
+        {
+          "word": "centaur",
+          "team": "enemy"
+        },
+        {
+          "word": "jupiter",
+          "team": "enemy"
+        },
+        {
+          "word": "net",
+          "team": "neutral"
+        },
+        {
+          "word": "spine",
+          "team": "neutral"
+        },
+        {
+          "word": "loch ness",
+          "team": "neutral"
+        },
+        {
+          "word": "palm",
+          "team": "neutral"
+        },
+        {
+          "word": "kiwi",
+          "team": "neutral"
+        },
+        {
+          "word": "capital",
+          "team": "neutral"
+        },
+        {
+          "word": "buffalo",
+          "team": "neutral"
+        },
+        {
+          "word": "tap",
+          "team": "assassin"
+        }
+      ],
+      "candidatePoolSize": 64,
+      "candidatesWithDefinitions": 64,
+      "activatedCandidates": 64,
+      "conceptTexts": 255,
+      "direct": {
+        "clue": "murray",
+        "number": 2,
+        "targets": [
+          "pin",
+          "robin"
+        ],
+        "closestDanger": "net",
+        "closestDangerTeam": "neutral",
+        "margin": 0.1308,
+        "expectedNet": 1.623,
+        "worth": 82,
+        "risk": "safe"
+      },
+      "concept": {
+        "clue": "flock",
+        "number": 2,
+        "targets": [
+          "grass",
+          "circle"
+        ],
+        "closestDanger": "net",
+        "closestDangerTeam": "neutral",
+        "margin": 0.1729,
+        "expectedNet": 1.6637,
+        "worth": 84,
+        "risk": "safe"
+      },
+      "conceptSelectedCardScores": [
+        {
+          "word": "grass",
+          "direct": 0.0396,
+          "concept": 0.5164,
+          "association": 0.4664
+        },
+        {
+          "word": "circle",
+          "direct": 0.1898,
+          "concept": 0.4986,
+          "association": 0.4486
+        },
+        {
+          "word": "net",
+          "direct": -0.0017,
+          "concept": 0.3258,
+          "association": 0.2758
+        },
+        {
+          "word": "robin",
+          "direct": 0.1744,
+          "concept": 0.3068,
+          "association": 0.2568
+        },
+        {
+          "word": "van",
+          "direct": 0.0415,
+          "concept": 0.2944,
+          "association": 0.2444
+        },
+        {
+          "word": "pin",
+          "direct": 0.1867,
+          "concept": 0.2755,
+          "association": 0.2255
+        },
+        {
+          "word": "kiwi",
+          "direct": -0.0152,
+          "concept": 0.2717,
+          "association": 0.2217
+        },
+        {
+          "word": "whale",
+          "direct": -0.0039,
+          "concept": 0.2508,
+          "association": 0.2008
+        },
+        {
+          "word": "dog",
+          "direct": 0.0831,
+          "concept": 0.2417,
+          "association": 0.1917
+        },
+        {
+          "word": "horn",
+          "direct": 0.1329,
+          "concept": 0.2317,
+          "association": 0.1817
+        },
+        {
+          "word": "theater",
+          "direct": -0.0707,
+          "concept": 0.225,
+          "association": 0.175
+        },
+        {
+          "word": "capital",
+          "direct": 0.1289,
+          "concept": 0.2233,
+          "association": 0.1733
+        },
+        {
+          "word": "undertaker",
+          "direct": -0.0273,
+          "concept": 0.2019,
+          "association": 0.1519
+        },
+        {
+          "word": "nut",
+          "direct": 0.0349,
+          "concept": 0.2014,
+          "association": 0.1514
+        },
+        {
+          "word": "tap",
+          "direct": -0.0186,
+          "concept": 0.1945,
+          "association": 0.1445
+        },
+        {
+          "word": "centaur",
+          "direct": 0.1434,
+          "concept": 0.157,
+          "association": 0.1434
+        },
+        {
+          "word": "spine",
+          "direct": 0.0252,
+          "concept": 0.1905,
+          "association": 0.1405
+        },
+        {
+          "word": "green",
+          "direct": -0.0009,
+          "concept": 0.1894,
+          "association": 0.1394
+        },
+        {
+          "word": "buffalo",
+          "direct": 0.0488,
+          "concept": 0.1832,
+          "association": 0.1332
+        },
+        {
+          "word": "millionaire",
+          "direct": 0.0621,
+          "concept": 0.1661,
+          "association": 0.1161
+        },
+        {
+          "word": "palm",
+          "direct": -0.1036,
+          "concept": 0.1502,
+          "association": 0.1002
+        },
+        {
+          "word": "log",
+          "direct": -0.0278,
+          "concept": 0.1417,
+          "association": 0.0917
+        },
+        {
+          "word": "cliff",
+          "direct": 0.0081,
+          "concept": 0.1416,
+          "association": 0.0916
+        },
+        {
+          "word": "jupiter",
+          "direct": 0.0467,
+          "concept": 0.1206,
+          "association": 0.0706
+        },
+        {
+          "word": "loch ness",
+          "direct": -0.01,
+          "concept": 0.1142,
+          "association": 0.0642
+        }
+      ],
+      "changed": true,
+      "timingMs": {
+        "directAnalysis": 355.2189,
+        "candidateRetrieval": 601.5377,
+        "conceptPreparation": 225.1975,
+        "rerankAnalysis": 352.5806
+      }
+    },
+    {
+      "boardIndex": 5,
+      "seed": "Q09ERQAAAAY",
+      "side": "red",
+      "board": [
+        {
+          "word": "nut",
+          "team": "enemy"
+        },
+        {
+          "word": "van",
+          "team": "enemy"
+        },
+        {
+          "word": "circle",
+          "team": "enemy"
+        },
+        {
+          "word": "pin",
+          "team": "enemy"
+        },
+        {
+          "word": "robin",
+          "team": "enemy"
+        },
+        {
+          "word": "grass",
+          "team": "enemy"
+        },
+        {
+          "word": "log",
+          "team": "enemy"
+        },
+        {
+          "word": "whale",
+          "team": "enemy"
+        },
+        {
+          "word": "millionaire",
+          "team": "enemy"
+        },
+        {
+          "word": "green",
+          "team": "friendly"
+        },
+        {
+          "word": "dog",
+          "team": "friendly"
+        },
+        {
+          "word": "undertaker",
+          "team": "friendly"
+        },
+        {
+          "word": "horn",
+          "team": "friendly"
+        },
+        {
+          "word": "cliff",
+          "team": "friendly"
+        },
+        {
+          "word": "theater",
+          "team": "friendly"
+        },
+        {
+          "word": "centaur",
+          "team": "friendly"
+        },
+        {
+          "word": "jupiter",
+          "team": "friendly"
+        },
+        {
+          "word": "net",
+          "team": "neutral"
+        },
+        {
+          "word": "spine",
+          "team": "neutral"
+        },
+        {
+          "word": "loch ness",
+          "team": "neutral"
+        },
+        {
+          "word": "palm",
+          "team": "neutral"
+        },
+        {
+          "word": "kiwi",
+          "team": "neutral"
+        },
+        {
+          "word": "capital",
+          "team": "neutral"
+        },
+        {
+          "word": "buffalo",
+          "team": "neutral"
+        },
+        {
+          "word": "tap",
+          "team": "assassin"
+        }
+      ],
+      "candidatePoolSize": 64,
+      "candidatesWithDefinitions": 64,
+      "activatedCandidates": 64,
+      "conceptTexts": 241,
+      "direct": {
+        "clue": "theatre",
+        "number": 1,
+        "targets": [
+          "theater"
+        ],
+        "closestDanger": "loch ness",
+        "closestDangerTeam": "neutral",
+        "margin": 0.8355,
+        "expectedNet": 0.943,
+        "worth": 99,
+        "risk": "safe"
+      },
+      "concept": {
+        "clue": "theatre",
+        "number": 1,
+        "targets": [
+          "theater"
+        ],
+        "closestDanger": "loch ness",
+        "closestDangerTeam": "neutral",
+        "margin": 0.8355,
+        "expectedNet": 0.943,
+        "worth": 99,
+        "risk": "safe"
+      },
+      "conceptSelectedCardScores": null,
+      "changed": false,
+      "timingMs": {
+        "directAnalysis": 280.9148,
+        "candidateRetrieval": 600.3867,
+        "conceptPreparation": 134.7151,
+        "rerankAnalysis": 289.5353
+      }
+    },
+    {
+      "boardIndex": 6,
+      "seed": "Q09ERQAAAAc",
+      "side": "blue",
+      "board": [
+        {
+          "word": "slip",
+          "team": "friendly"
+        },
+        {
+          "word": "saturn",
+          "team": "friendly"
+        },
+        {
+          "word": "horn",
+          "team": "friendly"
+        },
+        {
+          "word": "maple",
+          "team": "friendly"
+        },
+        {
+          "word": "cycle",
+          "team": "friendly"
+        },
+        {
+          "word": "cross",
+          "team": "friendly"
+        },
+        {
+          "word": "deck",
+          "team": "friendly"
+        },
+        {
+          "word": "stock",
+          "team": "friendly"
+        },
+        {
+          "word": "sock",
+          "team": "friendly"
+        },
+        {
+          "word": "train",
+          "team": "enemy"
+        },
+        {
+          "word": "rock",
+          "team": "enemy"
+        },
+        {
+          "word": "lab",
+          "team": "enemy"
+        },
+        {
+          "word": "pool",
+          "team": "enemy"
+        },
+        {
+          "word": "king",
+          "team": "enemy"
+        },
+        {
+          "word": "table",
+          "team": "enemy"
+        },
+        {
+          "word": "sub",
+          "team": "enemy"
+        },
+        {
+          "word": "genius",
+          "team": "enemy"
+        },
+        {
+          "word": "witch",
+          "team": "neutral"
+        },
+        {
+          "word": "england",
+          "team": "neutral"
+        },
+        {
+          "word": "bank",
+          "team": "neutral"
+        },
+        {
+          "word": "force",
+          "team": "neutral"
+        },
+        {
+          "word": "honey",
+          "team": "neutral"
+        },
+        {
+          "word": "canada",
+          "team": "neutral"
+        },
+        {
+          "word": "greece",
+          "team": "neutral"
+        },
+        {
+          "word": "fighter",
+          "team": "assassin"
+        }
+      ],
+      "candidatePoolSize": 64,
+      "candidatesWithDefinitions": 64,
+      "activatedCandidates": 64,
+      "conceptTexts": 260,
+      "direct": {
+        "clue": "lumber",
+        "number": 2,
+        "targets": [
+          "maple",
+          "deck"
+        ],
+        "closestDanger": "table",
+        "closestDangerTeam": "enemy",
+        "margin": 0.1907,
+        "expectedNet": 1.6037,
+        "worth": 83,
+        "risk": "safe"
+      },
+      "concept": {
+        "clue": "lumber",
+        "number": 2,
+        "targets": [
+          "maple",
+          "deck"
+        ],
+        "closestDanger": "table",
+        "closestDangerTeam": "enemy",
+        "margin": 0.1907,
+        "expectedNet": 1.6037,
+        "worth": 83,
+        "risk": "safe"
+      },
+      "conceptSelectedCardScores": null,
+      "changed": false,
+      "timingMs": {
+        "directAnalysis": 354.1332,
+        "candidateRetrieval": 545.1667,
+        "conceptPreparation": 271.7817,
+        "rerankAnalysis": 363.0175
+      }
+    },
+    {
+      "boardIndex": 6,
+      "seed": "Q09ERQAAAAc",
+      "side": "red",
+      "board": [
+        {
+          "word": "slip",
+          "team": "enemy"
+        },
+        {
+          "word": "saturn",
+          "team": "enemy"
+        },
+        {
+          "word": "horn",
+          "team": "enemy"
+        },
+        {
+          "word": "maple",
+          "team": "enemy"
+        },
+        {
+          "word": "cycle",
+          "team": "enemy"
+        },
+        {
+          "word": "cross",
+          "team": "enemy"
+        },
+        {
+          "word": "deck",
+          "team": "enemy"
+        },
+        {
+          "word": "stock",
+          "team": "enemy"
+        },
+        {
+          "word": "sock",
+          "team": "enemy"
+        },
+        {
+          "word": "train",
+          "team": "friendly"
+        },
+        {
+          "word": "rock",
+          "team": "friendly"
+        },
+        {
+          "word": "lab",
+          "team": "friendly"
+        },
+        {
+          "word": "pool",
+          "team": "friendly"
+        },
+        {
+          "word": "king",
+          "team": "friendly"
+        },
+        {
+          "word": "table",
+          "team": "friendly"
+        },
+        {
+          "word": "sub",
+          "team": "friendly"
+        },
+        {
+          "word": "genius",
+          "team": "friendly"
+        },
+        {
+          "word": "witch",
+          "team": "neutral"
+        },
+        {
+          "word": "england",
+          "team": "neutral"
+        },
+        {
+          "word": "bank",
+          "team": "neutral"
+        },
+        {
+          "word": "force",
+          "team": "neutral"
+        },
+        {
+          "word": "honey",
+          "team": "neutral"
+        },
+        {
+          "word": "canada",
+          "team": "neutral"
+        },
+        {
+          "word": "greece",
+          "team": "neutral"
+        },
+        {
+          "word": "fighter",
+          "team": "assassin"
+        }
+      ],
+      "candidatePoolSize": 64,
+      "candidatesWithDefinitions": 64,
+      "activatedCandidates": 64,
+      "conceptTexts": 294,
+      "direct": {
+        "clue": "subsection",
+        "number": 2,
+        "targets": [
+          "sub",
+          "table"
+        ],
+        "closestDanger": "canada",
+        "closestDangerTeam": "neutral",
+        "margin": 0.1737,
+        "expectedNet": 1.3379,
+        "worth": 72,
+        "risk": "safe"
+      },
+      "concept": {
+        "clue": "subsection",
+        "number": 2,
+        "targets": [
+          "sub",
+          "table"
+        ],
+        "closestDanger": "canada",
+        "closestDangerTeam": "neutral",
+        "margin": 0.1737,
+        "expectedNet": 1.3379,
+        "worth": 72,
+        "risk": "safe"
+      },
+      "conceptSelectedCardScores": null,
+      "changed": false,
+      "timingMs": {
+        "directAnalysis": 282.5803,
+        "candidateRetrieval": 547.0758,
+        "conceptPreparation": 157.8369,
+        "rerankAnalysis": 304.0756
+      }
+    },
+    {
+      "boardIndex": 7,
+      "seed": "Q09ERQAAAAg",
+      "side": "blue",
+      "board": [
+        {
+          "word": "maple",
+          "team": "friendly"
+        },
+        {
+          "word": "witch",
+          "team": "friendly"
+        },
+        {
+          "word": "concert",
+          "team": "friendly"
+        },
+        {
+          "word": "smuggler",
+          "team": "friendly"
+        },
+        {
+          "word": "war",
+          "team": "friendly"
+        },
+        {
+          "word": "bond",
+          "team": "friendly"
+        },
+        {
+          "word": "yard",
+          "team": "friendly"
+        },
+        {
+          "word": "wind",
+          "team": "friendly"
+        },
+        {
+          "word": "poison",
+          "team": "friendly"
+        },
+        {
+          "word": "triangle",
+          "team": "enemy"
+        },
+        {
+          "word": "luck",
+          "team": "enemy"
+        },
+        {
+          "word": "doctor",
+          "team": "enemy"
+        },
+        {
+          "word": "embassy",
+          "team": "enemy"
+        },
+        {
+          "word": "england",
+          "team": "enemy"
+        },
+        {
+          "word": "tail",
+          "team": "enemy"
+        },
+        {
+          "word": "chick",
+          "team": "enemy"
+        },
+        {
+          "word": "car",
+          "team": "enemy"
+        },
+        {
+          "word": "plane",
+          "team": "neutral"
+        },
+        {
+          "word": "hole",
+          "team": "neutral"
+        },
+        {
+          "word": "foot",
+          "team": "neutral"
+        },
+        {
+          "word": "seal",
+          "team": "neutral"
+        },
+        {
+          "word": "charge",
+          "team": "neutral"
+        },
+        {
+          "word": "saturn",
+          "team": "neutral"
+        },
+        {
+          "word": "note",
+          "team": "neutral"
+        },
+        {
+          "word": "lion",
+          "team": "assassin"
+        }
+      ],
+      "candidatePoolSize": 64,
+      "candidatesWithDefinitions": 64,
+      "activatedCandidates": 64,
+      "conceptTexts": 247,
+      "direct": {
+        "clue": "outside",
+        "number": 2,
+        "targets": [
+          "wind",
+          "yard"
+        ],
+        "closestDanger": "triangle",
+        "closestDangerTeam": "enemy",
+        "margin": 0.252,
+        "expectedNet": 1.828,
+        "worth": 93,
+        "risk": "safe"
+      },
+      "concept": {
+        "clue": "outside",
+        "number": 2,
+        "targets": [
+          "wind",
+          "yard"
+        ],
+        "closestDanger": "triangle",
+        "closestDangerTeam": "enemy",
+        "margin": 0.252,
+        "expectedNet": 1.828,
+        "worth": 93,
+        "risk": "safe"
+      },
+      "conceptSelectedCardScores": null,
+      "changed": false,
+      "timingMs": {
+        "directAnalysis": 350.6134,
+        "candidateRetrieval": 548.6262,
+        "conceptPreparation": 254.9216,
+        "rerankAnalysis": 349.6406
+      }
+    },
+    {
+      "boardIndex": 7,
+      "seed": "Q09ERQAAAAg",
+      "side": "red",
+      "board": [
+        {
+          "word": "maple",
+          "team": "enemy"
+        },
+        {
+          "word": "witch",
+          "team": "enemy"
+        },
+        {
+          "word": "concert",
+          "team": "enemy"
+        },
+        {
+          "word": "smuggler",
+          "team": "enemy"
+        },
+        {
+          "word": "war",
+          "team": "enemy"
+        },
+        {
+          "word": "bond",
+          "team": "enemy"
+        },
+        {
+          "word": "yard",
+          "team": "enemy"
+        },
+        {
+          "word": "wind",
+          "team": "enemy"
+        },
+        {
+          "word": "poison",
+          "team": "enemy"
+        },
+        {
+          "word": "triangle",
+          "team": "friendly"
+        },
+        {
+          "word": "luck",
+          "team": "friendly"
+        },
+        {
+          "word": "doctor",
+          "team": "friendly"
+        },
+        {
+          "word": "embassy",
+          "team": "friendly"
+        },
+        {
+          "word": "england",
+          "team": "friendly"
+        },
+        {
+          "word": "tail",
+          "team": "friendly"
+        },
+        {
+          "word": "chick",
+          "team": "friendly"
+        },
+        {
+          "word": "car",
+          "team": "friendly"
+        },
+        {
+          "word": "plane",
+          "team": "neutral"
+        },
+        {
+          "word": "hole",
+          "team": "neutral"
+        },
+        {
+          "word": "foot",
+          "team": "neutral"
+        },
+        {
+          "word": "seal",
+          "team": "neutral"
+        },
+        {
+          "word": "charge",
+          "team": "neutral"
+        },
+        {
+          "word": "saturn",
+          "team": "neutral"
+        },
+        {
+          "word": "note",
+          "team": "neutral"
+        },
+        {
+          "word": "lion",
+          "team": "assassin"
+        }
+      ],
+      "candidatePoolSize": 64,
+      "candidatesWithDefinitions": 64,
+      "activatedCandidates": 64,
+      "conceptTexts": 247,
+      "direct": {
+        "clue": "spherical",
+        "number": 2,
+        "targets": [
+          "triangle",
+          "england"
+        ],
+        "closestDanger": "saturn",
+        "closestDangerTeam": "neutral",
+        "margin": 0.1325,
+        "expectedNet": 1.3698,
+        "worth": 72,
+        "risk": "safe"
+      },
+      "concept": {
+        "clue": "spherical",
+        "number": 2,
+        "targets": [
+          "triangle",
+          "england"
+        ],
+        "closestDanger": "saturn",
+        "closestDangerTeam": "neutral",
+        "margin": 0.1325,
+        "expectedNet": 1.3698,
+        "worth": 72,
+        "risk": "safe"
+      },
+      "conceptSelectedCardScores": null,
+      "changed": false,
+      "timingMs": {
+        "directAnalysis": 280.5533,
+        "candidateRetrieval": 550.0558,
+        "conceptPreparation": 177.615,
+        "rerankAnalysis": 290.6994
+      }
+    }
+  ]
+}

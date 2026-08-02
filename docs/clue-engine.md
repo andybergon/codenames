@@ -150,6 +150,14 @@ edge       = Blue ease - Red ease
 
 Four safe options provide full breadth credit. Edge values within three points are displayed as even.
 
+## 🧠 Owner concept reranker experiment
+
+The checked [Owner concept reranker smoke](evaluations/owner-clue-ranking/README.md) is evaluation-only. It keeps the legal 30,000-clue vocabulary and direct number-one ranking, then retrieves at most 64 low-direct multi-clue candidates with WordNet definitions. Each activated clue scores every active friendly, enemy, neutral, and assassin card through the same guarded association formula used by the operative bridge. The existing target, weighted-danger, Worth, and Play policy stages consume those complete rows without special treatment for friendly cards.
+
+Across 16 deterministic opening-side cases, the bounded reranker changed one selected clue. It also recovered the forced `JOUST -> medieval tournament -> MATCH / CROWN / GLOVE / BELT` fixture above PIANO, but JOUST sits at vocabulary position 39,742 and is not available in the production 30,000-clue prefix. The one natural-board change, `FLOCK 2 -> GRASS / CIRCLE`, requires human calibration rather than same-model acceptance.
+
+The experiment reuses local BGE and WordNet assets and makes no hosted request. Missing definitions, inactive candidates, incomplete card rows, and unsupported configurations keep exact direct scores. The current evaluator is intentionally unoptimized: its warm median phases total about `1.52 s`, including `569 ms` for candidate retrieval and `255 ms` for concept preparation. No Play setting, saved-game field, benchmark fingerprint, or production behavior enables this path.
+
 ## 🕵️ Play missed-target policy
 
 The bot spymaster reconstructs unresolved intended targets from its own prior `clue-given` events. A target remains missed only while that friendly card is unrevealed. The policy adjusts recommendation scores without changing clue legality, target membership, or the information available to the operative.
@@ -293,6 +301,7 @@ Generated Italian clues also receive a pairwise `0.23` similarity penalty for lo
 | ✅ `npm run check` | Smoke result + build | Both output lanes |
 | 🧠 `npm run evaluate:embeddings` | [`embedding-model-comparison.json`](../scripts/generated/embedding-model-comparison.json) | Human target/avoid fit |
 | 🔗 `npm run evaluate:concept-ranking` | [`concept-ranking-evaluation.json`](evaluations/operative-ranking/concept-ranking-evaluation.json) | Multi-reranker JOUST, human, latency, and memory gates |
+| 🧠 `npm run evaluate:owner-concepts` | [`owner-concept-reranker-smoke.json`](evaluations/owner-clue-ranking/owner-concept-reranker-smoke.json) | Bounded Owner clue concept reranking |
 | 🧪 Fixed local screen | [`reranker-supplemental-screen.json`](evaluations/operative-ranking/reranker-supplemental-screen.json) | GTE and Jina direct versus WordNet fixtures |
 | ☁️ `npm run evaluate:hosted-reranker` | [`hosted-listwise-reranker-evaluation.json`](evaluations/operative-ranking/hosted-listwise-reranker-evaluation.json) | Capped hosted direct versus WordNet fixtures |
 | 🎮 `npm run benchmark:compare` | [`mixedbread-bridge-reranker-full-game-comparison.json`](evaluations/operative-ranking/mixedbread-bridge-reranker-full-game-comparison.json) | Strongest eligible reranker full-game effects |

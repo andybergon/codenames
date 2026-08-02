@@ -205,6 +205,76 @@ const morphologyResult = analyzeEmbeddedBoard(
 assert.equal(morphologyResult.summary.candidateTotal, 1);
 assert.ok(morphologyResult.suggestions.every(({ clue }) => clue !== "lives"));
 
+const ownerConceptBoard = [
+  { word: "MATCH", team: "friendly", layoutId: 10 },
+  { word: "CROWN", team: "friendly", layoutId: 11 },
+  { word: "PIANO", team: "assassin", layoutId: 12 },
+];
+const ownerConceptVectors = [
+  Float32Array.from([1, 0, 0]),
+  Float32Array.from([0, 1, 0]),
+  Float32Array.from([0, 0, 1]),
+];
+const ownerConceptClueIndex = {
+  clues: ["joust"],
+  dimensions: 3,
+  frequencies: [2.47],
+  quantization: { scale: 127 },
+  vectors: Int8Array.from([70, 70, 0]),
+};
+const ownerConceptResult = analyzeEmbeddedBoard(
+  ownerConceptBoard,
+  ownerConceptVectors,
+  ownerConceptClueIndex,
+  {
+    candidateSimilarityOverrides: {
+      minimumTargetSize: 2,
+      rows: new Map([
+        [
+          0,
+          new Map([
+            [10, 0.8],
+            [11, 0.78],
+            [12, 0.1],
+          ]),
+        ],
+      ]),
+    },
+  },
+);
+const ownerConceptSingle = ownerConceptResult.suggestions.find(
+  ({ clue, number }) => clue === "joust" && number === 1,
+);
+const ownerConceptMulti = ownerConceptResult.suggestions.find(
+  ({ clue, number }) => clue === "joust" && number === 2,
+);
+assert.ok(ownerConceptSingle);
+assert.ok(ownerConceptMulti);
+assert.ok(Math.abs(ownerConceptSingle.targets[0].sim - 70 / 127) < 1e-6);
+assert.ok(Math.abs(ownerConceptMulti.targets[0].sim - 0.8) < 1e-6);
+assert.ok(Math.abs(ownerConceptMulti.targets[1].sim - 0.78) < 1e-6);
+assert.ok(Math.abs(ownerConceptMulti.closestDanger.sim - 0.1) < 1e-6);
+
+const incompleteOwnerConceptResult = analyzeEmbeddedBoard(
+  ownerConceptBoard,
+  ownerConceptVectors,
+  ownerConceptClueIndex,
+  {
+    candidateSimilarityOverrides: {
+      minimumTargetSize: 2,
+      rows: new Map([[0, new Map([[10, 0.8], [11, 0.78]])]]),
+    },
+  },
+);
+const incompleteOwnerConceptMulti =
+  incompleteOwnerConceptResult.suggestions.find(
+    ({ clue, number }) => clue === "joust" && number === 2,
+  );
+assert.ok(incompleteOwnerConceptMulti);
+assert.ok(
+  Math.abs(incompleteOwnerConceptMulti.targets[0].sim - 70 / 127) < 1e-6,
+);
+
 const result = analyzeEmbeddedBoard(DEFAULT_BOARD, boardVectors, clueIndex, { limit: 8 });
 const excludedClue = result.suggestions[0].clue;
 const excludedResult = analyzeEmbeddedBoard(DEFAULT_BOARD, boardVectors, clueIndex, {
