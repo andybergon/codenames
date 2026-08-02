@@ -2,7 +2,7 @@
 
 A local-first word-association trainer and one-human game. Cat Owners give clues so Cats can find fish, while Dog Owners guide Dogs toward bones. Vegetables are neutral, and finding The Veterinarian ends the game.
 
-[Open Treats](https://codenames.andybergon.me)
+[Open Treats](https://treats.andybergon.me) · [Compatibility address](https://codenames.andybergon.me)
 
 ## Current product
 

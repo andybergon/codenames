@@ -106,9 +106,10 @@ Local-first Vite application for embedding-powered word-association clue recomme
 ## Deployment
 
 - GitHub: `https://github.com/andybergon/codenames`
-- Vercel project: `codenames`
-- Production: `https://codenames.andybergon.me`
-- Public Vercel alias: `https://codenames-trainer.vercel.app`
+- Vercel project: `treats-game`
+- Production: `https://treats.andybergon.me`
+- Compatibility production domain: `https://codenames.andybergon.me`
+- Public Vercel alias: `https://treats-game.vercel.app`
 - Deploy through pushes to `main`; do not upload the working directory directly with the Vercel CLI.
 - Keep Vercel SSO deployment protection disabled so the public `vercel.app` alias does not redirect visitors to Vercel login.
-- Cloudflare owns DNS. The production record is a DNS-only `CNAME` from `codenames.andybergon.me` to `90043d1adb0620da.vercel-dns-016.com`.
+- Cloudflare owns DNS. `treats.andybergon.me` and `codenames.andybergon.me` are DNS-only `CNAME` records targeting `90043d1adb0620da.vercel-dns-016.com`.
