@@ -35,9 +35,9 @@
 ## 🟡 Medium
 
 - 🧠 Validate concept-aware Owner clue generation.
-  - The checked 16-case local smoke changed 1 Owner decision and recovered the forced JOUST bridge, but JOUST remains outside the production 30,000-clue prefix.
-  - Next: run a frozen 100-board development screen, inspect every changed or near-miss clue, then build a blinded human clue-rating and guessing comparison before any full-game promotion run.
-  - Keep same-model results as regression evidence only. Require cross-model wrong-team, neutral, and assassin gates plus an acceptable browser latency budget before runtime use.
+  - The frozen 100-board screen changed 18 of 200 Owner decisions. Exploratory triage rated 11 poor, 2 mixed, and 5 plausible, so the independent per-card sense maximum is not eligible for human or cross-model promotion.
+  - Next: require one shared clue sense across the full target set, rerun the same boards, and reject the variant if obvious incoherent changes remain. Remove the duplicate clue scan and full analysis pass before any interactive latency evaluation.
+  - Only after local quality passes, run blinded human clue ratings and guesses, then require cross-model wrong-team, neutral, and assassin gates before runtime use.
 
 - 🧪 Isolate embedding-backed UI tests from external model downloads.
   - `npm test` can fail in Italian Train and completed Play post-game analysis when the browser cannot fetch embedding model assets, including on unchanged `main`.

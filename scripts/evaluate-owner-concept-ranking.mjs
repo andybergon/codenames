@@ -23,15 +23,17 @@ import { LANGUAGE, WORD_SET } from "../src/word-data.js";
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const REPORT_PATH = resolve(
   ROOT,
-  "docs/evaluations/owner-clue-ranking/owner-concept-reranker-smoke.json",
+  process.env.OWNER_CONCEPT_REPORT_PATH ??
+    "docs/evaluations/owner-clue-ranking/owner-concept-reranker-smoke.json",
 );
 const MODEL_DIRECTORY = resolve(ROOT, "public/data/model-lab/bge-small");
 const CONCEPT_DIRECTORY = resolve(ROOT, "public/data/concepts");
 const CANDIDATE_COUNT = 30_000;
 const CANDIDATE_POOL_SIZE = 64;
-const BOARD_COUNT = 8;
+const BOARD_COUNT = parseBoardCount(process.env.OWNER_CONCEPT_BOARD_COUNT);
 const RESULTS_PER_SIZE = 6;
 const MULTI_TOLERANCE = 5;
+const NEAR_MISS_PLAY_SCORE_GAP = 2;
 const JOUST_WORDS = ["match", "crown", "glove", "belt", "piano"];
 
 env.cacheDir =
@@ -59,6 +61,7 @@ const embeddingOptions = {
   revision: manifest.revision,
   inputPrefix: manifest.inputPrefix,
 };
+const fixture = await evaluateJoustFixture();
 
 const openingCases = [];
 for (let boardIndex = 0; boardIndex < BOARD_COUNT; boardIndex += 1) {
@@ -138,14 +141,21 @@ for (let boardIndex = 0; boardIndex < BOARD_COUNT; boardIndex += 1) {
       multiTolerance: MULTI_TOLERANCE,
       random: () => 0,
     };
-    const directDecision = evaluateBotClue({
+    const directEvaluation = evaluateBotClue({
       ...decisionOptions,
       analysis: directAnalysis,
-    }).selected;
-    const conceptDecision = evaluateBotClue({
+    });
+    const conceptEvaluation = evaluateBotClue({
       ...decisionOptions,
       analysis: conceptAnalysis,
-    }).selected;
+    });
+    const directDecision = directEvaluation.selected;
+    const conceptDecision = conceptEvaluation.selected;
+    const nearMiss = findNearMissBridge({
+      evaluation: conceptEvaluation,
+      selected: conceptDecision,
+      diagnostics: conceptScores.diagnostics,
+    });
     openingCases.push({
       boardIndex,
       seed,
@@ -166,6 +176,7 @@ for (let boardIndex = 0; boardIndex < BOARD_COUNT; boardIndex += 1) {
             normalizeConceptTerm(clue) ===
             normalizeConceptTerm(conceptDecision?.clue),
         )?.cards ?? null,
+      nearMiss,
       changed: suggestionIdentity(directDecision) !== suggestionIdentity(conceptDecision),
       timingMs: {
         directAnalysis: round(directAnalysisMs),
@@ -177,18 +188,20 @@ for (let boardIndex = 0; boardIndex < BOARD_COUNT; boardIndex += 1) {
   }
 }
 
-const fixture = await evaluateJoustFixture();
 const changedCases = openingCases.filter(({ changed }) => changed);
+const nearMissCases = openingCases.filter(
+  ({ changed, nearMiss }) => !changed && nearMiss,
+);
 const activatedCases = openingCases.filter(
   ({ activatedCandidates }) => activatedCandidates > 0,
 );
 const report = {
-  schemaVersion: 1,
+  schemaVersion: 2,
   generatedAt: new Date().toISOString(),
   status: "evaluation-only",
   conclusion:
     changedCases.length > 0
-      ? "Concept rescoring changes at least one opening Owner decision. Human and cross-model evidence are required before runtime use."
+      ? `Concept rescoring changes ${changedCases.length} of ${openingCases.length} opening Owner decisions. Human and cross-model evidence are required before runtime use.`
       : "The bounded concept-aware vocabulary reranker does not change these opening Owner decisions. Broader evaluation is required before judging generation quality.",
   configuration: {
     language: LANGUAGE.ENGLISH,
@@ -205,6 +218,7 @@ const report = {
     minimumTargetSize: 2,
     cluePolicy: PLAY_CLUE_POLICY.HYBRID,
     multiTolerance: MULTI_TOLERANCE,
+    nearMissPlayScoreGap: NEAR_MISS_PLAY_SCORE_GAP,
     fallback:
       "Missing definitions, inactive candidates, and incomplete override rows retain exact direct similarities.",
   },
@@ -214,6 +228,8 @@ const report = {
     activatedCases: activatedCases.length,
     changedCases: changedCases.length,
     changedRate: ratio(changedCases.length, openingCases.length),
+    nearMissCases: nearMissCases.length,
+    nearMissRate: ratio(nearMissCases.length, openingCases.length),
     candidatePoolMedian: median(
       openingCases.map(({ candidatePoolSize }) => candidatePoolSize),
     ),
@@ -235,13 +251,14 @@ const report = {
       ),
     },
   },
-  cases: openingCases,
+  cases: openingCases.map(compactOpeningCase),
+  reviews: openingCases.filter(({ changed, nearMiss }) => changed || nearMiss),
 };
 
 await mkdir(dirname(REPORT_PATH), { recursive: true });
 await writeFile(REPORT_PATH, `${JSON.stringify(report, null, 2)}\n`);
 console.log(
-  `Wrote ${REPORT_PATH}. ${changedCases.length}/${openingCases.length} opening decisions changed.`,
+  `Wrote ${REPORT_PATH}. ${changedCases.length}/${openingCases.length} opening decisions changed; ${nearMissCases.length} unchanged cases had a bridge alternative within ${NEAR_MISS_PLAY_SCORE_GAP} play-score points.`,
 );
 
 async function evaluateJoustFixture() {
@@ -255,18 +272,31 @@ async function evaluateJoustFixture() {
     await embedTerms(cards.map(({ word }) => word), embeddingOptions),
     manifest.centering.mean,
   );
-  const [clueVector] = centerEmbeddings(
-    await embedTerms(["joust"], embeddingOptions),
-    manifest.centering.mean,
+  const tailShard = manifest.shards.find(
+    ({ start, end }) => start <= 39_742 && end > 39_742,
   );
+  const tailPayload = JSON.parse(
+    await readFile(resolve(MODEL_DIRECTORY, tailShard.file), "utf8"),
+  );
+  const tailCandidateIndex = tailPayload.clues.findIndex(
+    (clue) => normalizeConceptTerm(clue) === "joust",
+  );
+  if (tailCandidateIndex < 0) {
+    throw new Error("JOUST is missing from the checked BGE clue index");
+  }
+  const tailVectors = Buffer.from(tailPayload.vectors, "base64");
+  const vectorStart = tailCandidateIndex * manifest.dimensions;
+  const clueVector = new Int8Array(
+    tailVectors.buffer,
+    tailVectors.byteOffset + vectorStart,
+    manifest.dimensions,
+  ).slice();
   const fixtureIndex = {
     clues: ["joust"],
     dimensions: manifest.dimensions,
-    frequencies: [2.47],
-    quantization: { scale: 127 },
-    vectors: Int8Array.from(clueVector, (value) =>
-      Math.max(-127, Math.min(127, Math.round(value * 127))),
-    ),
+    frequencies: [tailPayload.frequencies[tailCandidateIndex]],
+    quantization: manifest.quantization,
+    vectors: clueVector,
   };
   const conceptScores = await buildConceptOverrides({
     board: cards,
@@ -277,6 +307,12 @@ async function evaluateJoustFixture() {
     embeddingOptions,
     centeringMean: manifest.centering.mean,
   });
+  const directCardScores = cards.map((card, index) => ({
+    word: normalizeConceptTerm(card.word),
+    direct: round(
+      directCandidateSimilarity(fixtureIndex, 0, vectors[index]),
+    ),
+  }));
   const direct = analyzeEmbeddedBoard(cards, vectors, fixtureIndex, {
     language: LANGUAGE.ENGLISH,
     limit: RESULTS_PER_SIZE,
@@ -302,14 +338,19 @@ async function evaluateJoustFixture() {
     .map(({ association }) => association);
   return {
     candidateVocabularyPosition: 39_742,
+    modelIndexPosition: tailShard.start + tailCandidateIndex + 1,
     inProductionPrefix: false,
     directGenerated: Boolean(directSuggestion),
     conceptGenerated: Boolean(conceptSuggestion),
+    activationPassed:
+      Math.max(...directCardScores.map(({ direct }) => direct)) <
+      CONCEPT_ACTIVATION_CEILING,
     allIntendedAbovePiano:
       Number.isFinite(pianoScore) &&
       intendedScores.every((score) => score > pianoScore),
     direct: summarizeSuggestion(directSuggestion),
     concept: summarizeSuggestion(conceptSuggestion),
+    directCardScores,
     cardScores: scores,
   };
 }
@@ -540,6 +581,67 @@ function vectorsForRange(vectors, range) {
   return range ? vectors.slice(range.start, range.end) : [];
 }
 
+function findNearMissBridge({ evaluation, selected, diagnostics }) {
+  if (!selected) return null;
+  const selectedEntry = evaluation.ranked.find(
+    ({ suggestion }) => suggestionIdentity(suggestion) === suggestionIdentity(selected),
+  );
+  if (!selectedEntry) return null;
+
+  const diagnosticsByClue = new Map(
+    diagnostics.map(({ clue, cards }) => [normalizeConceptTerm(clue), cards]),
+  );
+  const selectedClue = normalizeConceptTerm(selected.clue);
+  const alternative = evaluation.ranked.find(
+    ({ suggestion }) =>
+      suggestion.number >= 2 &&
+      normalizeConceptTerm(suggestion.clue) !== selectedClue &&
+      diagnosticsByClue.has(normalizeConceptTerm(suggestion.clue)),
+  );
+  if (!alternative) return null;
+
+  const playScoreGap = selectedEntry.playScore - alternative.playScore;
+  if (playScoreGap > NEAR_MISS_PLAY_SCORE_GAP) return null;
+  return {
+    playScoreGap: round(playScoreGap),
+    selectedPlayScore: round(selectedEntry.playScore),
+    alternativePlayScore: round(alternative.playScore),
+    suggestion: summarizeSuggestion(alternative.suggestion),
+    cardScores:
+      diagnosticsByClue.get(
+        normalizeConceptTerm(alternative.suggestion.clue),
+      ) ?? null,
+  };
+}
+
+function compactOpeningCase(openingCase) {
+  return {
+    boardIndex: openingCase.boardIndex,
+    seed: openingCase.seed,
+    side: openingCase.side,
+    activatedCandidates: openingCase.activatedCandidates,
+    conceptTexts: openingCase.conceptTexts,
+    direct: compactSuggestionIdentity(openingCase.direct),
+    concept: compactSuggestionIdentity(openingCase.concept),
+    nearMiss: openingCase.nearMiss
+      ? {
+          playScoreGap: openingCase.nearMiss.playScoreGap,
+          suggestion: compactSuggestionIdentity(openingCase.nearMiss.suggestion),
+        }
+      : null,
+    changed: openingCase.changed,
+    timingMs: openingCase.timingMs,
+  };
+}
+
+function compactSuggestionIdentity(suggestion) {
+  if (!suggestion) return null;
+  return {
+    clue: suggestion.clue,
+    number: suggestion.number,
+  };
+}
+
 function summarizeSuggestion(suggestion) {
   if (!suggestion) return null;
   return {
@@ -566,6 +668,15 @@ function boardSeed(boardIndex) {
   bytes.write("CODE", 0, "ascii");
   bytes.writeUInt32BE(boardIndex + 1, 4);
   return bytes.toString("base64url");
+}
+
+function parseBoardCount(value) {
+  if (value === undefined) return 100;
+  const count = Number(value);
+  if (!Number.isInteger(count) || count < 0 || count > 1_000) {
+    throw new Error("OWNER_CONCEPT_BOARD_COUNT must be an integer from 0 to 1000");
+  }
+  return count;
 }
 
 function median(values) {
