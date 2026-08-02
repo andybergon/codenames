@@ -1986,10 +1986,11 @@ export function createPlayMode(options = {}) {
         cards: game.cards.map(({ layoutId, word, done }) => ({
           layoutId,
           word,
-          done: includeRevealed ? false : done,
+          done,
         })),
         clue,
         clueNumber,
+        includeRevealed,
         language: gameLanguage(),
       });
     }

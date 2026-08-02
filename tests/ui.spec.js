@@ -79,9 +79,9 @@ async function useTestPlayAnalysis(page) {
           },
         };
       },
-      guessCandidateExecutor({ cards }) {
+      guessCandidateExecutor({ cards, includeRevealed = false }) {
         return cards
-          .filter((card) => !card.done)
+          .filter((card) => includeRevealed || !card.done)
           .map((card, index) => ({
             layoutId: card.layoutId,
             similarity: 0.9 - index * 0.02,
@@ -1784,6 +1784,129 @@ test("Developer mode reuses turn analysis and retains score diagnostics", async 
     25,
   );
   expect(externalRequests).toEqual([]);
+});
+
+test("Developer diagnostics preserve revealed cards during bot decisions", async ({
+  page,
+}) => {
+  await page.route(/^https?:\/\//, async (route) => {
+    const url = new URL(route.request().url());
+    if (url.hostname === "127.0.0.1") {
+      await route.continue();
+      return;
+    }
+    await route.abort();
+  });
+  await page.addInitScript(() => {
+    window.__developerGuessInputs = [];
+    window.__developerFirstTurnTargetIds = [];
+    window.__developerTargetIds = [];
+    window.__codenamesPlayModeOptions = {
+      ...window.__codenamesPlayModeOptions,
+      botActionDelay: 0,
+      analysisExecutor({ cards }) {
+        const targets = cards
+          .filter((card) => card.team === "friendly" && !card.done)
+          .slice(0, 2)
+          .map((card, index) => ({
+            layoutId: card.layoutId,
+            word: card.word,
+            sim: 0.82 - index * 0.04,
+          }));
+        window.__developerTargetIds = targets.map(({ layoutId }) => layoutId);
+        if (window.__developerFirstTurnTargetIds.length === 0) {
+          window.__developerFirstTurnTargetIds = [
+            ...window.__developerTargetIds,
+          ];
+        }
+        return {
+          safe: [],
+          stretch: [],
+          suggestions: [
+            {
+              clue: "fixture",
+              number: 2,
+              targets,
+              worth: 78,
+              expectedNet: 1.6,
+              success: 0.88,
+              margin: 0.24,
+              risk: "safe",
+            },
+          ],
+          summary: {
+            friendlyTotal: targets.length,
+            candidateTotal: 1,
+            bestMargin: 0.24,
+            bestNet: 1.6,
+          },
+        };
+      },
+      guessCandidateExecutor({ cards, includeRevealed = false }) {
+        const doneLayoutIds = cards
+          .filter(({ done }) => done)
+          .map(({ layoutId }) => layoutId);
+        window.__developerGuessInputs.push({
+          doneLayoutIds,
+          includeRevealed,
+        });
+        const [firstTarget, secondTarget] = window.__developerTargetIds;
+        return cards
+          .filter((card) => includeRevealed || !card.done)
+          .map((card) => ({
+            layoutId: card.layoutId,
+            similarity:
+              card.layoutId === firstTarget
+                ? 0.9
+                : card.layoutId === secondTarget
+                  ? doneLayoutIds.includes(firstTarget)
+                    ? 0.85
+                    : 0.1
+                  : 0.04,
+          }));
+      },
+    };
+  });
+  await page.goto("/?mode=play");
+
+  const settings = page.locator(".play-settings");
+  await settings.locator("summary").click();
+  await page.locator("#play-developer-mode").check();
+  await page.locator('[data-play-seat="blue:spymaster"]').click();
+  await page.getByRole("button", { name: "Start new game", exact: true }).click();
+  await page.getByRole("button", {
+    name: "Show clue suggestions",
+    exact: true,
+  }).click();
+  await page.locator(".play-suggestion").click();
+  await page.getByRole("button", { name: "Give clue", exact: true }).click();
+
+  await expect
+    .poll(() =>
+      page.evaluate(() => {
+        const [firstTarget] = window.__developerFirstTurnTargetIds;
+        return window.__developerGuessInputs.some(
+          ({ doneLayoutIds, includeRevealed }) =>
+            includeRevealed && doneLayoutIds.includes(firstTarget),
+        );
+      }),
+    )
+    .toBe(true);
+  await expect
+    .poll(() =>
+      page.evaluate(() => {
+        const game = JSON.parse(
+          localStorage.getItem("codenames-play-session-v1"),
+        );
+        return game.history.filter(
+          (event) =>
+            event.type === "card-guessed" &&
+            event.turn === 1 &&
+            event.actor === "bot",
+        ).length;
+      }),
+    )
+    .toBe(2);
 });
 
 test("Developer mode can mark and diagnose a saved game in progress", async ({
