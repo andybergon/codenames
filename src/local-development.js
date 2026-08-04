@@ -39,14 +39,10 @@ export function mountLocalDevelopmentNavigation({
     return null;
   }
 
-  const labButton = document.createElement("button");
-  labButton.type = "button";
-  labButton.dataset.localDevelopmentMode = "lab";
-  labButton.textContent = "Lab";
-  labButton.addEventListener("click", () => {
-    window.location.assign("/?mode=benchmarks");
-  });
-  modeSwitch.append(labButton);
+  const labButton = modeSwitch.querySelector("[data-local-development-mode]");
+  if (!labButton || labButton.hidden) {
+    return null;
+  }
 
   const navigation = document.createElement("nav");
   navigation.className = "local-development-tabs";

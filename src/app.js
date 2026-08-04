@@ -812,8 +812,11 @@ function renderAppMode() {
   elements.trainerWorkspace.hidden = !isTrain || isTrainerLoading;
   elements.modelLab.hidden = !isTrain || isTrainerLoading;
   elements.playMode.hidden = !isPlay;
+  const localDevelopmentMode = elements.appModeSwitch.querySelector(
+    "[data-local-development-mode]",
+  );
   const hasLocalDevelopmentMode = Boolean(
-    elements.appModeSwitch.querySelector("[data-local-development-mode]"),
+    localDevelopmentMode && !localDevelopmentMode.hidden,
   );
   elements.appModeSwitch.hidden =
     isHiddenMode && !hasLocalDevelopmentMode;

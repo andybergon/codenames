@@ -38,6 +38,31 @@
         <div class="app-mode-switch" role="group" aria-label="App mode">
           <button type="button" data-app-mode="play" data-i18n="play" aria-pressed="true">Play</button>
           <button type="button" data-app-mode="train" data-i18n="train" aria-pressed="false">Train</button>
+          <button
+            type="button"
+            data-local-development-mode="lab"
+            aria-pressed="false"
+            hidden
+          >
+            Lab
+          </button>
+          <script>
+            (() => {
+              const hostname = window.location.hostname.trim().toLowerCase();
+              const isLoopback =
+                hostname === "localhost" ||
+                hostname.endsWith(".localhost") ||
+                hostname === "127.0.0.1" ||
+                hostname === "::1" ||
+                hostname === "[::1]";
+              if (!isLoopback) return;
+              const labButton = document.currentScript.previousElementSibling;
+              labButton.hidden = false;
+              labButton.addEventListener("click", () => {
+                window.location.assign("/?mode=benchmarks");
+              });
+            })();
+          </script>
         </div>
         <div class="topbar-controls">
           <div class="app-language-switch" role="group" aria-label="Game language" data-i18n-label="gameLanguage">
