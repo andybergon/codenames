@@ -548,6 +548,77 @@ test("recommendations explain one clue only after an uncached click", async ({ p
   );
 });
 
+test("unsupported SUMNER explanation stays exact at representative viewports", async ({
+  page,
+}) => {
+  await page.addInitScript(() => sessionStorage.clear());
+  const explanationRequests = [];
+  await page.route("**/api/explain-recommendations", async (route) => {
+    const request = route.request().postDataJSON();
+    explanationRequests.push(request);
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        model: "gpt-5.4-nano",
+        explanations: [
+          {
+            id: request.recommendations[0].id,
+            explanation:
+              "No reliable explanation was found for the exact clue SUMNER with STRAW and ROSE.",
+          },
+        ],
+      }),
+    });
+  });
+
+  for (const viewport of [
+    { width: 390, height: 844 },
+    { width: 768, height: 1024 },
+    { width: 1440, height: 900 },
+  ]) {
+    await page.setViewportSize(viewport);
+    await page.goto(`/tests/fixtures/recommendations.html?width=${viewport.width}`);
+    await page.evaluate(async () => {
+      const { createRecommendationExplanationControl } = await import(
+        "/src/recommendation-explanation-control.js"
+      );
+      document
+        .querySelector(".recommendation-explanation-control")
+        .replaceWith(
+          createRecommendationExplanationControl({
+            clue: "SUMNER",
+            targets: [{ word: "STRAW" }, { word: "ROSE" }],
+          }),
+        );
+    });
+
+    const explainButton = page.getByRole("button", {
+      name: "Explain why SUMNER connects STRAW, ROSE",
+      exact: true,
+    });
+    await explainButton.click();
+    const explanation = page.locator(".explanation-targets");
+    await expect(explanation).toHaveText(
+      "No reliable explanation was found for the exact clue SUMNER with STRAW and ROSE.",
+    );
+    await expect(explanation).not.toContainText("summer");
+    const fitsViewport = await explanation.evaluate((element) => {
+      const bounds = element.getBoundingClientRect();
+      return bounds.left >= 0 && bounds.right <= window.innerWidth;
+    });
+    expect(fitsViewport, `explanation clipping at ${viewport.width}px`).toBe(true);
+  }
+
+  expect(explanationRequests).toHaveLength(3);
+  expect(
+    explanationRequests.every(
+      ({ recommendations }) =>
+        recommendations[0].clue === "SUMNER" &&
+        recommendations[0].targets.join(",") === "STRAW,ROSE",
+    ),
+  ).toBe(true);
+});
+
 test("an unconfigured explanation reports the deployment issue without retrying", async ({
   page,
 }) => {

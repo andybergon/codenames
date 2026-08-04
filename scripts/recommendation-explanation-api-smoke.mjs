@@ -67,7 +67,113 @@ assert.equal(requestBody.model, "gpt-5.4-nano");
 assert.deepEqual(requestBody.reasoning, { effort: SEMANTIC_EXPLANATION_REASONING });
 assert.equal(requestBody.store, false);
 assert.match(requestBody.input[0].content, /shared concept/);
+assert.match(requestBody.input[0].content, /immutable game token/);
 assert.match(success.body.explanations[0].explanation, /^These words connect through/);
+
+const sumnerRecommendation = [
+  {
+    id: "sumner-2",
+    clue: "SUMNER",
+    targets: ["STRAW", "ROSE"],
+  },
+];
+let sumnerRequestBody;
+const substitutedClue = await handleRecommendationExplanationRequest({
+  method: "POST",
+  body: { recommendations: sumnerRecommendation },
+  apiKey: "test-key",
+  fetchImpl: async (_url, init) => {
+    sumnerRequestBody = JSON.parse(init.body);
+    return Response.json({
+      output: [
+        {
+          content: [
+            {
+              type: "output_text",
+              text: JSON.stringify({
+                explanations: [
+                  {
+                    id: "sumner-2",
+                    explanation:
+                      "These words connect through season and flowers: STRAW is an element of summer farm life, and ROSE is a common summer-blooming flower.",
+                  },
+                ],
+              }),
+            },
+          ],
+        },
+      ],
+    });
+  },
+});
+assert.equal(substitutedClue.status, 200);
+assert.match(sumnerRequestBody.input[1].content, /"clue":"sumner"/);
+assert.equal(
+  substitutedClue.body.explanations[0].explanation,
+  "No reliable explanation was found for the exact clue SUMNER with STRAW and ROSE.",
+);
+
+const exactSumnerWithNearNeighbor = await handleRecommendationExplanationRequest({
+  method: "POST",
+  body: { recommendations: sumnerRecommendation },
+  apiKey: "test-key",
+  fetchImpl: async () =>
+    Response.json({
+      output: [
+        {
+          content: [
+            {
+              type: "output_text",
+              text: JSON.stringify({
+                explanations: [
+                  {
+                    id: "sumner-2",
+                    explanation:
+                      "These words connect through Sumner: STRAW suggests summer farm life, and ROSE is a summer-blooming flower.",
+                  },
+                ],
+              }),
+            },
+          ],
+        },
+      ],
+    }),
+});
+assert.equal(
+  exactSumnerWithNearNeighbor.body.explanations[0].explanation,
+  "No reliable explanation was found for the exact clue SUMNER with STRAW and ROSE.",
+);
+
+const exactSummer = await handleRecommendationExplanationRequest({
+  method: "POST",
+  body: {
+    recommendations: [{ ...sumnerRecommendation[0], clue: "SUMMER" }],
+  },
+  apiKey: "test-key",
+  fetchImpl: async () =>
+    Response.json({
+      output: [
+        {
+          content: [
+            {
+              type: "output_text",
+              text: JSON.stringify({
+                explanations: [
+                  {
+                    id: "sumner-2",
+                    explanation:
+                      "These words connect through summer: STRAW appears in summer farm life, and ROSE is a common summer-blooming flower.",
+                  },
+                ],
+              }),
+            },
+          ],
+        },
+      ],
+    }),
+});
+assert.equal(exactSummer.status, 200);
+assert.match(exactSummer.body.explanations[0].explanation, /through summer:/i);
 
 let italianRequestBody;
 const italian = await handleRecommendationExplanationRequest({

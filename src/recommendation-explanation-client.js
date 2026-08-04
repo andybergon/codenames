@@ -1,4 +1,4 @@
-const CACHE_STORAGE_KEY = "codenames-semantic-explanations-p5-gpt-5.4-nano";
+const CACHE_STORAGE_KEY = "codenames-semantic-explanations-p6-gpt-5.4-nano";
 const MAX_CACHE_ENTRIES = 128;
 const explanationCache = loadStoredCache();
 

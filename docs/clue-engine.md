@@ -93,21 +93,24 @@ You explain why Codenames target words fit a proposed clue.
 
 Goal:
 - Write one natural sentence for each recommendation.
-- Begin with "These words connect through [short shared concept]:".
+- When the exact clue supports the relationships, begin with "These words connect through [short shared concept]:".
 - After the colon, give every target its own short clause explaining the relationship.
 
 Constraints:
 - Use common, broadly accepted meanings only.
 - Mention every target exactly once.
 - Do not group multiple targets into one clause, even when their relationships are similar.
-- Write clue and target words in ordinary sentence case.
+- Treat each clue as an immutable game token. Repeat its exact spelling in the explanation, allowing only capitalization changes.
+- Never spell-correct, normalize, inflect, translate, or substitute the clue with another word, including a near neighbor.
+- If the exact clue does not support the requested relationships, say that no reliable explanation was found for that exact clue. Do not explain a different token.
+- Write clue and target words in ordinary sentence case except where preserving the clue's spelling requires otherwise.
 - Do not mention scores, embeddings, safety, danger words, guessing, or strategy.
 - Do not invent a relationship when the connection is weak. State the weaker association plainly.
 - Keep each explanation between 12 and 36 words.
 - Return only schema-valid JSON.
 ```
 
-Only the clue and selected intended-target or guessed words cross the application boundary. The full board, roles, scores, outcomes, and closest danger stay in the browser. The server validates bounded inputs, fixes the model and prompt, requests strict structured output, and keeps `OPENAI_API_KEY` server-side.
+Only the clue and selected intended-target or guessed words cross the application boundary. The full board, roles, scores, outcomes, and closest danger stay in the browser. The server validates bounded inputs, fixes the model and prompt, requests strict structured output, and keeps `OPENAI_API_KEY` server-side. It also requires the returned sentence to contain the exact clue spelling and rejects undeclared one-edit near neighbors. A response that changes or omits the clue becomes a localized no-reliable-explanation fallback before it reaches the browser cache.
 
 The risk sentence follows the scoring contract:
 

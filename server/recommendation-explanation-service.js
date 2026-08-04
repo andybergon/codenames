@@ -141,7 +141,7 @@ async function requestSemanticExplanationChunk(
   }
 
   const parsed = JSON.parse(outputText);
-  return validateExplanations(parsed.explanations, recommendations);
+  return validateExplanations(parsed.explanations, recommendations, language);
 }
 
 function validateLanguage(value) {
@@ -182,13 +182,16 @@ export function validateRecommendations(value) {
   });
 }
 
-function validateExplanations(value, recommendations) {
+function validateExplanations(value, recommendations, language) {
   if (!Array.isArray(value) || value.length !== recommendations.length) {
     throw new Error("OpenAI returned the wrong number of explanations.");
   }
 
   const expectedIds = new Set(recommendations.map(({ id }) => id));
   const seenIds = new Set();
+  const recommendationById = new Map(
+    recommendations.map((recommendation) => [recommendation.id, recommendation]),
+  );
   const explanations = value.map(({ id, explanation }) => {
     if (!expectedIds.has(id) || seenIds.has(id)) {
       throw new Error("OpenAI returned an unexpected explanation ID.");
@@ -199,14 +202,114 @@ function validateExplanations(value, recommendations) {
     if (normalized.length < 20 || normalized.length > 320) {
       throw new Error("OpenAI returned an invalid explanation.");
     }
+    const recommendation = recommendationById.get(id);
     seenIds.add(id);
-    return { id, explanation: normalized };
+    return {
+      id,
+      explanation: explanationPreservesClue(normalized, recommendation)
+        ? normalized
+        : unsupportedClueExplanation(recommendation, language),
+    };
   });
 
   if (seenIds.size !== expectedIds.size) {
     throw new Error("OpenAI omitted an explanation.");
   }
   return explanations;
+}
+
+function explanationPreservesClue(explanation, { clue, targets }) {
+  if (!containsExactTerm(explanation, clue)) {
+    return false;
+  }
+
+  if (!/^\p{L}+$/u.test(clue) || [...clue].length < 5) {
+    return true;
+  }
+
+  const exactTerms = new Set(
+    [clue, ...targets].map((term) => term.toLocaleLowerCase()),
+  );
+  const clueToken = clue.toLocaleLowerCase();
+  return ![...explanation.matchAll(/[\p{L}]+/gu)].some(({ 0: token }) => {
+    const normalizedToken = token.toLocaleLowerCase();
+    return (
+      !exactTerms.has(normalizedToken) &&
+      isSingleEditNeighbor(clueToken, normalizedToken)
+    );
+  });
+}
+
+function containsExactTerm(text, term) {
+  const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp(`(?<!\\p{L})${escaped}(?!\\p{L})`, "iu").test(text);
+}
+
+function isSingleEditNeighbor(left, right) {
+  const leftCharacters = [...left];
+  const rightCharacters = [...right];
+  if (Math.abs(leftCharacters.length - rightCharacters.length) > 1) {
+    return false;
+  }
+
+  if (leftCharacters.length === rightCharacters.length) {
+    const differences = [];
+    for (let index = 0; index < leftCharacters.length; index += 1) {
+      if (leftCharacters[index] !== rightCharacters[index]) {
+        differences.push(index);
+      }
+      if (differences.length > 2) {
+        return false;
+      }
+    }
+    if (differences.length === 1) {
+      return true;
+    }
+    return (
+      differences.length === 2 &&
+      differences[1] === differences[0] + 1 &&
+      leftCharacters[differences[0]] === rightCharacters[differences[1]] &&
+      leftCharacters[differences[1]] === rightCharacters[differences[0]]
+    );
+  }
+
+  const [shorter, longer] =
+    leftCharacters.length < rightCharacters.length
+      ? [leftCharacters, rightCharacters]
+      : [rightCharacters, leftCharacters];
+  let shorterIndex = 0;
+  let longerIndex = 0;
+  let skipped = false;
+  while (shorterIndex < shorter.length && longerIndex < longer.length) {
+    if (shorter[shorterIndex] === longer[longerIndex]) {
+      shorterIndex += 1;
+      longerIndex += 1;
+    } else if (skipped) {
+      return false;
+    } else {
+      skipped = true;
+      longerIndex += 1;
+    }
+  }
+  return true;
+}
+
+function unsupportedClueExplanation({ clue, targets }, language) {
+  if (language === "it") {
+    return `Non è stata trovata una spiegazione affidabile per l'indizio esatto ${clue} con ${formatTermList(targets, "it")}.`;
+  }
+  return `No reliable explanation was found for the exact clue ${clue} with ${formatTermList(targets, "en")}.`;
+}
+
+function formatTermList(terms, language) {
+  if (terms.length === 1) {
+    return terms[0];
+  }
+  const conjunction = language === "it" ? "e" : "and";
+  if (terms.length === 2) {
+    return `${terms[0]} ${conjunction} ${terms[1]}`;
+  }
+  return `${terms.slice(0, -1).join(", ")}, ${conjunction} ${terms.at(-1)}`;
 }
 
 function validateIdentifier(value) {
