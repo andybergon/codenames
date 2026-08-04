@@ -1033,8 +1033,8 @@ test("localhost Lab navigation exposes hidden development surfaces", async ({
 
   await modeSwitch.getByRole("button", { name: "Lab" }).click();
   await expect(page).toHaveURL(/mode=benchmarks$/);
-  await expect(page.locator("#app-title")).toHaveText("Codenames");
-  await expect(page).toHaveTitle("Codenames");
+  await expect(page.locator("#app-title")).toHaveText("Treats");
+  await expect(page).toHaveTitle("Treats");
   await expect(modeSwitch).toBeVisible();
   await expect(
     modeSwitch.getByRole("button", { name: "Lab" }),
@@ -1067,7 +1067,7 @@ test("localhost Lab navigation exposes hidden development surfaces", async ({
       localhost: isLoopbackHostname("localhost"),
       ipv4: isLoopbackHostname("127.0.0.1"),
       ipv6: isLoopbackHostname("::1"),
-      production: isLoopbackHostname("codenames.andybergon.me"),
+      production: isLoopbackHostname("treats.andybergon.me"),
     };
   });
   expect(hostChecks).toEqual({
@@ -1079,8 +1079,8 @@ test("localhost Lab navigation exposes hidden development surfaces", async ({
 
   await modeSwitch.getByRole("button", { name: "Train" }).click();
   await expect(page).toHaveURL(/mode=train$/);
-  await expect(page.locator("#app-title")).toHaveText("Codenames");
-  await expect(page).toHaveTitle("Codenames");
+  await expect(page.locator("#app-title")).toHaveText("Treats");
+  await expect(page).toHaveTitle("Treats");
   await expect(
     modeSwitch.getByRole("button", { name: "Train" }),
   ).toHaveAttribute("aria-pressed", "true");
@@ -1095,8 +1095,8 @@ test("localhost Lab navigation exposes hidden development surfaces", async ({
 
   await tabs.getByRole("link", { name: "Calibration" }).click();
   await expect(page).toHaveURL(/mode=calibrate$/);
-  await expect(page.locator("#app-title")).toHaveText("Codenames");
-  await expect(page).toHaveTitle("Codenames");
+  await expect(page.locator("#app-title")).toHaveText("Treats");
+  await expect(page).toHaveTitle("Treats");
   await expect(
     page
       .locator(".local-development-tabs")
