@@ -4,7 +4,7 @@ Back to [README](../README.md).
 
 - 🧠 **Train default** · MiniLM-L6 · 384 dimensions · browser-local inference
 - 🇮🇹 **Italian beta** · Train + Play · Multilingual E5 small · English remains default
-- 🤖 **Play spymaster default** · BGE-small · hybrid scoring · five-point multi-clue tolerance
+- 🤖 **Play spymaster default** · BGE-small · hybrid scoring · ten-point multi-clue tolerance
 - 📚 **Default vocabulary** · 10,000 frequency-ranked and filtered clues
 - 📦 **Index** · mean-centered, normalized, int8 static vectors
 - 🎯 **Runtime work** · embed active board words · score precomputed clue candidates
@@ -175,7 +175,7 @@ The penalty is applied before the multi-card tolerance comparison. `npm run benc
 
 Clue reuse is a three-way Play setting. **Never repeat in this game** is the default and excludes every clue previously given by the same team. **Block the team's previous clue** excludes only that team's immediately preceding clue. **Allow repeats** applies no history exclusion. The other team's clue history never counts, and a replacement clue may target any overlap with earlier intended cards. Live Play excludes the configured history from the full candidate analysis, with defensive filtering during ranking. Benchmarks apply the same rule to analysis, ranking, and fallback selection through `--clue-repeat-policy allow|previous|never`.
 
-In the checked 100-board default run, 91 Hybrid clue turns had an unresolved prior target. Late recovery retried one on 35.2% of those eligible turns overall, but on 0 of 20 turns where at least four never-targeted friendly cards remained. The same run kept 0 wrong-team hits per game, a 0% assassin rate, 1.60 correct cards per turn, and 9.78 turns per game.
+In the checked 100-board default run, 106 Hybrid clue turns had an unresolved prior target. Late recovery retried one on 37.7% of those eligible turns overall, but on 0 of 20 turns where at least four never-targeted friendly cards remained. The same run kept 0 wrong-team hits per game, a 0% assassin rate, 1.68 correct cards per turn, and 9.36 turns per game.
 
 ## 🔎 Play operative policy
 
@@ -246,9 +246,9 @@ The checked 100-board same-model run measures deterministic production regressio
 
 | 🔎 Mode | 🧩 Low-sim fill | 🛑 Early pass | ✅ Correct per turn | 🔴 Wrong per game | ☠️ Assassin | ⏱️ Turns |
 |---|---:|---:|---:|---:|---:|---:|
-| ⚖️ Dynamic | 1.0% | 2.5% | 1.60 | 0.00 | 0.0% | 9.78 |
-| 🛡️ Conservative | 0.0% | 16.7% | 1.29 | 0.00 | 0.0% | 11.97 |
-| 🚀 Aggressive | 3.6% | 0.0% | 1.67 | 0.00 | 0.0% | 9.38 |
+| ⚖️ Dynamic | 2.0% | 3.1% | 1.68 | 0.00 | 0.0% | 9.36 |
+| 🛡️ Conservative | 0.0% | 20.5% | 1.30 | 0.00 | 0.0% | 11.81 |
+| 🚀 Aggressive | 4.7% | 0.0% | 1.76 | 0.00 | 0.0% | 8.92 |
 
 The [MiniLM-L6 operative stress run](../scripts/generated/play-operative-aggression-cross-model.md) holds BGE-small spymaster clues fixed while changing the guesser's embedding geometry:
 
@@ -342,7 +342,7 @@ The expanded comparison is checked in [`human-data-embedding-comparison.json`](.
 
 The hidden `?mode=benchmarks` page presents one row per complete checked configuration. It consumes the canonical v3 benchmark comparison artifact described in [Benchmark reporting](benchmark-reporting.md). The comparator owns scores, deltas, intervals, gates, verdicts, provenance, and source-separated human evidence. The page filters, sorts, applies display weights only when explicitly labelled, and renders the existing report values.
 
-The full-game benchmark has frozen smoke, calibration, development, and test board ranges. Use `--comparison-only` for embedding selection, then compare full reports with `npm run benchmark:compare`. Candidate models must first match BGE-small's fixed similarity-probe mean and spread through `--similarity-scale` and `--similarity-offset`. This makes the five-point multi-clue tolerance and absolute operative thresholds comparable across models. Every new result contains the complete canonical behavior configuration, exact asset hashes, a stable configuration fingerprint, and compact derived labels.
+The full-game benchmark has frozen smoke, calibration, development, and test board ranges. Use `--comparison-only` for embedding selection, then compare full reports with `npm run benchmark:compare`. Candidate models must first match BGE-small's fixed similarity-probe mean and spread through `--similarity-scale` and `--similarity-offset`. This makes the configured multi-clue tolerance and absolute operative thresholds comparable across models. Every new result contains the complete canonical behavior configuration, exact asset hashes, a stable configuration fingerprint, and compact derived labels.
 
 The hidden `?mode=calibrate` page loads versioned rounds from `public/data/calibration/manifest.json`. It automatically stores each guess, rating, and note under `codenames-human-calibration-v1`, while an empty pass requires the explicit Record pass action. When `DATABASE_URL` and `CALIBRATION_SYNC_SECRET` are configured, `/api/calibration` also stores each answer in `codenames_calibration_answers` and restores the newest event by timestamp. Clears and invalidated task definitions create timestamped deletion records, so stale browsers and imports cannot resurrect answers. The client retries transient failures with bounded exponential backoff and accepts the database record on a stale-write conflict. Production exchanges the pairing key once for a strict HTTP-only cookie and never stores it in browser-readable storage. Vite bypasses pairing only when the request socket is loopback and uses the server-side `DATABASE_URL` directly. Browser persistence and JSON import/export remain available when database sync is unavailable.
 

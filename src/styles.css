@@ -4821,11 +4821,6 @@ button.play-card:not(:disabled):hover {
   overflow-wrap: anywhere;
 }
 
-.play-feedback-actions {
-  margin-top: 10px;
-}
-
-.play-feedback-actions[hidden],
 .play-feedback-form[hidden] {
   display: none;
 }
@@ -4833,7 +4828,7 @@ button.play-card:not(:disabled):hover {
 .play-feedback-form {
   display: grid;
   gap: 9px;
-  margin-top: 10px;
+  margin: 3px 0 10px;
   border: 1px solid var(--line);
   border-radius: 8px;
   padding: 10px;
@@ -4871,25 +4866,17 @@ button.play-card:not(:disabled):hover {
   font-weight: 750;
 }
 
-.play-feedback-link {
-  border: 0;
-  padding: 2px 4px;
-  background: transparent;
-  color: var(--muted);
-  cursor: pointer;
-  font-size: 0.7rem;
-  font-weight: 800;
-  text-decoration: underline;
-  text-underline-offset: 2px;
+.play-feedback-selection {
+  display: inline-flex;
+  min-height: 38px;
+  align-items: center;
+  gap: 5px;
+  padding: 0 9px;
+  white-space: nowrap;
 }
 
-.play-feedback-link:hover,
-.play-feedback-link:focus-visible {
-  color: var(--ink);
-}
-
-.play-feedback-action-link {
-  margin-left: 6px;
+.play-feedback-selection[hidden] {
+  display: none;
 }
 
 .play-history {
@@ -4912,6 +4899,17 @@ button.play-card:not(:disabled):hover {
   gap: 8px;
 }
 
+.play-history-controls {
+  display: flex;
+  flex: 0 1 auto;
+  max-width: 100%;
+  min-width: 0;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
 .play-history-switch {
   flex: 0 0 auto;
 }
@@ -4927,6 +4925,7 @@ button.play-card:not(:disabled):hover {
 }
 
 .play-history-turn {
+  position: relative;
   min-width: 0;
   border: 1px solid var(--line);
   border-left: 3px solid var(--line);
@@ -4963,6 +4962,7 @@ button.play-card:not(:disabled):hover {
 }
 
 .play-history-action {
+  position: relative;
   min-width: 0;
   padding: 0;
   color: var(--muted);
@@ -4980,8 +4980,14 @@ button.play-card:not(:disabled):hover {
 
 .play-history-turn.is-reviewable
   .play-history-action[data-action="turn-passed"] {
-  display: flex;
   min-height: 28px;
+}
+
+.play-history-turn.is-reviewable
+  .play-history-action[data-action="turn-passed"]:not(
+    :has(.play-history-selectable-row)
+  ) {
+  display: flex;
   align-items: center;
   padding-left: 16px;
 }

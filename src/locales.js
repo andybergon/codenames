@@ -146,9 +146,10 @@ const COPY = Object.freeze({
       `${winner} won by ${reason}, ${turns} ${turns === 1 ? "clue" : "clues"}`,
     historicalReviewHelp:
       "Historical replay. Actions remain available, but score analysis from this version is unavailable.",
-    sendGameFeedback: "Send game feedback",
-    sendTurnFeedback: "Feedback on turn",
-    sendActionFeedback: "Feedback",
+    feedbackButton: "Feedback",
+    feedbackScopeGame: "Whole game",
+    feedbackScopeTurn: ({ turn }) => `Turn ${turn}`,
+    feedbackScopeAction: ({ action, turn }) => `${action} · Turn ${turn}`,
     feedbackCategory: "Category",
     feedbackBug: "Bug",
     feedbackClue: "Clue",
@@ -163,6 +164,8 @@ const COPY = Object.freeze({
     feedbackForTurn: ({ turn }) => `Feedback for turn ${turn}`,
     feedbackForAction: ({ action, turn }) =>
       `Feedback for ${action}, turn ${turn}`,
+    selectPassFeedback: ({ turn }) =>
+      `Select pass on turn ${turn} for feedback`,
     feedbackSent: "Thanks, feedback sent.",
     feedbackFailed: "Feedback could not be sent. Try again.",
     developerGame: "Developer game",
@@ -527,9 +530,10 @@ const COPY = Object.freeze({
       }`,
     historicalReviewHelp:
       "Replay storico. Le azioni restano disponibili, ma l'analisi dei punteggi di questa versione non è disponibile.",
-    sendGameFeedback: "Invia feedback sulla partita",
-    sendTurnFeedback: "Feedback sul turno",
-    sendActionFeedback: "Feedback",
+    feedbackButton: "Feedback",
+    feedbackScopeGame: "Partita intera",
+    feedbackScopeTurn: ({ turn }) => `Turno ${turn}`,
+    feedbackScopeAction: ({ action, turn }) => `${action} · Turno ${turn}`,
     feedbackCategory: "Categoria",
     feedbackBug: "Errore",
     feedbackClue: "Indizio",
@@ -544,6 +548,8 @@ const COPY = Object.freeze({
     feedbackForTurn: ({ turn }) => `Feedback per il turno ${turn}`,
     feedbackForAction: ({ action, turn }) =>
       `Feedback per ${action}, turno ${turn}`,
+    selectPassFeedback: ({ turn }) =>
+      `Seleziona il passaggio del turno ${turn} per il feedback`,
     feedbackSent: "Grazie, feedback inviato.",
     feedbackFailed: "Impossibile inviare il feedback. Riprova.",
     developerGame: "Partita sviluppatore",

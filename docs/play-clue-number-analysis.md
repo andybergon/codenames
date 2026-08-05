@@ -12,7 +12,7 @@ Play's single-clue bias is primarily a scoring and policy problem. The standard 
 | 📚 Candidate count | 🟡 Secondary | 30k adds 7.3 percentage points |
 | 🗂️ Board word set | 🟢 Not causal | Official and Extended differ by 5 points at opening |
 
-The implemented English Play default is BGE-small with 30,000 candidates, the hybrid score, a five-point multi-clue tolerance, late missed-target recovery, Dynamic operative aggression, and passing after the declared clue number. Across 100 deterministic games, that combination produced a 1.66 mean clue number and 58.4% multi-card clues. Opening clues averaged 2.20, the chronological first half averaged 1.99, and late-game singles remained available.
+The implemented English Play default uses BGE-small with 30,000 candidates, the hybrid score, a ten-point multi-clue tolerance, late missed-target recovery, Dynamic operative aggression, and passing after the declared clue number. Across 100 deterministic games, that combination produced a 1.75 mean clue number and 67.0% multi-card clues. Opening clues averaged 2.20, the chronological first half averaged 2.06, correct cards per turn reached 1.68, and games averaged 9.36 turns. The previous five-point full-setup run produced 58.4% multi-card clues. These same-model results measure regression and game shape, not human guessing accuracy.
 
 BGE-small is `Xenova/bge-small-en-v1.5`. Its quantized model is 34.0 MB versus 23.0 MB for the previous MiniLM-L6 model. With the 15.8 MB 30k clue index, the total download is about 49.8 MB versus 38.8 MB.
 
@@ -89,8 +89,8 @@ The bot operative also takes an automatic number-plus-one guess using the curren
 
 | 🎛️ Policy | 📈 Full mean | ⏩ First-half mean | 🔢 Multi clues | ✅ Correct per turn | 🔴 Wrong hits | ☠️ Assassin | ⏱️ Turns |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| 🧪 BGE hybrid, Dynamic, pass | 1.66 | 1.99 | 58.4% | 1.60 | 0.00 | 0.0% | 9.78 |
-| 📍 BGE current, Dynamic, pass | 1.14 | 1.18 | 13.1% | 1.14 | 0.00 | 0.0% | 13.70 |
+| 🧪 BGE hybrid, Dynamic, pass | 1.75 | 2.06 | 67.0% | 1.68 | 0.00 | 0.0% | 9.36 |
+| 📍 BGE current, Dynamic, pass | 1.24 | 1.29 | 22.5% | 1.23 | 0.00 | 0.0% | 12.71 |
 
 The current 30k run supersedes the earlier 10k policy-default comparison. The historical 10k bonus-guess runs remain separate because they used different operative settings:
 
@@ -99,18 +99,18 @@ The current 30k run supersedes the earlier 10k policy-default comparison. The hi
 | 🧠 BGE hybrid, random, bonus | 1.42 | 37.7% | 1.49 | 0.57 | 3.0% | 9.74 |
 | 🧱 MiniLM hybrid, random, bonus | 1.26 | 22.8% | 1.31 | 0.50 | 7.0% | 10.83 |
 
-The first-half mean takes the first `ceiling(total clue turns / 2)` clue turns from each completed game, then aggregates their clue numbers. The implemented policy prefers the best multi-card clue when its hybrid score is within five points of the overall best clue. It does not force a pair when the score gap is larger. Its clue-number shape changes naturally with the board:
+The first-half mean takes the first `ceiling(total clue turns / 2)` clue turns from each completed game, then aggregates their clue numbers. The implemented policy prefers the best multi-card clue when its hybrid score is within ten points of the overall best clue. It does not force a pair when the score gap is larger. Its clue-number shape changes naturally with the board:
 
 | 🕵️ Own agents left | 📈 Mean number | 🔢 Multi clues |
 | --- | ---: | ---: |
 | 🔵 9 | 2.20 | 100.0% |
-| 🔵 8 | 2.27 | 97.0% |
-| 🔵 7 | 2.03 | 94.3% |
-| 🔵 6 | 1.92 | 83.0% |
-| 🔵 5 | 1.77 | 73.5% |
-| 🔵 4 | 1.46 | 44.4% |
-| 🔵 3 | 1.35 | 35.4% |
-| 🔵 2 | 1.14 | 14.2% |
+| 🔵 8 | 2.29 | 99.0% |
+| 🔵 7 | 2.08 | 98.8% |
+| 🔵 6 | 2.00 | 90.9% |
+| 🔵 5 | 1.91 | 86.4% |
+| 🔵 4 | 1.69 | 66.7% |
+| 🔵 3 | 1.47 | 47.2% |
+| 🔵 2 | 1.18 | 18.0% |
 | 🔵 1 | 1.00 | 0.0% |
 
 The zero-error self-play result must not be treated as a human safety estimate. A real validation should replay human operative choices or collect Play sessions where the human guesses bot clues.
@@ -118,7 +118,7 @@ The zero-error self-play result must not be treated as a human safety estimate. 
 ## ✅ Implemented Play defaults
 
 1. Play bot turns use BGE-small while Train keeps its independent default.
-2. The hybrid score prefers a multi clue within five points of the best clue.
+2. The hybrid score prefers a multi clue within ten points of the best clue.
 3. Bot spymasters prefer never-targeted friendly cards until late game.
 4. Bot operatives use Dynamic aggression and adapt only to public remaining-agent counts.
 5. Bot operatives pass after the declared clue number.
@@ -132,7 +132,7 @@ The product target should be stage-dependent rather than a forced full-game mean
 
 - Run `npm run analyze:play-clues` for the controlled opening-board ablation. It updates [`play-clue-bias-analysis.json`](../scripts/generated/play-clue-bias-analysis.json).
 - Run `npm run benchmark:play` for the checked 100-board clue-policy and operative-aggression benchmark.
-- Run `node scripts/benchmark-play-policy.mjs --model bge-small --clue-selection tempo --multi-tolerance 5 --operative-aggression dynamic --bonus-guesses pass --output /tmp/play-bge-tempo.json` for the recommended experimental policy.
+- Run `node scripts/benchmark-play-policy.mjs --model bge-small --clue-selection tempo --multi-tolerance 10 --operative-aggression dynamic --bonus-guesses pass --output /tmp/play-bge-tempo.json` for the current default policy.
 - Add `--operative-model minilm-l6 --report-detail compact` for the checked cross-model aggregate report without per-game records.
 - Repeat the same policy command with `minilm-l6` and `minilm-l3` to refresh the same-policy full-game model comparison in [`play-model-benchmark.json`](../scripts/generated/play-model-benchmark.json).
 

@@ -49,7 +49,7 @@ export const DEFAULT_PLAY_BOT_SETTINGS = Object.freeze({
   candidateCount: 30_000,
   cluePolicy: PLAY_CLUE_POLICY.HYBRID,
   clueRepeatPolicy: PLAY_CLUE_REPEAT_POLICY.NEVER,
-  multiTolerance: 5,
+  multiTolerance: 10,
   missedTargetTiming: PLAY_MISSED_TARGET_TIMING.LATE,
   operativeAggression: PLAY_OPERATIVE_AGGRESSION.DYNAMIC,
   operativeConcepts: PLAY_CONCEPT_RANKING.GUARDED,

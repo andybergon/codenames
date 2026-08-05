@@ -574,6 +574,7 @@ test("unsupported SUMNER explanation stays exact at representative viewports", a
   for (const viewport of [
     { width: 390, height: 844 },
     { width: 768, height: 1024 },
+    { width: 823, height: 998 },
     { width: 1440, height: 900 },
   ]) {
     await page.setViewportSize(viewport);
@@ -609,7 +610,7 @@ test("unsupported SUMNER explanation stays exact at representative viewports", a
     expect(fitsViewport, `explanation clipping at ${viewport.width}px`).toBe(true);
   }
 
-  expect(explanationRequests).toHaveLength(3);
+  expect(explanationRequests).toHaveLength(4);
   expect(
     explanationRequests.every(
       ({ recommendations }) =>
@@ -1691,7 +1692,7 @@ test("Play exposes and saves bot policy settings", async ({ page }) => {
   await expect(page.locator("#play-bot-candidates")).toHaveValue("30000");
   await expect(page.locator("#play-clue-policy")).toHaveValue("hybrid");
   await expect(page.locator("#play-clue-repeat-policy")).toHaveValue("never");
-  await expect(page.locator("#play-multi-tolerance")).toHaveValue("5");
+  await expect(page.locator("#play-multi-tolerance")).toHaveValue("10");
   await expect(page.locator("#play-missed-target-timing")).toHaveValue("late");
   await expect(page.locator("#play-operative-aggression")).toHaveValue(
     "dynamic",
@@ -2806,6 +2807,10 @@ test("Play bot setting help explains measured tradeoffs and stays on-screen", as
     "Within 5 points",
   );
   await expect(multiPopover.locator("tbody tr").nth(1)).toContainText("58.4%");
+  await expect(multiPopover.locator("tbody tr").nth(2)).toContainText(
+    "Within 10 points",
+  );
+  await expect(multiPopover.locator("tbody tr").nth(2)).toContainText("67.0%");
   await multiHelp.click();
 
   await modelHelp.hover();
@@ -6140,10 +6145,61 @@ test("analytics review authenticates, filters, reviews games, and stays responsi
 });
 
 test("completed local games accept scoped player feedback", async ({ page }) => {
+  const active = activeShareGame();
+  const assassinGuess = {
+    layoutId: 24,
+    word: "WORD24",
+    team: "assassin",
+    actor: "bot",
+  };
   const completed = {
-    ...completedShareGame(),
+    ...active,
     origin: "local",
     analyticsSequence: 6,
+    cards: active.cards.map((card) => ({
+      ...card,
+      done: card.done || card.layoutId === assassinGuess.layoutId,
+      revealedBy:
+        card.layoutId === assassinGuess.layoutId ? "red" : card.revealedBy,
+      revealedTurn:
+        card.layoutId === assassinGuess.layoutId ? 2 : card.revealedTurn,
+    })),
+    phase: "complete",
+    turnNumber: 2,
+    currentTurn: {
+      side: "red",
+      clue: "SECOND",
+      number: 1,
+      actor: "human",
+      intendedLayoutIds: [9],
+      guesses: [assassinGuess],
+    },
+    winner: "blue",
+    endReason: "assassin",
+    history: [
+      ...active.history,
+      {
+        type: "clue-given",
+        turn: 2,
+        side: "red",
+        actor: "human",
+        clue: "SECOND",
+        number: 1,
+        intendedLayoutIds: [9],
+      },
+      {
+        type: "card-guessed",
+        turn: 2,
+        side: "red",
+        ...assassinGuess,
+      },
+      {
+        type: "game-ended",
+        turn: 2,
+        winner: "blue",
+        reason: "assassin",
+      },
+    ],
   };
   await page.addInitScript((session) => {
     localStorage.setItem(
@@ -6164,10 +6220,95 @@ test("completed local games accept scoped player feedback", async ({ page }) => 
 
   await page.goto("/");
   await page.getByRole("button", { name: "Review finished game" }).click();
+  const feedbackButton = page.locator("#play-feedback-selection");
+  await expect(feedbackButton).toBeVisible();
+  await expect(feedbackButton).toHaveAccessibleName("Feedback for this game");
+  await expect(feedbackButton).toContainText("Whole game");
   await expect(
-    page.getByRole("button", { name: "Send game feedback" }),
-  ).toBeVisible();
-  await page.getByRole("button", { name: "Send game feedback" }).click();
+    feedbackButton.locator("svg.lucide-message-circle"),
+  ).toHaveCount(1);
+  await expect(page.locator(".play-feedback-link")).toHaveCount(0);
+  const historyTurn = page.locator(
+    "#play-history-list > .play-history-turn",
+  ).first();
+  for (const viewport of [
+    { width: 390, height: 844 },
+    { width: 768, height: 1024 },
+    { width: 823, height: 998 },
+    { width: 1440, height: 900 },
+  ]) {
+    await page.setViewportSize(viewport);
+    const feedbackLayout = await page
+      .locator(".play-history")
+      .evaluate((history) => {
+        const controls = history.querySelector(".play-history-controls");
+        const button = history.querySelector("#play-feedback-selection");
+        const historyBounds = history.getBoundingClientRect();
+        const buttonBounds = button.getBoundingClientRect();
+        return {
+          buttonInsideHistory:
+            buttonBounds.left >= historyBounds.left &&
+            buttonBounds.right <= historyBounds.right,
+          controlsFit: controls.scrollWidth <= controls.clientWidth + 1,
+          pageOverflows:
+            document.documentElement.scrollWidth >
+            document.documentElement.clientWidth,
+        };
+      });
+    expect(
+      feedbackLayout.pageOverflows,
+      `page overflow at ${viewport.width}x${viewport.height}`,
+    ).toBe(false);
+    expect(feedbackLayout.controlsFit).toBe(true);
+    expect(feedbackLayout.buttonInsideHistory).toBe(true);
+  }
+
+  await feedbackButton.click();
+  await expect(page.locator("#play-feedback-target")).toHaveText(
+    "Feedback for this game",
+  );
+  await page.getByRole("button", { name: "Cancel" }).click();
+
+  await historyTurn.locator(":scope > .play-history-turn-review").click();
+  await expect(feedbackButton).toHaveAccessibleName("Feedback for turn 1");
+  await expect(feedbackButton).toContainText("Turn 1");
+
+  await historyTurn
+    .locator(
+      '.play-history-action[data-action="clue-given"] .play-history-row-select',
+    )
+    .click();
+  await expect(feedbackButton).toHaveAccessibleName(
+    "Feedback for clue, turn 1",
+  );
+  await expect(feedbackButton).toContainText("Clue · Turn 1");
+
+  await page
+    .locator("#play-history-list > .play-history-turn")
+    .nth(1)
+    .locator(
+      '.play-history-action[data-action="card-guessed"] .play-history-row-select',
+    )
+    .click();
+  await expect(feedbackButton).toHaveAccessibleName(
+    "Feedback for guess, turn 2",
+  );
+  await expect(feedbackButton).toContainText("Guess · Turn 2");
+
+  const passSelection = historyTurn.locator(
+    '.play-history-action[data-action="turn-passed"] .play-history-row-select',
+  );
+  await passSelection.click();
+  await expect(passSelection).toHaveAttribute("aria-pressed", "true");
+  await expect(feedbackButton).toHaveAccessibleName(
+    "Feedback for pass, turn 1",
+  );
+  await expect(feedbackButton).toContainText("Pass · Turn 1");
+
+  await feedbackButton.click();
+  await expect(page.locator("#play-feedback-target")).toHaveText(
+    "Feedback for pass, turn 1",
+  );
   await page.locator("#play-feedback-category").selectOption("ux");
   await page
     .locator("#play-feedback-note")
@@ -6178,7 +6319,12 @@ test("completed local games accept scoped player feedback", async ({ page }) => 
   );
   expect(await page.evaluate(() => window.__feedbackSubmissions)).toEqual([
     {
-      scope: { type: "game" },
+      scope: {
+        type: "action",
+        turn: 1,
+        actionIndex: 2,
+        actionType: "turn-passed",
+      },
       category: "ux",
       note: "The ending was hard to understand.",
     },

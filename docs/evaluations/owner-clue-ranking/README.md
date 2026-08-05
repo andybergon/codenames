@@ -4,7 +4,7 @@ The frozen 100-board screen rejects the current independent sense-pair reranker.
 
 ## 🧪 Experiment
 
-- Start with the production BGE-small model, 30,000-clue index, legality filter, Hybrid clue policy, and five-point multi-clue tolerance.
+- Start with the production BGE-small model, 30,000-clue index, legality filter, Hybrid clue policy, and ten-point multi-clue tolerance.
 - Retrieve at most 64 legal clues that have WordNet definitions, remain below the `0.20` direct activation ceiling for every active card, and have the strongest direct support across two friendly cards.
 - Compute `max(direct similarity, concept similarity - 0.05)` for every active friendly, enemy, neutral, and assassin card.
 - Rerun the unchanged target, danger, Worth, and policy ranking for clue numbers of two or more. Number-one clues keep exact direct scoring.

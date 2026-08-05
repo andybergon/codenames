@@ -1078,7 +1078,37 @@ const tempoSuggestion = chooseBotClue({
       },
       {
         clue: "pair",
-        worth: 75,
+        worth: 60,
+        risk: "safe",
+        number: 2,
+        margin: 0.2,
+        expectedNet: 1,
+        success: 0.9,
+      },
+    ],
+  },
+  ownRemaining: 7,
+  opponentRemaining: 5,
+  policy: PLAY_CLUE_POLICY.HYBRID,
+  multiTolerance: DEFAULT_PLAY_BOT_SETTINGS.multiTolerance,
+  random: () => 0,
+});
+assert.equal(tempoSuggestion.clue, "pair");
+const balancedTempoSuggestion = chooseBotClue({
+  analysis: {
+    suggestions: [
+      {
+        clue: "single",
+        worth: 80,
+        risk: "safe",
+        number: 1,
+        margin: 0.2,
+        expectedNet: 1,
+        success: 0.9,
+      },
+      {
+        clue: "pair",
+        worth: 60,
         risk: "safe",
         number: 2,
         margin: 0.2,
@@ -1093,7 +1123,7 @@ const tempoSuggestion = chooseBotClue({
   multiTolerance: 5,
   random: () => 0,
 });
-assert.equal(tempoSuggestion.clue, "pair");
+assert.equal(balancedTempoSuggestion.clue, "single");
 const missedTargetSuggestions = {
   suggestions: [
     {

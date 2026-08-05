@@ -1,4 +1,4 @@
-import { Share2, createIcons } from "lucide";
+import { MessageCircle, Share2, createIcons } from "lucide";
 import { createRandomSeed } from "../board-share.js";
 import {
   cardCopyKey,
@@ -215,8 +215,8 @@ const BOT_SETTING_INFO = Object.freeze({
       headers: ["🧮 Scoring", "🔢 Multi", "✅ Correct", "⏱️ Turns"],
       numericColumns: [1, 2, 3],
       rows: [
-        ["🧪 Human-like", "58.4%", "1.60", "9.78"],
-        ["📍 Conservative", "15.7%", "1.17", "13.34"],
+        ["🧪 Human-like", "67.0%", "1.68", "9.36"],
+        ["📍 Conservative", "22.5%", "1.23", "12.71"],
       ],
     },
     note: "Multi is the share of clues for 2+ cards. Correct is the average number of correct cards per turn, and Turns is the average number of turns per game. Results come from 100 paired same-model bot games, not human win rates.",
@@ -242,11 +242,11 @@ const BOT_SETTING_INFO = Object.freeze({
       numericColumns: [2],
       rows: [
         ["🛑 Off", "It has the best score", "Not measured"],
-        ["⚖️ Balanced", "Within 5 points", "58.4%*"],
-        ["🚀 Strong", "Within 10 points", "Not measured"],
+        ["⚖️ Balanced", "Within 5 points", "58.4%"],
+        ["🚀 Strong", "Within 10 points", "67.0%"],
       ],
     },
-    note: "Off always chooses the best-scoring clue. Balanced and Strong may choose a clue for 2+ cards when it scores within the shown distance of the best clue overall. A wider margin favors more multi-card clues. *58.4% is the rate for the full recommended setup, not this setting alone.",
+    note: "Off always chooses the best-scoring clue. Balanced and Strong may choose a clue for 2+ cards when it scores within the shown distance of the best clue overall. A wider margin favors more multi-card clues. The rates are separate 100-board full-setup runs, not isolated one-factor measurements.",
   },
   missedTargetTiming: {
     id: "missed-target-timing",
@@ -452,8 +452,10 @@ export function createPlayMode(options = {}) {
       "#play-post-game-analysis-status",
     ),
     conceptBridges: document.querySelector("#play-concept-bridges"),
-    feedbackActions: document.querySelector("#play-feedback-actions"),
-    feedbackGame: document.querySelector("#play-feedback-game"),
+    feedbackSelection: document.querySelector("#play-feedback-selection"),
+    feedbackScopeLabel: document.querySelector(
+      "#play-feedback-scope-label",
+    ),
     feedbackForm: document.querySelector("#play-feedback-form"),
     feedbackTarget: document.querySelector("#play-feedback-target"),
     feedbackCategory: document.querySelector("#play-feedback-category"),
@@ -469,6 +471,19 @@ export function createPlayMode(options = {}) {
     historyBlueList: document.querySelector("#play-history-blue-list"),
     historyRedList: document.querySelector("#play-history-red-list"),
   };
+
+  const feedbackIcon = document.createElement("i");
+  feedbackIcon.dataset.lucide = "message-circle";
+  feedbackIcon.setAttribute("aria-hidden", "true");
+  elements.feedbackSelection.prepend(feedbackIcon);
+  createIcons({
+    icons: { MessageCircle },
+    attrs: { width: 15, height: 15, "stroke-width": 2 },
+    root: elements.feedbackSelection,
+  });
+  elements.feedbackSelection
+    .querySelector("svg")
+    ?.removeAttribute("data-lucide");
 
   for (const [container, definition] of [
     [elements.wordReuseInfo, WORD_REUSE_INFO],
@@ -569,7 +584,8 @@ export function createPlayMode(options = {}) {
   let shareFeedbackTimer = 0;
   let postGameTurns = [];
   let selectedPostGameTurn = null;
-  let selectedHistoryExplanation = null;
+  let selectedHistorySelection = null;
+  let feedbackSelectionScope = { type: "game" };
   let postGameScores = [];
   let postGameConceptBridges = [];
   let postGameAnalysisState = "idle";
@@ -656,8 +672,8 @@ export function createPlayMode(options = {}) {
     ensurePostGameAnalysis();
   });
 
-  elements.feedbackGame.addEventListener("click", () => {
-    openFeedbackForm({ type: "game" });
+  elements.feedbackSelection.addEventListener("click", () => {
+    openFeedbackForm(feedbackSelectionScope);
   });
   elements.feedbackCancel.addEventListener("click", closeFeedbackForm);
   elements.feedbackForm.addEventListener("submit", (event) => {
@@ -1329,7 +1345,8 @@ export function createPlayMode(options = {}) {
     postGameAnalysisRun += 1;
     postGameTurns = [];
     selectedPostGameTurn = null;
-    selectedHistoryExplanation = null;
+    selectedHistorySelection = null;
+    feedbackSelectionScope = { type: "game" };
     postGameScores = [];
     postGameConceptBridges = [];
     postGameAnalysisState = "idle";
@@ -1587,7 +1604,8 @@ export function createPlayMode(options = {}) {
           (scores) => Object.keys(scores).length === game.cards.length,
         );
       if (latestClueChanged) {
-        selectedHistoryExplanation = null;
+        selectedHistorySelection = null;
+        feedbackSelectionScope = { type: "game" };
         postGameAnalysisState = "idle";
       }
       if (hasCompleteSavedScores) {
@@ -2607,22 +2625,67 @@ export function createPlayMode(options = {}) {
     );
   }
 
+  function feedbackScopeText(scope) {
+    if (scope.type === "turn") {
+      return translate(gameLanguage(), "feedbackScopeTurn", {
+        turn: scope.turn,
+      });
+    }
+    if (scope.type === "action") {
+      return translate(gameLanguage(), "feedbackScopeAction", {
+        action: localizedFeedbackAction(scope.actionType),
+        turn: scope.turn,
+      });
+    }
+    return translate(gameLanguage(), "feedbackScopeGame");
+  }
+
+  function feedbackTargetText(scope) {
+    return scope.type === "game"
+      ? translate(gameLanguage(), "feedbackForGame")
+      : scope.type === "turn"
+        ? translate(gameLanguage(), "feedbackForTurn", {
+            turn: scope.turn,
+          })
+        : translate(gameLanguage(), "feedbackForAction", {
+            action: localizedFeedbackAction(scope.actionType).toLocaleLowerCase(
+              gameLanguage(),
+            ),
+            turn: scope.turn,
+          });
+  }
+
+  function renderFeedbackSelection() {
+    const available = canCollectPlayerFeedback();
+    elements.feedbackSelection.hidden = !available;
+    if (!available) {
+      feedbackScope = null;
+      elements.feedbackForm.hidden = true;
+      return;
+    }
+    elements.feedbackScopeLabel.textContent = feedbackScopeText(
+      feedbackSelectionScope,
+    );
+    elements.feedbackSelection.setAttribute(
+      "aria-label",
+      feedbackTargetText(feedbackSelectionScope),
+    );
+  }
+
+  function setFeedbackSelectionScope(scope) {
+    feedbackSelectionScope = scope;
+    if (!elements.feedbackForm.hidden) {
+      feedbackScope = scope;
+      elements.feedbackTarget.textContent = feedbackTargetText(scope);
+    }
+  }
+
   function openFeedbackForm(scope) {
     if (!canCollectPlayerFeedback()) return;
     feedbackScope = scope;
     elements.feedbackForm.hidden = false;
     elements.feedbackStatus.textContent = "";
-    elements.feedbackTarget.textContent =
-      scope.type === "game"
-        ? translate(gameLanguage(), "feedbackForGame")
-        : scope.type === "turn"
-          ? translate(gameLanguage(), "feedbackForTurn", {
-              turn: scope.turn,
-            })
-          : translate(gameLanguage(), "feedbackForAction", {
-              action: localizedFeedbackAction(scope.actionType),
-              turn: scope.turn,
-            });
+    elements.feedbackTarget.textContent = feedbackTargetText(scope);
     elements.feedbackNote.focus({ preventScroll: true });
   }
 
@@ -2669,7 +2732,7 @@ export function createPlayMode(options = {}) {
       "turn-passed": "historyPassAction",
     }[actionType];
     return key
-      ? translate(gameLanguage(), key).toLocaleLowerCase(gameLanguage())
+      ? translate(gameLanguage(), key)
       : actionType;
   }
 
@@ -2678,11 +2741,7 @@ export function createPlayMode(options = {}) {
     const completedGame = game.phase === GAME_PHASE.COMPLETE;
     elements.postGameAnalysis.hidden =
       !completedGame && !selectedTurn && !feedbackAvailable;
-    elements.feedbackActions.hidden = !feedbackAvailable;
-    if (!feedbackAvailable) {
-      feedbackScope = null;
-      elements.feedbackForm.hidden = true;
-    }
+    renderFeedbackSelection();
     if (!selectedTurn) {
       elements.conceptBridges.hidden = true;
       elements.conceptBridges.replaceChildren();
@@ -3134,7 +3193,10 @@ export function createPlayMode(options = {}) {
       });
       heading.addEventListener("click", (event) => {
         event.stopPropagation();
-        selectHistoryTurn(turnIndex);
+        selectHistoryTurn(turnIndex, null, {
+          type: "turn",
+          turn: turn.turn,
+        });
       });
       item.addEventListener("click", (event) => {
         if (
@@ -3143,7 +3205,10 @@ export function createPlayMode(options = {}) {
         ) {
           return;
         }
-        selectHistoryTurn(turnIndex);
+        selectHistoryTurn(turnIndex, null, {
+          type: "turn",
+          turn: turn.turn,
+        });
       });
     }
     heading.className =
@@ -3166,40 +3231,30 @@ export function createPlayMode(options = {}) {
       heading.append(viewing);
     }
     actions.className = "play-history-actions";
-    let turnFeedback = null;
-    if (canCollectPlayerFeedback() && Number.isInteger(turn.turn)) {
-      turnFeedback = document.createElement("button");
-      turnFeedback.type = "button";
-      turnFeedback.className = "play-feedback-link";
-      turnFeedback.textContent = translate(
-        gameLanguage(),
-        "sendTurnFeedback",
-      );
-      turnFeedback.addEventListener("click", () => {
-        openFeedbackForm({ type: "turn", turn: turn.turn });
-      });
-    }
     actions.append(
       ...turn.events.map((event) =>
         createHistoryItem(event, turnIndex, clueEvent),
       ),
     );
-    item.append(
-      heading,
-      ...(turnFeedback ? [turnFeedback] : []),
-      actions,
-    );
+    item.append(heading, actions);
     return item;
   }
 
-  function selectHistoryTurn(turnIndex, explanation = null) {
+  function selectHistoryTurn(
+    turnIndex,
+    selection = null,
+    selectedFeedbackScope = null,
+  ) {
     const scrollPositions = [
       elements.historyList,
       elements.historyBlueList,
       elements.historyRedList,
     ].map((list) => [list, list.scrollTop]);
     selectedPostGameTurn = turnIndex;
-    selectedHistoryExplanation = explanation;
+    selectedHistorySelection = selection;
+    if (selectedFeedbackScope) {
+      setFeedbackSelectionScope(selectedFeedbackScope);
+    }
     renderGame();
     for (const [list, scrollTop] of scrollPositions) {
       list.scrollTop = scrollTop;
@@ -3247,6 +3302,7 @@ export function createPlayMode(options = {}) {
               },
             ),
             turnIndex,
+            feedbackScope: historyActionFeedbackScope(event),
           },
         );
       } else {
@@ -3282,13 +3338,30 @@ export function createPlayMode(options = {}) {
               },
             ),
             turnIndex,
+            feedbackScope: historyActionFeedbackScope(event),
           },
         );
       } else {
         item.append(guessSummary);
       }
     } else if (event.type === "turn-passed") {
-      item.append(createHistoryActionLabel("historyPassAction"));
+      const summary = createHistoryActionLabel("historyPassAction");
+      if (
+        canCollectPlayerFeedback() &&
+        turnAnalysisEnabled() &&
+        Number.isInteger(event.analyticsActionIndex)
+      ) {
+        appendHistoryRowSelection(item, summary, {
+          selectionKey: `${turnIndex}:pass:${event.analyticsActionIndex}`,
+          selectionLabel: translate(gameLanguage(), "selectPassFeedback", {
+            turn: event.turn,
+          }),
+          turnIndex,
+          feedbackScope: historyActionFeedbackScope(event),
+        });
+      } else {
+        item.append(summary);
+      }
     } else {
       item.textContent = `🏁 ${translate(gameLanguage(), "historyWin", {
         side: localizedSideLabel(event.winner),
@@ -3300,28 +3373,16 @@ export function createPlayMode(options = {}) {
         ),
       })}`;
     }
-    if (
-      canCollectPlayerFeedback() &&
-      Number.isInteger(event.analyticsActionIndex)
-    ) {
-      const feedback = document.createElement("button");
-      feedback.type = "button";
-      feedback.className = "play-feedback-link play-feedback-action-link";
-      feedback.textContent = translate(
-        gameLanguage(),
-        "sendActionFeedback",
-      );
-      feedback.addEventListener("click", () => {
-        openFeedbackForm({
-          type: "action",
-          turn: event.turn,
-          actionIndex: event.analyticsActionIndex,
-          actionType: event.type,
-        });
-      });
-      item.append(feedback);
-    }
     return item;
+  }
+
+  function historyActionFeedbackScope(event) {
+    return {
+      type: "action",
+      turn: event.turn,
+      actionIndex: event.analyticsActionIndex,
+      actionType: event.type,
+    };
   }
 
   function createCluePill(clue) {
@@ -3380,6 +3441,7 @@ export function createPlayMode(options = {}) {
       selectionKey,
       selectionLabel,
       turnIndex,
+      feedbackScope,
     },
   ) {
     const row = document.createElement("div");
@@ -3406,24 +3468,52 @@ export function createPlayMode(options = {}) {
     row.className = "play-history-selectable-row";
     row.classList.toggle(
       "is-selected",
-      selectedHistoryExplanation === selectionKey,
+      selectedHistorySelection === selectionKey,
     );
     selector.type = "button";
     selector.className = "play-history-row-select";
     selector.setAttribute("aria-label", selectionLabel);
     selector.setAttribute(
       "aria-pressed",
-      String(selectedHistoryExplanation === selectionKey),
+      String(selectedHistorySelection === selectionKey),
     );
     selector.append(summary);
     actionSlot.className = "play-history-inline-actions";
-    actionSlot.hidden = selectedHistoryExplanation !== selectionKey;
+    actionSlot.hidden = selectedHistorySelection !== selectionKey;
     selector.addEventListener("click", (event) => {
       event.stopPropagation();
-      selectHistoryTurn(turnIndex, selectionKey);
+      selectHistoryTurn(turnIndex, selectionKey, feedbackScope);
     });
     row.append(selector, actionSlot);
     item.append(row, explanation);
+  }
+
+  function appendHistoryRowSelection(
+    item,
+    summary,
+    { selectionKey, selectionLabel, turnIndex, feedbackScope },
+  ) {
+    const row = document.createElement("div");
+    const selector = document.createElement("button");
+    row.className = "play-history-selectable-row";
+    row.classList.toggle(
+      "is-selected",
+      selectedHistorySelection === selectionKey,
+    );
+    selector.type = "button";
+    selector.className = "play-history-row-select";
+    selector.setAttribute("aria-label", selectionLabel);
+    selector.setAttribute(
+      "aria-pressed",
+      String(selectedHistorySelection === selectionKey),
+    );
+    selector.append(summary);
+    selector.addEventListener("click", (event) => {
+      event.stopPropagation();
+      selectHistoryTurn(turnIndex, selectionKey, feedbackScope);
+    });
+    row.append(selector);
+    item.append(row);
   }
 
   function createHistoryActionLabel(key) {
