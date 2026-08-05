@@ -61,6 +61,43 @@ try {
   assert.equal(first.stats().caseCount, 2);
   assert.equal(first.stats().usage.inputTokens, 2);
   assert.equal(first.stats().usage.outputTokens, 2);
+  assert.equal(first.identity.reasoningEffort, "low");
+  assert.ok(
+    first.identity.selectionCommand.argv.includes(
+      'model_reasoning_effort="low"',
+    ),
+  );
+
+  const lunaHigh = await createSubscriptionCliClueReranker({
+    cacheDirectory: join(cacheDirectory, "luna-high"),
+    cliVersionOverride: "codex-cli test",
+    invokeTransport: async (_definition, prompt) => {
+      const request = JSON.parse(prompt);
+      const structuredOutput = {
+        picks: [
+          {
+            caseId: request.cases[0].caseId,
+            candidateId: request.cases[0].candidates[0].candidateId,
+          },
+        ],
+      };
+      return {
+        picks: structuredOutput.picks,
+        rawOutput: JSON.stringify(structuredOutput),
+        structuredOutput,
+        usage: null,
+      };
+    },
+    modelId: "codex-luna-high",
+  });
+  assert.equal(lunaHigh.identity.selector, "gpt-5.6-luna");
+  assert.equal(lunaHigh.identity.reasoningEffort, "high");
+  assert.ok(
+    lunaHigh.identity.selectionCommand.argv.includes(
+      'model_reasoning_effort="high"',
+    ),
+  );
+  assert.equal(await lunaHigh.select(inputs[0]), "c0");
 
   const cached = await createSubscriptionCliClueReranker({
     cacheDirectory,

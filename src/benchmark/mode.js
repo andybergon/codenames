@@ -308,11 +308,23 @@ function renderCliModel(model) {
       </div>
       <span class="benchmark-status" data-state="${escapeHtml(model.overallStatus)}">${overall.icon} ${overall.label}</span>
     </div>
+    ${renderCliCost(model)}
     <div class="benchmark-cli-stage-grid">
       ${CLI_STAGE_SLOTS.map((slot) => renderCliStage(model, slot)).join("")}
     </div>
     ${renderRunNotes(model)}
   </article>`;
+}
+
+function renderCliCost(model) {
+  const economics = model.economics;
+  if (economics?.status !== "measured") {
+    return `<p class="benchmark-cli-cost"><strong>Cost unavailable</strong><span>${escapeHtml(economics?.reason ?? "No matching subscription rate is recorded.")}</span></p>`;
+  }
+  return `<p class="benchmark-cli-cost">
+    <strong>💳 ≈${formatUsd(economics.apiEquivalent.usdPerGame)}/game · ${formatCredits(economics.creditsPerGame)} credits/game</strong>
+    <span>API-equivalent estimate from ${formatInteger(economics.completedGames)} completed games · <a href="${escapeHtml(economics.apiEquivalent.rateCard.sourceUrl)}" target="_blank" rel="noreferrer">API pricing</a></span>
+  </p>`;
 }
 
 function renderCliStage(model, slot) {
@@ -337,6 +349,7 @@ function renderCliStage(model, slot) {
     </div>
     <p><strong>95% range:</strong> ${formatStudyInterval(metric.delta)}</p>
     <p>${escapeHtml(reason)}</p>
+    ${renderSelectionDiagnostics(screen.selectionDiagnostics)}
     <details class="benchmark-result-evidence">
       <summary>Exact recorded values</summary>
       <dl class="benchmark-exact-values">
@@ -348,6 +361,11 @@ function renderCliStage(model, slot) {
       </dl>
     </details>
   </section>`;
+}
+
+function renderSelectionDiagnostics(diagnostics) {
+  if (!diagnostics) return "";
+  return `<p class="benchmark-selection-diagnostics"><strong>Clue ambition:</strong> multi-card clues ${formatPercent(diagnostics.multiClueRate.baseline)} → ${formatPercent(diagnostics.multiClueRate.candidate)}, first-half clue number ${formatStudyNumber(diagnostics.firstHalfMeanClueNumber.baseline)} → ${formatStudyNumber(diagnostics.firstHalfMeanClueNumber.candidate)}, passes/game ${formatStudyNumber(diagnostics.passesPerGame.baseline)} → ${formatStudyNumber(diagnostics.passesPerGame.candidate)}.</p>`;
 }
 
 function renderMissingCliStage(model, slot) {
@@ -459,6 +477,18 @@ function formatNumber(value) {
 
 function formatStudyNumber(value) {
   return Number.isFinite(value) ? value.toFixed(2) : "Not recorded";
+}
+
+function formatCredits(value) {
+  return Number.isFinite(value) ? value.toFixed(2) : "Not recorded";
+}
+
+function formatUsd(value) {
+  return Number.isFinite(value) ? `$${value.toFixed(3)}` : "Not recorded";
+}
+
+function formatPercent(value) {
+  return Number.isFinite(value) ? `${(value * 100).toFixed(1)}%` : "Not recorded";
 }
 
 function formatSigned(value) {

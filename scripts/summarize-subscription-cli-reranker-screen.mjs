@@ -9,7 +9,20 @@ const OUTPUT_DIRECTORY = resolve(
   ROOT,
   "docs/evaluations/subscription-cli-reranker",
 );
+const PRIOR_REPORT = await readJsonIfExists(
+  resolve(OUTPUT_DIRECTORY, "subscription-cli-reranker-screen.json"),
+);
 const MODELS = Object.freeze([
+  {
+    id: "codex-luna-low",
+    label: "GPT-5.6 Luna Low",
+    cli: "codex",
+  },
+  {
+    id: "codex-luna-high",
+    label: "GPT-5.6 Luna High",
+    cli: "codex",
+  },
   {
     id: "codex-sol",
     label: "GPT-5.6 Sol",
@@ -31,6 +44,51 @@ const SCREENS = Object.freeze([
   { id: "development", label: "Same-model development" },
   { id: "transfer-smoke", label: "MiniLM-L6 transfer smoke" },
 ]);
+const CHATGPT_CREDIT_RATE_CARD = Object.freeze({
+  sourceUrl: "https://learn.chatgpt.com/docs/pricing#what-are-tokens-and-credits",
+  verifiedAt: "2026-08-05",
+  unit: "credits-per-million-tokens",
+  rates: Object.freeze({
+    "gpt-5.6-sol": Object.freeze({
+      input: 125,
+      cachedInput: 12.5,
+      output: 750,
+    }),
+    "gpt-5.6-terra": Object.freeze({
+      input: 50,
+      cachedInput: 5,
+      output: 300,
+    }),
+    "gpt-5.6-luna": Object.freeze({
+      input: 5,
+      cachedInput: 0.5,
+      output: 30,
+    }),
+  }),
+});
+const OPENAI_API_RATE_CARD = Object.freeze({
+  sourceUrl: "https://developers.openai.com/api/docs/pricing",
+  verifiedAt: "2026-08-05",
+  tier: "standard-short-context",
+  unit: "usd-per-million-tokens",
+  rates: Object.freeze({
+    "gpt-5.6-sol": Object.freeze({
+      input: 5,
+      cachedInput: 0.5,
+      output: 30,
+    }),
+    "gpt-5.6-terra": Object.freeze({
+      input: 2,
+      cachedInput: 0.2,
+      output: 12,
+    }),
+    "gpt-5.6-luna": Object.freeze({
+      input: 0.2,
+      cachedInput: 0.02,
+      output: 1.2,
+    }),
+  }),
+});
 
 const models = [];
 for (const model of MODELS) {
@@ -41,6 +99,17 @@ for (const model of MODELS) {
     progress?.completedScreens ??
     failure?.completedScreens ??
     (await discoverCompletedScreens(model));
+  const priorModel = PRIOR_REPORT?.models?.find(({ id }) => id === model.id);
+  if (
+    priorModel &&
+    !failure &&
+    !progress &&
+    archivedInterruptions.length === 0 &&
+    completedScreenIds.length === 0
+  ) {
+    models.push(priorModel);
+    continue;
+  }
   const screens = [];
   for (const screen of SCREENS) {
     if (!completedScreenIds.includes(screen.id)) continue;
@@ -89,7 +158,9 @@ for (const model of MODELS) {
     availability: failure
       ? (failure.interruption?.class ?? "cli-interruption")
       : incomplete
-        ? "externally-interrupted"
+        ? completedScreenIds.length > 0
+          ? "staged"
+          : "externally-interrupted"
         : "available",
     overallStatus: screens.some(({ verdict }) => verdict === "block")
       ? "block"
@@ -128,6 +199,90 @@ for (const model of MODELS) {
           ]
         : [],
   });
+}
+
+for (let index = 0; index < models.length; index += 1) {
+  models[index] = {
+    ...models[index],
+    economics: subscriptionEconomics(models[index]),
+  };
+}
+
+function subscriptionEconomics(model) {
+  const selector = model.identity?.selector;
+  const rate = CHATGPT_CREDIT_RATE_CARD.rates[selector];
+  const apiRate = OPENAI_API_RATE_CARD.rates[selector];
+  const completedGames = model.screens.reduce(
+    (total, screen) => total + screen.evidence.boardCount,
+    0,
+  );
+  if (!rate || !model.requestCorpus || completedGames === 0) {
+    return {
+      status: "unavailable",
+      reason: rate
+        ? "No complete request corpus and game count are available."
+        : "No matching official ChatGPT credit rate is attached to this provider model.",
+    };
+  }
+  const usage = model.requestCorpus.usage;
+  const uncachedInputTokens = Math.max(
+    0,
+    usage.inputTokens - usage.cachedInputTokens,
+  );
+  const totalCredits =
+    (uncachedInputTokens * rate.input +
+      usage.cachedInputTokens * rate.cachedInput +
+      usage.outputTokens * rate.output) /
+    1_000_000;
+  const estimatedApiUsd = apiRate
+    ? (uncachedInputTokens * apiRate.input +
+        usage.cachedInputTokens * apiRate.cachedInput +
+        usage.outputTokens * apiRate.output) /
+      1_000_000
+    : null;
+  return {
+    status: "measured",
+    unit: "ChatGPT credits",
+    completedGames,
+    totalCredits: round(totalCredits),
+    creditsPerGame: round(totalCredits / completedGames),
+    usage: {
+      uncachedInputTokens,
+      cachedInputTokens: usage.cachedInputTokens,
+      outputTokens: usage.outputTokens,
+    },
+    rateCard: {
+      sourceUrl: CHATGPT_CREDIT_RATE_CARD.sourceUrl,
+      verifiedAt: CHATGPT_CREDIT_RATE_CARD.verifiedAt,
+      unit: CHATGPT_CREDIT_RATE_CARD.unit,
+      input: rate.input,
+      cachedInput: rate.cachedInput,
+      output: rate.output,
+    },
+    apiEquivalent: estimatedApiUsd == null
+      ? {
+          status: "unavailable",
+          reason: "No matching official OpenAI API rate is attached to this model.",
+        }
+      : {
+          status: "estimated",
+          totalUsd: round(estimatedApiUsd),
+          usdPerGame: round(estimatedApiUsd / completedGames),
+          rateCard: {
+            sourceUrl: OPENAI_API_RATE_CARD.sourceUrl,
+            verifiedAt: OPENAI_API_RATE_CARD.verifiedAt,
+            tier: OPENAI_API_RATE_CARD.tier,
+            unit: OPENAI_API_RATE_CARD.unit,
+            input: apiRate.input,
+            cachedInput: apiRate.cachedInput,
+            output: apiRate.output,
+          },
+          basis:
+            "Estimated standard short-context OpenAI API cost for the measured CLI token usage. No API request or API charge occurred.",
+        },
+    basis:
+      "Official ChatGPT credit rates applied to the exact content-addressed request corpus, divided by completed benchmark games. Cached input is a subset of total input and is priced separately.",
+  };
 }
 
 async function requestCorpusSummary(model, identity) {
@@ -284,7 +439,7 @@ const humanGold = {
 };
 
 const report = {
-  schemaVersion: 1,
+  schemaVersion: 2,
   artifactKind: "subscription-cli-clue-reranker-screen",
   generatedAt: [...models]
     .map(({ generatedAt }) => generatedAt)
@@ -302,6 +457,8 @@ const report = {
     apiSpendCapUsd: 5,
     runtimeBoundary:
       "The web application cannot invoke coding subscription CLIs during normal play.",
+    costBoundary:
+      "Cost per game reports measured ChatGPT credits and an estimated standard short-context OpenAI API equivalent from exact CLI token usage. The USD estimate is not incurred API spend or an incremental subscription charge.",
   },
   protocol: {
     promptVersion: 1,
@@ -383,6 +540,9 @@ async function readScreen(model, screen) {
     readArtifact(comparisonPath),
     readFile(logPath, "utf8"),
   ]);
+  const baselineArtifact = await readArtifact(
+    comparisonArtifact.json.baseline.path,
+  );
   const candidate = comparisonArtifact.json.candidates.find(
     ({ id }) => id === model.id,
   );
@@ -438,6 +598,10 @@ async function readScreen(model, screen) {
         },
       ]),
     ),
+    selectionDiagnostics: selectionDiagnostics(
+      baselineArtifact.json,
+      reportArtifact.json,
+    ),
     gates: candidate.promotion.gates,
     artifacts: {
       report: artifactReference(reportArtifact),
@@ -454,6 +618,27 @@ async function readScreen(model, screen) {
       },
     },
   };
+}
+
+function selectionDiagnostics(baselineReport, candidateReport) {
+  const baseline = baselineReport.policies?.hybrid;
+  const candidate = candidateReport.policies?.hybrid;
+  if (!baseline || !candidate) return null;
+  return Object.fromEntries(
+    [
+      "meanClueNumber",
+      "firstHalfMeanClueNumber",
+      "multiClueRate",
+      "passesPerGame",
+    ].map((key) => [
+      key,
+      {
+        baseline: baseline[key],
+        candidate: candidate[key],
+        delta: round(candidate[key] - baseline[key]),
+      },
+    ]),
+  );
 }
 
 async function readFailure(model) {
@@ -739,16 +924,19 @@ function renderMarkdown(value) {
   const rows = value.models
     .map(
       (model) =>
-        `| 🤖 ${model.label} | ${status(model.overallStatus)} | ${screenStatus(model, "smoke")} | ${screenStatus(model, "development")} | ${screenStatus(model, "transfer-smoke")} | ${model.requests.requestAttempts} | ${formatMilliseconds(model.requests.latencyMs.p50)} | ${formatPercent(model.requests.errorRate)} |`,
+        `| 🤖 ${model.label} | ${status(model.overallStatus)} | ${formatCreditCost(model.economics)} | ${screenStatus(model, "smoke")} | ${screenStatus(model, "development")} | ${screenStatus(model, "transfer-smoke")} | ${model.requests.requestAttempts} | ${formatMilliseconds(model.requests.latencyMs.p50)} | ${formatPercent(model.requests.errorRate)} |`,
     )
     .join("\n");
   const details = value.models
     .map((model) => {
       const screens = model.screens
-        .map(
-          (screen) =>
-            `- ${screen.label}: ${status(screen.verdict)}, ${screen.evidence.boardCount} boards, ${screen.requests.requestAttempts} requests, p50 ${formatMilliseconds(screen.requests.latencyMs.p50)}, ${screen.run.seconds.toFixed(2)} s, peak RSS ${formatBytes(screen.run.maximumResidentBytes)}.`,
-        )
+        .map((screen) => {
+          const diagnostics = screen.selectionDiagnostics;
+          const behavior = diagnostics
+            ? ` Clue ambition changed from ${formatPercent(diagnostics.multiClueRate.baseline)} to ${formatPercent(diagnostics.multiClueRate.candidate)} multi-card clues, first-half clue number ${diagnostics.firstHalfMeanClueNumber.baseline.toFixed(2)} to ${diagnostics.firstHalfMeanClueNumber.candidate.toFixed(2)}, and ${diagnostics.passesPerGame.baseline.toFixed(2)} to ${diagnostics.passesPerGame.candidate.toFixed(2)} passes per game.`
+            : "";
+          return `- ${screen.label}: ${status(screen.verdict)}, ${screen.evidence.boardCount} boards, ${screen.requests.requestAttempts} requests, p50 ${formatMilliseconds(screen.requests.latencyMs.p50)}, ${screen.run.seconds.toFixed(2)} s, peak RSS ${formatBytes(screen.run.maximumResidentBytes)}.${behavior}`;
+        })
         .join("\n");
       const failure = model.failure
         ? `\n- Interruption: \`${model.failure.failedScreen}\` stopped without fallback (${model.failure.interruption?.class ?? "cli-interruption"}). ${model.failure.interruption?.detail ?? model.failure.error}`
@@ -768,10 +956,20 @@ function renderMarkdown(value) {
       const corpus = model.requestCorpus
         ? `\n- Durable request corpus: ${model.requestCorpus.records.toLocaleString()} unique content-addressed records, ${model.requestCorpus.usage.inputTokens.toLocaleString()} input tokens, ${model.requestCorpus.usage.cachedInputTokens.toLocaleString()} cached input tokens, and ${model.requestCorpus.usage.outputTokens.toLocaleString()} output tokens.`
         : "";
-      return `## 🤖 ${model.label}\n\n${identity}\n- Completed-screen execution usage: ${model.requests.usage.inputTokens.toLocaleString()} input, ${model.requests.usage.cachedInputTokens.toLocaleString()} cached input, ${model.requests.usage.cacheCreationInputTokens.toLocaleString()} cache-creation input, ${model.requests.usage.cacheReadInputTokens.toLocaleString()} cache-read input, and ${model.requests.usage.outputTokens.toLocaleString()} output tokens.${corpus}${failure}${interruptions}${limitations}\n${screens || "- No complete screen artifact."}`;
+      const economics =
+        model.economics.status === "measured"
+          ? `\n- Cost: ${model.economics.creditsPerGame.toFixed(2)} ChatGPT credits per completed game (${model.economics.totalCredits.toFixed(2)} credits across ${model.economics.completedGames} games), using the [official ChatGPT rate card](${model.economics.rateCard.sourceUrl}) verified ${model.economics.rateCard.verifiedAt}. The same measured tokens are an estimated $${model.economics.apiEquivalent.usdPerGame.toFixed(3)} per game at [standard short-context API prices](${model.economics.apiEquivalent.rateCard.sourceUrl}), but no API charge occurred.`
+          : `\n- Cost: unavailable. ${model.economics.reason}`;
+      return `## 🤖 ${model.label}\n\n${identity}\n- Completed-screen execution usage: ${model.requests.usage.inputTokens.toLocaleString()} input, ${model.requests.usage.cachedInputTokens.toLocaleString()} cached input, ${model.requests.usage.cacheCreationInputTokens.toLocaleString()} cache-creation input, ${model.requests.usage.cacheReadInputTokens.toLocaleString()} cache-read input, and ${model.requests.usage.outputTokens.toLocaleString()} output tokens.${corpus}${economics}${failure}${interruptions}${limitations}\n${screens || "- No complete screen artifact."}`;
     })
     .join("\n\n");
-  return `# Subscription CLI clue reranker screen\n\n| 🧠 Candidate | 🚦 Overall | 🔬 Smoke | 🛠️ Development | 🛡️ Transfer | 🔢 Requests | ⏱️ P50 | ⚠️ Error rate |\n| --- | --- | --- | --- | --- | ---: | ---: | ---: |\n${rows}\n\nThese are subscription CLI research signals. No API request, API key, sealed test board, promotion decision, or production-runtime claim is part of this report.\n\n## 👥 Human and gold evidence\n\n🚫 Unavailable. ${value.humanGold.blocker} The sealed 30-task calibration round was not consumed. Existing listener and operative artifacts remain source references only and are not attached as clue-selection evidence.\n\n${details}\n\n## 📌 Boundary\n\n- The safe embedding engine generated every six-item shortlist and the selected clue continued through the existing game engine.\n- Same-model self-play, development comparison, and MiniLM-L6 transfer remain separate.\n- A gate failure blocks even if another headline metric rises.\n- The web application cannot call these coding CLIs in normal play.\n- Any future provider API implementation remains separate and keeps the absolute $5 total spend cap.\n`;
+  return `# Subscription CLI clue reranker screen\n\n| 🧠 Candidate | 🚦 Overall | 💳 Cost/game | 🔬 Smoke | 🛠️ Development | 🛡️ Transfer | 🔢 Requests | ⏱️ P50 | ⚠️ Error rate |\n| --- | --- | ---: | --- | --- | --- | ---: | ---: | ---: |\n${rows}\n\nThese are subscription CLI research signals. No API request, API key, sealed test board, promotion decision, or production-runtime claim is part of this report.\n\n## 👥 Human and gold evidence\n\n🚫 Unavailable. ${value.humanGold.blocker} The sealed 30-task calibration round was not consumed. Existing listener and operative artifacts remain source references only and are not attached as clue-selection evidence.\n\n${details}\n\n## 📌 Boundary\n\n- The safe embedding engine generated every six-item shortlist and the selected clue continued through the existing game engine.\n- Same-model self-play, development comparison, and MiniLM-L6 transfer remain separate.\n- A gate failure blocks even if another headline metric rises.\n- Cost per game uses exact content-addressed token usage, the official ChatGPT credit rate card, and the standard short-context OpenAI API rate card. USD is an API-equivalent estimate, not incurred spend.\n- The web application cannot call these coding CLIs in normal play.\n- Any future provider API implementation remains separate and keeps the absolute $5 total spend cap.\n`;
+}
+
+function formatCreditCost(economics) {
+  return economics.status === "measured"
+    ? `$${economics.apiEquivalent.usdPerGame.toFixed(3)} est · ${economics.creditsPerGame.toFixed(2)} credits`
+    : "N/A";
 }
 
 function status(value) {

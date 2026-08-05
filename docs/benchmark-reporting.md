@@ -141,21 +141,26 @@ Run the complete non-held-out subscription screen with:
 npm run benchmark:subscription-cli
 ```
 
-The command runs Claude Opus, GPT-5.6 Sol, and GPT-5.6 Terra sequentially when their exact selectors are available. Each receives one frozen safe-engine shortlist case per read-only, no-tools request. Requests are content-addressed by the complete prompt, CLI version, selector, adapter revision, and transport revision. No API key is inherited, no provider fallback is allowed, and a fatal, timeout, quota, parse, or validation error stops that model without substituting another.
+The command runs GPT-5.6 Luna at Low and High reasoning, GPT-5.6 Sol, GPT-5.6 Terra, and Claude Opus sequentially when their exact selectors are available. Luna's reasoning levels are separate candidate identities. Each candidate receives one frozen safe-engine shortlist case per read-only, no-tools request. Requests are content-addressed by the complete prompt, CLI version, selector, reasoning effort, adapter revision, and transport revision. No API key is inherited, no provider fallback is allowed, and a fatal, timeout, quota, parse, or validation error stops that model without substituting another.
 
 The sequence produces same-model smoke and development comparisons plus a MiniLM-L6 operative smoke transfer screen. It never requests the sealed test split. These subscription CLI results are research signals only because the web application cannot invoke coding CLIs during normal play. An API candidate would require a separate provider implementation, the existing `$5` total API cap, and fresh evidence.
 
-`npm run benchmark:subscription-cli:summary` writes the checked [subscription CLI reranker screen](evaluations/subscription-cli-reranker/subscription-cli-reranker-screen.md) from validated completed screens, exact identity probes, atomic progress records, and archived interruption evidence.
+Use `--screens smoke` for a bounded first screen before committing subscription quota and time to development and transfer runs. Resume the same candidate identity with additional comma-separated screen IDs only after reviewing the earlier stage.
+
+`npm run benchmark:subscription-cli:summary` writes the checked [subscription CLI reranker screen](evaluations/subscription-cli-reranker/subscription-cli-reranker-screen.md) from validated completed screens, exact identity probes, atomic progress records, and archived interruption evidence. For Codex candidates, it applies the official ChatGPT credit rate card to the exact content-addressed request corpus and reports credits per completed game. It also estimates USD per game from the same measured tokens using standard short-context OpenAI API rates. Cached input is removed from ordinary input before each separate cached rate is applied. Credits are measured subscription usage, while USD is an API-equivalent estimate rather than incurred spend or an incremental subscription charge.
+
+One benchmark case is one Owner clue turn and one CLI request. Cost explanations therefore report cases per completed game, average uncached-input, cached-input, and output tokens per case, and their separate price contributions. Codex usage includes the fixed CLI system and runtime context as well as the compact game case, and the CLI does not expose a reliable token split between those sources. Local content-addressed request reuse is separate from provider cached-input tokens: the full-game estimate prices every unique case record so rerunning from a warm local cache cannot make the model appear cheaper.
 
 If a subscription quota or transport interruption stops a model, resume only that exact model without regenerating the frozen baselines:
 
 ```sh
 npm run benchmark:subscription-cli -- \
   --reuse-baselines \
-  --models codex-sol
+  --models codex-luna-low \
+  --screens smoke
 ```
 
-Replace `codex-sol` with `codex-terra` or `claude-opus` as needed. The runner validates each completed report, comparison, and timing-log triple before skipping it. It records progress atomically and archives failed attempts, so a resumed screen reuses only content-addressed requests with the same CLI identity, adapter revision, prompt, shortlist, and full case content.
+Replace `codex-luna-low` with `codex-luna-high`, `codex-sol`, `codex-terra`, or `claude-opus` as needed. The runner validates each completed report, comparison, and timing-log triple before skipping it. It records progress atomically and archives failed attempts, so a resumed screen reuses only content-addressed requests with the same CLI identity, adapter revision, prompt, shortlist, and full case content.
 
 ## Evidence split
 

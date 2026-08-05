@@ -80,7 +80,10 @@ import {
   boardVectorCacheIdentity,
   loadOrCreateBoardVectors,
 } from "./benchmark-board-vector-cache.mjs";
-import { createSubscriptionCliClueReranker } from "./subscription-cli-clue-reranker.mjs";
+import {
+  createSubscriptionCliClueReranker,
+  SUBSCRIPTION_CLI_MODEL_IDS,
+} from "./subscription-cli-clue-reranker.mjs";
 
 const ROOT = resolve(fileURLToPath(new URL("..", import.meta.url)));
 env.cacheDir =
@@ -1488,10 +1491,10 @@ function parseOptions(args) {
       index -= 1;
     } else if (option === "--subscription-cli-model") {
       if (
-        !["claude-opus", "codex-sol", "codex-terra"].includes(value)
+        !SUBSCRIPTION_CLI_MODEL_IDS.includes(value)
       ) {
         throw new Error(
-          `${option} must be claude-opus, codex-sol, or codex-terra.`,
+          `${option} must be ${SUBSCRIPTION_CLI_MODEL_IDS.join(", ")}.`,
         );
       }
       values.subscriptionCliModel = value;

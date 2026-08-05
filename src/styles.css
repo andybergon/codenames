@@ -473,6 +473,23 @@
   font-size: 0.8rem;
 }
 
+.benchmark-cli-cost {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px 10px;
+  align-items: baseline;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.benchmark-cli-cost strong {
+  color: var(--text);
+}
+
+.benchmark-cli-cost a {
+  color: inherit;
+}
+
 .benchmark-cli-stage-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

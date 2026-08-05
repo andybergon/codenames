@@ -6400,7 +6400,7 @@ test("benchmark page leads with findings and the accepted baseline", async ({
     "9 keep default · 3 worth deeper testing · 5 unclear",
   );
   await expect(page.locator(".benchmark-learning-summary")).toContainText(
-    "3 models",
+    "5 models",
   );
   await expect(page.locator(".benchmark-learning-summary")).toContainText(
     "0 sealed boards",
@@ -6437,7 +6437,7 @@ test("benchmark page explains the six testing stages and their use", async ({
     [
       "smoke",
       "Smoke · 20 boards",
-      "8 settings decided here · 3 CLI models completed",
+      "8 settings decided here · 5 CLI models completed",
     ],
     ["calibration", "Calibration · 100 boards", "Not used here"],
     ["development", "Development · 128 boards", "9 settings · 2 CLI models"],
@@ -6514,7 +6514,52 @@ test("benchmark CLI study shows scores and explicit missing stages", async ({
     page.getByRole("heading", { name: "Could a coding CLI pick better clues?" }),
   ).toBeVisible();
   const models = page.locator(".benchmark-cli-model");
-  await expect(models).toHaveCount(3);
+  await expect(models).toHaveCount(5);
+
+  const lunaLow = models.filter({ hasText: "GPT-5.6 Luna Low" });
+  await expect(lunaLow).toHaveCount(1);
+  await expect(lunaLow.locator(".benchmark-cli-cost")).toContainText(
+    "≈$0.042/game · 1.06 credits/game",
+  );
+  await expect(lunaLow.locator('[data-cli-stage="smoke"]')).toContainText(
+    "1.42",
+  );
+  await expect(lunaLow.locator('[data-cli-stage="smoke"]')).toContainText(
+    "-0.22",
+  );
+  await expect(
+    lunaLow.locator('[data-cli-stage="smoke"] .benchmark-selection-diagnostics'),
+  ).toContainText(
+    "multi-card clues 60.0% → 41.9%, first-half clue number 2.03 → 1.70, passes/game 8.50 → 10.10",
+  );
+  await expect(
+    lunaLow.locator('[data-cli-stage="development"]'),
+  ).toContainText("Not run");
+
+  const lunaHigh = models.filter({ hasText: "GPT-5.6 Luna High" });
+  await expect(lunaHigh).toHaveCount(1);
+  await expect(lunaHigh.locator('[data-cli-stage="smoke"]')).toContainText(
+    "1.39",
+  );
+  await expect(lunaHigh.locator('[data-cli-stage="smoke"]')).toContainText(
+    "-0.25",
+  );
+  await expect(lunaHigh.locator(".benchmark-cli-cost")).toContainText(
+    "≈$0.042/game · 1.05 credits/game",
+  );
+
+  const terra = models.filter({ hasText: "GPT-5.6 Terra" });
+  await expect(terra).toHaveCount(1);
+  await expect(terra.locator(".benchmark-cli-cost")).toContainText(
+    "≈$0.301/game · 7.52 credits/game",
+  );
+  await expect(terra.locator(".benchmark-cli-stage")).toHaveCount(3);
+  await expect(terra.locator('[data-cli-stage="smoke"]')).toContainText(
+    "1.32",
+  );
+  await expect(terra.locator('[data-cli-stage="development"]')).toContainText(
+    "1.29",
+  );
 
   const sol = models.filter({ hasText: "GPT-5.6 Sol" });
   await expect(sol).toHaveCount(1);

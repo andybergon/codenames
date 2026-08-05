@@ -9,12 +9,22 @@ import {
 } from "node:fs/promises";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { createSubscriptionCliClueReranker } from "./subscription-cli-clue-reranker.mjs";
+import {
+  createSubscriptionCliClueReranker,
+  SUBSCRIPTION_CLI_MODEL_IDS,
+} from "./subscription-cli-clue-reranker.mjs";
 
 const ROOT = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const OUTPUT_ROOT = resolve(ROOT, ".cache/subscription-cli-benchmark");
-const MODELS = Object.freeze(["codex-sol", "codex-terra", "claude-opus"]);
-const { reuseBaselines, selectedModels } = parseOptions(process.argv.slice(2));
+const MODELS = SUBSCRIPTION_CLI_MODEL_IDS;
+const SCREEN_IDS = Object.freeze([
+  "smoke",
+  "development",
+  "transfer-smoke",
+]);
+const { reuseBaselines, selectedModels, selectedScreens } = parseOptions(
+  process.argv.slice(2),
+);
 const acceptedDevelopment = resolve(
   ROOT,
   "scripts/generated/play-accepted-baseline-development.json",
@@ -92,11 +102,14 @@ for (const modelId of selectedModels) {
     completedScreens,
   });
   await archiveFailure(failurePath, directory, priorFailure);
-  let activeScreen = completedScreens.includes("smoke")
-    ? "development"
-    : "smoke";
+  let activeScreen =
+    selectedScreens.find((screenId) => !completedScreens.includes(screenId)) ??
+    selectedScreens.at(-1);
   try {
-    if (!completedScreens.includes("smoke")) {
+    if (
+      selectedScreens.includes("smoke") &&
+      !completedScreens.includes("smoke")
+    ) {
       await runScreen({
         baseline: acceptedSmoke,
         baselineId: "accepted-production-smoke",
@@ -112,8 +125,13 @@ for (const modelId of selectedModels) {
         completedScreens,
       });
     }
-    activeScreen = "development";
-    if (!completedScreens.includes("development")) {
+    if (selectedScreens.includes("development")) {
+      activeScreen = "development";
+    }
+    if (
+      selectedScreens.includes("development") &&
+      !completedScreens.includes("development")
+    ) {
       await runScreen({
         baseline: acceptedDevelopment,
         baselineId: "accepted-production-development",
@@ -129,8 +147,13 @@ for (const modelId of selectedModels) {
         completedScreens,
       });
     }
-    activeScreen = "transfer-smoke";
-    if (!completedScreens.includes("transfer-smoke")) {
+    if (selectedScreens.includes("transfer-smoke")) {
+      activeScreen = "transfer-smoke";
+    }
+    if (
+      selectedScreens.includes("transfer-smoke") &&
+      !completedScreens.includes("transfer-smoke")
+    ) {
       await runScreen({
         baseline: transferSmoke,
         baselineId: "accepted-production-transfer-smoke",
@@ -165,7 +188,7 @@ for (const modelId of selectedModels) {
 }
 
 console.log(
-  `Completed non-held-out subscription CLI screens for ${selectedModels.join(", ")}.`,
+  `Completed selected subscription CLI screens (${selectedScreens.join(", ")}) for ${selectedModels.join(", ")}.`,
 );
 if (failures.length > 0) {
   process.exitCode = 1;
@@ -246,24 +269,44 @@ async function run(executable, args, logPath = null) {
 }
 
 function parseOptions(args) {
-  const reuseBaselines = args.includes("--reuse-baselines");
-  const remaining = args.filter((value) => value !== "--reuse-baselines");
-  if (remaining.length === 0) {
-    return { reuseBaselines, selectedModels: MODELS };
+  let reuseBaselines = false;
+  let selectedModels = MODELS;
+  let selectedScreens = SCREEN_IDS;
+  for (let index = 0; index < args.length; index += 1) {
+    const option = args[index];
+    if (option === "--reuse-baselines") {
+      reuseBaselines = true;
+      continue;
+    }
+    const value = args[index + 1];
+    if (option === "--models") {
+      selectedModels = parseSelection(value, MODELS, "Models");
+      index += 1;
+      continue;
+    }
+    if (option === "--screens") {
+      selectedScreens = parseSelection(value, SCREEN_IDS, "Screens");
+      index += 1;
+      continue;
+    }
+    throw new Error(usage());
   }
-  if (remaining.length !== 2 || remaining[0] !== "--models") {
-    throw new Error(
-      "Usage: node scripts/run-subscription-cli-clue-reranker-screen.mjs [--reuse-baselines] [--models codex-sol,codex-terra,claude-opus]",
-    );
-  }
-  const models = remaining[1].split(",").filter(Boolean);
+  return { reuseBaselines, selectedModels, selectedScreens };
+}
+
+function parseSelection(value, allowed, label) {
+  const selected = value?.split(",").filter(Boolean) ?? [];
   if (
-    models.length === 0 ||
-    models.some((modelId) => !MODELS.includes(modelId))
+    selected.length === 0 ||
+    selected.some((candidate) => !allowed.includes(candidate))
   ) {
-    throw new Error(`Models must be selected from ${MODELS.join(", ")}.`);
+    throw new Error(`${label} must be selected from ${allowed.join(", ")}.`);
   }
-  return { reuseBaselines, selectedModels: models };
+  return selected;
+}
+
+function usage() {
+  return `Usage: node scripts/run-subscription-cli-clue-reranker-screen.mjs [--reuse-baselines] [--models ${MODELS.join(",")}] [--screens ${SCREEN_IDS.join(",")}]`;
 }
 
 function subscriptionEnvironment() {
@@ -313,7 +356,7 @@ async function validateCompletedScreens(
 ) {
   const completed = [];
   for (const screenId of screenIds) {
-    if (!["smoke", "development", "transfer-smoke"].includes(screenId)) {
+    if (!SCREEN_IDS.includes(screenId)) {
       continue;
     }
     try {

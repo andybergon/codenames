@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "artifactKind": "subscription-cli-clue-reranker-screen",
-  "generatedAt": "2026-07-29T13:47:54.523Z",
+  "generatedAt": "2026-08-05T05:04:47.611Z",
   "scientificBoundary": {
     "apiRequests": false,
     "apiKeysInherited": false,
@@ -11,7 +11,8 @@
     "productionAvailabilityClaim": false,
     "providerFallback": false,
     "apiSpendCapUsd": 5,
-    "runtimeBoundary": "The web application cannot invoke coding subscription CLIs during normal play."
+    "runtimeBoundary": "The web application cannot invoke coding subscription CLIs during normal play.",
+    "costBoundary": "Cost per game reports measured ChatGPT credits and an estimated standard short-context OpenAI API equivalent from exact CLI token usage. The USD estimate is not incurred API spend or an incremental subscription charge."
   },
   "protocol": {
     "promptVersion": 1,
@@ -61,6 +62,1120 @@
     "reason": "An initial simultaneous three-model pilot hit subscription connection failures and used schedule-dependent batching with incomplete cache provenance. A corrected Sol trial at four concurrent requests also stopped after repeated connection refusals. Both incomplete attempts were replaced by the corrected one-case protocol with one Codex request or two Claude requests in flight."
   },
   "models": [
+    {
+      "id": "codex-luna-low",
+      "label": "GPT-5.6 Luna Low",
+      "cli": "codex",
+      "availability": "staged",
+      "overallStatus": "block",
+      "generatedAt": "2026-08-05T05:04:47.611Z",
+      "identity": {
+        "modelId": "codex-luna-low",
+        "cli": "codex",
+        "cliVersion": "codex-cli 0.146.0",
+        "implementationSha256": "951221e388679cfc24e0e0a18fd7b651b3b13a0753751165604e3de087c34fb5",
+        "selector": "gpt-5.6-luna",
+        "reasoningEffort": "low",
+        "selectionCommand": {
+          "executable": "codex",
+          "argv": [
+            "exec",
+            "--ignore-user-config",
+            "--ignore-rules",
+            "--ephemeral",
+            "--sandbox",
+            "read-only",
+            "--disable",
+            "shell_tool",
+            "--disable",
+            "plugins",
+            "--disable",
+            "skill_search",
+            "--disable",
+            "plugin_sharing",
+            "--disable",
+            "tool_suggest",
+            "--model",
+            "gpt-5.6-luna",
+            "-c",
+            "model_reasoning_effort=\"low\"",
+            "--json",
+            "{PROMPT}"
+          ]
+        },
+        "subscriptionSurface": "codex-subscription",
+        "promptVersion": 1,
+        "shortlistVersion": "play-safe-shortlist-v1",
+        "transportVersion": 1,
+        "requestConcurrency": 1,
+        "casesPerRequest": 1,
+        "timeoutMs": 120000,
+        "tools": "disabled",
+        "fallbackModel": null,
+        "resolvedModel": "gpt-5.6-luna"
+      },
+      "requests": {
+        "requestAttempts": 10,
+        "successfulRequests": 10,
+        "cachedRequests": 212,
+        "cases": 222,
+        "retries": 0,
+        "quotaStops": 0,
+        "errors": 0,
+        "errorRate": 0,
+        "fallbackRate": 0,
+        "cacheHitRate": 0.954955,
+        "latencyMs": {
+          "count": 10,
+          "mean": 5748.95,
+          "p50": 5516.2,
+          "p95": 8182.6,
+          "p99": 8182.6,
+          "maximum": 8182.6
+        },
+        "usage": {
+          "inputTokens": 256944,
+          "cachedInputTokens": 108288,
+          "cacheCreationInputTokens": 0,
+          "cacheReadInputTokens": 0,
+          "outputTokens": 646,
+          "reasoningOutputTokens": 336
+        }
+      },
+      "requestCorpus": {
+        "records": 222,
+        "uniquePromptHashes": 222,
+        "bytes": 1044714,
+        "firstGeneratedAt": "2026-08-05T04:06:40.847Z",
+        "lastGeneratedAt": "2026-08-05T05:04:47.608Z",
+        "usage": {
+          "inputTokens": 5753313,
+          "cachedInputTokens": 1818624,
+          "cacheCreationInputTokens": 0,
+          "cacheReadInputTokens": 0,
+          "outputTokens": 21700,
+          "reasoningOutputTokens": 14713
+        },
+        "latencyBoundary": "Per-request latency is retained by the complete screen execution that issued it. Earlier interrupted-attempt request latencies are not reconstructable from cache records."
+      },
+      "screens": [
+        {
+          "id": "smoke",
+          "label": "Same-model smoke",
+          "generatedAt": "2026-08-05T05:04:47.611Z",
+          "verdict": "block",
+          "reasons": [
+            "At least one Play promotion gate conclusively failed."
+          ],
+          "identity": {
+            "modelId": "codex-luna-low",
+            "cli": "codex",
+            "cliVersion": "codex-cli 0.146.0",
+            "implementationSha256": "951221e388679cfc24e0e0a18fd7b651b3b13a0753751165604e3de087c34fb5",
+            "selector": "gpt-5.6-luna",
+            "reasoningEffort": "low",
+            "selectionCommand": {
+              "executable": "codex",
+              "argv": [
+                "exec",
+                "--ignore-user-config",
+                "--ignore-rules",
+                "--ephemeral",
+                "--sandbox",
+                "read-only",
+                "--disable",
+                "shell_tool",
+                "--disable",
+                "plugins",
+                "--disable",
+                "skill_search",
+                "--disable",
+                "plugin_sharing",
+                "--disable",
+                "tool_suggest",
+                "--model",
+                "gpt-5.6-luna",
+                "-c",
+                "model_reasoning_effort=\"low\"",
+                "--json",
+                "{PROMPT}"
+              ]
+            },
+            "subscriptionSurface": "codex-subscription",
+            "promptVersion": 1,
+            "shortlistVersion": "play-safe-shortlist-v1",
+            "transportVersion": 1,
+            "requestConcurrency": 1,
+            "casesPerRequest": 1,
+            "timeoutMs": 120000,
+            "tools": "disabled",
+            "fallbackModel": null
+          },
+          "requests": {
+            "requestAttempts": 10,
+            "successfulRequests": 10,
+            "cachedRequests": 212,
+            "cases": 222,
+            "retries": 0,
+            "quotaStops": 0,
+            "errors": {
+              "total": 0,
+              "transport": 0,
+              "parse": 0,
+              "validation": 0,
+              "timeout": 0,
+              "rate": 0
+            },
+            "fallbackRate": 0,
+            "cacheHitRate": 0.954955,
+            "latencyMs": {
+              "count": 10,
+              "mean": 5748.95,
+              "p50": 5516.2,
+              "p95": 8182.6,
+              "p99": 8182.6,
+              "maximum": 8182.6
+            },
+            "usage": {
+              "inputTokens": 256944,
+              "cachedInputTokens": 108288,
+              "cacheCreationInputTokens": 0,
+              "cacheReadInputTokens": 0,
+              "outputTokens": 646,
+              "reasoningOutputTokens": 336
+            }
+          },
+          "run": {
+            "seconds": 100.19,
+            "maximumResidentBytes": 824262656,
+            "boardVectorCache": {
+              "status": "hit",
+              "milliseconds": 3.2
+            }
+          },
+          "evidence": {
+            "split": "smoke",
+            "boardOffset": 0,
+            "boardCount": 20,
+            "operativeModelId": "same",
+            "heldOutProtocol": null
+          },
+          "configurationFingerprint": "e0b749d1c4862c04ed049f96dc21e183cccba0842d0ad567a307fd9368ad1b28",
+          "configurationSchema": 2,
+          "pinnedAssets": {
+            "implementation": "e830436f0ab83ed64886997c78b8505704ccbf26b7d95fdd81b8eb8aa424baca",
+            "boardWords": "b2bdf45505d9a23da8f127923c62a33be570d9fc1646400ad8038a18e78ab9a2",
+            "spymasterManifest": "df9997658cb028aac476db5291b03d2fb88a7923304036c651da7206968da8fb",
+            "operativeManifest": "df9997658cb028aac476db5291b03d2fb88a7923304036c651da7206968da8fb",
+            "conceptAssets": "d23c4a06d0dfb491b512349659e2a95bf05b9b8cb15a8a52bc648fbb45c77c01"
+          },
+          "metrics": {
+            "correctCardsPerTurn": {
+              "baseline": 1.642105,
+              "candidate": 1.418919,
+              "delta": {
+                "estimate": -0.223186,
+                "lower": -0.293617,
+                "upper": -0.153976
+              },
+              "status": "regressed"
+            },
+            "wrongTeamHitsPerGame": {
+              "baseline": 0,
+              "candidate": 0,
+              "delta": {
+                "estimate": 0,
+                "lower": 0,
+                "upper": 0
+              },
+              "status": "unchanged"
+            },
+            "neutralHitsPerGame": {
+              "baseline": 0,
+              "candidate": 0,
+              "delta": {
+                "estimate": 0,
+                "lower": 0,
+                "upper": 0
+              },
+              "status": "unchanged"
+            },
+            "assassinRate": {
+              "baseline": 0,
+              "candidate": 0,
+              "delta": {
+                "estimate": 0,
+                "lower": 0,
+                "upper": 0
+              },
+              "status": "unchanged"
+            },
+            "fallbackClueRate": {
+              "baseline": 0,
+              "candidate": 0,
+              "delta": {
+                "estimate": 0,
+                "lower": 0,
+                "upper": 0
+              },
+              "status": "unchanged"
+            },
+            "stallRate": {
+              "baseline": 0,
+              "candidate": 0,
+              "delta": {
+                "estimate": 0,
+                "lower": 0,
+                "upper": 0
+              },
+              "status": "unchanged"
+            },
+            "meanTurnsPerGame": {
+              "baseline": 9.5,
+              "candidate": 11.1,
+              "delta": {
+                "estimate": 1.6,
+                "lower": 1.05,
+                "upper": 2.2
+              },
+              "status": "changed"
+            }
+          },
+          "selectionDiagnostics": {
+            "meanClueNumber": {
+              "baseline": 1.689474,
+              "candidate": 1.436937,
+              "delta": -0.252537
+            },
+            "firstHalfMeanClueNumber": {
+              "baseline": 2.029703,
+              "candidate": 1.700855,
+              "delta": -0.328848
+            },
+            "multiClueRate": {
+              "baseline": 0.6,
+              "candidate": 0.418919,
+              "delta": -0.181081
+            },
+            "passesPerGame": {
+              "baseline": 8.5,
+              "candidate": 10.1,
+              "delta": 1.6
+            }
+          },
+          "gates": {
+            "zeroStalls": {
+              "passed": true,
+              "actual": 0,
+              "maximum": 0,
+              "status": "pass"
+            },
+            "assassinNonInferiority": {
+              "passed": true,
+              "actual": {
+                "estimate": 0,
+                "lower": 0,
+                "upper": 0
+              },
+              "maximumUpperBound": 0.05,
+              "candidateRate": {
+                "estimate": 0,
+                "lower": 0,
+                "upper": 0.161125
+              },
+              "status": "pass"
+            },
+            "wrongTeamNonInferiority": {
+              "passed": true,
+              "actual": {
+                "estimate": 0,
+                "lower": 0,
+                "upper": 0
+              },
+              "maximumUpperBound": 0.15,
+              "candidateRate": 0,
+              "status": "pass"
+            },
+            "neutralNonInferiority": {
+              "passed": true,
+              "actual": {
+                "estimate": 0,
+                "lower": 0,
+                "upper": 0
+              },
+              "maximumUpperBound": 0.15,
+              "status": "pass"
+            },
+            "fallback": {
+              "passed": true,
+              "actual": 0,
+              "maximum": 0.01,
+              "status": "pass"
+            },
+            "correctNonInferiority": {
+              "passed": false,
+              "actual": {
+                "estimate": -0.223186,
+                "lower": -0.293617,
+                "upper": -0.153976
+              },
+              "minimumLowerBound": -0.05,
+              "status": "block"
+            },
+            "correctSuperiority": {
+              "passed": false,
+              "actual": {
+                "estimate": -0.223186,
+                "lower": -0.293617,
+                "upper": -0.153976
+              },
+              "minimumLowerBound": 0,
+              "status": "block"
+            }
+          },
+          "artifacts": {
+            "report": {
+              "path": ".cache/subscription-cli-benchmark/codex-luna-low/smoke.json",
+              "sha256": "4a4c04301b405b9a05a84dc2083911e7390ded4099badeae653ab4c58be2f502",
+              "bytes": 114240
+            },
+            "comparison": {
+              "path": ".cache/subscription-cli-benchmark/codex-luna-low/smoke-comparison.json",
+              "sha256": "14eeac6a217d938070d46b4fe260346cbec576597bdcbd3afc6bec64e0eeb781",
+              "bytes": 54635
+            },
+            "baseline": {
+              "path": "/Users/ab/.codex/worktrees/2597/codenames/.cache/subscription-cli-benchmark/baseline-same-model/smoke.json",
+              "sha256": "ca72342176cf6fc6b59102b4b4636d70c40e414287e703195242c319d45492cc",
+              "configurationFingerprint": "86847f42ad8b5344b4c7ede5500b5d41af2cb0e223062a981da9f829cd4f5ad3"
+            },
+            "timingLog": {
+              "path": ".cache/subscription-cli-benchmark/codex-luna-low/smoke.log",
+              "sha256": "67fb9ca407e20146849bca9c8f44eb1b877aefe8e8471975c0894f58d46ebeba"
+            }
+          }
+        }
+      ],
+      "failure": null,
+      "progress": {
+        "schemaVersion": 1,
+        "generatedAt": "2026-08-05T05:04:47.797Z",
+        "providerEnvironmentPolicy": {
+          "version": 1,
+          "removedVariableNames": [
+            "CODEX_CI",
+            "CODEX_INTERNAL_ORIGINATOR_OVERRIDE",
+            "CODEX_PERMISSION_PROFILE",
+            "CODEX_SHELL",
+            "CODEX_THREAD_ID"
+          ],
+          "subscriptionConfigVariablesAllowed": [
+            "CLAUDE_CONFIG_DIR",
+            "CODEX_HOME"
+          ],
+          "alternateProviderRoutesRemoved": true
+        },
+        "modelId": "codex-luna-low",
+        "provenance": {
+          "modelId": "codex-luna-low",
+          "cli": "codex",
+          "cliVersion": "codex-cli 0.146.0",
+          "implementationSha256": "951221e388679cfc24e0e0a18fd7b651b3b13a0753751165604e3de087c34fb5",
+          "selector": "gpt-5.6-luna",
+          "reasoningEffort": "low",
+          "selectionCommand": {
+            "executable": "codex",
+            "argv": [
+              "exec",
+              "--ignore-user-config",
+              "--ignore-rules",
+              "--ephemeral",
+              "--sandbox",
+              "read-only",
+              "--disable",
+              "shell_tool",
+              "--disable",
+              "plugins",
+              "--disable",
+              "skill_search",
+              "--disable",
+              "plugin_sharing",
+              "--disable",
+              "tool_suggest",
+              "--model",
+              "gpt-5.6-luna",
+              "-c",
+              "model_reasoning_effort=\"low\"",
+              "--json",
+              "{PROMPT}"
+            ]
+          },
+          "subscriptionSurface": "codex-subscription",
+          "promptVersion": 1,
+          "shortlistVersion": "play-safe-shortlist-v1",
+          "transportVersion": 1,
+          "requestConcurrency": 1,
+          "casesPerRequest": 1,
+          "timeoutMs": 120000,
+          "tools": "disabled",
+          "fallbackModel": null
+        },
+        "completedScreens": [
+          "smoke"
+        ],
+        "artifact": {
+          "path": ".cache/subscription-cli-benchmark/codex-luna-low/progress.json",
+          "sha256": "cf73bfe41fc4b4f1eb2938a810088e08831453891fb0dac37777f9e7aeb785b0",
+          "bytes": 1651
+        }
+      },
+      "interruptions": [
+        {
+          "failedScreen": "smoke",
+          "generatedAt": "2026-08-05T04:31:52.262Z",
+          "class": "subscription-transport-refused",
+          "detail": "Reconnecting... 2/5 (stream disconnected before completion: Connection refused (os error 61))",
+          "run": {
+            "seconds": 579.91,
+            "maximumResidentBytes": 703299584,
+            "boardVectorCache": {
+              "status": "hit",
+              "milliseconds": 5.3
+            }
+          },
+          "logSha256": "bfb5bfdf6fc6ee8458dcec4de6ea4b3166cd971c953b542cdb944af33bb652fd",
+          "logArtifact": {
+            "path": ".cache/subscription-cli-benchmark/codex-luna-low/smoke.attempt-2026-08-05T04-31-52.262Z.log",
+            "sha256": "bfb5bfdf6fc6ee8458dcec4de6ea4b3166cd971c953b542cdb944af33bb652fd",
+            "bytes": 1828
+          }
+        },
+        {
+          "failedScreen": "smoke",
+          "generatedAt": "2026-08-05T04:53:45.835Z",
+          "class": "subscription-transport-refused",
+          "detail": "Reconnecting... 2/5 (stream disconnected before completion: Connection refused (os error 61))",
+          "run": {
+            "seconds": 630.2,
+            "maximumResidentBytes": 801849344,
+            "boardVectorCache": {
+              "status": "hit",
+              "milliseconds": 3.7
+            }
+          },
+          "logSha256": "bf24429ef060457af4be90fb2e8f682fa69d9e8ef23ecf3d1356a07b2e210d65",
+          "logArtifact": {
+            "path": ".cache/subscription-cli-benchmark/codex-luna-low/smoke.attempt-2026-08-05T04-53-45.835Z.log",
+            "sha256": "bf24429ef060457af4be90fb2e8f682fa69d9e8ef23ecf3d1356a07b2e210d65",
+            "bytes": 1828
+          }
+        },
+        {
+          "failedScreen": "smoke",
+          "generatedAt": "2026-08-05T05:03:07.468Z",
+          "class": "subscription-transport-refused",
+          "detail": "Reconnecting... 2/5 (stream disconnected before completion: Connection refused (os error 61))",
+          "run": {
+            "seconds": 284.74,
+            "maximumResidentBytes": 827211776,
+            "boardVectorCache": {
+              "status": "hit",
+              "milliseconds": 5.1
+            }
+          },
+          "logSha256": "50978270f19fddce9b852b163834be9ed4f491f7702ef63a77ceb4b7da479c8d",
+          "logArtifact": {
+            "path": ".cache/subscription-cli-benchmark/codex-luna-low/smoke.attempt-2026-08-05T05-03-07.468Z.log",
+            "sha256": "50978270f19fddce9b852b163834be9ed4f491f7702ef63a77ceb4b7da479c8d",
+            "bytes": 1872
+          }
+        }
+      ],
+      "measurementLimitations": [],
+      "economics": {
+        "status": "measured",
+        "unit": "ChatGPT credits",
+        "completedGames": 20,
+        "totalCredits": 21.233757,
+        "creditsPerGame": 1.061688,
+        "usage": {
+          "uncachedInputTokens": 3934689,
+          "cachedInputTokens": 1818624,
+          "outputTokens": 21700
+        },
+        "rateCard": {
+          "sourceUrl": "https://learn.chatgpt.com/docs/pricing#what-are-tokens-and-credits",
+          "verifiedAt": "2026-08-05",
+          "unit": "credits-per-million-tokens",
+          "input": 5,
+          "cachedInput": 0.5,
+          "output": 30
+        },
+        "apiEquivalent": {
+          "status": "estimated",
+          "totalUsd": 0.84935,
+          "usdPerGame": 0.042468,
+          "rateCard": {
+            "sourceUrl": "https://developers.openai.com/api/docs/pricing",
+            "verifiedAt": "2026-08-05",
+            "tier": "standard-short-context",
+            "unit": "usd-per-million-tokens",
+            "input": 0.2,
+            "cachedInput": 0.02,
+            "output": 1.2
+          },
+          "basis": "Estimated standard short-context OpenAI API cost for the measured CLI token usage. No API request or API charge occurred."
+        },
+        "basis": "Official ChatGPT credit rates applied to the exact content-addressed request corpus, divided by completed benchmark games. Cached input is a subset of total input and is priced separately."
+      }
+    },
+    {
+      "id": "codex-luna-high",
+      "label": "GPT-5.6 Luna High",
+      "cli": "codex",
+      "availability": "staged",
+      "overallStatus": "block",
+      "generatedAt": "2026-08-05T05:02:36.872Z",
+      "identity": {
+        "modelId": "codex-luna-high",
+        "cli": "codex",
+        "cliVersion": "codex-cli 0.146.0",
+        "implementationSha256": "951221e388679cfc24e0e0a18fd7b651b3b13a0753751165604e3de087c34fb5",
+        "selector": "gpt-5.6-luna",
+        "reasoningEffort": "high",
+        "selectionCommand": {
+          "executable": "codex",
+          "argv": [
+            "exec",
+            "--ignore-user-config",
+            "--ignore-rules",
+            "--ephemeral",
+            "--sandbox",
+            "read-only",
+            "--disable",
+            "shell_tool",
+            "--disable",
+            "plugins",
+            "--disable",
+            "skill_search",
+            "--disable",
+            "plugin_sharing",
+            "--disable",
+            "tool_suggest",
+            "--model",
+            "gpt-5.6-luna",
+            "-c",
+            "model_reasoning_effort=\"high\"",
+            "--json",
+            "{PROMPT}"
+          ]
+        },
+        "subscriptionSurface": "codex-subscription",
+        "promptVersion": 1,
+        "shortlistVersion": "play-safe-shortlist-v1",
+        "transportVersion": 1,
+        "requestConcurrency": 1,
+        "casesPerRequest": 1,
+        "timeoutMs": 120000,
+        "tools": "disabled",
+        "fallbackModel": null,
+        "resolvedModel": "gpt-5.6-luna"
+      },
+      "requests": {
+        "requestAttempts": 36,
+        "successfulRequests": 36,
+        "cachedRequests": 187,
+        "cases": 223,
+        "retries": 0,
+        "quotaStops": 0,
+        "errors": 0,
+        "errorRate": 0,
+        "fallbackRate": 0,
+        "cacheHitRate": 0.838565,
+        "latencyMs": {
+          "count": 36,
+          "mean": 5669.044444,
+          "p50": 4955.4,
+          "p95": 9537.3,
+          "p99": 13962,
+          "maximum": 13962
+        },
+        "usage": {
+          "inputTokens": 926281,
+          "cachedInputTokens": 372992,
+          "cacheCreationInputTokens": 0,
+          "cacheReadInputTokens": 0,
+          "outputTokens": 3740,
+          "reasoningOutputTokens": 2605
+        }
+      },
+      "requestCorpus": {
+        "records": 223,
+        "uniquePromptHashes": 223,
+        "bytes": 1057555,
+        "firstGeneratedAt": "2026-08-05T04:16:17.799Z",
+        "lastGeneratedAt": "2026-08-05T05:02:36.868Z",
+        "usage": {
+          "inputTokens": 5782637,
+          "cachedInputTokens": 1997312,
+          "cacheCreationInputTokens": 0,
+          "cacheReadInputTokens": 0,
+          "outputTokens": 36583,
+          "reasoningOutputTokens": 29551
+        },
+        "latencyBoundary": "Per-request latency is retained by the complete screen execution that issued it. Earlier interrupted-attempt request latencies are not reconstructable from cache records."
+      },
+      "screens": [
+        {
+          "id": "smoke",
+          "label": "Same-model smoke",
+          "generatedAt": "2026-08-05T05:02:36.872Z",
+          "verdict": "block",
+          "reasons": [
+            "At least one Play promotion gate conclusively failed."
+          ],
+          "identity": {
+            "modelId": "codex-luna-high",
+            "cli": "codex",
+            "cliVersion": "codex-cli 0.146.0",
+            "implementationSha256": "951221e388679cfc24e0e0a18fd7b651b3b13a0753751165604e3de087c34fb5",
+            "selector": "gpt-5.6-luna",
+            "reasoningEffort": "high",
+            "selectionCommand": {
+              "executable": "codex",
+              "argv": [
+                "exec",
+                "--ignore-user-config",
+                "--ignore-rules",
+                "--ephemeral",
+                "--sandbox",
+                "read-only",
+                "--disable",
+                "shell_tool",
+                "--disable",
+                "plugins",
+                "--disable",
+                "skill_search",
+                "--disable",
+                "plugin_sharing",
+                "--disable",
+                "tool_suggest",
+                "--model",
+                "gpt-5.6-luna",
+                "-c",
+                "model_reasoning_effort=\"high\"",
+                "--json",
+                "{PROMPT}"
+              ]
+            },
+            "subscriptionSurface": "codex-subscription",
+            "promptVersion": 1,
+            "shortlistVersion": "play-safe-shortlist-v1",
+            "transportVersion": 1,
+            "requestConcurrency": 1,
+            "casesPerRequest": 1,
+            "timeoutMs": 120000,
+            "tools": "disabled",
+            "fallbackModel": null
+          },
+          "requests": {
+            "requestAttempts": 36,
+            "successfulRequests": 36,
+            "cachedRequests": 187,
+            "cases": 223,
+            "retries": 0,
+            "quotaStops": 0,
+            "errors": {
+              "total": 0,
+              "transport": 0,
+              "parse": 0,
+              "validation": 0,
+              "timeout": 0,
+              "rate": 0
+            },
+            "fallbackRate": 0,
+            "cacheHitRate": 0.838565,
+            "latencyMs": {
+              "count": 36,
+              "mean": 5669.044444,
+              "p50": 4955.4,
+              "p95": 9537.3,
+              "p99": 13962,
+              "maximum": 13962
+            },
+            "usage": {
+              "inputTokens": 926281,
+              "cachedInputTokens": 372992,
+              "cacheCreationInputTokens": 0,
+              "cacheReadInputTokens": 0,
+              "outputTokens": 3740,
+              "reasoningOutputTokens": 2605
+            }
+          },
+          "run": {
+            "seconds": 246.35,
+            "maximumResidentBytes": 877985792,
+            "boardVectorCache": {
+              "status": "hit",
+              "milliseconds": 3.1
+            }
+          },
+          "evidence": {
+            "split": "smoke",
+            "boardOffset": 0,
+            "boardCount": 20,
+            "operativeModelId": "same",
+            "heldOutProtocol": null
+          },
+          "configurationFingerprint": "73304dcf721646e722c325ae6d69f6c9533ad4c5834af30aa79eab3ec9585715",
+          "configurationSchema": 2,
+          "pinnedAssets": {
+            "implementation": "e830436f0ab83ed64886997c78b8505704ccbf26b7d95fdd81b8eb8aa424baca",
+            "boardWords": "b2bdf45505d9a23da8f127923c62a33be570d9fc1646400ad8038a18e78ab9a2",
+            "spymasterManifest": "df9997658cb028aac476db5291b03d2fb88a7923304036c651da7206968da8fb",
+            "operativeManifest": "df9997658cb028aac476db5291b03d2fb88a7923304036c651da7206968da8fb",
+            "conceptAssets": "d23c4a06d0dfb491b512349659e2a95bf05b9b8cb15a8a52bc648fbb45c77c01"
+          },
+          "metrics": {
+            "correctCardsPerTurn": {
+              "baseline": 1.642105,
+              "candidate": 1.394619,
+              "delta": {
+                "estimate": -0.247486,
+                "lower": -0.314447,
+                "upper": -0.183647
+              },
+              "status": "regressed"
+            },
+            "wrongTeamHitsPerGame": {
+              "baseline": 0,
+              "candidate": 0,
+              "delta": {
+                "estimate": 0,
+                "lower": 0,
+                "upper": 0
+              },
+              "status": "unchanged"
+            },
+            "neutralHitsPerGame": {
+              "baseline": 0,
+              "candidate": 0,
+              "delta": {
+                "estimate": 0,
+                "lower": 0,
+                "upper": 0
+              },
+              "status": "unchanged"
+            },
+            "assassinRate": {
+              "baseline": 0,
+              "candidate": 0,
+              "delta": {
+                "estimate": 0,
+                "lower": 0,
+                "upper": 0
+              },
+              "status": "unchanged"
+            },
+            "fallbackClueRate": {
+              "baseline": 0,
+              "candidate": 0,
+              "delta": {
+                "estimate": 0,
+                "lower": 0,
+                "upper": 0
+              },
+              "status": "unchanged"
+            },
+            "stallRate": {
+              "baseline": 0,
+              "candidate": 0,
+              "delta": {
+                "estimate": 0,
+                "lower": 0,
+                "upper": 0
+              },
+              "status": "unchanged"
+            },
+            "meanTurnsPerGame": {
+              "baseline": 9.5,
+              "candidate": 11.15,
+              "delta": {
+                "estimate": 1.65,
+                "lower": 1.1,
+                "upper": 2.2
+              },
+              "status": "changed"
+            }
+          },
+          "selectionDiagnostics": {
+            "meanClueNumber": {
+              "baseline": 1.689474,
+              "candidate": 1.408072,
+              "delta": -0.281402
+            },
+            "firstHalfMeanClueNumber": {
+              "baseline": 2.029703,
+              "candidate": 1.655462,
+              "delta": -0.374241
+            },
+            "multiClueRate": {
+              "baseline": 0.6,
+              "candidate": 0.38565,
+              "delta": -0.21435
+            },
+            "passesPerGame": {
+              "baseline": 8.5,
+              "candidate": 10.15,
+              "delta": 1.65
+            }
+          },
+          "gates": {
+            "zeroStalls": {
+              "passed": true,
+              "actual": 0,
+              "maximum": 0,
+              "status": "pass"
+            },
+            "assassinNonInferiority": {
+              "passed": true,
+              "actual": {
+                "estimate": 0,
+                "lower": 0,
+                "upper": 0
+              },
+              "maximumUpperBound": 0.05,
+              "candidateRate": {
+                "estimate": 0,
+                "lower": 0,
+                "upper": 0.161125
+              },
+              "status": "pass"
+            },
+            "wrongTeamNonInferiority": {
+              "passed": true,
+              "actual": {
+                "estimate": 0,
+                "lower": 0,
+                "upper": 0
+              },
+              "maximumUpperBound": 0.15,
+              "candidateRate": 0,
+              "status": "pass"
+            },
+            "neutralNonInferiority": {
+              "passed": true,
+              "actual": {
+                "estimate": 0,
+                "lower": 0,
+                "upper": 0
+              },
+              "maximumUpperBound": 0.15,
+              "status": "pass"
+            },
+            "fallback": {
+              "passed": true,
+              "actual": 0,
+              "maximum": 0.01,
+              "status": "pass"
+            },
+            "correctNonInferiority": {
+              "passed": false,
+              "actual": {
+                "estimate": -0.247486,
+                "lower": -0.314447,
+                "upper": -0.183647
+              },
+              "minimumLowerBound": -0.05,
+              "status": "block"
+            },
+            "correctSuperiority": {
+              "passed": false,
+              "actual": {
+                "estimate": -0.247486,
+                "lower": -0.314447,
+                "upper": -0.183647
+              },
+              "minimumLowerBound": 0,
+              "status": "block"
+            }
+          },
+          "artifacts": {
+            "report": {
+              "path": ".cache/subscription-cli-benchmark/codex-luna-high/smoke.json",
+              "sha256": "4aadef63faa6d85d04da92b6d722f24326137e8ab8999c0d54c63ca8b61b9f50",
+              "bytes": 114753
+            },
+            "comparison": {
+              "path": ".cache/subscription-cli-benchmark/codex-luna-high/smoke-comparison.json",
+              "sha256": "ee8a8829b384568a7cba2ce0203d9d2acce89be78a358ef09ee916fa61a002e6",
+              "bytes": 55227
+            },
+            "baseline": {
+              "path": "/Users/ab/.codex/worktrees/2597/codenames/.cache/subscription-cli-benchmark/baseline-same-model/smoke.json",
+              "sha256": "ca72342176cf6fc6b59102b4b4636d70c40e414287e703195242c319d45492cc",
+              "configurationFingerprint": "86847f42ad8b5344b4c7ede5500b5d41af2cb0e223062a981da9f829cd4f5ad3"
+            },
+            "timingLog": {
+              "path": ".cache/subscription-cli-benchmark/codex-luna-high/smoke.log",
+              "sha256": "a3df0915a3478f9cc23965db6687595b693b3728704d86572c9fa39001cbcb0d"
+            }
+          }
+        }
+      ],
+      "failure": null,
+      "progress": {
+        "schemaVersion": 1,
+        "generatedAt": "2026-08-05T05:02:37.061Z",
+        "providerEnvironmentPolicy": {
+          "version": 1,
+          "removedVariableNames": [
+            "CODEX_CI",
+            "CODEX_INTERNAL_ORIGINATOR_OVERRIDE",
+            "CODEX_PERMISSION_PROFILE",
+            "CODEX_SHELL",
+            "CODEX_THREAD_ID"
+          ],
+          "subscriptionConfigVariablesAllowed": [
+            "CLAUDE_CONFIG_DIR",
+            "CODEX_HOME"
+          ],
+          "alternateProviderRoutesRemoved": true
+        },
+        "modelId": "codex-luna-high",
+        "provenance": {
+          "modelId": "codex-luna-high",
+          "cli": "codex",
+          "cliVersion": "codex-cli 0.146.0",
+          "implementationSha256": "951221e388679cfc24e0e0a18fd7b651b3b13a0753751165604e3de087c34fb5",
+          "selector": "gpt-5.6-luna",
+          "reasoningEffort": "high",
+          "selectionCommand": {
+            "executable": "codex",
+            "argv": [
+              "exec",
+              "--ignore-user-config",
+              "--ignore-rules",
+              "--ephemeral",
+              "--sandbox",
+              "read-only",
+              "--disable",
+              "shell_tool",
+              "--disable",
+              "plugins",
+              "--disable",
+              "skill_search",
+              "--disable",
+              "plugin_sharing",
+              "--disable",
+              "tool_suggest",
+              "--model",
+              "gpt-5.6-luna",
+              "-c",
+              "model_reasoning_effort=\"high\"",
+              "--json",
+              "{PROMPT}"
+            ]
+          },
+          "subscriptionSurface": "codex-subscription",
+          "promptVersion": 1,
+          "shortlistVersion": "play-safe-shortlist-v1",
+          "transportVersion": 1,
+          "requestConcurrency": 1,
+          "casesPerRequest": 1,
+          "timeoutMs": 120000,
+          "tools": "disabled",
+          "fallbackModel": null
+        },
+        "completedScreens": [
+          "smoke"
+        ],
+        "artifact": {
+          "path": ".cache/subscription-cli-benchmark/codex-luna-high/progress.json",
+          "sha256": "446fc2b7a1d4447f9161a4ada71c40ce2c806af694a0b6823671d6215fb18004",
+          "bytes": 1655
+        }
+      },
+      "interruptions": [
+        {
+          "failedScreen": "smoke",
+          "generatedAt": "2026-08-05T04:42:22.530Z",
+          "class": "cli-interruption",
+          "detail": "The subscription CLI stopped before producing a complete screen.",
+          "run": {
+            "seconds": null,
+            "maximumResidentBytes": null,
+            "boardVectorCache": {
+              "status": "hit",
+              "milliseconds": 3.8
+            }
+          },
+          "logSha256": "db458a0d6c08e1d90185fe1932cf77b6ce5d3d0db76fa6e0b9a234e202759284",
+          "logArtifact": {
+            "path": ".cache/subscription-cli-benchmark/codex-luna-high/smoke.attempt-2026-08-05T04-42-22.530Z.log",
+            "sha256": "db458a0d6c08e1d90185fe1932cf77b6ce5d3d0db76fa6e0b9a234e202759284",
+            "bytes": 288
+          }
+        },
+        {
+          "failedScreen": "smoke",
+          "generatedAt": "2026-08-05T04:58:30.561Z",
+          "class": "subscription-transport-refused",
+          "detail": "Reconnecting... 2/5 (stream disconnected before completion: Connection refused (os error 61))",
+          "run": {
+            "seconds": 670.98,
+            "maximumResidentBytes": 836452352,
+            "boardVectorCache": {
+              "status": "hit",
+              "milliseconds": 3.4
+            }
+          },
+          "logSha256": "be89a851cbce7cdcb56a033175525050c4e323eda3770cc54776dfb559bc9d0d",
+          "logArtifact": {
+            "path": ".cache/subscription-cli-benchmark/codex-luna-high/smoke.attempt-2026-08-05T04-58-30.561Z.log",
+            "sha256": "be89a851cbce7cdcb56a033175525050c4e323eda3770cc54776dfb559bc9d0d",
+            "bytes": 1830
+          }
+        }
+      ],
+      "measurementLimitations": [],
+      "economics": {
+        "status": "measured",
+        "unit": "ChatGPT credits",
+        "completedGames": 20,
+        "totalCredits": 21.022771,
+        "creditsPerGame": 1.051139,
+        "usage": {
+          "uncachedInputTokens": 3785325,
+          "cachedInputTokens": 1997312,
+          "outputTokens": 36583
+        },
+        "rateCard": {
+          "sourceUrl": "https://learn.chatgpt.com/docs/pricing#what-are-tokens-and-credits",
+          "verifiedAt": "2026-08-05",
+          "unit": "credits-per-million-tokens",
+          "input": 5,
+          "cachedInput": 0.5,
+          "output": 30
+        },
+        "apiEquivalent": {
+          "status": "estimated",
+          "totalUsd": 0.840911,
+          "usdPerGame": 0.042046,
+          "rateCard": {
+            "sourceUrl": "https://developers.openai.com/api/docs/pricing",
+            "verifiedAt": "2026-08-05",
+            "tier": "standard-short-context",
+            "unit": "usd-per-million-tokens",
+            "input": 0.2,
+            "cachedInput": 0.02,
+            "output": 1.2
+          },
+          "basis": "Estimated standard short-context OpenAI API cost for the measured CLI token usage. No API request or API charge occurred."
+        },
+        "basis": "Official ChatGPT credit rates applied to the exact content-addressed request corpus, divided by completed benchmark games. Cached input is a subset of total input and is priced separately."
+      }
+    },
     {
       "id": "codex-sol",
       "label": "GPT-5.6 Sol",
@@ -1114,7 +2229,43 @@
       ],
       "measurementLimitations": [
         "A resume attempt overwrote the original Sol smoke report with a cache-only replay. The exact comparison metrics remain reproducible, but the original per-request latency array is unavailable."
-      ]
+      ],
+      "economics": {
+        "status": "measured",
+        "unit": "ChatGPT credits",
+        "completedGames": 168,
+        "totalCredits": 3451.73095,
+        "creditsPerGame": 20.546018,
+        "usage": {
+          "uncachedInputTokens": 24066340,
+          "cachedInputTokens": 29671936,
+          "outputTokens": 96719
+        },
+        "rateCard": {
+          "sourceUrl": "https://learn.chatgpt.com/docs/pricing#what-are-tokens-and-credits",
+          "verifiedAt": "2026-08-05",
+          "unit": "credits-per-million-tokens",
+          "input": 125,
+          "cachedInput": 12.5,
+          "output": 750
+        },
+        "apiEquivalent": {
+          "status": "estimated",
+          "totalUsd": 138.069238,
+          "usdPerGame": 0.821841,
+          "rateCard": {
+            "sourceUrl": "https://developers.openai.com/api/docs/pricing",
+            "verifiedAt": "2026-08-05",
+            "tier": "standard-short-context",
+            "unit": "usd-per-million-tokens",
+            "input": 5,
+            "cachedInput": 0.5,
+            "output": 30
+          },
+          "basis": "Estimated standard short-context OpenAI API cost for the measured CLI token usage. No API request or API charge occurred."
+        },
+        "basis": "Official ChatGPT credit rates applied to the exact content-addressed request corpus, divided by completed benchmark games. Cached input is a subset of total input and is priced separately."
+      }
     },
     {
       "id": "codex-terra",
@@ -2207,7 +3358,43 @@
           }
         }
       ],
-      "measurementLimitations": []
+      "measurementLimitations": [],
+      "economics": {
+        "status": "measured",
+        "unit": "ChatGPT credits",
+        "completedGames": 168,
+        "totalCredits": 1263.304,
+        "creditsPerGame": 7.519667,
+        "usage": {
+          "uncachedInputTokens": 21061980,
+          "cachedInputTokens": 32894720,
+          "outputTokens": 152438
+        },
+        "rateCard": {
+          "sourceUrl": "https://learn.chatgpt.com/docs/pricing#what-are-tokens-and-credits",
+          "verifiedAt": "2026-08-05",
+          "unit": "credits-per-million-tokens",
+          "input": 50,
+          "cachedInput": 5,
+          "output": 300
+        },
+        "apiEquivalent": {
+          "status": "estimated",
+          "totalUsd": 50.53216,
+          "usdPerGame": 0.300787,
+          "rateCard": {
+            "sourceUrl": "https://developers.openai.com/api/docs/pricing",
+            "verifiedAt": "2026-08-05",
+            "tier": "standard-short-context",
+            "unit": "usd-per-million-tokens",
+            "input": 2,
+            "cachedInput": 0.2,
+            "output": 12
+          },
+          "basis": "Estimated standard short-context OpenAI API cost for the measured CLI token usage. No API request or API charge occurred."
+        },
+        "basis": "Official ChatGPT credit rates applied to the exact content-addressed request corpus, divided by completed benchmark games. Cached input is a subset of total input and is priced separately."
+      }
     },
     {
       "id": "claude-opus",
@@ -2625,16 +3812,20 @@
           }
         }
       ],
-      "measurementLimitations": []
+      "measurementLimitations": [],
+      "economics": {
+        "status": "unavailable",
+        "reason": "No matching official ChatGPT credit rate is attached to this provider model."
+      }
     }
   ],
   "summary": {
-    "modelCount": 3,
+    "modelCount": 5,
     "outcomes": {
-      "block": 3
+      "block": 5
     },
     "completedStages": {
-      "smoke": 3,
+      "smoke": 5,
       "development": 2,
       "transferSmoke": 2,
       "heldOutTest": 0

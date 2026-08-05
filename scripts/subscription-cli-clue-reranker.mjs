@@ -17,15 +17,36 @@ const MODELS = Object.freeze({
   },
   "codex-sol": {
     cli: "codex",
+    reasoningEffort: "low",
     selector: "gpt-5.6-sol",
     transport: "codex-subscription",
   },
   "codex-terra": {
     cli: "codex",
+    reasoningEffort: "low",
     selector: "gpt-5.6-terra",
     transport: "codex-subscription",
   },
+  "codex-luna-low": {
+    cli: "codex",
+    reasoningEffort: "low",
+    selector: "gpt-5.6-luna",
+    transport: "codex-subscription",
+  },
+  "codex-luna-high": {
+    cli: "codex",
+    reasoningEffort: "high",
+    selector: "gpt-5.6-luna",
+    transport: "codex-subscription",
+  },
 });
+export const SUBSCRIPTION_CLI_MODEL_IDS = Object.freeze([
+  "codex-luna-low",
+  "codex-luna-high",
+  "codex-sol",
+  "codex-terra",
+  "claude-opus",
+]);
 
 export async function createSubscriptionCliClueReranker({
   cacheDirectory,
@@ -38,7 +59,7 @@ export async function createSubscriptionCliClueReranker({
   const definition = MODELS[modelId];
   if (!definition) {
     throw new Error(
-      `Unknown subscription CLI model ${modelId}. Expected ${Object.keys(MODELS).join(", ")}.`,
+      `Unknown subscription CLI model ${modelId}. Expected ${SUBSCRIPTION_CLI_MODEL_IDS.join(", ")}.`,
     );
   }
   await mkdir(cacheDirectory, { recursive: true });
@@ -52,6 +73,7 @@ export async function createSubscriptionCliClueReranker({
     cliVersion,
     implementationSha256,
     selector: definition.selector,
+    reasoningEffort: definition.reasoningEffort ?? "low",
     selectionCommand: commandTemplate,
     subscriptionSurface: definition.transport,
     promptVersion: SUBSCRIPTION_CLI_PROMPT_VERSION,
@@ -496,7 +518,7 @@ function transportCommand(definition, prompt) {
       "--model",
       definition.selector,
       "-c",
-      'model_reasoning_effort="low"',
+      `model_reasoning_effort="${definition.reasoningEffort ?? "low"}"`,
       "--json",
       prompt,
     ],

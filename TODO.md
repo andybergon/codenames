@@ -8,9 +8,9 @@
 
 - 🤖 Evaluate an LLM reranker as a benchmarked candidate policy.
   - Keep the embedding system as the safe shortlist generator, pass the selected clue through the existing engine, and compare fairly against the embedding-only accepted baseline.
-  - The subscription CLI screen found smoke regressions for Claude Opus, GPT-5.6 Sol, and GPT-5.6 Terra. Sol and Terra also regressed on development; Opus reached its monthly subscription limit during development. None currently justifies an API rollout.
+  - The subscription CLI screen found smoke regressions for GPT-5.6 Luna Low, GPT-5.6 Luna High, Claude Opus, GPT-5.6 Sol, and GPT-5.6 Terra. Luna Low and High reached 1.419 and 1.395 correct cards per turn versus BGE's 1.642, so neither warranted development or transfer. Sol and Terra also regressed on development; Opus reached its monthly subscription limit during development. None currently justifies an API rollout.
   - Preflight with an absolute total API spend cap of `$5` unless the user explicitly raises it. The first pass must be a tiny equivalent smoke or gold screen with strict request and token accounting; Opus is not eligible for a meaningful development run within this cap.
-  - Preserve the canonical configuration, provenance, measured cost, and latency controls.
+  - Preserve the canonical configuration, provenance, measured cost, and latency controls. Any revised protocol must report turns per game, one-request-per-turn identity, uncached-input, cached-input, and output tokens per request, measured credits per game, and API-equivalent USD per game. Keep local request-cache reuse separate from provider cached-input billing.
   - Do not replace the full engine without separate evidence that clears the existing benchmark gates.
 
 ## 🔴 High
