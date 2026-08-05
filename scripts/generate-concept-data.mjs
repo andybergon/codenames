@@ -26,6 +26,10 @@ const ARCHIVE_PATH = resolve(
   process.env.WORDNET_ARCHIVE ?? DEFAULT_ARCHIVE,
 );
 const OUTPUT_DIRECTORY = resolve(ROOT, "public/data/concepts");
+const WORD_RELATIONS_PATH = resolve(
+  ROOT,
+  "src/generated/english-word-relations.js",
+);
 const CLUE_WORDS_PATH = resolve(
   ROOT,
   "scripts/generated/clue-words.json",
@@ -88,6 +92,15 @@ for (const part of PARTS_OF_SPEECH) {
   }
 }
 
+const wordRelationTerms = new Set(
+  EXTENDED_WORDS.map((word) => normalizeTerm(word)),
+);
+const wordRelations = buildWordRelations(wordRelationTerms);
+validateWordRelations(wordRelations);
+await writeWordRelations(WORD_RELATIONS_PATH, wordRelations, {
+  archiveSha256,
+});
+
 await mkdir(OUTPUT_DIRECTORY, { recursive: true });
 await clearGeneratedShards();
 const boardEntries = Object.fromEntries(
@@ -141,7 +154,7 @@ await writeJson(resolve(OUTPUT_DIRECTORY, "manifest.json"), {
 });
 
 console.log(
-  `Wrote ${entries.size} WordNet concept entries and ${Object.keys(boardEntries).length} English board entries.`,
+  `Wrote ${entries.size} WordNet concept entries, ${Object.keys(boardEntries).length} English board entries, and ${wordRelations.size} word-relation entries.`,
 );
 
 function readArchiveEntry(entry) {
@@ -183,6 +196,227 @@ function parseDefinitions(raw) {
     }
   }
   return definitions;
+}
+
+function buildWordRelations(includedTerms) {
+  const synsets = new Map();
+  for (const part of PARTS_OF_SPEECH) {
+    for (const synset of parseSynsets(
+      readArchiveEntry(`wordnet/data.${part.file}`),
+    )) {
+      synsets.set(synsetKey(synset.partOfSpeech, synset.offset), synset);
+    }
+  }
+
+  const relations = new Map();
+  for (const synset of synsets.values()) {
+    for (const pointer of synset.pointers) {
+      if (
+        !["+", "\\"].includes(pointer.symbol) ||
+        pointer.sourceWord === 0 ||
+        pointer.targetWord === 0
+      ) {
+        continue;
+      }
+      const targetSynset = synsets.get(
+        synsetKey(pointer.targetPartOfSpeech, pointer.targetOffset),
+      );
+      addWordRelation(
+        relations,
+        includedTerms,
+        synset.lemmas[pointer.sourceWord - 1],
+        targetSynset?.lemmas[pointer.targetWord - 1],
+        { requireMorphologicalShape: true },
+      );
+    }
+  }
+
+  for (const part of PARTS_OF_SPEECH) {
+    const exceptions = readArchiveEntry(`wordnet/${part.file}.exc`);
+    for (const line of exceptions.split(/\r?\n/u)) {
+      const [inflected, ...lemmas] = line.trim().split(/\s+/u);
+      for (const lemma of lemmas) {
+        addWordRelation(
+          relations,
+          includedTerms,
+          inflected,
+          lemma,
+        );
+      }
+    }
+  }
+
+  return new Map(
+    [...relations]
+      .map(([term, related]) => [
+        term,
+        [...related].sort(compareCodeUnits),
+      ])
+      .sort(([left], [right]) => compareCodeUnits(left, right)),
+  );
+}
+
+function validateWordRelations(relations) {
+  const requiredRelations = [
+    ["mouse", "mice"],
+    ["rome", "roman"],
+    ["spine", "spinal"],
+    ["foot", "feet"],
+    ["tooth", "teeth"],
+  ];
+  const excludedRelations = [
+    ["eye", "optical"],
+    ["tooth", "dental"],
+    ["plane", "planet"],
+  ];
+  const relationCount = [...relations.values()].reduce(
+    (total, related) => total + related.length,
+    0,
+  );
+  if (relations.size < 500 || relationCount < 900) {
+    throw new Error(
+      `WordNet relation output is unexpectedly small: ${relations.size} terms and ${relationCount} relations.`,
+    );
+  }
+  for (const [term, related] of requiredRelations) {
+    if (!relations.get(term)?.includes(related)) {
+      throw new Error(`Missing required WordNet relation ${term}/${related}.`);
+    }
+  }
+  for (const [term, related] of excludedRelations) {
+    if (relations.get(term)?.includes(related)) {
+      throw new Error(`Unexpected semantic relation ${term}/${related}.`);
+    }
+  }
+}
+
+function compareCodeUnits(left, right) {
+  return left < right ? -1 : left > right ? 1 : 0;
+}
+
+function parseSynsets(raw) {
+  const synsets = [];
+  for (const line of raw.split(/\r?\n/u)) {
+    if (!/^\d{8}\s/u.test(line)) continue;
+    const definitionSeparator = line.indexOf(" | ");
+    const fields = line
+      .slice(0, definitionSeparator < 0 ? undefined : definitionSeparator)
+      .trim()
+      .split(/\s+/u);
+    const wordCount = Number.parseInt(fields[3], 16);
+    const lemmas = [];
+    let cursor = 4;
+    for (let index = 0; index < wordCount; index += 1) {
+      lemmas.push(fields[cursor]);
+      cursor += 2;
+    }
+    const pointerCount = Number(fields[cursor]);
+    cursor += 1;
+    const pointers = [];
+    for (let index = 0; index < pointerCount; index += 1) {
+      const sourceTarget = fields[cursor + 3];
+      pointers.push({
+        symbol: fields[cursor],
+        targetOffset: fields[cursor + 1],
+        targetPartOfSpeech: fields[cursor + 2],
+        sourceWord: Number.parseInt(sourceTarget.slice(0, 2), 16),
+        targetWord: Number.parseInt(sourceTarget.slice(2), 16),
+      });
+      cursor += 4;
+    }
+    synsets.push({
+      offset: fields[0],
+      partOfSpeech: fields[2],
+      lemmas,
+      pointers,
+    });
+  }
+  return synsets;
+}
+
+function synsetKey(partOfSpeech, offset) {
+  return `${partOfSpeech === "s" ? "a" : partOfSpeech}:${offset}`;
+}
+
+function addWordRelation(
+  relations,
+  includedTerms,
+  leftValue,
+  rightValue,
+  { requireMorphologicalShape = false } = {},
+) {
+  const left = normalizeWordRelationTerm(leftValue);
+  const right = normalizeWordRelationTerm(rightValue);
+  if (
+    !left ||
+    !right ||
+    left === right ||
+    (requireMorphologicalShape &&
+      !sharesMorphologicalShape(left, right)) ||
+    (!includedTerms.has(left) && !includedTerms.has(right))
+  ) {
+    return;
+  }
+  if (includedTerms.has(left)) {
+    addRelatedTerm(relations, left, right);
+  }
+  if (includedTerms.has(right)) {
+    addRelatedTerm(relations, right, left);
+  }
+}
+
+function sharesMorphologicalShape(left, right) {
+  const minimumLength = Math.min(left.length, right.length);
+  const requiredOverlap = Math.max(
+    3,
+    Math.ceil(minimumLength * 0.6),
+  );
+  return longestCommonSubstringLength(left, right) >= requiredOverlap;
+}
+
+function longestCommonSubstringLength(left, right) {
+  let previous = Array(right.length + 1).fill(0);
+  let longest = 0;
+  for (let leftIndex = 1; leftIndex <= left.length; leftIndex += 1) {
+    const current = Array(right.length + 1).fill(0);
+    for (
+      let rightIndex = 1;
+      rightIndex <= right.length;
+      rightIndex += 1
+    ) {
+      if (left[leftIndex - 1] === right[rightIndex - 1]) {
+        current[rightIndex] = previous[rightIndex - 1] + 1;
+        longest = Math.max(longest, current[rightIndex]);
+      }
+    }
+    previous = current;
+  }
+  return longest;
+}
+
+function normalizeWordRelationTerm(value) {
+  const normalized = normalizeTerm(value);
+  return /^[a-z]+$/u.test(normalized) ? normalized : "";
+}
+
+function addRelatedTerm(relations, term, related) {
+  if (!relations.has(term)) {
+    relations.set(term, new Set());
+  }
+  relations.get(term).add(related);
+}
+
+async function writeWordRelations(path, relations, { archiveSha256 }) {
+  const entries = JSON.stringify([...relations], null, 2);
+  const contents = [
+    "// Generated by npm run generate:concepts. Do not edit manually.",
+    `// Princeton WordNet 3.0 archive SHA-256: ${archiveSha256}`,
+    "export const ENGLISH_WORD_RELATIONS = new Map(",
+    entries,
+    ");",
+    "",
+  ].join("\n");
+  await writeFile(path, contents);
 }
 
 function normalizeTerm(value) {

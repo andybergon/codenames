@@ -37,7 +37,10 @@ import {
   GAME_END_REASON,
   GAME_ORIGIN,
   GAME_PHASE,
+  LEGACY_PLAY_RULES_VERSION,
   PLAYER_ROLE,
+  PLAY_RULES_VERSION,
+  PREVIOUS_PLAY_RULES_VERSION,
   actorForSeat,
   canUndoPlayGame,
   createPlayGame,
@@ -554,6 +557,7 @@ let game = createPlayGame({
 assert.equal(game.activeSide, SIDE.BLUE);
 assert.equal(game.phase, GAME_PHASE.AWAITING_CLUE);
 assert.equal(game.language, LANGUAGE.ENGLISH);
+assert.equal(game.rulesVersion, PLAY_RULES_VERSION);
 assert.deepEqual(game.botSettings, DEFAULT_PLAY_BOT_SETTINGS);
 assert.equal(actorForSeat(game, SIDE.BLUE, PLAYER_ROLE.SPYMASTER), "bot");
 assert.equal(actorForSeat(game, SIDE.BLUE, PLAYER_ROLE.OPERATIVE), "human");
@@ -701,19 +705,27 @@ assert.throws(
     }),
   /stem or inflection/,
 );
-const legacyDerivationGame = giveClue(derivationGame, {
-  clue: "teach",
-  number: 1,
-  actor: "human",
-  useLegacyClueRules: true,
-});
+const legacyDerivationGame = giveClue(
+  createPlayGame({
+    cards: derivationGame.cards,
+    humanSeat: { side: SIDE.BLUE, role: PLAYER_ROLE.SPYMASTER },
+    rulesVersion: LEGACY_PLAY_RULES_VERSION,
+    seed: "legacy-derivation",
+    wordSet: sample.wordSet,
+  }),
+  {
+    clue: "teach",
+    number: 1,
+    actor: "human",
+  },
+);
 const legacyDerivationPayload = JSON.parse(
   Buffer.from(
     encodePlayGame(legacyDerivationGame),
     "base64url",
   ).toString("utf8"),
 );
-legacyDerivationPayload[1] = 1;
+assert.equal(legacyDerivationPayload[1], LEGACY_PLAY_RULES_VERSION);
 const legacyDerivationCode = Buffer.from(
   JSON.stringify(legacyDerivationPayload),
 ).toString("base64url");
@@ -725,13 +737,89 @@ assert.equal(
   "TEACH",
 );
 assert.equal(
+  restorePlayGame(restoredLegacyDerivationGame).currentTurn.clue,
+  "TEACH",
+);
+assert.equal(
   JSON.parse(
     Buffer.from(
       encodePlayGame(restoredLegacyDerivationGame),
       "base64url",
     ).toString("utf8"),
   )[1],
-  1,
+  LEGACY_PLAY_RULES_VERSION,
+);
+
+for (const [boardWord, clue] of [
+  ["MOUSE", "mice"],
+  ["ROME", "roman"],
+  ["SPINE", "spinal"],
+]) {
+  const lexicalFamilyGame = createPlayGame({
+    cards: sample.cards.map((card, index) =>
+      index === 0 ? { ...card, word: boardWord } : card,
+    ),
+    humanSeat: { side: SIDE.BLUE, role: PLAYER_ROLE.SPYMASTER },
+    seed: `lexical-family-${boardWord}`,
+    wordSet: sample.wordSet,
+  });
+  assert.throws(
+    () =>
+      giveClue(lexicalFamilyGame, {
+        clue,
+        number: 1,
+        actor: "human",
+      }),
+    /stem or inflection/,
+  );
+}
+
+const previousRulesGame = createPlayGame({
+  cards: sample.cards.map((card, index) =>
+    index === 0 ? { ...card, word: "SPINE" } : card,
+  ),
+  humanSeat: { side: SIDE.BLUE, role: PLAYER_ROLE.SPYMASTER },
+  rulesVersion: PREVIOUS_PLAY_RULES_VERSION,
+  seed: "previous-rules-lexical-family",
+  wordSet: sample.wordSet,
+});
+const previousRulesClueGame = giveClue(previousRulesGame, {
+  clue: "spinal",
+  number: 1,
+  actor: "human",
+});
+const previousRulesPayload = JSON.parse(
+  Buffer.from(
+    encodePlayGame(previousRulesClueGame),
+    "base64url",
+  ).toString("utf8"),
+);
+assert.equal(
+  previousRulesPayload[1],
+  PREVIOUS_PLAY_RULES_VERSION,
+);
+const previousRulesCode = Buffer.from(
+  JSON.stringify(previousRulesPayload),
+).toString("base64url");
+const restoredPreviousRulesGame = decodePlayGame(previousRulesCode);
+assert.equal(restoredPreviousRulesGame.currentTurn.clue, "SPINAL");
+assert.equal(
+  restorePlayGame(restoredPreviousRulesGame).currentTurn.clue,
+  "SPINAL",
+);
+assert.equal(
+  replayPlayActionStates(restoredPreviousRulesGame).at(-1).game
+    .currentTurn.clue,
+  "SPINAL",
+);
+assert.equal(
+  JSON.parse(
+    Buffer.from(
+      encodePlayGame(restoredPreviousRulesGame),
+      "base64url",
+    ).toString("utf8"),
+  )[1],
+  PREVIOUS_PLAY_RULES_VERSION,
 );
 
 game = giveClue(game, {
@@ -2126,7 +2214,7 @@ assert.deepEqual(
   },
   {
     formatVersion: 3,
-    rulesVersion: 2,
+    rulesVersion: 3,
     settingsVersion: 4,
     compatibility: "full",
   },

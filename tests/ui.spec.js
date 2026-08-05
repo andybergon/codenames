@@ -129,6 +129,42 @@ function playSessionWithHistory(history) {
   };
 }
 
+function clueValidationSession({ boardWord, clue }) {
+  const teams = [
+    ...Array(9).fill("friendly"),
+    ...Array(8).fill("enemy"),
+    ...Array(7).fill("neutral"),
+    "assassin",
+  ];
+  return {
+    schemaVersion: 1,
+    seed: `clue-${clue}-ui`,
+    wordSet: "official",
+    humanSeat: { side: "blue", role: "spymaster" },
+    cards: teams.map((team, layoutId) => ({
+      word: layoutId === 0 ? boardWord : `WORD${layoutId}`,
+      team,
+      layoutId,
+      done: false,
+      revealedBy: null,
+      revealedTurn: null,
+    })),
+    activeSide: "blue",
+    phase: "awaiting-clue",
+    turnNumber: 1,
+    currentTurn: null,
+    winner: null,
+    endReason: null,
+    history: [
+      {
+        type: "game-started",
+        humanSeat: { side: "blue", role: "spymaster" },
+        activeSide: "blue",
+      },
+    ],
+  };
+}
+
 function completedShareGame() {
   const teams = [
     ...Array(9).fill("friendly"),
@@ -3335,41 +3371,24 @@ for (const { description, boardWord, clue } of [
     boardWord: "TEACHER",
     clue: "teach",
   },
+  {
+    description: "an irregular plural",
+    boardWord: "MOUSE",
+    clue: "mice",
+  },
+  {
+    description: "a place-name derivation",
+    boardWord: "ROME",
+    clue: "roman",
+  },
+  {
+    description: "an adjective derivation",
+    boardWord: "SPINE",
+    clue: "spinal",
+  },
 ]) {
   test(`Play rejects ${description} of an unrevealed board word`, async ({ page }) => {
-    const teams = [
-      ...Array(9).fill("friendly"),
-      ...Array(8).fill("enemy"),
-      ...Array(7).fill("neutral"),
-      "assassin",
-    ];
-    const savedGame = {
-      schemaVersion: 1,
-      seed: `clue-${clue}-ui`,
-      wordSet: "official",
-      humanSeat: { side: "blue", role: "spymaster" },
-      cards: teams.map((team, layoutId) => ({
-        word: layoutId === 0 ? boardWord : `WORD${layoutId}`,
-        team,
-        layoutId,
-        done: false,
-        revealedBy: null,
-        revealedTurn: null,
-      })),
-      activeSide: "blue",
-      phase: "awaiting-clue",
-      turnNumber: 1,
-      currentTurn: null,
-      winner: null,
-      endReason: null,
-      history: [
-        {
-          type: "game-started",
-          humanSeat: { side: "blue", role: "spymaster" },
-          activeSide: "blue",
-        },
-      ],
-    };
+    const savedGame = clueValidationSession({ boardWord, clue });
     await page.addInitScript((session) => {
       localStorage.setItem("codenames-play-session-v1", JSON.stringify(session));
     }, savedGame);
@@ -3386,6 +3405,26 @@ for (const { description, boardWord, clue } of [
     ).not.toHaveClass(/is-done/);
   });
 }
+
+test("Play accepts semantic neighbors that are not word forms", async ({ page }) => {
+  await useTestBotAction(page, 0);
+  const savedGame = clueValidationSession({
+    boardWord: "EYE",
+    clue: "optical",
+  });
+  await page.addInitScript((session) => {
+    localStorage.setItem("codenames-play-session-v1", JSON.stringify(session));
+  }, savedGame);
+  await page.goto("/?mode=play");
+  await page.getByRole("button", { name: "Resume game", exact: true }).click();
+
+  await page.getByRole("textbox", { name: "Clue", exact: true }).fill("optical");
+  await page.getByRole("button", { name: "Give clue", exact: true }).click();
+  await expect(page.locator("#play-clue-error")).toBeEmpty();
+  await expect(page.locator("#play-history-list")).toContainText(
+    "Clue: OPTICAL",
+  );
+});
 
 test("Play moves through history and groups fully automated turns", async ({ page }) => {
   const teams = [

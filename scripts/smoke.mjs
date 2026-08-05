@@ -146,6 +146,22 @@ assert.equal(isForbiddenClue("teacher", ["teach"]), true);
 assert.equal(isForbiddenClue("write", ["writer"]), true);
 assert.equal(isForbiddenClue("run", ["runner"]), true);
 assert.equal(isForbiddenClue("planet", ["plane"]), false);
+assert.equal(isForbiddenClue("mice", ["mouse"]), true);
+assert.equal(isForbiddenClue("mouse", ["mice"]), true);
+assert.equal(isForbiddenClue("roman", ["rome"]), true);
+assert.equal(isForbiddenClue("rome", ["roman"]), true);
+assert.equal(isForbiddenClue("spinal", ["spine"]), true);
+assert.equal(isForbiddenClue("spine", ["spinal"]), true);
+assert.equal(isForbiddenClue("feet", ["foot"]), true);
+assert.equal(isForbiddenClue("teeth", ["tooth"]), true);
+assert.equal(isForbiddenClue("optical", ["eye"]), false);
+assert.equal(isForbiddenClue("dental", ["tooth"]), false);
+assert.equal(
+  isForbiddenClue("spinal", ["spine"], {
+    includeLexicalFamilies: false,
+  }),
+  false,
+);
 
 assert.deepEqual(
   explainRecommendation({

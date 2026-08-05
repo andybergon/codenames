@@ -35,6 +35,16 @@ export const GAME_ORIGIN = Object.freeze({
   UNKNOWN: "unknown",
 });
 
+const PLAY_RULES = Object.freeze({
+  LEGACY: 1,
+  AGENT_DERIVATIONS: 2,
+  WORD_RELATIONS: 3,
+});
+export const LEGACY_PLAY_RULES_VERSION = PLAY_RULES.LEGACY;
+export const PREVIOUS_PLAY_RULES_VERSION = PLAY_RULES.AGENT_DERIVATIONS;
+export const PLAY_RULES_VERSION = PLAY_RULES.WORD_RELATIONS;
+const REPLAYABLE_RULES_VERSIONS = new Set(Object.values(PLAY_RULES));
+
 const SIDES = new Set(Object.values(SIDE));
 const PLAYER_ROLES = new Set(Object.values(PLAYER_ROLE));
 const ACTORS = new Set(["human", "bot"]);
@@ -73,12 +83,16 @@ export function createPlayGame({
   humanSeat,
   language = LANGUAGE.ENGLISH,
   origin = GAME_ORIGIN.LOCAL,
+  rulesVersion = PLAY_RULES_VERSION,
   seed,
   wordSet,
   wordReusePolicy,
 }) {
   validateSeat(humanSeat);
   validateLanguage(language);
+  if (!isReplayablePlayRulesVersion(rulesVersion)) {
+    throw new Error("Unsupported Play rules version.");
+  }
   if (!Array.isArray(cards) || cards.length !== 25) {
     throw new Error("A Play game requires exactly 25 cards.");
   }
@@ -92,6 +106,7 @@ export function createPlayGame({
     schemaVersion: 1,
     developerMode: normalizedDeveloperMode,
     origin: normalizedOrigin,
+    rulesVersion,
     analyticsSequence: 0,
     seed: String(seed ?? ""),
     language,
@@ -138,7 +153,6 @@ export function giveClue(
     actor,
     intendedLayoutIds = [],
     developerDiagnostics = null,
-    useLegacyClueRules = false,
   },
 ) {
   assertActive(game, GAME_PHASE.AWAITING_CLUE);
@@ -148,7 +162,7 @@ export function giveClue(
     clue,
     game.cards,
     game.language ?? LANGUAGE.ENGLISH,
-    useLegacyClueRules,
+    game.rulesVersion ?? PLAY_RULES_VERSION,
   );
   const normalizedNumber = Number(number);
   const maximum = remainingCardsForSide(game.cards, game.activeSide);
@@ -400,6 +414,7 @@ function createReplayGame(game) {
     humanSeat: game.humanSeat,
     language: game.language,
     origin: game.origin,
+    rulesVersion: game.rulesVersion,
     seed: game.seed,
     wordSet: game.wordSet,
     wordReusePolicy: game.wordReusePolicy,
@@ -601,12 +616,18 @@ export function validateStoredGame(value) {
     storedBotSettings,
     language,
   );
+  const storedRulesVersion =
+    value.rulesVersion ?? value.shareMetadata?.rulesVersion;
+  const rulesVersion = isReplayablePlayRulesVersion(storedRulesVersion)
+    ? storedRulesVersion
+    : PLAY_RULES_VERSION;
   return {
     ...value,
     developerMode: value.developerMode === true,
     origin: GAME_ORIGINS.has(value.origin)
       ? value.origin
       : GAME_ORIGIN.UNKNOWN,
+    rulesVersion,
     analyticsSequence:
       Number.isSafeInteger(value.analyticsSequence) &&
       value.analyticsSequence >= 0
@@ -672,7 +693,7 @@ function validateClue(
   clue,
   cards,
   language,
-  useLegacyClueRules = false,
+  rulesVersion,
 ) {
   const normalized = String(clue ?? "").trim();
   if (!normalized || /\s/u.test(normalized)) {
@@ -684,7 +705,10 @@ function validateClue(
   if (
     isForbiddenClue(normalizeTerm(normalized), boardWords, {
       language,
-      includeDerivations: !useLegacyClueRules,
+      includeDerivations:
+        rulesVersion >= PLAY_RULES.AGENT_DERIVATIONS,
+      includeLexicalFamilies:
+        rulesVersion >= PLAY_RULES.WORD_RELATIONS,
     })
   ) {
     throw new Error(
@@ -692,6 +716,10 @@ function validateClue(
     );
   }
   return normalized.toLocaleUpperCase(language);
+}
+
+export function isReplayablePlayRulesVersion(value) {
+  return REPLAYABLE_RULES_VERSIONS.has(value);
 }
 
 function assertActive(game, phase) {

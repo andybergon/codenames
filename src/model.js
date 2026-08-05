@@ -3,6 +3,7 @@ import {
   ITALIAN_EXTENDED_WORDS,
   LANGUAGE,
 } from "./word-data.js";
+import { ENGLISH_WORD_RELATIONS } from "./generated/english-word-relations.js";
 
 export const HAZARD_POLICY = Object.freeze({
   friendly: { multiplier: 0, offset: 0 },
@@ -242,10 +243,12 @@ export function isForbiddenClue(
 ) {
   const language = options.language ?? LANGUAGE.ENGLISH;
   const includeDerivations = options.includeDerivations ?? true;
+  const includeLexicalFamilies = options.includeLexicalFamilies ?? true;
   return buildClueLegalityFilter(
     boardWords,
     language,
     includeDerivations,
+    includeLexicalFamilies,
   )(
     normalizeTerm(clue),
   );
@@ -340,6 +343,7 @@ function buildClueLegalityFilter(
   boardWords,
   language,
   includeDerivations = true,
+  includeLexicalFamilies = true,
 ) {
   if (language === LANGUAGE.ENGLISH) {
     const compactBoardWords = boardWords.map((word) =>
@@ -353,7 +357,6 @@ function buildClueLegalityFilter(
     const boardDerivations = includeDerivations
       ? new Set(compactBoardWords.flatMap(simpleAgentNouns))
       : new Set();
-
     return (clue) => {
       const compactClue = normalizeTerm(clue).replaceAll(" ", "");
       if (
@@ -361,6 +364,10 @@ function buildClueLegalityFilter(
         boardStemSet.has(simpleStem(compactClue)) ||
         boardInflections.has(compactClue) ||
         boardDerivations.has(compactClue) ||
+        (includeLexicalFamilies &&
+          compactBoardWords.some((compactWord) =>
+            areEnglishWordFormsRelated(compactClue, compactWord),
+          )) ||
         simpleInflections(compactClue).some((form) =>
           boardWordSet.has(form),
         ) ||
@@ -571,6 +578,13 @@ function simpleAgentNouns(value) {
   }
 
   return forms;
+}
+
+function areEnglishWordFormsRelated(left, right) {
+  return (
+    ENGLISH_WORD_RELATIONS.get(left)?.includes(right) === true ||
+    ENGLISH_WORD_RELATIONS.get(right)?.includes(left) === true
+  );
 }
 
 function shouldDoubleFinalConsonant(value) {
