@@ -4280,14 +4280,13 @@ test("completed Play sessions replay turns and explain clues and guesses", async
   await expect(page.locator('.play-card[data-team="friendly"]')).toHaveCount(9);
   await expect(page.locator('.play-card[data-team="enemy"]')).toHaveCount(8);
   await expect(page.locator("#play-post-game-analysis")).toBeVisible();
-  await expect(page.locator("#play-concept-bridges")).toBeVisible();
-  await expect(page.locator("#play-concept-bridges")).toContainText("WORD0");
-  await expect(page.locator("#play-concept-bridges")).toContainText(
-    "the opening stage in a sequence",
-  );
-  await expect(page.locator("#play-concept-bridges")).not.toContainText(
-    "position two",
-  );
+  await expect(page.locator("#play-concept-bridges")).toBeHidden();
+  await expect(
+    page.locator('.play-score-team[data-side="blue"] strong'),
+  ).toHaveText("8");
+  await expect(
+    page.locator('.play-score-team[data-side="red"] strong'),
+  ).toHaveText("8");
   await expect(page.locator("#play-analysis-summary")).toHaveCount(0);
   await expect(page.locator("#play-analysis-status")).toHaveCount(0);
   await expect(
@@ -4304,9 +4303,9 @@ test("completed Play sessions replay turns and explain clues and guesses", async
     name: "Review turn 2: Dog team clue SECOND 1",
     exact: true,
   });
-  await expect(firstClue).toHaveAttribute("aria-pressed", "true");
+  await expect(firstClue).toHaveAttribute("aria-pressed", "false");
   await expect(secondClue).toHaveAttribute("aria-pressed", "false");
-  await expect(firstClue.locator(".play-history-viewing")).toHaveText("Viewing");
+  await expect(firstClue.locator(".play-history-viewing")).toHaveCount(0);
   await expect(secondClue.locator(".play-history-viewing")).toHaveCount(0);
   await expect(page.locator("#play-history-list")).not.toContainText("Review");
   const initialTurnRows = await page
@@ -4321,7 +4320,7 @@ test("completed Play sessions replay turns and explain clues and guesses", async
   expect(initialTurnRows).toEqual([
     expect.objectContaining({
       turn: "0",
-      selected: true,
+      selected: false,
       text: expect.stringContaining("Guess: WORD0"),
     }),
     expect.objectContaining({
@@ -4332,6 +4331,21 @@ test("completed Play sessions replay turns and explain clues and guesses", async
   ]);
   expect(initialTurnRows[0].text).toContain("Pass");
   expect(initialTurnRows[1].text).toContain("Cat team won by the Veterinarian");
+  await firstClue.click();
+  await expect(page.locator("#play-concept-bridges")).toBeVisible();
+  await expect(page.locator("#play-concept-bridges")).toContainText("WORD0");
+  await expect(page.locator("#play-concept-bridges")).toContainText(
+    "the opening stage in a sequence",
+  );
+  await expect(page.locator("#play-concept-bridges")).not.toContainText(
+    "position two",
+  );
+  await expect(
+    page.locator('.play-score-team[data-side="blue"] strong'),
+  ).toHaveText("9");
+  await expect(
+    page.locator('.play-score-team[data-side="red"] strong'),
+  ).toHaveText("8");
   const historyList = page.locator("#play-history-list");
   await historyList.evaluate((list) => {
     list.scrollTop = 40;

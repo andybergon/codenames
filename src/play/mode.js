@@ -568,7 +568,7 @@ export function createPlayMode(options = {}) {
   let activeModelId = null;
   let shareFeedbackTimer = 0;
   let postGameTurns = [];
-  let selectedPostGameTurn = 0;
+  let selectedPostGameTurn = null;
   let selectedHistoryExplanation = null;
   let postGameScores = [];
   let postGameConceptBridges = [];
@@ -1328,7 +1328,7 @@ export function createPlayMode(options = {}) {
   function resetPostGameAnalysis() {
     postGameAnalysisRun += 1;
     postGameTurns = [];
-    selectedPostGameTurn = 0;
+    selectedPostGameTurn = null;
     selectedHistoryExplanation = null;
     postGameScores = [];
     postGameConceptBridges = [];
@@ -1545,10 +1545,12 @@ export function createPlayMode(options = {}) {
   function preparePostGameTurns() {
     if (game?.phase === GAME_PHASE.COMPLETE && postGameTurns.length === 0) {
       postGameTurns = replayCompletedClueTurns(game);
-      selectedPostGameTurn = Math.max(
-        0,
-        Math.min(selectedPostGameTurn, postGameTurns.length - 1),
-      );
+      if (Number.isInteger(selectedPostGameTurn)) {
+        selectedPostGameTurn = Math.max(
+          0,
+          Math.min(selectedPostGameTurn, postGameTurns.length - 1),
+        );
+      }
       return;
     }
     if (game?.developerMode && liveDiagnosticsVisible) {
@@ -2673,7 +2675,9 @@ export function createPlayMode(options = {}) {
 
   function renderPostGameAnalysis(selectedTurn) {
     const feedbackAvailable = canCollectPlayerFeedback();
-    elements.postGameAnalysis.hidden = !selectedTurn && !feedbackAvailable;
+    const completedGame = game.phase === GAME_PHASE.COMPLETE;
+    elements.postGameAnalysis.hidden =
+      !completedGame && !selectedTurn && !feedbackAvailable;
     elements.feedbackActions.hidden = !feedbackAvailable;
     if (!feedbackAvailable) {
       feedbackScope = null;
@@ -2682,6 +2686,12 @@ export function createPlayMode(options = {}) {
     if (!selectedTurn) {
       elements.conceptBridges.hidden = true;
       elements.conceptBridges.replaceChildren();
+      elements.historicalReviewNote.hidden =
+        game.reviewCompatibility !== "history-only";
+      elements.postGameAnalysisStatus.hidden = true;
+      elements.postGameOutcome.textContent = completedGame
+        ? postGameOutcomeText()
+        : "";
       return;
     }
     elements.historicalReviewNote.hidden =
@@ -2697,20 +2707,24 @@ export function createPlayMode(options = {}) {
     renderConceptBridges(selectedTurn);
     elements.postGameOutcome.textContent =
       game.phase === GAME_PHASE.COMPLETE
-        ? `${sideEmoji(game.winner)} ${translate(
-            gameLanguage(),
-            "postGameOutcome",
-            {
-              winner: localizedSideLabel(game.winner),
-              reason: translate(
-                gameLanguage(),
-                game.endReason === GAME_END_REASON.ASSASSIN
-                  ? "assassin"
-                  : "allAgents",
-              ),
-            },
-          )}`
+        ? postGameOutcomeText()
         : translate(gameLanguage(), "developerGame");
+  }
+
+  function postGameOutcomeText() {
+    return `${sideEmoji(game.winner)} ${translate(
+      gameLanguage(),
+      "postGameOutcome",
+      {
+        winner: localizedSideLabel(game.winner),
+        reason: translate(
+          gameLanguage(),
+          game.endReason === GAME_END_REASON.ASSASSIN
+            ? "assassin"
+            : "allAgents",
+        ),
+      },
+    )}`;
   }
 
   function renderConceptBridges(selectedTurn) {
