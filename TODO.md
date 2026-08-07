@@ -34,6 +34,10 @@
 
 ## 🟡 Medium
 
+- 💬 Refresh the semantic explanation evaluation for the exact-token prompt.
+  - Prompt v6 and its server-side clue-substitution guard shipped in `7c930ce`; `scripts/generated/recommendation-explanation-evaluation.json` still records prompt v4.
+  - Run `npm run evaluate:explanations -- --max-cost-usd 0.08` only after explicit task-specific cost authorization and a fresh official model-availability and pricing check.
+
 - 🧠 Validate concept-aware Owner clue generation.
   - The frozen 100-board screen changed 18 of 200 Owner decisions. Exploratory triage rated 11 poor, 2 mixed, and 5 plausible, so the independent per-card sense maximum is not eligible for human or cross-model promotion.
   - Next: require one shared clue sense across the full target set, rerun the same boards, and reject the variant if obvious incoherent changes remain. Remove the duplicate clue scan and full analysis pass before any interactive latency evaluation.
